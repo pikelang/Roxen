@@ -41,7 +41,7 @@ protected class decaying_file {
       data = data[left+1..];
       left = rate;
       if(++crot >= sizeof(rotten_bits))
-	crot = 0;
+        crot = 0;
     }
     left -= sizeof(data);
     return newdata + data;
@@ -103,19 +103,19 @@ void create()
   ::create();
 
   defvar("bitrot", 0,
-	 _(3,"Scrambled downloads: Return files with bitrot"), TYPE_FLAG,
-	 _(4,"If this function is enabled, downloads <i>are</i> allowed, "
-	 "but the files will be scrambled."));
+         _(3,"Scrambled downloads: Return files with bitrot"), TYPE_FLAG,
+         _(4,"If this function is enabled, downloads <i>are</i> allowed, "
+         "but the files will be scrambled."));
 
   defvar("bitrot_header", 2376,
-	 _(5,"Scrambled downloads: Unscrambled header length"),TYPE_INT,
-	 _(6,"Number of bytes to be sent without any bitrot at all."), 0,
-	 lambda(){ return !query("bitrot"); });
+         _(5,"Scrambled downloads: Unscrambled header length"),TYPE_INT,
+         _(6,"Number of bytes to be sent without any bitrot at all."), 0,
+         lambda(){ return !query("bitrot"); });
 
   defvar("bitrot_percent", 3,
-	 _(7,"Scrambled downloads: Percent of bits to rot"), TYPE_INT,
-	 _(8,"Selects the percentage of the file that will receive bitrot"), 0,
-	 lambda(){ return !query("bitrot"); });
+         _(7,"Scrambled downloads: Percent of bits to rot"), TYPE_INT,
+         _(8,"Selects the percentage of the file that will receive bitrot"), 0,
+         lambda(){ return !query("bitrot"); });
 }
 
 protected mixed not_allowed( object id )

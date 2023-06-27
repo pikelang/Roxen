@@ -13,16 +13,16 @@ constant module_type = MODULE_URL | MODULE_TAG;
 constant module_name = "Language module II";
 constant module_doc  = "Handles documents in different languages. "
             "What language a file is in is specified with the "
-	    "language code before the extension. index.sv.html would be a file in swedish "
+            "language code before the extension. index.sv.html would be a file in swedish "
             "while index.en.html would be one in english. ";
 
 void create() {
   defvar( "default_language", "en", "Default language", TYPE_STRING,
-	  "The default language for this server. Is used when trying to "
-	  "decide which language to send when the user hasn't selected any." );
+          "The default language for this server. Is used when trying to "
+          "decide which language to send when the user hasn't selected any." );
 
   defvar( "languages", ({"en","de","sv"}), "Languages", TYPE_STRING_LIST,
-	  "The languages supported by this site." );
+          "The languages supported by this site." );
 }
 
 string default_language;
@@ -84,8 +84,8 @@ object remap_url(RequestID id, string url) {
     foreach(languages, string lang) {
       string this=file+"."+lang+"."+split[-1];
       if(dir[this]) {
-	found+=(<lang>);
-	files+=([lang:path+this]);
+        found+=(<lang>);
+        files+=([lang:path+this]);
       }
     }
 
@@ -145,8 +145,8 @@ class TagLanguage {
     array do_return(RequestID id) {
       string lang=([mapping(string:mixed)]id->misc->defines)->language;
       if(args->type=="code") {
-	result=lang;
-	return 0;
+        result=lang;
+        return 0;
       }
       result=translator( ({}),id )(lang);
       return 0;
@@ -166,8 +166,8 @@ class TagUnavailableLanguage {
       string lang=id->misc->pref_languages->get_languages()[0];
       if(lang==([mapping(string:mixed)]id->misc->defines)->language) return 0;
       if(args->type=="code") {
-	result=lang;
-	return 0;
+        result=lang;
+        return 0;
       }
       result=translator( ({}),id )(lang);
       return 0;

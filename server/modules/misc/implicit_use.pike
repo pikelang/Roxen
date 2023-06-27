@@ -13,7 +13,7 @@ constant module_doc  = "Defines tags from a template file";
 void create() {
 
   defvar("uses", "*   package=roxenlogo", "Match pattern", TYPE_TEXT_FIELD,
-	 "Maps from URL glob to what template to activate. The template is "
+         "Maps from URL glob to what template to activate. The template is "
          "either file=name or package=name.");
 
 }
@@ -29,9 +29,9 @@ void start(int num, Configuration c) {
     array res=pair/" " - ({""});
     if(sizeof(res)>1) {
       if(matches[res[0]])
-	matches[res[0]] += ({ res[1..]*" " });
+        matches[res[0]] += ({ res[1..]*" " });
       else
-	matches[res[0]] = ({ res[1..]*" " });
+        matches[res[0]] = ({ res[1..]*" " });
     }
   }
   conf = c;
@@ -57,7 +57,7 @@ mapping first_try(RequestID id) {
   foreach(indices(matches), string match)
     if(glob(match,id->not_query))
       uses += map(matches[match],
-		  lambda(string in) { return "<use "+in+"/>"; })*"";
+                  lambda(string in) { return "<use "+in+"/>"; })*"";
 
   RXML.PXml parser = conf->rxml_tag_set ( RXML.t_html(RXML.PXml), id);
   parser->recover_errors = 1;
@@ -66,7 +66,7 @@ mapping first_try(RequestID id) {
   if (mixed err = catch( parser->write_end (uses) )) {
     if (objectp (err) && err->thrown_at_unwind)
       error ("Can't handle RXML parser unwinding in "
-	     "compatibility mode (error=%O).\n", err);
+             "compatibility mode (error=%O).\n", err);
     else throw (err);
   }
 

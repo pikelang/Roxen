@@ -35,9 +35,9 @@ int write_status_file()
     if( roxen() )
     {
       foreach(roxen()->configurations, object c)
-	// Configuration not usable here
-	fd->write(c->query_name()+"\r\n"+
-		  c->query("MyWorldLocation")+"\r\n");
+        // Configuration not usable here
+        fd->write(c->query_name()+"\r\n"+
+                  c->query("MyWorldLocation")+"\r\n");
       fd->close();
     }
   } else {
@@ -117,12 +117,12 @@ int main(int argc, array (string) argv)
     switch(arg[0])
     {
       case "cd":
-	opt->wd = arg[1];
-	break;
-	
+        opt->wd = arg[1];
+        break;
+        
       case "quiet":
-	opt->verbose = 0;
-	break;
+        opt->verbose = 0;
+        break;
     }
   // Don't complain about unknown options but
   // remove NULL entries left behind by find_all_options
@@ -157,7 +157,7 @@ int main(int argc, array (string) argv)
     if (!opt->script) {
       rm(log_dir+"/debug/default.10");
       for(int i=9;i>0;i--)
-	mv(log_dir+"/debug/default."+i, log_dir+"/debug/default."+(i+1));
+        mv(log_dir+"/debug/default."+i, log_dir+"/debug/default."+(i+1));
     }
 
     if(fd->open(log_dir+"/debug/default.1", "wct"))
@@ -175,13 +175,13 @@ int main(int argc, array (string) argv)
 
   if(opt->verbose)
     werror("Roxen base directory : "+dir+"\n"
-	   "Roxen log directory  : "+log_dir+"\n"
-	   "Roxen shutdown file  : "+(key || "None")+"\n"
-	   "Roxen arguments      : "+(sizeof(argv)>1?argv[1..]*" ":"None")+"\n"
+           "Roxen log directory  : "+log_dir+"\n"
+           "Roxen shutdown file  : "+(key || "None")+"\n"
+           "Roxen arguments      : "+(sizeof(argv)>1?argv[1..]*" ":"None")+"\n"
 #if constant (Nettle)
-	   "This version of Roxen has crypto algorithms available.\n"
+           "This version of Roxen has crypto algorithms available.\n"
 #endif
-	   );
+           );
 
   call_out (write_status_file, 1);
   

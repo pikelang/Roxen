@@ -89,7 +89,7 @@ public class RoxenRequest {
   {
     if(_variables == null)
       if((_variables = getVariables()) == null)
-	_variables = new TreeMap();
+        _variables = new TreeMap();
     return _variables;
   }
 
@@ -102,7 +102,7 @@ public class RoxenRequest {
   {
     if(_requestHeaders == null)
       if((_requestHeaders = getRequestHeaders()) == null)
-	_requestHeaders = new TreeMap();
+        _requestHeaders = new TreeMap();
     return _requestHeaders;
   }
 
@@ -115,7 +115,7 @@ public class RoxenRequest {
   {
     if(_cookies == null)
       if((_cookies = getCookies()) == null)
-	_cookies = new TreeMap();
+        _cookies = new TreeMap();
     return _cookies;
   }
 
@@ -128,7 +128,7 @@ public class RoxenRequest {
   {
     if(_supports == null)
       if((_supports = getSupports()) == null)
-	_supports = new HashSet();
+        _supports = new HashSet();
     return _supports;
   }
 
@@ -141,7 +141,7 @@ public class RoxenRequest {
   {
     if(_pragma == null)
       if((_pragma = getPragma()) == null)
-	_pragma = new HashSet();
+        _pragma = new HashSet();
     return _pragma;
   }
 
@@ -154,7 +154,7 @@ public class RoxenRequest {
   {
     if(_prestate == null)
       if((_prestate = getPrestate()) == null)
-	_prestate = new HashSet();
+        _prestate = new HashSet();
     return _prestate;
   }
 
@@ -191,9 +191,9 @@ public class RoxenRequest {
    */
 
   RoxenRequest(RoxenConfiguration _conf, String _rawURL, String _prot,
-	       String _clientprot, String _method, String _realfile,
-	       String _virtfile, String _raw, String _query,
-	       String _notQuery, String _remoteaddr, int _time)
+               String _clientprot, String _method, String _realfile,
+               String _virtfile, String _raw, String _query,
+               String _notQuery, String _remoteaddr, int _time)
   {
     conf = _conf;
     rawURL = _rawURL;

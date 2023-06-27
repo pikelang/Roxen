@@ -54,9 +54,9 @@
     </tr>
     <update-package-contents package="&form.install;">
       <tr>
-  	<td align="right" nowrap="nowrap">&_.size;</td>
-	<td>&nbsp;</td>
-  	<td nowrap="nowrap">&_.path;</tt></td>
+        <td align="right" nowrap="nowrap">&_.size;</td>
+        <td>&nbsp;</td>
+        <td nowrap="nowrap">&_.path;</tt></td>
       </tr>
     </update-package-contents>
   </table>

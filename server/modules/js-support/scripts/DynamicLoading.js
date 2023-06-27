@@ -95,23 +95,23 @@ function checkSafariLoad()
     if (fl.loaded == false) {
       var ifr = document.getElementById(fl.frameName);
       if (ifr.contentDocument.body != null) {
-	//  Since we don't know for sure when the new document has finished
-	//  loading (nope, adding an onLoad handler dynamically doesn't work)
-	//  we'll poll until the document length stabilizes.
-	//
-	//  FIXME: Doesn't handle popups which are zero bytes long.
-	var newlen = ifr.contentDocument.body.innerHTML.length;
-	if (!newlen || (newlen != fl.doclen)) {
-	  //  Not yet loaded
-	  fl.doclen = newlen;
-	  allLoaded = false;
-	} else {
-	  fl.loaded = true;
-	  fl.document = ifr.contentDocument;
-	  fl.onload(fl);
-	}
+        //  Since we don't know for sure when the new document has finished
+        //  loading (nope, adding an onLoad handler dynamically doesn't work)
+        //  we'll poll until the document length stabilizes.
+        //
+        //  FIXME: Doesn't handle popups which are zero bytes long.
+        var newlen = ifr.contentDocument.body.innerHTML.length;
+        if (!newlen || (newlen != fl.doclen)) {
+          //  Not yet loaded
+          fl.doclen = newlen;
+          allLoaded = false;
+        } else {
+          fl.loaded = true;
+          fl.document = ifr.contentDocument;
+          fl.onload(fl);
+        }
       } else
-	allLoaded = false;
+        allLoaded = false;
     }
   }
   if (allLoaded) {
@@ -161,7 +161,7 @@ function loadLayer(e, layer_name, src, properties, parent)
     popups.length--;
 
   var pos = new properties.LayerPosition(new TriggerCoord(e, 0), 0,
-					 properties);
+                                         properties);
   if (!properties.stay_put) {
     if (properties.dont_bound_popup)
       //  Need to move into final position at once
@@ -194,36 +194,36 @@ function loadLayer(e, layer_name, src, properties, parent)
     } else {
       //  Use ActiveX version for MSIE
       try {
-	req = new ActiveXObject("Msxml2.XMLHTTP");
+        req = new ActiveXObject("Msxml2.XMLHTTP");
       } catch (e) {
-	try {
-	  req = new ActiveXObject("Microsoft.XMLHTTP");
-	} catch (e) {
-	  req = false;
-	}
+        try {
+          req = new ActiveXObject("Microsoft.XMLHTTP");
+        } catch (e) {
+          req = false;
+        }
       }
     }
     if (req) {
       //  Define notification function
       req.onreadystatechange = function() {
-	if (req.readyState == 4)
-	  //  Safari 1.3/2.0 reports "undefined" for repeated requests to
-	  //  the same URL. It's also over-cached even if the server sets
-	  //  expire headers correctly, but not much we can do about that.
-	  if (req.status == 200 || req.status == undefined) {
-	    var o = getObject(layer_name);
-	    o.innerHTML = req.responseText;
-	    if (!properties.dont_bound_popup) {
-	      if (properties.stay_put)
-		boundPopup(layer_name);
-	      else
-		boundPopup(layer_name, pos.x, pos.y);
-	    }
-	    addPopup(layer_name, properties);
-	    captureMouseEvent(popupMove);
-	    show(layer_name);
-	    if (properties.show_callback) properties.show_callback(layer_name);
-	  }
+        if (req.readyState == 4)
+          //  Safari 1.3/2.0 reports "undefined" for repeated requests to
+          //  the same URL. It's also over-cached even if the server sets
+          //  expire headers correctly, but not much we can do about that.
+          if (req.status == 200 || req.status == undefined) {
+            var o = getObject(layer_name);
+            o.innerHTML = req.responseText;
+            if (!properties.dont_bound_popup) {
+              if (properties.stay_put)
+                boundPopup(layer_name);
+              else
+                boundPopup(layer_name, pos.x, pos.y);
+            }
+            addPopup(layer_name, properties);
+            captureMouseEvent(popupMove);
+            show(layer_name);
+            if (properties.show_callback) properties.show_callback(layer_name);
+          }
       }
 
       //  Send async request

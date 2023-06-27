@@ -10,8 +10,8 @@ constant action = "debug_info";
 
 LocaleString name= LOCALE(163,"Debug summary");
 LocaleString doc = LOCALE(164,
-		    "Shows a text file containing a configuration summary, suitable "
-		    "for support purposes.");
+                    "Shows a text file containing a configuration summary, suitable "
+                    "for support purposes.");
 
 int creation_date = time();
 
@@ -29,8 +29,8 @@ string get_cvs_versions(string dir)
       res+=get_cvs_versions(dir+"/"+fn);
     else
       res+=replace(dir+"/"+fn,
-		   ({"//", "\\\\"}),
-		   ({"/", "\\"}))+"\n";
+                   ({"//", "\\\\"}),
+                   ({"/", "\\"}))+"\n";
   }
   return res;
 }
@@ -78,9 +78,9 @@ string make_environment_summary()
   res+=sprintf("  %-30s %s\n", "Platform:", "NT");
 #else
   res+=sprintf("  %-30s %s %s %s\n", "Platform:",
-	       uname()->sysname||"",
-	       uname()->release||"",
-	       uname()->machine);
+               uname()->sysname||"",
+               uname()->release||"",
+               uname()->machine);
 #endif
 
   res += "\n";
@@ -112,9 +112,9 @@ string make_variables_summary(mapping vars)
   string res="";
   foreach(sort(indices(vars)), string varname)
     res+=sprintf("%s%-30s %s\n",
-		 vars[varname]->is_defaulted()?"  ":" *",
-		 varname+":",
-		 describe_var(vars[varname]));
+                 vars[varname]->is_defaulted()?"  ":" *",
+                 varname+":",
+                 describe_var(vars[varname]));
   return res;
 }
 
@@ -140,9 +140,9 @@ string make_configuration_summary(string configuration)
   foreach(values(c->modules), mixed modulecopies)
     foreach(values(modulecopies->copies), RoxenModule module)
       res += sprintf("%s%s%s\n\n",
-		     make_headline(module->module_identifier() || "?"),
-		     make_variables_summary(module->getvars()),
-		     indent(make_extra_module_info(module),1));
+                     make_headline(module->module_identifier() || "?"),
+                     make_variables_summary(module->getvars()),
+                     indent(make_extra_module_info(module),1));
   return res;
 }
 
@@ -182,11 +182,11 @@ mixed parse( RequestID id )
     mapping ret = Roxen.http_string_answer(res, "application/octet-stream");
     ret["extra_heads"] = ([]);
     Roxen.add_http_header(ret["extra_heads"], "Content-Disposition",
-			  "attachment; filename=debug-summary.txt");
+                          "attachment; filename=debug-summary.txt");
     return ret;
   }
   else if (id->variables->download &&
-	   id->variables->download == "debuglog") {
+           id->variables->download == "debuglog") {
     string res = "---";
     object st = file_stat(debuglog);
     if (st && st->isreg)
@@ -194,7 +194,7 @@ mixed parse( RequestID id )
     mapping ret = Roxen.http_string_answer(res, "application/octet-stream");
     ret["extra_heads"] = ([]);
     Roxen.add_http_header(ret["extra_heads"], "Content-Disposition",
-			  "attachment; filename="+((debuglog/"/")[-1]));
+                          "attachment; filename="+((debuglog/"/")[-1]));
     return ret;
   }
   

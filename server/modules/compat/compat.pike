@@ -29,7 +29,7 @@ LocaleString module_name   = LOCALE(3,"Tags: Old RXML Compatibility Module");
 LocaleString module_doc    =
   LOCALE(4,"Adds support for old (deprecated) RXML tags and attributes.") + " " +
   sprintf( LOCALE(1, "In order to function properly the ROXEN_COMPAT define must be "
-		  "set to 1.3 or lower. It is currently set to %1.1f."), ROXEN_COMPAT);
+                  "set to 1.3 or lower. It is currently set to %1.1f."), ROXEN_COMPAT);
 #else // ROXEN_COMPAT > 1.3
 LocaleString module_doc    =
   LOCALE(4,"Adds support for old (deprecated) RXML tags and attributes.");
@@ -40,28 +40,28 @@ string compat_level;
 void create()
 {
   defvar("logold", 0,
-	 LOCALE(5,"Log all old RXML calls in the event log."),
+         LOCALE(5,"Log all old RXML calls in the event log."),
          TYPE_FLAG,
          LOCALE(6,"If set, all calls through the backward compatibility code "
-		"will be logged in the event log, enabeling you to upgrade "
-		"those RXML tags."));
+                "will be logged in the event log, enabeling you to upgrade "
+                "those RXML tags."));
   defvar("enableall", 1,
-	 LOCALE(7,"Enable all tag compatibility"),
-	 TYPE_FLAG,
-	 LOCALE(8,"If not set support will only be enabled for tag modules "
-		"that you have added to your server. The drawback is that "
-		"you have to reload this module when you add a new module "
-		"that this has support for"));
+         LOCALE(7,"Enable all tag compatibility"),
+         TYPE_FLAG,
+         LOCALE(8,"If not set support will only be enabled for tag modules "
+                "that you have added to your server. The drawback is that "
+                "you have to reload this module when you add a new module "
+                "that this has support for"));
 
   defvar("disableall", 0,
-	 LOCALE(9,"Disable all tag compatibility"),
-	 TYPE_FLAG,
-	 LOCALE(10,"If set, all tag compatiblity will be disabled. The "
-		"parser will still run in compatibility mode though, so "
-		"you need not write proper XML. The drawback is some "
-		"decreased performance and disabled error checking. This "
-		"option overrides the 'Enable all tag compatibility' "
-		"setting."));
+         LOCALE(9,"Disable all tag compatibility"),
+         TYPE_FLAG,
+         LOCALE(10,"If set, all tag compatiblity will be disabled. The "
+                "parser will still run in compatibility mode though, so "
+                "you need not write proper XML. The drawback is some "
+                "decreased performance and disabled error checking. This "
+                "option overrides the 'Enable all tag compatibility' "
+                "setting."));
 
   compat_level = my_configuration() && my_configuration()->query("compat_level");
 }
@@ -99,7 +99,7 @@ void old_rxml_warning(RequestID id, string problem, string solution)
   if(query("logold"))
     report_warning(
       sprintf(LOCALE(11,"Old RXML in %s: contains %s. Use %s instead."),
-	      id->not_query,problem,solution)+"\n");
+              id->not_query,problem,solution)+"\n");
 }
 
 string status() {
@@ -110,8 +110,8 @@ string status() {
   if(compat_level >= "2.2")
     ret += "<font color='red'>" + LOCALE(2, "Warning!") + "</font> " +
       sprintf(LOCALE(39, "This sites compatibility level is set to %s, but it "
-		     "must be set to a value below 2.2. Change the value in the "
-		     "site global settings and restart the server."), compat_level);
+                     "must be set to a value below 2.2. Change the value in the "
+                     "site global settings and restart the server."), compat_level);
 
 return ret;
 }
@@ -120,13 +120,13 @@ return ret;
 // --------------------------- Tags and containers ------------------------------
 
 string container_preparse( string tag_name, mapping args, string contents,
-		     RequestID id )
+                     RequestID id )
 // Changes the parsing order by first parsing it's contents and then
 // morphing itself into another tag that gets parsed.
 {
   old_rxml_warning(id,LOCALE(14,"preparse tag"),LOCALE(15,"preparse attribute"));
   return make_container( args->tag, args - ([ "tag" : 1 ]),
-			 parse_rxml( contents, id ) );
+                         parse_rxml( contents, id ) );
 }
 
 array|string tag_append(string tag, mapping m, RequestID id)
@@ -136,21 +136,21 @@ array|string tag_append(string tag, mapping m, RequestID id)
       // Set variable to the value of a define
       id->variables[ m->variable ] += id->misc->defines[ m->define ]||"";
       old_rxml_warning(id, LOCALE(16,"define attribute in append tag"),
-		       LOCALE(17,"only variables"));
+                       LOCALE(17,"only variables"));
       return ({""});
     }
     if (m->other) {
       old_rxml_warning(id, LOCALE(18,"other attribute in append tag"),
-		       LOCALE(19,"only regular variables"));
+                       LOCALE(19,"only regular variables"));
       RXML.Context context=RXML.get_context();
       mixed value=context->user_get_var(m->variable, m->scope);
       // Append the value of a misc variable to an enityt variable.
       if (!id->misc->variables || !id->misc->variables[ m->other ])
-	RXML.run_error("Other variable doesn't exist.\n");
+        RXML.run_error("Other variable doesn't exist.\n");
       if (value)
-	value+=id->misc->variables[ m->other ];
+        value+=id->misc->variables[ m->other ];
       else
-	value=id->misc->variables[ m->other ];
+        value=id->misc->variables[ m->other ];
       context->user_set_var(m->variable, value, m->scope);
       return ({""});
     }
@@ -172,13 +172,13 @@ string|array tag_redirect(string tag, mapping m, RequestID id)
   foreach(indices(m), string s)
     if(m[s]==s && sizeof(s))
       switch (s[0]) {
-	case '+': prestate[s[1..]] = 1;
-      	          old_rxml_warning(id, LOCALE(51,"+prestate attribute"),
-				   LOCALE(52,"add=prestate"));
+        case '+': prestate[s[1..]] = 1;
+                  old_rxml_warning(id, LOCALE(51,"+prestate attribute"),
+                                   LOCALE(52,"add=prestate"));
                   break;
-	case '-': prestate[s[1..]] = 0;
-    	          old_rxml_warning(id, LOCALE(53,"-prestate attribute"),
-				   LOCALE(54,"drop=prestate"));
+        case '-': prestate[s[1..]] = 0;
+                  old_rxml_warning(id, LOCALE(53,"-prestate attribute"),
+                                   LOCALE(54,"drop=prestate"));
                   break;
       }
 
@@ -202,7 +202,7 @@ array(string) tag_referrer(string tag, mapping m, RequestID id)
 {
   NOCACHE();
   old_rxml_warning(id, tag+" "+LOCALE(20,"tag"),
-		   LOCALE(21,"&client.referrer; entity"));
+                   LOCALE(21,"&client.referrer; entity"));
   return({ sizeof(id->referer) ?
     (m->quote=="none"?id->referer:(html_encode_string(id->referer*""))) :
     (m->alt || "") });
@@ -216,16 +216,16 @@ string|array tag_set(string tag, mapping m, RequestID id)
       // Set variable to the value of a define
       context->user_set_var(m->variable, id->misc->defines[ m->define ], m->scope);
       old_rxml_warning(id, LOCALE(22,"define attribute in set tag"),
-		       LOCALE(17,"only variables"));
+                       LOCALE(17,"only variables"));
       return ({""});
     }
     if (m->other) {
       old_rxml_warning(id, LOCALE(23,"other attribute in set tag"),
-		       LOCALE(19,"only regular variables"));
+                       LOCALE(19,"only regular variables"));
       if (id->misc->variables && id->misc->variables[ m->other ]) {
-	// Set an entity variable to the value of a misc variable
-	context->user_set_var(m->variable, (string)id->misc->variables[m->other], m->scope);
-	return ({""});
+        // Set an entity variable to the value of a misc variable
+        context->user_set_var(m->variable, (string)id->misc->variables[m->other], m->scope);
+        return ({""});
       }
       RXML.run_error("Other variable doesn't exist.\n");
     }
@@ -233,7 +233,7 @@ string|array tag_set(string tag, mapping m, RequestID id)
       // Set an entity variable to the result of some evaluated RXML
       context->user_set_var(m->variable, parse_rxml(m->eval, id), m->scope);
       old_rxml_warning(id, LOCALE(24,"eval attribute in set tag"),
-		       LOCALE(25,"define variable"));
+                       LOCALE(25,"define variable"));
       return ({""});
     }
   }
@@ -254,7 +254,7 @@ array(string) tag_date(string q, mapping m, RequestID id)
   int t=(int)m["unix-time"] || (int)m->unix_time || time(1);
   if(m->unix_time)
     old_rxml_warning(id, LOCALE(28,"unix_time attribute in date tag"),
-		     LOCALE(29,"unix-time"));
+                     LOCALE(29,"unix-time"));
   if(m->day)    t += (int)m->day * 86400;
   if(m->hour)   t += (int)m->hour * 3600;
   if(m->minute) t += (int)m->minute * 60;
@@ -276,13 +276,13 @@ inline string do_replace(string s, mapping m, RequestID id)
 {
   return replace(s, indices(m), values(m));
   old_rxml_warning(id, LOCALE(30,"replace (A=B) in in insert tag"),
-		   LOCALE(31,"the replace tag"));
+                   LOCALE(31,"the replace tag"));
 }
 
 protected string compat_broken_http_encode_string(string f)
 {
   return replace(f, ({ "\000", " ", "\t", "\n", "\r", "%", "'", "\"" }),
-		 ({"%00", "%20", "%09", "%0A", "%0D", "%25", "%27", "%22"}));
+                 ({"%00", "%20", "%09", "%0A", "%0D", "%25", "%27", "%22"}));
 }
 
 string|array tag_insert(string tag,mapping m,RequestID id)
@@ -293,7 +293,7 @@ string|array tag_insert(string tag,mapping m,RequestID id)
 
   if(n=m->define || m->name) {
     old_rxml_warning(id, LOCALE(32,"define or name attribute in insert tag"),
-		     LOCALE(17,"only variables"));
+                     LOCALE(17,"only variables"));
     m_delete(m, "define");
     m_delete(m, "name");
     if(id->misc->defines[n])
@@ -313,7 +313,7 @@ string|array tag_insert(string tag,mapping m,RequestID id)
 
   if(n = m->other) {
     old_rxml_warning(id, LOCALE(33,"other attribute in insert tag"),
-		     LOCALE(19,"only regular variables"));
+                     LOCALE(19,"only regular variables"));
     if(stringp(id->misc[n]) || intp(id->misc[n]))
       return m->quote=="none"?(string)id->misc[n]:({ html_encode_string((string)id->misc[n]) });
     RXML.run_error("No such other variable ("+n+").\n");
@@ -323,13 +323,13 @@ string|array tag_insert(string tag,mapping m,RequestID id)
   {
     NOCACHE();
     old_rxml_warning(id, LOCALE(34,"cookies attribute in insert tag"),
-		     "<insert scope=cookie>");
+                     "<insert scope=cookie>");
     if(n!="cookies")
       return ({ html_encode_string(Array.map(indices(id->cookies),
-			  lambda(string s, mapping m)
-			  { return sprintf("%s=%O\n", s, m[s]); },
-					     id->cookies) * "\n")
-	      });
+                          lambda(string s, mapping m)
+                          { return sprintf("%s=%O\n", s, m[s]); },
+                                             id->cookies) * "\n")
+              });
     return ({ String.implode_nicely(indices(id->cookies)) });
   }
 
@@ -337,7 +337,7 @@ string|array tag_insert(string tag,mapping m,RequestID id)
   {
     NOCACHE();
     old_rxml_warning(id, LOCALE(35,"cookie attribute in insert tag"),
-		     LOCALE(36,"cookie entities"));
+                     LOCALE(36,"cookie entities"));
     m_delete(m, "cookie");
     if(id->cookies[n]) {
       string cookie=do_replace(id->cookies[n], m, id);
@@ -382,7 +382,7 @@ string|array container_apre(string tag, mapping m, string q, RequestID id)
 {
   if(m->add || m->drop) return ({1});
   old_rxml_warning(id, LOCALE(37,"prestates as atomic attributs in apre tag"),
-		   LOCALE(38,"add and drop"));
+                   LOCALE(38,"add and drop"));
 
   string href, s;
   array(string) foo;
@@ -422,8 +422,8 @@ string|array container_aconf(string tag, mapping m, string q, RequestID id)
 {
   if(m->add || m->drop) return ({1});
   old_rxml_warning(id,
-		   LOCALE(55,"config items as atomic attributes in aconf tag"),
-		   LOCALE(38,"add and drop"));
+                   LOCALE(55,"config items as atomic attributes in aconf tag"),
+                   LOCALE(38,"add and drop"));
 
   string href;
   mapping cookies = ([]);
@@ -465,7 +465,7 @@ array container_autoformat(string tag, mapping m, string c, RequestID id)
 {
   if(!m->pre) return ({1});
   old_rxml_warning(id, LOCALE(56,"pre attribute in <autoformat> tag"),
-		   LOCALE(57,"p attribute"));
+                   LOCALE(57,"p attribute"));
   m->p=1;
   m_delete(m, "pre");
   return ({1, tag, m, c});
@@ -475,8 +475,8 @@ array container_default(string tag, mapping m, string c, RequestID id)
 {
   if(!m->multi_separator) return ({1});
   old_rxml_warning(id,
-		   LOCALE(58,"multiseparator attribute in <default> tag"),
-		   LOCALE(59,"separator attribute"));
+                   LOCALE(58,"multiseparator attribute in <default> tag"),
+                   LOCALE(59,"separator attribute"));
   m+=(["separator":m->multi_separator]);
   m_delete(m, "multi_separator");
   return ({1, tag, m, c});
@@ -486,8 +486,8 @@ array container_recursive_output(string tag, mapping m, string c, RequestID id)
 {
   if(!m->multisep) return ({1});
   old_rxml_warning(id,
-		   LOCALE(60,"multisep attribute in <recursive-output> tag"),
-		   LOCALE(59,"separator attribute"));
+                   LOCALE(60,"multisep attribute in <recursive-output> tag"),
+                   LOCALE(59,"separator attribute"));
   m+=(["separator":m->multisep]);
   m_delete(m, "multisep");
   return ({1, tag, m, c});
@@ -514,7 +514,7 @@ array tag_countdown(string tag, mapping m, RequestID id)
       m[tmp[1]]=m[tmp[0]];
       m_delete(m, tmp[0]);
       old_rxml_warning(id, LOCALE(62,"<countdown> attribute")+" "+tmp[0],
-		       tmp[1]);
+                       tmp[1]);
     }
   }
 
@@ -528,7 +528,7 @@ array tag_countdown(string tag, mapping m, RequestID id)
       m->event=tmp;
       m_delete(m, tmp);
       old_rxml_warning(id, LOCALE(62,"<countdown> attribute")+" "+tmp,
-		       "event="+tmp);
+                       "event="+tmp);
     }
 
   if(m->nowp) {
@@ -541,12 +541,12 @@ array tag_countdown(string tag, mapping m, RequestID id)
 
   if(!m->display) {
     foreach(({"seconds","minutes","hours","days","weeks","months","years",
-	      "dogyears","combined","when"}), string tmp)
+              "dogyears","combined","when"}), string tmp)
       if(m[tmp]) {
-	m->display=tmp;
-	m_delete(m, tmp);
-	old_rxml_warning(id, LOCALE(62,"<countdown> attribute")+" "+tmp,
-			 "display="+tmp);
+        m->display=tmp;
+        m_delete(m, tmp);
+        old_rxml_warning(id, LOCALE(62,"<countdown> attribute")+" "+tmp,
+                         "display="+tmp);
       }
   }
 
@@ -559,37 +559,37 @@ array container_tablify(string tag, mapping m, string q, RequestID id)
     m->oddbgcolor=m->fgcolor0;
     m_delete(m, "fgcolor0");
     old_rxml_warning(id, LOCALE(63,"<tablify> attribute")+
-		     " fgcolor0","oddbgcolor");
+                     " fgcolor0","oddbgcolor");
   }
   if(m->fgcolor1) {
     m->evenbgcolor=m->fgcolor1;
     m_delete(m, "fgcolor1");
     old_rxml_warning(id, LOCALE(63,"<tablify> attribute")+
-		     " fgcolor1","evenbgcolor");
+                     " fgcolor1","evenbgcolor");
   }
   if(m->fgcolor) {
     m->textcolor=m->fgcolor;
     m_delete(m, "fgcolor");
     old_rxml_warning(id, LOCALE(63,"<tablify> attribute")+" fgcolor",
-		     "textcolor");
+                     "textcolor");
   }
   if(m->rowalign) {
     m->cellalign=m->rowalign;
     m_delete(m, "rowalign");
     old_rxml_warning(id, LOCALE(63,"<tablify> attribute")+" rowalign",
-		     "cellalign");
+                     "cellalign");
   }
   // When people have forgotten what bgcolor meant we can reuse it as evenbgcolor=oddbgcolor=m->bgcolor
   if(m->bgcolor) {
     m->bordercolor=m->bgcolor;
     m_delete(m, "bgcolor");
     old_rxml_warning(id, LOCALE(63,"<tablify> attribute")+" bgcolor",
-		     "bordercolor");
+                     "bordercolor");
   }
   if (m->preprocess || m->parse) {
     q = parse_rxml(q, id);
     old_rxml_warning(id, LOCALE(63,"<tablify> attribute")+
-		     (m->parse?" parse":" preprocess"),"preparse");
+                     (m->parse?" parse":" preprocess"),"preparse");
     m_delete(m, "parse");
     m_delete(m, "preprocess");
   }
@@ -598,7 +598,7 @@ array container_tablify(string tag, mapping m, string q, RequestID id)
 
 array tag_echo(string t, mapping m, RequestID id) {
   old_rxml_warning(id, "<echo> "+LOCALE(20,"tag"),
-		   LOCALE(64,"<insert> tag or entities"));
+                   LOCALE(64,"<insert> tag or entities"));
   return ({1,"!--#echo",m});
 }
 
@@ -649,19 +649,19 @@ mapping gtext_compat(mapping m, RequestID id) {
     m["magic-background"]=m->magicbg;
     m_delete(m, "magicbg");
     old_rxml_warning(id, LOCALE(65,"<gtext> attribute")+" magicbg",
-		     "magic-background");
+                     "magic-background");
   }
   if(m->turbulence) {
     m->bgturbulence=m->turbulence;
     m_delete(m, "turbulence");
     old_rxml_warning(id, LOCALE(65,"<gtext> attribute")+" turbulence",
-		     "bgturbulence");
+                     "bgturbulence");
   }
   if(m->font_size) {
     m["fontsize"]=m->font_size;
     m_delete(m, "font_size");
     old_rxml_warning(id, LOCALE(65,"<gtext> attribute")+"  font_size",
-		     "fontsize");
+                     "fontsize");
   }
   if(m->magic && !m["magic-fgcolor"])
     m->fgcolor=id->misc->defines->fgcolor;
@@ -696,8 +696,8 @@ string|array(string) tag_clientname(string tag, mapping m, RequestID id)
   if (sizeof(id->client)) {
     if(m->full) {
       old_rxml_warning(id ,"clientname "+LOCALE(20,"tag"),
-		       "&client.Fullname; "+LOCALE(68,"or")+
-		       " &client.fullname;");
+                       "&client.Fullname; "+LOCALE(68,"or")+
+                       " &client.fullname;");
       client=id->client * " ";
     }
     else {
@@ -748,12 +748,12 @@ array(string) tag_accept_language(string tag, mapping m, RequestID id)
 
   if(m->full) {
     old_rxml_warning(id ,"accept-language "+LOCALE(20,"tag"),
-		     "&client.accept_languages;");
+                     "&client.accept_languages;");
     return ({ html_encode_string(id->misc["accept-language"]*",") });
   }
   else {
     old_rxml_warning(id ,"accept-language "+LOCALE(20,"tag"),
-		     "&client.accept_language;");
+                     "&client.accept_language;");
     return ({ html_encode_string((id->misc["accept-language"][0]/";")[0]) });
   }
 }
@@ -800,7 +800,7 @@ array container_elif(string t, mapping m, string c, RequestID id) {
 array tag_set_max_cache(string t, mapping m, RequestID id) {
   if(m->time) {
     old_rxml_warning(id, LOCALE(43,"the <set-max-cache> attribute time"),
-		     LOCALE(44,"the time notation in <date>"));
+                     LOCALE(44,"the time notation in <date>"));
     id->misc->cacheable = (int)m->time;
     return ({""});
   }
@@ -821,7 +821,7 @@ array tag_set_cookie(string t, mapping m, RequestID id) {
 
 array tag_remove_cookie(string t, mapping m, RequestID id) {
   old_rxml_warning(id, "remove_cookie "+LOCALE(20,"tag"),
-		   "remove-cookie "+LOCALE(20,"tag"));
+                   "remove-cookie "+LOCALE(20,"tag"));
   return ({ 1, "remove-cookie", m });
 }
 
@@ -835,12 +835,12 @@ array|string container_if(string t, mapping m, string c, RequestID id) {
   int only_once;
   string rxml = Parser.HTML()
     ->add_tag("otherwise", lambda(){
-			     only_once++;
-			     return only_once==1?"</if><if false='1'>":0; })
+                             only_once++;
+                             return only_once==1?"</if><if false='1'>":0; })
     ->finish(c)->read();
   if(only_once)
     old_rxml_warning(id, "otherwise "+LOCALE(20,"tag"),
-		     "else "+LOCALE(20,"tag"));
+                     "else "+LOCALE(20,"tag"));
   else
     return ({ 1 });
 
@@ -864,8 +864,8 @@ array|string container_if(string t, mapping m, string c, RequestID id) {
 mapping query_tag_callers() {
   if(!enabled) start(1, my_configuration());
   mapping active=(["list-tags":tag_list_tags,
-		   "version":tag_version,
-		   "line":tag_line,
+                   "version":tag_version,
+                   "line":tag_line,
   ]);
   if(enabled->countdown) active->countdown=tag_countdown;
   if(enabled->counter) active->counter=tag_counter;

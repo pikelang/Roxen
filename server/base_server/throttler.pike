@@ -74,7 +74,7 @@ private void fill_bucket() {
     if( min_grant >= depth )
     {
       THROTTLING_DEBUG("Adjusting min_grant to depth ("+depth+") was "+
-		       min_grant);
+                       min_grant);
       min_grant = depth;
     }
   }
@@ -109,7 +109,7 @@ private void wake_up_some () {
 //handles a single request. It assumes it has been granted, otherwise
 //it will allow going over quota.
 private void grant (int howmuch, function callback, string host,
-		    array(mixed) cb_args ) {
+                    array(mixed) cb_args ) {
   THROTTLING_DEBUG("grant("+howmuch+"). bucket="+bucket);
   if (!callback) {
     THROTTLING_DEBUG("no callback. Exiting");
@@ -128,7 +128,7 @@ private void grant (int howmuch, function callback, string host,
 //when granted, callback will be called. First arg is the number
 //of allowed bytes. Then the hereby supplied args.
 void request (int howmuch, function(int,mixed ...:void) callback,
-	      string host, mixed ... cb_args) {
+              string host, mixed ... cb_args) {
   if (!fill_rate) { //no throttling is actually done
     THROTTLING_DEBUG("auto-grant (not throttling)");
     callback(howmuch,@cb_args);

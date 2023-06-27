@@ -51,7 +51,7 @@ Layers find_layers( string pattern, array layers )
     q = replace( q, "\x80000000", "," );
     foreach( layers, Image.Layer l )
       if( glob( q, (l->get_misc_value( "name" )||"Background") ) )
-	res += ({ l });
+        res += ({ l });
   }
   return res;
 }
@@ -74,7 +74,7 @@ array(int) find_layers_indexes( string pattern, array layers )
     foreach( layers, Image.Layer l )
     {
       if( glob( q, (l->get_misc_value( "name" )||"Background") ) )
-	res += ({ ii });
+        res += ({ ii });
       ii++;
     }
   }
@@ -136,7 +136,7 @@ Layers find_layers_id( string pattern, array layers )
   foreach( pattern/",", string q )
     foreach( layers, Image.Layer l )
       if( glob( q, (l->get_misc_value( "name" )||"Background") ) )
-	res += ({ l });
+        res += ({ l });
   return res;
 }
 
@@ -189,27 +189,27 @@ private array(float) xyreverse(array(float) a)
 protected object compile_handler = class {
     mapping(string:mixed) get_default_module() {
       return ([ "this_program":0,
-		// Kludge: These casts are to avoid that the type
-		// checker in pike 7.8 freaks out..
-		"`+": (function) `+,
-		"`-": (function) `-,
-		"`*": (function) `*,
-		"`/": (function) `/,
-		"`%": (function) `%,
-		"`&": (function) `&,
-		"`|": (function) `|,
-		"`^": (function) `^,
-		"`<": (function) `<,
-		"`>": (function) `>,
-		"`==": (function) `==,
-		"`<=": (function) `<=,
-		"`>=": (function) `>=,
-	     ]);
+                // Kludge: These casts are to avoid that the type
+                // checker in pike 7.8 freaks out..
+                "`+": (function) `+,
+                "`-": (function) `-,
+                "`*": (function) `*,
+                "`/": (function) `/,
+                "`%": (function) `%,
+                "`&": (function) `&,
+                "`|": (function) `|,
+                "`^": (function) `^,
+                "`<": (function) `<,
+                "`>": (function) `>,
+                "`==": (function) `==,
+                "`<=": (function) `<=,
+                "`>=": (function) `>=,
+             ]);
     }
 
     mixed resolv(string id, void|string fn, void|string ch) {
       throw( ({ sprintf("The symbol %O is not known.\n", id),
-		backtrace() }) );
+                backtrace() }) );
     }
   }();
 
@@ -222,9 +222,9 @@ mixed parse_sexpr(string what)
 
 
 array(array(float)) make_polygon_from_line(float h,
-					   array(float) coords,
-					   int|void cap_style,
-					   int|void join_style)
+                                           array(float) coords,
+                                           int|void cap_style,
+                                           int|void join_style)
 {
   int points = sizeof(coords)>>1;
   int closed = points>2 &&
@@ -251,110 +251,110 @@ array(array(float)) make_polygon_from_line(float h,
       /* Initial cap */
       switch(cap_style) {
       case CAP_BUTT:
-	left += ({ ox+sx, oy+sy });
-	right += ({ ox-sx, oy-sy });
-	break;
+        left += ({ ox+sx, oy+sy });
+        right += ({ ox-sx, oy-sy });
+        break;
       case CAP_PROJECTING:
-	left += ({ ox+sx-sy, oy+sy+sx });
-	right += ({ ox-sx-sy, oy-sy+sx });
-	break;
+        left += ({ ox+sx-sy, oy+sy+sx });
+        right += ({ ox-sx-sy, oy-sy+sx });
+        break;
       case CAP_ROUND:
-	array(float) initial_cap = allocate(CAPSTEPS*2);
-	
-	int j=0;
-	for(int i=0; i<CAPSTEPS; i++) {
-	  initial_cap[j++] = ox + sx*cap_cos_table[i] - sy*cap_sin_table[i];
-	  initial_cap[j++] = oy + sy*cap_cos_table[i] + sx*cap_sin_table[i];
-	}
-	right += initial_cap;
-	break;
+        array(float) initial_cap = allocate(CAPSTEPS*2);
+        
+        int j=0;
+        for(int i=0; i<CAPSTEPS; i++) {
+          initial_cap[j++] = ox + sx*cap_cos_table[i] - sy*cap_sin_table[i];
+          initial_cap[j++] = oy + sy*cap_cos_table[i] + sx*cap_sin_table[i];
+        }
+        right += initial_cap;
+        break;
       }
     }
 
     if(closed || point<points-1) {
       /* Interconnecting segment and join */
       if(point == points-2 && !closed)
-	/* Let the final cap generate the segment */
-	continue;
+        /* Let the final cap generate the segment */
+        continue;
 
       int t2 = (t==points-1 ? 0 : t+1);
       float t2x = coords[t2<<1], t2y = coords[(t2<<1)+1];
       float d2x = t2x - tx, d2y = t2y - ty, d2d = sqrt(d2x*d2x + d2y*d2y);
       float s2x, s2y;
       if(d2d > 0.0) {
-	s2x = (-d2y*h) / (d2d*2);
-	s2y = (d2x*h) / (d2d*2);
+        s2x = (-d2y*h) / (d2d*2);
+        s2y = (d2x*h) / (d2d*2);
       } else {
-	s2x = sx;
-	s2y = sy;
+        s2x = sx;
+        s2y = sy;
       }
 
       float mdiv = (sx*s2y-sy*s2x);
       if(mdiv == 0.0) {
-	left += ({ tx+sx, ty+sy, tx+s2x, ty+s2y });
-	right += ({ tx-sx, ty-sy, tx-s2x, ty-s2y });
+        left += ({ tx+sx, ty+sy, tx+s2x, ty+s2y });
+        right += ({ tx-sx, ty-sy, tx-s2x, ty-s2y });
       } else {
-	float m = (s2y*(sy-s2y)+s2x*(sx-s2x))/mdiv;
+        float m = (s2y*(sy-s2y)+s2x*(sx-s2x))/mdiv;
 
-	/* Left join */
+        /* Left join */
 
-	switch(mdiv<0.0 && join_style) {
-	case JOIN_MITER:
-	  left += ({ tx+sx+sy*m, ty+sy-sx*m });
-	  break;
-	case JOIN_BEVEL:
-	  left += ({ tx+sx, ty+sy, tx+s2x, ty+s2y });
-	  break;
-	case JOIN_ROUND:
-	  float theta0 = acos((sx*s2x+sy*s2y)/(sx*sx+sy*sy));
-	  for(int i=0; i<JOINSTEPS; i++) {
-	    float theta = theta0*i/(JOINSTEPS-1);
-	    float sint = sin(theta), cost = cos(theta);
-	    left += ({ tx+sx*cost+sy*sint, ty+sy*cost-sx*sint });
-	  }
-	  break;
-	}
+        switch(mdiv<0.0 && join_style) {
+        case JOIN_MITER:
+          left += ({ tx+sx+sy*m, ty+sy-sx*m });
+          break;
+        case JOIN_BEVEL:
+          left += ({ tx+sx, ty+sy, tx+s2x, ty+s2y });
+          break;
+        case JOIN_ROUND:
+          float theta0 = acos((sx*s2x+sy*s2y)/(sx*sx+sy*sy));
+          for(int i=0; i<JOINSTEPS; i++) {
+            float theta = theta0*i/(JOINSTEPS-1);
+            float sint = sin(theta), cost = cos(theta);
+            left += ({ tx+sx*cost+sy*sint, ty+sy*cost-sx*sint });
+          }
+          break;
+        }
 
-	/* Right join */
+        /* Right join */
 
-	switch(mdiv>0.0 && join_style) {
-	case JOIN_MITER:
-	  right += ({ tx-sx-sy*m, ty-sy+sx*m });
-	  break;
-	case JOIN_BEVEL:
-	  right += ({ tx-sx, ty-sy, tx-s2x, ty-s2y });
-	  break;
-	case JOIN_ROUND:
-	  float theta0 = -acos((sx*s2x+sy*s2y)/(sx*sx+sy*sy));
-	  for(int i=0; i<JOINSTEPS; i++) {
-	    float theta = theta0*i/(JOINSTEPS-1);
-	    float sint = sin(theta), cost = cos(theta);
-	    right += ({ tx-sx*cost-sy*sint, ty-sy*cost+sx*sint });
-	  }
-	  break;
-	}
+        switch(mdiv>0.0 && join_style) {
+        case JOIN_MITER:
+          right += ({ tx-sx-sy*m, ty-sy+sx*m });
+          break;
+        case JOIN_BEVEL:
+          right += ({ tx-sx, ty-sy, tx-s2x, ty-s2y });
+          break;
+        case JOIN_ROUND:
+          float theta0 = -acos((sx*s2x+sy*s2y)/(sx*sx+sy*sy));
+          for(int i=0; i<JOINSTEPS; i++) {
+            float theta = theta0*i/(JOINSTEPS-1);
+            float sint = sin(theta), cost = cos(theta);
+            right += ({ tx-sx*cost-sy*sint, ty-sy*cost+sx*sint });
+          }
+          break;
+        }
       }
     } else {
       /* Final cap */
       switch(cap_style) {
       case CAP_BUTT:
-	left += ({ ox+sx, oy+sy });
-	right += ({ ox-sx, oy-sy });
-	break;
+        left += ({ ox+sx, oy+sy });
+        right += ({ ox-sx, oy-sy });
+        break;
       case CAP_PROJECTING:
-	left += ({ ox+sx+sy, oy+sy-sx });
-	right += ({ ox-sx+sy, oy-sy-sx });
-	break;
+        left += ({ ox+sx+sy, oy+sy-sx });
+        right += ({ ox-sx+sy, oy-sy-sx });
+        break;
       case CAP_ROUND:
-	array(float) end_cap = allocate(CAPSTEPS*2);
-	
-	int j=0;
-	for(int i=0; i<CAPSTEPS; i++) {
-	  end_cap[j++] = ox - sx*cap_cos_table[i] + sy*cap_sin_table[i];
-	  end_cap[j++] = oy - sy*cap_cos_table[i] - sx*cap_sin_table[i];
-	}
-	right += end_cap;
-	break;
+        array(float) end_cap = allocate(CAPSTEPS*2);
+        
+        int j=0;
+        for(int i=0; i<CAPSTEPS; i++) {
+          end_cap[j++] = ox - sx*cap_cos_table[i] + sy*cap_sin_table[i];
+          end_cap[j++] = oy - sy*cap_cos_table[i] - sx*cap_sin_table[i];
+        }
+        right += end_cap;
+        break;
       }
     }
   }
@@ -437,17 +437,17 @@ class LazyImage( LazyImage parent )
     {
       case 'O':
 #ifdef GXML_DEBUG
-	string s1 = sprintf("%O", args) - "\n";
-	string s2 = parent?sprintf("(\n%O)", parent):"";
-	return replace(sprintf( "%s[%d:%d]: %s %s",
-				operation_name, object_id, refs, s1, s2 ),
-		       "\n", "\n  ");
+        string s1 = sprintf("%O", args) - "\n";
+        string s2 = parent?sprintf("(\n%O)", parent):"";
+        return replace(sprintf( "%s[%d:%d]: %s %s",
+                                operation_name, object_id, refs, s1, s2 ),
+                       "\n", "\n  ");
 #else
-	string s = parent?sprintf("(%O)", parent):"";
-	return sprintf( "%s%s", operation_name, s );
+        string s = parent?sprintf("(%O)", parent):"";
+        return sprintf( "%s%s", operation_name, s );
 #endif /* GXML_DEBUG */
       default:
-	error("Cannot sprintf image to '%c'\n", f );
+        error("Cannot sprintf image to '%c'\n", f );
     }
   }
 
@@ -489,28 +489,28 @@ class LazyImage( LazyImage parent )
       case "diff": return "difference";
 
       case "hue":
-	if( gimp ) return "hls_hue";
-	return "hue";
+        if( gimp ) return "hls_hue";
+        return "hue";
 
       case "saturation":
-	if( gimp ) return "hls_saturation";
-	return "saturation";
+        if( gimp ) return "hls_saturation";
+        return "saturation";
 
       case "lightness":
       case "luminence":
       case "luminosity":
       case "value":
-	if( gimp ) return "hls_lightness";
-	return "value";
+        if( gimp ) return "hls_lightness";
+        return "value";
       case "colorburn":  return "multiply"; // ps, not 100% correct
       case "colordodge": return "idivide"; // ps
       case "softlight":  return "hardlight"; // not correct. 
-	
+        
       case 0:
-	return "normal";
+        return "normal";
 
       default:
-	return from;
+        return from;
     }
   }
 
@@ -544,11 +544,11 @@ class LazyImage( LazyImage parent )
     int limit_index( int i )
     {
       if( i>sizeof(guides) )
-	i = sizeof(guides);
+        i = sizeof(guides);
       if( i < 0 && ( i < -sizeof(guides) ) )
-	i = -sizeof(guides);
+        i = -sizeof(guides);
       if( i == 0 )
-	i = 1;
+        i = 1;
       return i>0?i-1:i;
     };
     foreach( in, Image.Layer s )
@@ -556,75 +556,75 @@ class LazyImage( LazyImage parent )
     rguides = ({});
     foreach( guides, object g  )
       if( g->pos > 0 )
-	if( g->vertical == vertical )
-	  rguides |= ({ g->pos });
+        if( g->vertical == vertical )
+          rguides |= ({ g->pos });
     guides = sort( rguides );
     return guides[ limit_index( index ) ];
   }
 
   protected string handle_variable( string variable, Image.Image|Image.Layer cl,
-				    Layers l)
+                                    Layers l)
   {
     array(string) v = (variable/".");
     string exts_ind( mapping exts, int i)
     {
       switch( i )
       {
-	case 'l': return (string)exts->x0;
-	case 'r': return (string)exts->x1;
-	case 't': return (string)exts->y0;
-	case 'b': return (string)exts->y1;
-	case 'w': return (string)exts->w;
-	case 'h': return (string)exts->h;
+        case 'l': return (string)exts->x0;
+        case 'r': return (string)exts->x1;
+        case 't': return (string)exts->y0;
+        case 'b': return (string)exts->y1;
+        case 'w': return (string)exts->w;
+        case 'h': return (string)exts->h;
       }
     };
     switch( v[0] )
     {
       case "guides":
-	return (string)find_guide((int)v[-1], (v[1]=="v"),
-				  get_current_layers());
-	break;
+        return (string)find_guide((int)v[-1], (v[1]=="v"),
+                                  get_current_layers());
+        break;
 
       case "image":
-	return exts_ind( layers_extents( get_current_layers() ), v[1][0] );
+        return exts_ind( layers_extents( get_current_layers() ), v[1][0] );
 
       case "layer":
-	mapping exts = ([]);
-	if( !cl )
-	  RXML.parse_error( "No current layer (while parsing "+variable+" in "+
-			  operation_name+")\n");
-	if( cl->xoffset )
-	  exts = ([
-	    "x0":cl->xoffset(), "y0":cl->yoffset(),
-	    "w":cl->xsize(),    "h":cl->ysize(),
-	  ]);
-	else
-	  exts = ([ "w":cl->xsize(), "h":cl->ysize(), ]);
-	return exts_ind( exts, v[1][0] );
+        mapping exts = ([]);
+        if( !cl )
+          RXML.parse_error( "No current layer (while parsing "+variable+" in "+
+                          operation_name+")\n");
+        if( cl->xoffset )
+          exts = ([
+            "x0":cl->xoffset(), "y0":cl->yoffset(),
+            "w":cl->xsize(),    "h":cl->ysize(),
+          ]);
+        else
+          exts = ([ "w":cl->xsize(), "h":cl->ysize(), ]);
+        return exts_ind( exts, v[1][0] );
       case "layers":
-	if (!sizeof(l))
-	  RXML.parse_error( "No layers (while parsing "+variable+" in "+
-			    operation_name+")\n");
-	exts = ([]);
-	Layers layers = find_layers(v[1], l);
-	if (!sizeof(layers))
-	  RXML.parse_error( "No such layer (while parsing "+variable+" in "+
-			    operation_name+")\n");
-	Image.Layer tl = layers[0];
-	if( tl->xoffset )
-	  exts = ([
-	    "x0":tl->xoffset(), "y0":tl->yoffset(),
-	    "w":tl->xsize(),    "h":tl->ysize(),
-	  ]);
-	else
-	  exts = ([ "w":tl->xsize(), "h":tl->ysize(), ]);
-	return exts_ind( exts, v[2][0] );
+        if (!sizeof(l))
+          RXML.parse_error( "No layers (while parsing "+variable+" in "+
+                            operation_name+")\n");
+        exts = ([]);
+        Layers layers = find_layers(v[1], l);
+        if (!sizeof(layers))
+          RXML.parse_error( "No such layer (while parsing "+variable+" in "+
+                            operation_name+")\n");
+        Image.Layer tl = layers[0];
+        if( tl->xoffset )
+          exts = ([
+            "x0":tl->xoffset(), "y0":tl->yoffset(),
+            "w":tl->xsize(),    "h":tl->ysize(),
+          ]);
+        else
+          exts = ([ "w":tl->xsize(), "h":tl->ysize(), ]);
+        return exts_ind( exts, v[2][0] );
     }
   }
   
 
   protected string parse_variables( string from, Image.Layer|Image.Image cl,
-				    Layers l)
+                                    Layers l)
   {
     if( !from )
       return 0;
@@ -635,7 +635,7 @@ class LazyImage( LazyImage parent )
   }
   
   protected int translate_coordinate( string from, Image.Layer|Image.Image cl,
-				      Layers l)
+                                      Layers l)
   {
     if( !from ) return 0;
     return (int)parse_sexpr( parse_variables( from, cl, l ) );
@@ -646,11 +646,11 @@ class LazyImage( LazyImage parent )
     switch( lower_case(String.trim_all_whites(style||"")) )
     {
       default:
-	return CAP_BUTT;
+        return CAP_BUTT;
       case "round":
-	return CAP_ROUND;
+        return CAP_ROUND;
       case "projecting":
-	return CAP_PROJECTING;
+        return CAP_PROJECTING;
     }
   }
 
@@ -659,17 +659,17 @@ class LazyImage( LazyImage parent )
     switch( lower_case(String.trim_all_whites(style||"")) )
     {
       default:
-	return JOIN_MITER;
+        return JOIN_MITER;
       case "round":
-	return JOIN_ROUND;
+        return JOIN_ROUND;
       case "bevel":
-	return JOIN_BEVEL;
+        return JOIN_BEVEL;
     }
   }
 
   protected float translate_coordinate_f( string from,
-					  Image.Layer|Image.Image cl,
-					  Layers l)
+                                          Image.Layer|Image.Image cl,
+                                          Layers l)
   {
     if( !from ) return 0;
     return (float)parse_sexpr( parse_variables( from, cl, l ) );
@@ -717,22 +717,22 @@ class LazyImage( LazyImage parent )
     if( parent )
     {
       if( !ignore_parent ) {
-	/*Layers*/array(Image.Layer)|mapping res = parent->run(i+1);
-	if (mappingp(res))
-	  return res;
-	result = res;
+        /*Layers*/array(Image.Layer)|mapping res = parent->run(i+1);
+        if (mappingp(res))
+          return res;
+        result = res;
       }
       
       if( parent->refs > 1 ) 
       {
-	// only copy if the parent data is used in more places than this.
-	// It's sort of unessesary otherwise.
-	if( destructive->image || destructive->alpha )
-	  result = map( result, copy_layer_data );
-	else if( destructive->meta )
-	{
-	  result = map( result, copy_layer );
-	}
+        // only copy if the parent data is used in more places than this.
+        // It's sort of unessesary otherwise.
+        if( destructive->image || destructive->alpha )
+          result = map( result, copy_layer_data );
+        else if( destructive->meta )
+        {
+          result = map( result, copy_layer );
+        }
       }
       parent->unref();
     }
@@ -745,10 +745,10 @@ class LazyImage( LazyImage parent )
     werror("%20s:", operation_name);
     float t = gauge{
 #endif /* GXML_DEBUG */
-	/*Layers*/array(Image.Layer)|mapping process_res = process( result );
-	if (mappingp(process_res))
-	  return process_res;
-	result = process_res;
+        /*Layers*/array(Image.Layer)|mapping process_res = process( result );
+        if (mappingp(process_res))
+          return process_res;
+        result = process_res;
 #ifdef GXML_DEBUG
       };
     werror(" %.3f %.3f\n",t,(gethrtime()-t2)/1000000.0 );
@@ -805,8 +805,8 @@ class LazyImage( LazyImage parent )
   mapping encode()
   {
     mapping res = ([ "n": get_program_name(object_program(this_object())),
-		     "a": args,
-		     "r": refs ]);
+                     "a": args,
+                     "r": refs ]);
     if(parent)
       res["p"] = parent->encode();
     
@@ -826,36 +826,36 @@ class LoadImage
     {
       RequestID id = request_id->get();
       if(!id)
-	error("Oops, no request id object.");
+        error("Oops, no request id object.");
       
       //  Reject empty source paths for sufficiently high compat_level
       if ((args->src || "") == "") {
-	float compat_level = (float) id->conf->query("compat_level");
-	if (compat_level >= 5.2) {
-	  RXML.parse_error("Empty src attribute not allowed.\n");
-	}
+        float compat_level = (float) id->conf->query("compat_level");
+        if (compat_level >= 5.2) {
+          RXML.parse_error("Empty src attribute not allowed.\n");
+        }
       }
       
       array|mapping res;
 #if constant(Sitebuilder) && constant(Sitebuilder.sb_start_use_imagecache)
       //  Let SiteBuilder get a chance to decode its argument data
       if (Sitebuilder.sb_start_use_imagecache) {
-	Sitebuilder.sb_start_use_imagecache(args, id);
-	res = roxen.load_layers(args->src, id);
-	Sitebuilder.sb_end_use_imagecache(args, id);
+        Sitebuilder.sb_start_use_imagecache(args, id);
+        res = roxen.load_layers(args->src, id);
+        Sitebuilder.sb_end_use_imagecache(args, id);
       } else
 #endif
       {
-	res = roxen.load_layers(args->src, id);
+        res = roxen.load_layers(args->src, id);
       }
       if( !res || mappingp(res) ) {
-	if (mappingp(res) && res->error == Protocols.HTTP.HTTP_UNAUTH)
-	  return res;
-	RXML.parse_error("Failed to load specified image [%O]\n", args->src );
+        if (mappingp(res) && res->error == Protocols.HTTP.HTTP_UNAUTH)
+          return res;
+        RXML.parse_error("Failed to load specified image [%O]\n", args->src );
       }
       if( args->tiled )
-	foreach( res, Image.Layer l )
-	  l->set_tiled( 1 );
+        foreach( res, Image.Layer l )
+          l->set_tiled( 1 );
       return (layers||({}))+res;
     }
 
@@ -863,11 +863,11 @@ class LoadImage
     {
       RequestID id = RXML.get_context()->id;
       if( !args->src )
-	RXML.parse_error("Missing src attribute to load\n");
+        RXML.parse_error("Missing src attribute to load\n");
       if (args->src == "") {
-	float compat_level = (float) id->conf->query("compat_level");
-	if (compat_level >= 5.2)
-	  RXML.parse_error("Empty src attribute not allowed.\n");
+        float compat_level = (float) id->conf->query("compat_level");
+        if (compat_level >= 5.2)
+          RXML.parse_error("Empty src attribute not allowed.\n");
       }
       args->src = Roxen.fix_relative( args->src, id );
       Stat s = id->conf->try_stat_file( args->src, id );
@@ -876,15 +876,15 @@ class LoadImage
       // e.g. /internal-roxen-*.
       if (s)
       {
-	string fn = id->conf->real_file( args->src, id );
-	if( fn ) Roxen.add_cache_stat_callback( id, fn, s[ST_MTIME] );
-	args->stat = s[ ST_MTIME ];
+        string fn = id->conf->real_file( args->src, id );
+        if( fn ) Roxen.add_cache_stat_callback( id, fn, s[ST_MTIME] );
+        args->stat = s[ ST_MTIME ];
 #if constant(Sitebuilder) && constant(Sitebuilder.sb_prepare_imagecache)
-	//  The file we called try_stat_file() on above may be a SiteBuilder
-	//  file. If so we need to extend the argument data with e.g.
-	//  current language fork.
-	if (Sitebuilder.sb_prepare_imagecache)
-	  args = Sitebuilder.sb_prepare_imagecache(args, args->src, id);
+        //  The file we called try_stat_file() on above may be a SiteBuilder
+        //  file. If so we need to extend the argument data with e.g.
+        //  current language fork.
+        if (Sitebuilder.sb_prepare_imagecache)
+          args = Sitebuilder.sb_prepare_imagecache(args, args->src, id);
 #endif
       }
       return args;
@@ -906,14 +906,14 @@ class SelectLayers
       Layers res = l;
 
       if( args->include )
-	res = find_layers( args->include, l );
+        res = find_layers( args->include, l );
       else if( args["include-id"] )
-	res = find_layers_id( args["include-id"], l );
+        res = find_layers_id( args["include-id"], l );
 
       if( args->exclude )
-	res -= find_layers( args->exclude, res );
+        res -= find_layers( args->exclude, res );
       else if( args["exclude-id"] )
-	res -= find_layers_id( args["exclude-id"], l );
+        res -= find_layers_id( args["exclude-id"], l );
 
       return res;
     }
@@ -945,23 +945,23 @@ class Text
 
       
       if( args->layers )
-	on = find_layers_indexes( args->layers, l );
+        on = find_layers_indexes( args->layers, l );
       if( args["layers-id"] )
-	on = find_layers_id_indexes( args["layers-id"], l );
+        on = find_layers_id_indexes( args["layers-id"], l );
 
       string font =
-	(args->font||"default")+" "+
-	(translate_coordinate(args->fontsize,0,l)||32);
+        (args->font||"default")+" "+
+        (translate_coordinate(args->fontsize,0,l)||32);
       f = resolve_font( font );
 
       if( !f )
-	RXML.parse_error("Cannot find the font ("+font+")\n");
+        RXML.parse_error("Cannot find the font ("+font+")\n");
 
       mapping text_info;
       if(f->write_with_info)
-	text_info = f->write_with_info(parse_variables(args->text,0,l)/"\n");
+        text_info = f->write_with_info(parse_variables(args->text,0,l)/"\n");
       else
-	text_info = ([ "img" : f->write(@(parse_variables(args->text,0,l)/"\n")) ]);
+        text_info = ([ "img" : f->write(@(parse_variables(args->text,0,l)/"\n")) ]);
       Image.Image text = text_info->img;
       int overshoot = (int)text_info->overshoot;
 
@@ -970,52 +970,52 @@ class Text
       y -= overshoot;
 
       if( args["modulate-alpha"] )
-	foreach( on, int i )
-	{
-	  Image.Image a = l[i]->alpha();
-	  if( !a )
-	    a = l[i]->image()->copy()->clear(Image.Color.black);
-	  a = a->paste_alpha_color( text, 255,255,255, x, y );
-	  l[ i ]->set_image( l[ i ]->image(), l[i]->alpha() );
-	}
+        foreach( on, int i )
+        {
+          Image.Image a = l[i]->alpha();
+          if( !a )
+            a = l[i]->image()->copy()->clear(Image.Color.black);
+          a = a->paste_alpha_color( text, 255,255,255, x, y );
+          l[ i ]->set_image( l[ i ]->image(), l[i]->alpha() );
+        }
       else if( args["replace-alpha"] )
-	foreach( on, int i )
-	  l[i]->set_image( l[i]->image(),
-			   text->copy( 0,0,
-				       l[i]->image()->xsize()-1,
-				       l[i]->image()->ysize()-1) );
+        foreach( on, int i )
+          l[i]->set_image( l[i]->image(),
+                           text->copy( 0,0,
+                                       l[i]->image()->xsize()-1,
+                                       l[i]->image()->ysize()-1) );
       else
       {
-	ti = Image.Layer( Image.Image( text->xsize(), text->ysize(),
-				     translate_color( args->color ) )
-			  , text, translate_mode( args->mode ) );
-	ti->set_offset( x,y );
-	ti->set_misc_value( "name", parse_variables(args->name || args->text,
-						    ti,l));
+        ti = Image.Layer( Image.Image( text->xsize(), text->ysize(),
+                                     translate_color( args->color ) )
+                          , text, translate_mode( args->mode ) );
+        ti->set_offset( x,y );
+        ti->set_misc_value( "name", parse_variables(args->name || args->text,
+                                                    ti,l));
 
-	if( !on )  return (l||({})) + ({ ti });
-	foreach( on, int i )
-	{
-	  ti = copy_layer( ti );
-	  if( string n = l[i]->get_misc_value( "name" ) )
-	    ti->set_misc_value( "name", parse_variables(n,ti,l) );
-	  else
-	    ti->set_misc_value( "name",
-				parse_variables(args->name || args->text,
-						ti,l) );
-	  l[ i ] = ({ l[i], ti });
-	}
-	return Array.flatten( l );
+        if( !on )  return (l||({})) + ({ ti });
+        foreach( on, int i )
+        {
+          ti = copy_layer( ti );
+          if( string n = l[i]->get_misc_value( "name" ) )
+            ti->set_misc_value( "name", parse_variables(n,ti,l) );
+          else
+            ti->set_misc_value( "name",
+                                parse_variables(args->name || args->text,
+                                                ti,l) );
+          l[ i ] = ({ l[i], ti });
+        }
+        return Array.flatten( l );
       }
     }
 
     Arguments check_args( Arguments args )
     {
       if( args["modulate-alpha"] && !(args->on || args["on-id"] ) )
-	RXML.parse_error("Need 'layers' or 'layers-id' "
-		    "when using 'modulate-alpha'\n" );
+        RXML.parse_error("Need 'layers' or 'layers-id' "
+                    "when using 'modulate-alpha'\n" );
       if( !args->text )
-	RXML.parse_error("No text specified\n" );
+        RXML.parse_error("No text specified\n" );
 
       return args;
     }
@@ -1037,50 +1037,50 @@ class ReplaceAlpha
     {
       Layers victims = layers;
       if( args->layers )
-	victims = find_layers( args->layers, layers );
+        victims = find_layers( args->layers, layers );
       else if( args["layers-id"] )
-	victims = find_layers( args["layers-id"], layers );
+        victims = find_layers( args["layers-id"], layers );
 
       if( args->from || args["from-id"])
       {
-	Image.Image new_alpha;
-	Layers tmp;
-	if( args->from ) tmp = find_layers( args->from, layers );
-	if( args["from-id"] ) tmp = find_layers( args["from-id"], layers );
+        Image.Image new_alpha;
+        Layers tmp;
+        if( args->from ) tmp = find_layers( args->from, layers );
+        if( args["from-id"] ) tmp = find_layers( args["from-id"], layers );
 
-	if( !sizeof( tmp ) )
-	  args->color = "black";
-	else
-	{
-	  int xs, ys;
-	  // 1. Find size.
-	  foreach( victims, Image.Layer l )
-	  {
-	    if( l->xsize() > xs )
-	      xs = l->xsize();
-	    if( l->ysize() > ys )
-	      ys = l->ysize();
-	  }
-	  new_alpha = Image.Image( xs, ys );
-	  foreach( tmp, Image.Layer l )
-	    new_alpha->paste_alpha_color( l->alpha(), 255,255,255 );
-	  foreach( victims, Image.Layer l )
-	    l->set_image( l->image(),
-			  new_alpha->copy( 0,0,
-					   l->image()->xsize()-1,
-					   l->image()->ysize()-1 ) );
-	};
+        if( !sizeof( tmp ) )
+          args->color = "black";
+        else
+        {
+          int xs, ys;
+          // 1. Find size.
+          foreach( victims, Image.Layer l )
+          {
+            if( l->xsize() > xs )
+              xs = l->xsize();
+            if( l->ysize() > ys )
+              ys = l->ysize();
+          }
+          new_alpha = Image.Image( xs, ys );
+          foreach( tmp, Image.Layer l )
+            new_alpha->paste_alpha_color( l->alpha(), 255,255,255 );
+          foreach( victims, Image.Layer l )
+            l->set_image( l->image(),
+                          new_alpha->copy( 0,0,
+                                           l->image()->xsize()-1,
+                                           l->image()->ysize()-1 ) );
+        };
       }
       if( args->color )
       {
-	Image.Color c = translate_color( args->color );
-	foreach( victims, Image.Layer l ) {
-	  if (l->image()) {
-	    l->set_image( l->image(), l->image()->copy()->clear( c ) );
-	  } else {
-	    l->set_image(0, 0);
-	  }
-	}
+        Image.Color c = translate_color( args->color );
+        foreach( victims, Image.Layer l ) {
+          if (l->image()) {
+            l->set_image( l->image(), l->image()->copy()->clear( c ) );
+          } else {
+            l->set_image(0, 0);
+          }
+        }
       }
 
       return layers;
@@ -1089,7 +1089,7 @@ class ReplaceAlpha
     Arguments check_args( Arguments args )
     {
       if( !parent )
-	RXML.parse_error( "replace-alpha cannot be the toplevel node\n" );
+        RXML.parse_error( "replace-alpha cannot be the toplevel node\n" );
       return args;
     }
   };
@@ -1117,33 +1117,33 @@ class Shadow
       Image.Image shadow = Image.Image( e->w+grow*2, e->h+grow*2 );
 
       if( !sizeof( q ) )
-	return layers;
+        return layers;
       
       foreach( q, Image.Layer l )
-	shadow->paste_alpha_color( (l->alpha() ||
-				    l->image()->copy()->clear(255,255,255)),
-				   255,255,255,
-				   l->xoffset()-e->x0+grow,
-				   l->yoffset()-e->y0+grow );
+        shadow->paste_alpha_color( (l->alpha() ||
+                                    l->image()->copy()->clear(255,255,255)),
+                                   255,255,255,
+                                   l->xoffset()-e->x0+grow,
+                                   l->yoffset()-e->y0+grow );
       // Blur, if wanted.
 
       if( args->soft )
-	shadow = shadow->grey_blur( (int)args->soft );
+        shadow = shadow->grey_blur( (int)args->soft );
 
       Image.Layer sl = Image.Layer( shadow->copy()
-				    ->clear( translate_color( args->color ) ),
-				    shadow );
+                                    ->clear( translate_color( args->color ) ),
+                                    shadow );
       sl->set_offset( e->x0 + xoffset - grow,
-		      e->y0 + yoffset - grow );
+                      e->y0 + yoffset - grow );
       sl->set_misc_value( "name", (args->name ||
-				   q[0]->get_misc_value("name")+".shadow"));
+                                   q[0]->get_misc_value("name")+".shadow"));
       return (layers-q) + ({sl}) + q;
     }
     
     Arguments check_args( Arguments a )
     {
       if( !parent )
-	RXML.parse_error( "shadow cannot be the toplevel node\n" );
+        RXML.parse_error( "shadow cannot be the toplevel node\n" );
       return args;
     }
   };
@@ -1172,19 +1172,19 @@ class Join
     {
       switch( f )
       {
-	case 'O':
+        case 'O':
 #ifdef GXML_DEBUG
-	  return replace(sprintf( "%s[%d:%d]: %O (%{\n%O %})",
-				  operation_name, object_id, refs,
-				  args - ([ "contents":1 ]),
-				  args->contents),
-			 "\n", "\n  ");
+          return replace(sprintf( "%s[%d:%d]: %O (%{\n%O %})",
+                                  operation_name, object_id, refs,
+                                  args - ([ "contents":1 ]),
+                                  args->contents),
+                         "\n", "\n  ");
 #else
-	  return sprintf( "%s(%{%O, %})", operation_name, args->contents);
-	  
+          return sprintf( "%s(%{%O, %})", operation_name, args->contents);
+          
 #endif
-	default:
-	  error("Cannot sprintf image to '%c'\n", f );
+        default:
+          error("Cannot sprintf image to '%c'\n", f );
       }
     }
   };
@@ -1196,16 +1196,16 @@ class Join
     array(Layers|mapping) res_array = args->contents->run(i + 1);
     foreach(res_array, /*Layers*/array(Image.Layer)|mapping res)
       if (mappingp(res))
-	return res;
+        return res;
     return `+( ({}), @res_array );
   }
 
   mapping encode()
   {
     return ([ "n": get_program_name(object_program(this_object())),
-	      "a": args - ([ "contents": 1 ]),
-	      "p": args->contents->encode(),
-	      "r": refs ]);
+              "a": args - ([ "contents": 1 ]),
+              "p": args->contents->encode(),
+              "r": refs ]);
   }
   
 }
@@ -1225,9 +1225,9 @@ class SetLayerMode
       if( args->layers )       q = find_layers( args->layers, l );
       if( args["layers-id"] )  q = find_layers_id( args["layers-id"], l );
       if( catch {
-	q->set_mode( translate_mode( args->mode ) );
+        q->set_mode( translate_mode( args->mode ) );
       } )
-	RXML.parse_error( "The layer mode %O is not supported\n",args->mode );
+        RXML.parse_error( "The layer mode %O is not supported\n",args->mode );
       return l;
     }
 
@@ -1235,9 +1235,9 @@ class SetLayerMode
     Arguments check_args( Arguments args )
     {
       if( !args->mode )
-	RXML.parse_error( "Expected mode as an argument\n" );
+        RXML.parse_error( "Expected mode as an argument\n" );
       if( !parent )
-	RXML.parse_error( "set-layer-mode cannot be the toplevel node\n" );
+        RXML.parse_error( "set-layer-mode cannot be the toplevel node\n" );
       return args;
     }
   };
@@ -1262,17 +1262,17 @@ class MoveLayer
       int y = translate_coordinate( args->y,0,l );
       
       if( !args["absolute"] )
-	foreach( q, Image.Layer l )
-	  l->set_offset(x+l->xoffset(), y+l->yoffset());
+        foreach( q, Image.Layer l )
+          l->set_offset(x+l->xoffset(), y+l->yoffset());
       else
-	q->set_offset( x, y );
+        q->set_offset( x, y );
       return l;
     }
     
     Arguments check_args( Arguments args )
     {
       if( !parent )
-	RXML.parse_error( "move-layer cannot be the toplevel node\n" );
+        RXML.parse_error( "move-layer cannot be the toplevel node\n" );
       return args;
     }
   };
@@ -1297,23 +1297,23 @@ class NewLayer
     {
       Image.Layer new_layer = Image.Layer();
       int xs = translate_coordinate( args->xsize,0,l ),
-	  ys = translate_coordinate( args->ysize,0,l );
+          ys = translate_coordinate( args->ysize,0,l );
 
       Image.Image i = Image.Image( xs,ys,
-				   translate_color(args->color||"000" ));
+                                   translate_color(args->color||"000" ));
       Image.Image a = Image.Image( xs,ys,
-				   args->transparent?
-				   Image.Color.black:
-				   Image.Color.white );
+                                   args->transparent?
+                                   Image.Color.black:
+                                   Image.Color.white );
       new_layer->set_misc_value( "name", args->name||"-" );
 
       new_layer->set_image( i, a );
       new_layer->set_mode( translate_mode( args->mode ) );
       int xo = translate_coordinate( args->xoffset, new_layer, l),
-	  yo = translate_coordinate( args->yoffset, new_layer, l);
+          yo = translate_coordinate( args->yoffset, new_layer, l);
       new_layer->set_offset( xo, yo );
       if( args->tiled )
-	new_layer->set_tiled( 1 );
+        new_layer->set_tiled( 1 );
       return (l||({}))+({new_layer});
     }
   };
@@ -1337,27 +1337,27 @@ class Crop
 
       foreach( layers, Image.Layer l )
       {
-	if( l->tiled() )
-	  continue;
-	if( l->xoffset() > x0+width ||
-	    l->yoffset() > y0+height ) // totally outside the image.
-	  layers -= ({ l });
-	else
-	{
-	  /* Do this the easy way... + and - are hard. :-) */
-	  Image.Image i = Image.Image( width, height );
-	  Image.Image a = Image.Image( width, height );
-	  if( l->image() )
-	    i = i->paste( l->image(), l->xoffset()-x0, l->yoffset()-y0 );
+        if( l->tiled() )
+          continue;
+        if( l->xoffset() > x0+width ||
+            l->yoffset() > y0+height ) // totally outside the image.
+          layers -= ({ l });
+        else
+        {
+          /* Do this the easy way... + and - are hard. :-) */
+          Image.Image i = Image.Image( width, height );
+          Image.Image a = Image.Image( width, height );
+          if( l->image() )
+            i = i->paste( l->image(), l->xoffset()-x0, l->yoffset()-y0 );
 
-	  if( l->alpha() )
-	    a = a->paste( l->alpha(), l->xoffset()-x0, l->yoffset()-y0 );
-	  else
-	    a->paste( l->image()->copy()->clear( Image.Color.white ),
-		      l->xoffset()-x0, l->yoffset()-y0 );
-	  l->set_image( i, a );
-	  l->set_offset( 0, 0 );
-	}
+          if( l->alpha() )
+            a = a->paste( l->alpha(), l->xoffset()-x0, l->yoffset()-y0 );
+          else
+            a->paste( l->image()->copy()->clear( Image.Color.white ),
+                      l->xoffset()-x0, l->yoffset()-y0 );
+          l->set_image( i, a );
+          l->set_offset( 0, 0 );
+        }
       }
       return layers;
     }
@@ -1365,9 +1365,9 @@ class Crop
     Arguments check_args( Arguments args )
     {
       if( !args->x || !args->y )
-	RXML.parse_error("Need 'x' and 'y' arguments for crop\n" );
+        RXML.parse_error("Need 'x' and 'y' arguments for crop\n" );
       if( !parent )
-	RXML.parse_error( "crop cannot be the toplevel node\n" );
+        RXML.parse_error( "crop cannot be the toplevel node\n" );
       return args;
     }
   };
@@ -1390,47 +1390,47 @@ class Scale
     {
       Layers victims = layers;
       if( args->layers )
-	victims = find_layers( args->layers, layers );
+        victims = find_layers( args->layers, layers );
       else if( args["layers-id"] )
-	victims = find_layers( args["layers-id"], layers );
+        victims = find_layers( args["layers-id"], layers );
 
       int|float width, height, max_width, max_height;
       if( args->mode == "relative" )
       {
-	width = translate_coordinate_f( args->width, 0, layers ) / 100.0;
-	height = translate_coordinate_f( args->height, 0, layers ) / 100.0;
+        width = translate_coordinate_f( args->width, 0, layers ) / 100.0;
+        height = translate_coordinate_f( args->height, 0, layers ) / 100.0;
       }
       else
       {
-	width = translate_coordinate( args->width, 0, layers );
-	height = translate_coordinate( args->height, 0, layers );
+        width = translate_coordinate( args->width, 0, layers );
+        height = translate_coordinate( args->height, 0, layers );
       }
       if (args["max-width"])
-	max_width = translate_coordinate( args["max-width"], 0, layers );
+        max_width = translate_coordinate( args["max-width"], 0, layers );
       if (args["max-height"])
-	max_height = translate_coordinate( args["max-height"], 0, layers );
+        max_height = translate_coordinate( args["max-height"], 0, layers );
       
       foreach( victims, Image.Layer l )
       {
-	if( max_width || max_height )
-	{
-	  if (max_width && max_height)
-	  {
-	    if ( max_width / (float)l->xsize() < max_height / (float)l->ysize() )
-	      max_height = 0;
-	    else
-	      max_width = 0;
-	  }
-	  max_width = min( max_width, l->xsize() );
-	  max_height = min( max_height, l->ysize() );
-	}
+        if( max_width || max_height )
+        {
+          if (max_width && max_height)
+          {
+            if ( max_width / (float)l->xsize() < max_height / (float)l->ysize() )
+              max_height = 0;
+            else
+              max_width = 0;
+          }
+          max_width = min( max_width, l->xsize() );
+          max_height = min( max_height, l->ysize() );
+        }
 
-	Image.Image i = l->image(), a = l->alpha();
-	if( i )
-	  i = i->scale( max_width||width, max_height||height );
-	if( a )
-	  a = a->scale( max_width||width, max_height||height );
-	l->set_image( i, a );
+        Image.Image i = l->image(), a = l->alpha();
+        if( i )
+          i = i->scale( max_width||width, max_height||height );
+        if( a )
+          a = a->scale( max_width||width, max_height||height );
+        l->set_image( i, a );
       }
       return layers;
     }
@@ -1438,11 +1438,11 @@ class Scale
     Arguments check_args( Arguments args )
     {
       if( !args->width && !args->height &&
-	  !args["max-width"] && !args["max-height"] )
-	RXML.parse_error("Either 'width' or 'height' arguments "
-			 "must be specified\n" );
+          !args["max-width"] && !args["max-height"] )
+        RXML.parse_error("Either 'width' or 'height' arguments "
+                         "must be specified\n" );
       if( !parent )
-	RXML.parse_error( "scale cannot be the toplevel node\n" );
+        RXML.parse_error( "scale cannot be the toplevel node\n" );
       return args;
     }
   };
@@ -1459,19 +1459,19 @@ class Rotate
     {
       Layers victims = layers;
       if( args->layers )
-	victims = find_layers( args->layers, layers );
+        victims = find_layers( args->layers, layers );
       else if( args["layers-id"] )
-	victims = find_layers( args["layers-id"], layers );
+        victims = find_layers( args["layers-id"], layers );
 
       float r = (float)args->degrees;
       foreach( victims, Image.Layer l )
       {
-	Image.Image i = l->image(), a = l->alpha();
-	if( i )
-	  i = i->rotate( r );
-	if( a )
-	  a = a->rotate( r );
-	l->set_image( i, a );
+        Image.Image i = l->image(), a = l->alpha();
+        if( i )
+          i = i->rotate( r );
+        if( a )
+          a = a->rotate( r );
+        l->set_image( i, a );
       }
       return layers;
     }
@@ -1479,9 +1479,9 @@ class Rotate
     Arguments check_args( Arguments args )
     {
       if( !args->degrees )
-	RXML.parse_error( "Required argument 'degrees' missing.\n" );
+        RXML.parse_error( "Required argument 'degrees' missing.\n" );
       if( !parent )
-	RXML.parse_error( "rotate cannot be the toplevel node\n" );
+        RXML.parse_error( "rotate cannot be the toplevel node\n" );
       return args;
     }
   };
@@ -1501,28 +1501,28 @@ class GreyBlur
       Layers victims = layers;
 
       if( args->layers )
-	victims = find_layers( args->layers, layers );
+        victims = find_layers( args->layers, layers );
       else if( args["layers-id"] )
-	victims = find_layers( args["layers-id"], layers );
+        victims = find_layers( args["layers-id"], layers );
 
 
       foreach( victims, Image.Layer l )
       {
-	Image.Image i;
-	if( args->what == "alpha" )
-	  i = l->alpha() || l->image()->copy()->clear(255,255,255);
-	else
-	  i = l->image();
+        Image.Image i;
+        if( args->what == "alpha" )
+          i = l->alpha() || l->image()->copy()->clear(255,255,255);
+        else
+          i = l->image();
 
-	if( !i )
-	  continue;
+        if( !i )
+          continue;
 
-	i = i->grey_blur( t );
+        i = i->grey_blur( t );
 
-	if( args->what == "alpha" )
-	  l->set_image( l->image(), i );
-	else
-	  l->set_image( i, l->alpha() );
+        if( args->what == "alpha" )
+          l->set_image( l->image(), i );
+        else
+          l->set_image( i, l->alpha() );
       }
 
       return layers;
@@ -1531,7 +1531,7 @@ class GreyBlur
     Arguments check_args( Arguments args )
     {
       if( !parent )
-	RXML.parse_error( "blur cannot be the toplevel node\n" );
+        RXML.parse_error( "blur cannot be the toplevel node\n" );
       return args;
     }
   };
@@ -1562,31 +1562,31 @@ class Blur
       Layers victims = layers;
 
       if( args->layers )
-	victims = find_layers( args->layers, layers );
+        victims = find_layers( args->layers, layers );
       else if( args["layers-id"] )
-	victims = find_layers( args["layers-id"], layers );
+        victims = find_layers( args["layers-id"], layers );
 
 
       foreach( victims, Image.Layer l )
       {
-	Image.Image i;
-	if( args->what == "alpha" )
-	  i = l->alpha() || l->image()->copy()->clear(255,255,255);
-	else
-	  i = l->image();
+        Image.Image i;
+        if( args->what == "alpha" )
+          i = l->alpha() || l->image()->copy()->clear(255,255,255);
+        else
+          i = l->image();
 
-	if( !i )
-	  continue;
+        if( !i )
+          continue;
 
-	if( d == 3 )
-	  i = i->blur( t );
-	else for( int tt; tt<t; tt++ )
-	  i = i->apply_matrix( mt );
+        if( d == 3 )
+          i = i->blur( t );
+        else for( int tt; tt<t; tt++ )
+          i = i->apply_matrix( mt );
 
-	if( args->what == "alpha" )
-	  l->set_image( l->image(), i );
-	else
-	  l->set_image( i, l->alpha() );
+        if( args->what == "alpha" )
+          l->set_image( l->image(), i );
+        else
+          l->set_image( i, l->alpha() );
       }
 
       return layers;
@@ -1595,7 +1595,7 @@ class Blur
     Arguments check_args( Arguments args )
     {
       if( !parent )
-	RXML.parse_error( "blur cannot be the toplevel node\n" );
+        RXML.parse_error( "blur cannot be the toplevel node\n" );
       return args;
     }
   };
@@ -1611,43 +1611,43 @@ class X									\
     Layers process( Layers layers )					\
     {									\
       Layers victims = layers;						\
-									\
+                                                                        \
       if( args->layers )						\
-	victims = find_layers( args->layers, layers );			\
+        victims = find_layers( args->layers, layers );			\
       else if( args["layers-id"] )					\
-	victims = find_layers( args["layers-id"], layers );		\
-									\
-									\
+        victims = find_layers( args["layers-id"], layers );		\
+                                                                        \
+                                                                        \
       foreach( victims, Image.Layer l )					\
       {									\
-	Image.Image i;							\
-	foreach((args->what=="both"?({"image","alpha"}):({args->what})),\
-	        string what)                                            \
+        Image.Image i;							\
+        foreach((args->what=="both"?({"image","alpha"}):({args->what})),\
+                string what)                                            \
         {                                                               \
-	if( what == "alpha" )					        \
-	  i = l->alpha() || l->image()->copy()->clear(255,255,255);	\
-	else								\
-	  i = l->image();						\
-									\
-	if( !i )							\
-	  continue;							\
-									\
-	i = i->Z( A );							\
-									\
-	if( what == "alpha" )					        \
-	  l->set_image( l->image(), i );				\
-	else								\
-	  l->set_image( i, l->alpha() );				\
-	}                                                               \
+        if( what == "alpha" )					        \
+          i = l->alpha() || l->image()->copy()->clear(255,255,255);	\
+        else								\
+          i = l->image();						\
+                                                                        \
+        if( !i )							\
+          continue;							\
+                                                                        \
+        i = i->Z( A );							\
+                                                                        \
+        if( what == "alpha" )					        \
+          l->set_image( l->image(), i );				\
+        else								\
+          l->set_image( i, l->alpha() );				\
+        }                                                               \
       }									\
-									\
+                                                                        \
       return layers;							\
     }									\
-									\
+                                                                        \
     Arguments check_args( Arguments args )				\
     {									\
       if( !parent )							\
-	RXML.parse_error( Y+" cannot be the toplevel node\n" );		\
+        RXML.parse_error( Y+" cannot be the toplevel node\n" );		\
       return args;                                                      \
     }									\
   };									\
@@ -1655,23 +1655,23 @@ class X									\
 
 //! @ignore
 BASIC_I_OR_A_OPERATION( Gamma, "gamma", gamma,
-			translate_coordinate_f(args->gamma,0,layers) );
+                        translate_coordinate_f(args->gamma,0,layers) );
 BASIC_I_OR_A_OPERATION( Invert, "invert", invert, );
 BASIC_I_OR_A_OPERATION( Grey,   "grey", grey, );
 BASIC_I_OR_A_OPERATION( Color,  "color", color,
-			@translate_color(args->color)->rgb());
+                        @translate_color(args->color)->rgb());
 BASIC_I_OR_A_OPERATION( Clear,  "clear", clear,
-			translate_color(args->color));
+                        translate_color(args->color));
 BASIC_I_OR_A_OPERATION( MirrorX, "mirror-x", mirrorx, );
 BASIC_I_OR_A_OPERATION( MirrorY, "mirror-y", mirrory, );
 BASIC_I_OR_A_OPERATION( HSV2RGB, "hsv-to-rgb", hsv_to_rgb, );
 BASIC_I_OR_A_OPERATION( RGB2HSV, "rgb-to-hsv", rgb_to_hsv, );
 BASIC_I_OR_A_OPERATION( Distance,"color-distance",distancesq,
-			translate_color(args->color));
+                        translate_color(args->color));
 BASIC_I_OR_A_OPERATION( SelectFrom,"select-from",select_from,
-			@({translate_coordinate( args->x,0,layers ),
-			   translate_coordinate( args->y,0,layers ),
-			   (int)args["edge-value"] % 256 }));
+                        @({translate_coordinate( args->x,0,layers ),
+                           translate_coordinate( args->y,0,layers ),
+                           (int)args["edge-value"] % 256 }));
 //! @endignore
 
 class Expand
@@ -1686,32 +1686,32 @@ class Expand
     {
       Layers victims = layers;
       if( !layers )
-	RXML.parse_error( "Expand cannot be the toplevel node\n");
+        RXML.parse_error( "Expand cannot be the toplevel node\n");
       
       if( args->layers )
-	victims = find_layers( args->layers, layers );
+        victims = find_layers( args->layers, layers );
       else if( args["layers-id"] )
-	victims = find_layers( args["layers-id"], layers );
+        victims = find_layers( args["layers-id"], layers );
 
       mapping m = layers_extents( layers );
       
       foreach( victims, Image.Layer l )
       {
-	if( l->tiled() )
-	  continue;
-	Image.Image i = Image.Image( m->w, m->h );
-	Image.Image a = Image.Image( m->w, m->h );
+        if( l->tiled() )
+          continue;
+        Image.Image i = Image.Image( m->w, m->h );
+        Image.Image a = Image.Image( m->w, m->h );
 
-	if( l->image() )
-	  i = i->paste( l->image(), l->xoffset()-m->x0, l->yoffset()-m->y0 );
+        if( l->image() )
+          i = i->paste( l->image(), l->xoffset()-m->x0, l->yoffset()-m->y0 );
 
-	if( l->alpha() )
-	  a = a->paste( l->alpha(), l->xoffset()-m->x0, l->yoffset()-m->y0 );
-	else
-	  a->paste( l->image()->copy()->clear( Image.Color.white ),
-		    l->xoffset()-m->x0, l->yoffset()-m->y0 );
-	l->set_image( i, a );
-	l->set_offset( 0, 0 );
+        if( l->alpha() )
+          a = a->paste( l->alpha(), l->xoffset()-m->x0, l->yoffset()-m->y0 );
+        else
+          a->paste( l->image()->copy()->clear( Image.Color.white ),
+                    l->xoffset()-m->x0, l->yoffset()-m->y0 );
+        l->set_image( i, a );
+        l->set_offset( 0, 0 );
       }
       return layers;
     }
@@ -1719,7 +1719,7 @@ class Expand
     Arguments check_args( Arguments args )
     {
       if( !parent )
-	RXML.parse_error( "expand cannot be the toplevel node\n" );
+        RXML.parse_error( "expand cannot be the toplevel node\n" );
       return args;
     }
   };
@@ -1743,86 +1743,86 @@ class Line
       if( args["layers-id"] ) on = find_layers_id( args["layers-id"], layers );
       
       int x = translate_coordinate( args->xsize, 0, layers ),
-	  y = translate_coordinate( args->ysize, 0, layers );
+          y = translate_coordinate( args->ysize, 0, layers );
       mapping ext;
 
       if( on )
       {
-	ext = layers_extents( on );
-	x = ext->x1;
-	y = ext->y1;
+        ext = layers_extents( on );
+        x = ext->x1;
+        y = ext->y1;
       }
 
       if( x && y )
-	pi = Image.Image( x, y );
+        pi = Image.Image( x, y );
 
       foreach(args->coordinates/",", string c)
-	coordinates += ({
-	  translate_coordinate_f( c, pi, layers )
-	});
+        coordinates += ({
+          translate_coordinate_f( c, pi, layers )
+        });
 
       if( args["coordinate-system"] )
       {
-	float a, b, c, d;
-	if( sscanf( parse_variables(args["coordinate-system"], pi, layers),
-		    "%f,%f-%f,%f", a, b, c, d ) != 4 )
-	  RXML.parse_error("Illegal syntax for coordinate-system. "
-			   "Expected x0,y0-x1,y1\n");
+        float a, b, c, d;
+        if( sscanf( parse_variables(args["coordinate-system"], pi, layers),
+                    "%f,%f-%f,%f", a, b, c, d ) != 4 )
+          RXML.parse_error("Illegal syntax for coordinate-system. "
+                           "Expected x0,y0-x1,y1\n");
 
-	for( int i=0; i<sizeof( coordinates ); i+=2 )
-	{
-	  coordinates[i]  = virtual_to_screen( coordinates[i], a, c, x );
-	  coordinates[i+1] = (y-virtual_to_screen( coordinates[i+1], b, d, y ));
-	}
+        for( int i=0; i<sizeof( coordinates ); i+=2 )
+        {
+          coordinates[i]  = virtual_to_screen( coordinates[i], a, c, x );
+          coordinates[i+1] = (y-virtual_to_screen( coordinates[i+1], b, d, y ));
+        }
       }
 
       if( !pi )
       {
-	foreach( coordinates / 2, array s )
-	{
-	  if( (int)s[0] > x )	x = (int)s[0];
-	  if( (int)s[1] > y )   y = (int)s[1];
-	}
-	pi = Image.Image( x, y );
+        foreach( coordinates / 2, array s )
+        {
+          if( (int)s[0] > x )	x = (int)s[0];
+          if( (int)s[1] > y )   y = (int)s[1];
+        }
+        pi = Image.Image( x, y );
       }
 
       pi->setcolor( 255,255,255 );
 
       array(array(float)) coords =
-	make_polygon_from_line( translate_coordinate_f( args->width||"1.0",pi,
-							layers ),
-				coordinates,
-				translate_cap_style( args->cap ),
-				translate_join_style( args->join ) );
-				
+        make_polygon_from_line( translate_coordinate_f( args->width||"1.0",pi,
+                                                        layers ),
+                                coordinates,
+                                translate_cap_style( args->cap ),
+                                translate_join_style( args->join ) );
+                                
       
       pi = pi->polygone( @coords );
 
       if( args->opacity )
-	pi *= ((float)args->opacity)/100.0;
-	
+        pi *= ((float)args->opacity)/100.0;
+        
       
       if( !on )
       {
-	Image.Layer l = Image.Layer( );
-	l->set_misc_value( "name",
-			   parse_variables(args->name || "poly", pi, layers) );
-	l->set_offset( translate_coordinate( args->xoffset, pi, layers ),
-		       translate_coordinate( args->yoffset, pi, layers ) );
+        Image.Layer l = Image.Layer( );
+        l->set_misc_value( "name",
+                           parse_variables(args->name || "poly", pi, layers) );
+        l->set_offset( translate_coordinate( args->xoffset, pi, layers ),
+                       translate_coordinate( args->yoffset, pi, layers ) );
 
-	l->set_image( Image.Image( x,y, translate_color( args->color ) ),
-		      pi );
-	return (layers||({}))+({l});
+        l->set_image( Image.Image( x,y, translate_color( args->color ) ),
+                      pi );
+        return (layers||({}))+({l});
       }
 
       if( args["base-opacity"] )
-	pi += (int)(((float)args["base-opacity"]/100.0)*255);
+        pi += (int)(((float)args["base-opacity"]/100.0)*255);
       foreach( on, Image.Layer l )
       {
-	Image.Image a = l->alpha();
-	if( !a ) a=l->image();
-	a = a->copy()->clear(0,0,0)->paste( pi, -l->xoffset(), -l->yoffset() );
-	l->set_image( l->image(),a );
+        Image.Image a = l->alpha();
+        if( !a ) a=l->image();
+        a = a->copy()->clear(0,0,0)->paste( pi, -l->xoffset(), -l->yoffset() );
+        l->set_image( l->image(),a );
       }
       return layers;
     }
@@ -1830,8 +1830,8 @@ class Line
     Arguments check_args( Arguments args )
     {
       if( !args->coordinates ||
-	  sizeof( args->coordinates/"," )&1 )
-	RXML.parse_error( "Illegal coordinate list\n");
+          sizeof( args->coordinates/"," )&1 )
+        RXML.parse_error( "Illegal coordinate list\n");
       return args;
     }
   };
@@ -1856,76 +1856,76 @@ class Polygone
       if( args["layers-id"] ) on = find_layers_id( args["layers-id"], layers );
       
       int x = translate_coordinate( args->xsize, 0, layers ),
-	  y = translate_coordinate( args->ysize, 0, layers );
+          y = translate_coordinate( args->ysize, 0, layers );
       mapping ext;
 
       if( on )
       {
-	ext = layers_extents( on );
-	x = ext->x1;
-	y = ext->y1;
+        ext = layers_extents( on );
+        x = ext->x1;
+        y = ext->y1;
       }
 
       if( x && y )
-	pi = Image.Image( x, y );
+        pi = Image.Image( x, y );
 
       foreach(args->coordinates/",", string c)
-	coordinates += ({
-	  translate_coordinate_f( c, pi, layers )
-	});
+        coordinates += ({
+          translate_coordinate_f( c, pi, layers )
+        });
 
       if( args["coordinate-system"] )
       {
-	float a, b, c, d;
-	if( sscanf( parse_variables(args["coordinate-system"], pi, layers),
-		    "%f,%f-%f,%f", a, b, c, d ) != 4 )
-	  RXML.parse_error("Illegal syntax for coordinate-system. "
-			   "Expected x0,y0-x1,y1\n");
+        float a, b, c, d;
+        if( sscanf( parse_variables(args["coordinate-system"], pi, layers),
+                    "%f,%f-%f,%f", a, b, c, d ) != 4 )
+          RXML.parse_error("Illegal syntax for coordinate-system. "
+                           "Expected x0,y0-x1,y1\n");
 
-	for( int i=0; i<sizeof( coordinates ); i+=2 )
-	{
-	  coordinates[i]  = virtual_to_screen( coordinates[i], a, c, x );
-	  coordinates[i+1] = (y-virtual_to_screen( coordinates[i+1], b, d, y ));
-	}
+        for( int i=0; i<sizeof( coordinates ); i+=2 )
+        {
+          coordinates[i]  = virtual_to_screen( coordinates[i], a, c, x );
+          coordinates[i+1] = (y-virtual_to_screen( coordinates[i+1], b, d, y ));
+        }
       }
       if( !pi )
       {
-	foreach( coordinates / 2, array s )
-	{
-	  if( (int)s[0] > x )	x = (int)s[0];
-	  if( (int)s[1] > y )   y = (int)s[1];
-	}
-	pi = Image.Image( x, y );
+        foreach( coordinates / 2, array s )
+        {
+          if( (int)s[0] > x )	x = (int)s[0];
+          if( (int)s[1] > y )   y = (int)s[1];
+        }
+        pi = Image.Image( x, y );
       }
 
       pi->setcolor( 255,255,255 );
       pi = pi->polygone( coordinates );
 
       if( args->opacity )
-	pi *= ((float)args->opacity)/100.0;
-	
+        pi *= ((float)args->opacity)/100.0;
+        
       
       if( !on )
       {
-	Image.Layer l = Image.Layer( );
-	l->set_misc_value( "name",
-			   parse_variables(args->name || "poly", pi, layers) );
-	l->set_offset( translate_coordinate( args->xoffset, pi, layers ),
-		       translate_coordinate( args->yoffset, pi, layers ) );
+        Image.Layer l = Image.Layer( );
+        l->set_misc_value( "name",
+                           parse_variables(args->name || "poly", pi, layers) );
+        l->set_offset( translate_coordinate( args->xoffset, pi, layers ),
+                       translate_coordinate( args->yoffset, pi, layers ) );
 
-	l->set_image( Image.Image( x,y, translate_color( args->color ) ),
-		      pi );
-	return (layers||({}))+({l});
+        l->set_image( Image.Image( x,y, translate_color( args->color ) ),
+                      pi );
+        return (layers||({}))+({l});
       }
 
       if( args["base-opacity"] )
-	pi += (int)(((float)args["base-opacity"]/100.0)*255);
+        pi += (int)(((float)args["base-opacity"]/100.0)*255);
       foreach( on, Image.Layer l )
       {
-	Image.Image a = l->alpha();
-	if( !a ) a=l->image();
-	a = a->copy()->clear(0,0,0)->paste( pi, -l->xoffset(), -l->yoffset() );
-	l->set_image( l->image(),a );
+        Image.Image a = l->alpha();
+        if( !a ) a=l->image();
+        a = a->copy()->clear(0,0,0)->paste( pi, -l->xoffset(), -l->yoffset() );
+        l->set_image( l->image(),a );
       }
       return layers;
     }
@@ -1933,8 +1933,8 @@ class Polygone
     Arguments check_args( Arguments args )
     {
       if( !args->coordinates ||
-	  sizeof( args->coordinates/"," )&1 )
-	RXML.parse_error( "Illegal coordinate list\n");
+          sizeof( args->coordinates/"," )&1 )
+        RXML.parse_error( "Illegal coordinate list\n");
       return args;
     }
   };
@@ -1981,11 +1981,11 @@ LazyImage join_images( LazyImage ... i )
   // Merge any join nodes in the arguments here to avoid deep recursion.
   array(LazyImage) contents =
     map(i, lambda(LazyImage i) {
-	     if (i && (i->operation_name == "join") && i->args) {
-	       return [array(LazyImage)]i->args->contents;
-	     }
-	     return ({ i });
-	   }) * ({});
+             if (i && (i->operation_name == "join") && i->args) {
+               return [array(LazyImage)]i->args->contents;
+             }
+             return ({ i });
+           }) * ({});
   
   j->set_args( ([ "contents":contents ]) );
   return j;

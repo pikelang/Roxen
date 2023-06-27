@@ -39,15 +39,15 @@ class TagWashHtml
     return
       "<p>"+
       ((replace(replace(s - "\r" - "\0", "\n\n", "\0"),
-		"\0\n", "\0")/"\0") - ({ "\n", "" }))*"</p>\n<p>"
+                "\0\n", "\0")/"\0") - ({ "\n", "" }))*"</p>\n<p>"
       +"</p>";
   }
 
   string unparagraphify(string s)
   {
     return replace(replace(s, ({ "<P>", "</P>" }), ({ "<p>", "</p>" })),
-		   ({ "</p>\n<p>", "</p>\r\n<p>", "</p><p>", "<p>", "</p>" }),
-		   ({ "\n\n",      "\n\n",        "\n\n",    "",    "" }) );
+                   ({ "</p>\n<p>", "</p>\r\n<p>", "</p><p>", "<p>", "</p>" }),
+                   ({ "\n\n",      "\n\n",        "\n\n",    "",    "" }) );
   }
 
   array parse_arg_array(string s)
@@ -59,7 +59,7 @@ class TagWashHtml
   }
 
   array safe_container(Parser.HTML p, mapping args, string cont,
-			string close_tags, mapping keep_attrs)
+                        string close_tags, mapping keep_attrs)
   {
     string tag = lower_case(p->tag_name());
     if(keep_attrs)
@@ -67,24 +67,24 @@ class TagWashHtml
     Parser.HTML parser = p->clone();
     string res = parser->finish(cont)->read();
     return ({ replace(Roxen.make_tag(tag, args), ({ "<",">" }), ({ "\0[","\0]" })) +
-	      res + "\0[/"+tag+"\0]" });
+              res + "\0[/"+tag+"\0]" });
   }
 
   array safe_tag(Parser.HTML p, mapping args,
-		  string close_tags, mapping keep_attrs)
+                  string close_tags, mapping keep_attrs)
   {
     string tag = lower_case(p->tag_name());
     if(keep_attrs)
       args &= (keep_attrs[tag] || ({ }));
     
     return ({ replace(RXML.t_xml->format_tag(tag, args, 0, (close_tags?0:
-							    RXML.FLAG_COMPAT_PARSE|
-							    RXML.FLAG_EMPTY_ELEMENT)),
-		      ({ "<",">" }), ({ "\0[","\0]" }) ) });
+                                                            RXML.FLAG_COMPAT_PARSE|
+                                                            RXML.FLAG_EMPTY_ELEMENT)),
+                      ({ "<",">" }), ({ "\0[","\0]" }) ) });
   }
 
   string filter_body(string s, array keep_tags, array keep_containers,
-		     string close_tags, string keep_attributes, string remove_unwanted_tags)
+                     string close_tags, string keep_attributes, string remove_unwanted_tags)
   {
     // Replace < and > with \1 and \2 in stead of quoting with &lt; and &gt; to
     // be able regexp match on single characters.
@@ -99,8 +99,8 @@ class TagWashHtml
       keep_attrs = ([ ]);
       foreach(keep_attributes/",", string entry)
       {
-	if(sscanf(entry, "%s:%s", string tag, string attr) == 2)
-	  keep_attrs[tag] = (keep_attrs[tag] || ({ })) + ({ attr });
+        if(sscanf(entry, "%s:%s", string tag, string attr) == 2)
+          keep_attrs[tag] = (keep_attrs[tag] || ({ })) + ({ attr });
       }
     }
 
@@ -120,8 +120,8 @@ class TagWashHtml
           });
 
     return replace(parser->finish(s)->read(),
-		   ({ "<",  ">",  "&",     "\0[", "\0]" }),
-		   ({ "\1", "\2", "&amp;", "<",   ">" }));
+                   ({ "<",  ">",  "&",     "\0[", "\0]" }),
+                   ({ "\1", "\2", "&amp;", "<",   ">" }));
   }
 
   string linkify(string s, void|mapping attrs)
@@ -129,13 +129,13 @@ class TagWashHtml
     string fix_link(string l)
     {
       if (has_prefix(l, "http://") ||
-	  has_prefix(l, "https://") ||
-	  has_prefix(l, "ftp://") ||
-	  has_prefix(l, "mailto:"))
-	return l;
+          has_prefix(l, "https://") ||
+          has_prefix(l, "ftp://") ||
+          has_prefix(l, "mailto:"))
+        return l;
       
       if (has_prefix(l, "ftp."))
-	return "ftp://" + l;
+        return "ftp://" + l;
 
       return "http://"+l;
     };
@@ -148,16 +148,16 @@ class TagWashHtml
 
     Parser.HTML parser = Parser.HTML();
     parser->add_container("a", lambda(Parser.HTML p, mapping args)
-			       { return ({ p->current() }); });
+                               { return ({ p->current() }); });
     parser->_set_data_callback(
       lambda(Parser.HTML p, string data)
       { return ({ utf8_to_string(link_regexp->
-		  replace(string_to_utf8(data), lambda(string link)
+                  replace(string_to_utf8(data), lambda(string link)
                                 {
                                   link = fix_link(link);
                                   return sprintf("<a href=\"%s\"%s>%s</a>",
                                                  link, attrs_string, link);
-				}) ) }); });
+                                }) ) }); });
 
     string res = parser->finish(s)->read();
     parser = 0;			// Avoid trampoline garbage.
@@ -184,7 +184,7 @@ class TagWashHtml
     string tag_a(string tag, mapping arg, string cont)
     {
       if(sizeof(arg) == 1 && arg->href == cont)
-	return cont;
+        return cont;
     };
 
     return parse_html(s, ([ ]), ([ "a":tag_a ]) );
@@ -199,21 +199,21 @@ class TagWashHtml
       result = content||"";
 
       if(args->unparagraphify)
-	result = unparagraphify(result);
+        result = unparagraphify(result);
 
       if(args["unlinkify"])
-	result = unlinkify(result);
+        result = unlinkify(result);
 
       if(!args["keep-all"])
-	result = filter_body(result,
-			     parse_arg_array(args["keep-tags"]),
-			     parse_arg_array(args["keep-containers"]),
-			     args["close-tags"],
-			     args["keep-attributes"],
+        result = filter_body(result,
+                             parse_arg_array(args["keep-tags"]),
+                             parse_arg_array(args["keep-containers"]),
+                             args["close-tags"],
+                             args["keep-attributes"],
            args["remove-unwanted-tags"]);
 
       if(args->paragraphify)
-	result = paragraphify(result);
+        result = paragraphify(result);
 
       if(args["linkify"]) {
         mapping attrs = ([]);
@@ -230,10 +230,10 @@ class TagWashHtml
       }
 
       if (!args["keep-all"])
-	result = replace(result, ({ "\1", "\2" }), ({ "&lt;", "&gt;" }));
+        result = replace(result, ({ "\1", "\2" }), ({ "&lt;", "&gt;" }));
 
       if(args["remove-illegal-xml-chars"])
-	result = remove_illegal_chars(result);
+        result = remove_illegal_chars(result);
 
       return 0;
     }
@@ -243,10 +243,10 @@ class TagWashHtml
   {
     req_arg_types = ([ ]);
     opt_arg_types = ([ "keep-all":RXML.t_text(RXML.PXml),
-		       "keep-tags":RXML.t_text(RXML.PXml),
-		       "keep-containers":RXML.t_text(RXML.PXml),
-		       "keep-attributes":RXML.t_text(RXML.PXml),
-		       "paragraphify":RXML.t_text(RXML.PXml),
+                       "keep-tags":RXML.t_text(RXML.PXml),
+                       "keep-containers":RXML.t_text(RXML.PXml),
+                       "keep-attributes":RXML.t_text(RXML.PXml),
+                       "paragraphify":RXML.t_text(RXML.PXml),
                        "unparagraphify":RXML.t_text(RXML.PXml),
                        "linkify":RXML.t_text(RXML.PXml),
                        "link-target":RXML.t_text(RXML.PXml),
@@ -258,7 +258,7 @@ class TagWashHtml
 #define VALID_CHARS "[^ \t\n\r<>\"'`(){}|\1\2]"
     link_regexp =
       Regexp("(((http)|(https)|(ftp))://(" VALID_CHARS "+)(\\." VALID_CHARS "+)+)|"
-	     "(((www)|(ftp))(\\." VALID_CHARS "+)+)");
+             "(((www)|(ftp))(\\." VALID_CHARS "+)+)");
   }
 }
 

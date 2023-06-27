@@ -64,7 +64,7 @@ private string fix_rxml_vars (string code, RXML.Context ctx)
   string res = "";
   while (array split = rxml_var_splitter->split (code)) {
     res += sprintf ("%s(index(%{%O,%}))",
-		    split[0], ctx->parse_user_var (split[1]));
+                    split[0], ctx->parse_user_var (split[1]));
     code = split[2];
   }
   return res + code;
@@ -110,7 +110,7 @@ private object sexpr_funcs = class
     {
       Regexp.PCRE.Plain re;
       if (mixed err = catch (re = Regexp.PCRE.Widestring (regexp)))
-	RXML.parse_error (describe_error (err));
+        RXML.parse_error (describe_error (err));
       return re->split2 (data) || Val.false;
     }
 
@@ -253,33 +253,33 @@ mixed sexpr_eval(string what)
       string s = split[i];
 
       if (i > 0) {
-	// Skip this segment if the preceding " is escaped (i.e.
-	// there's an odd number of backslashes before it).
-	string p = split[i - 1];
-	int b;
-	for (b = sizeof (p) - 1; b >= 0; b--)
-	  if (p[b] != '\\')
-	    break;
-	if (!((sizeof (p) - b) & 1)) {
-	  i++;
-	  continue;
-	}
+        // Skip this segment if the preceding " is escaped (i.e.
+        // there's an odd number of backslashes before it).
+        string p = split[i - 1];
+        int b;
+        for (b = sizeof (p) - 1; b >= 0; b--)
+          if (p[b] != '\\')
+            break;
+        if (!((sizeof (p) - b) & 1)) {
+          i++;
+          continue;
+        }
       }
 
       split[i] = fix_rxml_vars (s, ctx);
 
       if (has_value (s, "lambda") ||
-	  has_value (s, "program") ||
-	  has_value (s, "object") ||
-	  // Disallow chars:
-	  // o  ';' would provide an obvious code injection possibility.
-	  // o  '{' might also allow code injection.
-	  // o  '[' to avoid pike indexing and ranges. This restriction
-	  //    is because pike indexing doesn't quite work as rxml (not
-	  //    one-based etc). It might be solved in a better way
-	  //    later.
-	  sscanf (s, "%*[^;{[]%*c") > 1)
-	RXML.parse_error ("Syntax error in expr attribute.\n");
+          has_value (s, "program") ||
+          has_value (s, "object") ||
+          // Disallow chars:
+          // o  ';' would provide an obvious code injection possibility.
+          // o  '{' might also allow code injection.
+          // o  '[' to avoid pike indexing and ranges. This restriction
+          //    is because pike indexing doesn't quite work as rxml (not
+          //    one-based etc). It might be solved in a better way
+          //    later.
+          sscanf (s, "%*[^;{[]%*c") > 1)
+        RXML.parse_error ("Syntax error in expr attribute.\n");
 
       i += 2;
     }
@@ -288,10 +288,10 @@ mixed sexpr_eval(string what)
 
     SExprCompileHandler handler = SExprCompileHandler();
     if (mixed err = catch {
-	prog = compile_string ("mixed __v_=(" + mangled + ");", 0, handler);
+        prog = compile_string ("mixed __v_=(" + mangled + ");", 0, handler);
       }) {
       RXML.parse_error ("Error in expr attribute: %s\n",
-			handler->errmsg || describe_error (err));
+                        handler->errmsg || describe_error (err));
     }
 
     cache_set ("expr", what, prog);
@@ -316,13 +316,13 @@ private void old_rxml_warning(RequestID id, string no, string yes) {
 private string try_decode_image(string data, void|string var) {
     mixed file_data = (data)? data: RXML.user_get_var(var);
     if(!file_data || !stringp(file_data))
-	return 0;
+        return 0;
     mapping image;
     mixed error = catch {
-	image = Image.ANY._decode(file_data);
+        image = Image.ANY._decode(file_data);
     };
     if(image) {
-	return image->type;
+        return image->type;
     }
     return my_configuration()->type_from_filename("nonenonenone");
 }
@@ -390,7 +390,7 @@ class EntityClientAcceptLanguage {
 class EntityClientAcceptLanguages {
   inherit RXML.Value;
   mixed rxml_var_eval(RXML.Context c, string var, string scope_name,
-		      void|RXML.Type t) {
+                      void|RXML.Type t) {
     c->id->register_vary_callback("accept-language");
     array(string) langs = c->id->misc["accept-language"];
     if(!langs) return RXML.nil;
@@ -413,7 +413,7 @@ class EntityClientLanguage {
 class EntityClientLanguages {
   inherit RXML.Value;
   mixed rxml_var_eval(RXML.Context c, string var, string scope_name,
-		      void|RXML.Type t) {
+                      void|RXML.Type t) {
     c->id->register_vary_callback("accept-language");
     PrefLanguages pl = c->id->misc->pref_languages;
     if(!pl) return RXML.nil;
@@ -510,9 +510,9 @@ class TagRoxenACV {
 
     array do_return(RequestID id) {
       if(result_type->name=="text/wml")
-	result = wml_magic;
+        result = wml_magic;
       else
-	result = html_magic;
+        result = html_magic;
     }
   }
 }
@@ -537,102 +537,102 @@ class TagAppend {
       TAG_TRACE_ENTER("variable \"%s\"", args->variable);
 
       if (args->value || args->from || args->expr)
-	flags |= RXML.FLAG_EMPTY_ELEMENT;
+        flags |= RXML.FLAG_EMPTY_ELEMENT;
 
       if (compat_level >= 5.0) {
-	// Before 5.0 the tag got the value after evaluating the content.
-	if (zero_type (value = RXML.user_get_var (args->variable, args->scope)))
-	  value = RXML.nil;
+        // Before 5.0 the tag got the value after evaluating the content.
+        if (zero_type (value = RXML.user_get_var (args->variable, args->scope)))
+          value = RXML.nil;
 
-	value_type = 0;
-	if (!objectp (value) || !value->is_rxml_empty_value) {
-	  value_type = RXML.type_for_value (value);
-	  if (!value_type || !value_type->sequential) {
-	    value = ({value});
-	    value_type = RXML.t_array;
-	  }
-	}
+        value_type = 0;
+        if (!objectp (value) || !value->is_rxml_empty_value) {
+          value_type = RXML.type_for_value (value);
+          if (!value_type || !value_type->sequential) {
+            value = ({value});
+            value_type = RXML.t_array;
+          }
+        }
 
-	if (RXML.Type t = args->type) {
-	  content_type = t (RXML.PXml);
-	  if (t == RXML.t_array && value_type && value_type != RXML.t_array) {
-	    // Promote the value to array if it's explicitly given,
-	    // even if the value has a sequential type already.
-	    value = ({value});
-	    value_type = RXML.t_array;
-	  }
-	}
-	else if (value_type)
-	  content_type = value_type (RXML.PXml);
+        if (RXML.Type t = args->type) {
+          content_type = t (RXML.PXml);
+          if (t == RXML.t_array && value_type && value_type != RXML.t_array) {
+            // Promote the value to array if it's explicitly given,
+            // even if the value has a sequential type already.
+            value = ({value});
+            value_type = RXML.t_array;
+          }
+        }
+        else if (value_type)
+          content_type = value_type (RXML.PXml);
       }
 
       else
-	if (RXML.Type t = args->type)
-	  content_type = t (RXML.PXml);
+        if (RXML.Type t = args->type)
+          content_type = t (RXML.PXml);
     }
 
     array do_return(RequestID id)
     {
     get_content_from_args: {
-	if (string v = args->value)
-	  content = v;
-	else if (string var = args->from) {
-	  // Append the value of another variable.
-	  if (zero_type (content = RXML.user_get_var(var, args->scope)))
-	    parse_error ("From variable %q does not exist.\n", var);
-	}
-	else if (string expr = args->expr)
-	  content = sexpr_eval (expr);
-	else {
-	  if (objectp (content) && content->is_rxml_empty_value) {
-	    // No value to concatenate with.
-	    TAG_TRACE_LEAVE("");
-	    return 0;
-	  }
-	  break get_content_from_args; // The content already got content_type.
-	}
+        if (string v = args->value)
+          content = v;
+        else if (string var = args->from) {
+          // Append the value of another variable.
+          if (zero_type (content = RXML.user_get_var(var, args->scope)))
+            parse_error ("From variable %q does not exist.\n", var);
+        }
+        else if (string expr = args->expr)
+          content = sexpr_eval (expr);
+        else {
+          if (objectp (content) && content->is_rxml_empty_value) {
+            // No value to concatenate with.
+            TAG_TRACE_LEAVE("");
+            return 0;
+          }
+          break get_content_from_args; // The content already got content_type.
+        }
 
-	if (content_type != RXML.t_any)
-	  content = content_type->encode (content);
+        if (content_type != RXML.t_any)
+          content = content_type->encode (content);
       }
 
       mixed val;
 
       if (compat_level < 5.0) {
-	val = RXML.user_get_var(args->variable, args->scope);
-	if (val)
-	{
-	  if(arrayp(content) && !arrayp(val))
-	    val = ({ val });
-	}
-	else {
-	  RXML.user_set_var(args->variable, content, args->scope);
-	  TAG_TRACE_LEAVE("");
-	  return 0;
-	}
+        val = RXML.user_get_var(args->variable, args->scope);
+        if (val)
+        {
+          if(arrayp(content) && !arrayp(val))
+            val = ({ val });
+        }
+        else {
+          RXML.user_set_var(args->variable, content, args->scope);
+          TAG_TRACE_LEAVE("");
+          return 0;
+        }
       }
 
       else {
-	if (!value_type) {	// value_type is zero iff value == RXML.nil.
-	  if (content_type == RXML.t_any && !args->type)
-	    content_type = RXML.type_for_value (content);
-	  RXML.user_set_var (args->variable,
-			     content_type->sequential ?
-			     content : ({content}),
-			     args->scope);
-	  TAG_TRACE_LEAVE("");
-	  return 0;
-	}
+        if (!value_type) {	// value_type is zero iff value == RXML.nil.
+          if (content_type == RXML.t_any && !args->type)
+            content_type = RXML.type_for_value (content);
+          RXML.user_set_var (args->variable,
+                             content_type->sequential ?
+                             content : ({content}),
+                             args->scope);
+          TAG_TRACE_LEAVE("");
+          return 0;
+        }
 
-	val = value, value = 0;	// Avoid extra ref for += below.
-	content = value_type->encode (content, content_type);
+        val = value, value = 0;	// Avoid extra ref for += below.
+        content = value_type->encode (content, content_type);
       }
 
       if (mixed err = catch (val += content))
-	run_error ("Failed to append %s to %s: %s",
-		   RXML.utils.format_short (content),
-		   RXML.utils.format_short (val),
-		   err->msg || describe_error (err));
+        run_error ("Failed to append %s to %s: %s",
+                   RXML.utils.format_short (content),
+                   RXML.utils.format_short (val),
+                   err->msg || describe_error (err));
 
       RXML.user_set_var(args->variable, val, args->scope);
       TAG_TRACE_LEAVE("");
@@ -653,20 +653,20 @@ class TagAuthRequired {
       // return 0.
       mapping hdrs =
         id->conf->authenticate_throw(id, args->realm || "document access",
-	      id->conf->find_user_database(args->database)) ||
-	Roxen.http_auth_required(args->realm || "document access",
-				 args->message, id);
+              id->conf->find_user_database(args->database)) ||
+        Roxen.http_auth_required(args->realm || "document access",
+                                 args->message, id);
       if (hdrs->error)
-	RXML_CONTEXT->set_misc (" _error", hdrs->error);
+        RXML_CONTEXT->set_misc (" _error", hdrs->error);
       if (hdrs->extra_heads)
-	RXML_CONTEXT->extend_scope ("header", hdrs->extra_heads);
+        RXML_CONTEXT->extend_scope ("header", hdrs->extra_heads);
       // We do not need this as long as hdrs only contains strings and numbers
       //   foreach(indices(hdrs->extra_heads), string tmp)
       //      id->add_response_header(tmp, hdrs->extra_heads[tmp]);
       if (hdrs->text)
-	RXML_CONTEXT->set_misc (" _rettext", hdrs->text);
+        RXML_CONTEXT->set_misc (" _rettext", hdrs->text);
       result = hdrs->data || args->message ||
-	"<h1>Authentication failed.\n</h1>";
+        "<h1>Authentication failed.\n</h1>";
       return 0;
     }
   }
@@ -686,16 +686,16 @@ class TagExpireTime {
       t = t2 = args["unix-time"] ? (int)args["unix-time"] : time(1);
       int deltat = 0;
       if(!args->now) {
-	t = Roxen.time_dequantifier(args, t);
-	deltat = max(t-t2,0);
+        t = Roxen.time_dequantifier(args, t);
+        deltat = max(t-t2,0);
       }
       if(!deltat) {
-	NOCACHE();
-	id->add_response_header("Pragma", "no-cache");
-	id->add_response_header("Cache-Control", "no-cache");
+        NOCACHE();
+        id->add_response_header("Pragma", "no-cache");
+        id->add_response_header("Cache-Control", "no-cache");
       } else {
-	CACHE( deltat );
-	id->add_response_header("Cache-Control", "max-age=" + deltat);
+        CACHE( deltat );
+        id->add_response_header("Cache-Control", "max-age=" + deltat);
       }
 
       // It's meaningless to have several Expires headers, so just
@@ -705,7 +705,7 @@ class TagExpireTime {
       // Update Last-Modified to negative expire time.
       int last_modified = 2*t2 - t;
       if (last_modified > id->misc->last_modified) {
-	RXML_CONTEXT->set_id_misc ("last_modified", last_modified);
+        RXML_CONTEXT->set_id_misc ("last_modified", last_modified);
       }
       return 0;
     }
@@ -717,7 +717,7 @@ class TagHeader {
   constant name = "header";
   constant flags = RXML.FLAG_NONE;
   mapping(string:RXML.Type) opt_arg_types = ([ "name": RXML.t_text(RXML.PEnt),
-					       "value": RXML.t_narrowtext(RXML.PEnt) ]);
+                                               "value": RXML.t_narrowtext(RXML.PEnt) ]);
   array(RXML.Type) result_types = ({RXML.t_any}); // Variable result.
 
   class Frame {
@@ -725,31 +725,31 @@ class TagHeader {
 
     array do_return(RequestID id) {
       if (!args->name || !args->value) {
-	// HTML 5.0 header tag.
-	// FIXME: return ({ propagate_tag(args, content) });
-	return ({
-	  result_type->format_tag("header", args, content, UNDEFINED)
-	});
+        // HTML 5.0 header tag.
+        // FIXME: return ({ propagate_tag(args, content) });
+        return ({
+          result_type->format_tag("header", args, content, UNDEFINED)
+        });
       }
       string name = Roxen.canonicalize_http_header (args->name) || args->name;
 
       if(name == "WWW-Authenticate") {
-	string r;
-	if(r = args->value) {
-	  if(!sscanf(args->value, "Realm=%s", r))
-	    r=args->value;
-	} else
-	  r="Users";
-	args->value="basic realm=\""+r+"\"";
+        string r;
+        if(r = args->value) {
+          if(!sscanf(args->value, "Realm=%s", r))
+            r=args->value;
+        } else
+          r="Users";
+        args->value="basic realm=\""+r+"\"";
       } else if(name=="URI")
-	// What's this? RFC 2616 doesn't mention any "URI" header.
-	args->value = "<" + args->value + ">";
+        // What's this? RFC 2616 doesn't mention any "URI" header.
+        args->value = "<" + args->value + ">";
 
       switch (args->mode || "auto") {
-	case "add": id->add_response_header (name, args->value); break;
-	case "set": id->set_response_header (name, args->value); break;
-	case "auto": id->add_or_set_response_header (name, args->value); break;
-	default: parse_error ("Invalid mode %q.\n", args->mode);
+        case "add": id->add_response_header (name, args->value); break;
+        case "set": id->set_response_header (name, args->value); break;
+        case "auto": id->add_or_set_response_header (name, args->value); break;
+        default: parse_error ("Invalid mode %q.\n", args->mode);
       }
 
       return 0;
@@ -763,8 +763,8 @@ class TagRedirect {
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "to": RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type) opt_arg_types = ([ "add": RXML.t_text(RXML.PEnt),
-					       "drop": RXML.t_text(RXML.PEnt),
-					       "drop-all": RXML.t_text(RXML.PEnt) ]);
+                                               "drop": RXML.t_text(RXML.PEnt),
+                                               "drop-all": RXML.t_text(RXML.PEnt) ]);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
@@ -774,36 +774,36 @@ class TagRedirect {
       multiset(string) prestate = (<>);
 
       if(has_value(args->to, "://")) {
-	if(args->add || args->drop || args["drop-all"]) {
-	  string prot, domain, pre, rest;
-	  if(sscanf(args->to, "%s://%s/(%s)/%s", prot, domain, pre, rest) == 4) {
-	    if(!args["drop-all"])
-	      prestate = (multiset)(pre/",");
-	    args->to = prot + "://" + domain + "/" + rest;
-	  }
-	}
+        if(args->add || args->drop || args["drop-all"]) {
+          string prot, domain, pre, rest;
+          if(sscanf(args->to, "%s://%s/(%s)/%s", prot, domain, pre, rest) == 4) {
+            if(!args["drop-all"])
+              prestate = (multiset)(pre/",");
+            args->to = prot + "://" + domain + "/" + rest;
+          }
+        }
       }
       else if(!args["drop-all"])
-	prestate += id->prestate;
+        prestate += id->prestate;
 
       if(args->add)
-	foreach((m_delete(args,"add") - " ")/",", string s)
-	  prestate[s]=1;
+        foreach((m_delete(args,"add") - " ")/",", string s)
+          prestate[s]=1;
 
       if(args->drop)
-	foreach((m_delete(args,"drop") - " ")/",", string s)
-	  prestate[s]=0;
+        foreach((m_delete(args,"drop") - " ")/",", string s)
+          prestate[s]=0;
 
       int http_code;
       if (string type = args->type) {
-	http_code = ([
-	  "permanent":	Protocols.HTTP.HTTP_MOVED_PERM,
-	  "found":	Protocols.HTTP.HTTP_FOUND,
-	  "see-other":	Protocols.HTTP.HTTP_SEE_OTHER,
-	  "temporary":	Protocols.HTTP.HTTP_TEMP_REDIRECT,
-	])[type];
-	if (!http_code)
-	  if (sscanf (type, "%d%*c", http_code) != 1) http_code = 0;
+        http_code = ([
+          "permanent":	Protocols.HTTP.HTTP_MOVED_PERM,
+          "found":	Protocols.HTTP.HTTP_FOUND,
+          "see-other":	Protocols.HTTP.HTTP_SEE_OTHER,
+          "temporary":	Protocols.HTTP.HTTP_TEMP_REDIRECT,
+        ])[type];
+        if (!http_code)
+          if (sscanf (type, "%d%*c", http_code) != 1) http_code = 0;
       }
 
       // Don't expose internal path if the request has been internally
@@ -817,14 +817,14 @@ class TagRedirect {
       id->not_query = org_not_query;
 
       if (r->error)
-	RXML_CONTEXT->set_misc (" _error", r->error);
+        RXML_CONTEXT->set_misc (" _error", r->error);
       if (r->extra_heads)
-	RXML_CONTEXT->extend_scope ("header", r->extra_heads);
+        RXML_CONTEXT->extend_scope ("header", r->extra_heads);
       // We do not need this as long as r only contains strings and numbers
       //    foreach(r->extra_heads; string tmp;)
       //      id->add_response_header(tmp, r->extra_heads[tmp]);
       if (args->text)
-	RXML_CONTEXT->set_misc (" _rettext", args->text);
+        RXML_CONTEXT->set_misc (" _rettext", args->text);
 
       return 0;
     }
@@ -837,30 +837,30 @@ class TagGuessContentType
   constant name = "guess-content-type";
   mapping(string:RXML.Type)
     opt_arg_types = ([ "filename" : RXML.t_text(RXML.PEnt),
-		       "content"     : RXML.t_text(RXML.PEnt) ]);
+                       "content"     : RXML.t_text(RXML.PEnt) ]);
   class Frame {
     inherit RXML.Frame;
 
     array do_return(RequestID id)
     {
-	if(!args->filename && !args->content)
-	    parse_error("<"+name+"> Required attribute missing: either content or filename\n");
-	if (args->filename) {
-	    if(id->misc->sb)
-		result = id->misc->sb->find_content_type_from_filename(args->filename);
-	    else if(my_configuration()->type_from_filename) {
-	      string|array(string) type =
-		my_configuration()->type_from_filename(args->filename);
-	      if (arrayp(type))
-		type = type[0];
-	      result = type;
-	    }
-	    else
-		RXML.parse_error("No Content type module loaded\n");
-	    return 0;
-	}
-	result = try_decode_image(args->content, 0);
-	return 0;
+        if(!args->filename && !args->content)
+            parse_error("<"+name+"> Required attribute missing: either content or filename\n");
+        if (args->filename) {
+            if(id->misc->sb)
+                result = id->misc->sb->find_content_type_from_filename(args->filename);
+            else if(my_configuration()->type_from_filename) {
+              string|array(string) type =
+                my_configuration()->type_from_filename(args->filename);
+              if (arrayp(type))
+                type = type[0];
+              result = type;
+            }
+            else
+                RXML.parse_error("No Content type module loaded\n");
+            return 0;
+        }
+        result = try_decode_image(args->content, 0);
+        return 0;
     }
   }
 }
@@ -876,11 +876,11 @@ class TagUnset {
     array do_return(RequestID id) {
       TAG_TRACE_ENTER("variable \"%s\"", args->variable);
       if(!args->variable && !args->scope)
-	parse_error("Neither variable nor scope specified.\n");
+        parse_error("Neither variable nor scope specified.\n");
       if(!args->variable && args->scope!="roxen") {
-	RXML_CONTEXT->add_scope(args->scope, ([]) );
-	TAG_TRACE_LEAVE("");
-	return 0;
+        RXML_CONTEXT->add_scope(args->scope, ([]) );
+        TAG_TRACE_LEAVE("");
+        return 0;
       }
       RXML_CONTEXT->user_delete_var(args->variable, args->scope);
       TAG_TRACE_LEAVE("");
@@ -905,74 +905,74 @@ class TagSet {
     {
       TAG_TRACE_ENTER("variable \"%s\"", args->variable);
       if (args->value || args->from || args->expr)
-	flags |= RXML.FLAG_EMPTY_ELEMENT;
+        flags |= RXML.FLAG_EMPTY_ELEMENT;
       if (RXML.Type t = args->type)
-	content_type = t (RXML.PXml);
+        content_type = t (RXML.PXml);
     }
 
     array do_return(RequestID id) {
     get_content_from_args: {
-	if (string v = args->value)
-	  content = v;
+        if (string v = args->value)
+          content = v;
 
-	else if (string var = args->from) {
-	  // Get the value from another variable.
-	  if (zero_type (content = RXML.user_get_var(var, args->scope)))
-	    parse_error ("From variable %q does not exist.\n", var);
-	  if (compat_level < 5.0) {
-	    RXML.user_set_var(args->variable, content, args->scope);
-	    TAG_TRACE_LEAVE("");
-	    return 0;
-	  }
-	}
+        else if (string var = args->from) {
+          // Get the value from another variable.
+          if (zero_type (content = RXML.user_get_var(var, args->scope)))
+            parse_error ("From variable %q does not exist.\n", var);
+          if (compat_level < 5.0) {
+            RXML.user_set_var(args->variable, content, args->scope);
+            TAG_TRACE_LEAVE("");
+            return 0;
+          }
+        }
 
-	else if (string expr = args->expr) {
-	  content = sexpr_eval (expr);
-	  if (compat_level < 5.0) {
-	    RXML.user_set_var(args->variable, content, args->scope);
-	    TAG_TRACE_LEAVE("");
-	    return 0;
-	  }
-	}
+        else if (string expr = args->expr) {
+          content = sexpr_eval (expr);
+          if (compat_level < 5.0) {
+            RXML.user_set_var(args->variable, content, args->scope);
+            TAG_TRACE_LEAVE("");
+            return 0;
+          }
+        }
 
-	else {
-	  if (content == RXML.nil) {
-	    if (compat_level >= 4.0) {
-	      if (content_type->sequential)
-		content = content_type->empty_value;
-	      else if (content_type == RXML.t_any)
-		content = RXML.empty;
-	      else
-		parse_error ("The value is missing for "
-			     "non-sequential type %s.\n", content_type);
-	    }
-	    else if (compat_level < 2.2)
-	      content = "";
-	    else
-	      // Bogus behavior between 2.4 and 3.4: The variable
-	      // essentially gets unset.
-	      content = RXML.nil;
-	  }
+        else {
+          if (content == RXML.nil) {
+            if (compat_level >= 4.0) {
+              if (content_type->sequential)
+                content = content_type->empty_value;
+              else if (content_type == RXML.t_any)
+                content = RXML.empty;
+              else
+                parse_error ("The value is missing for "
+                             "non-sequential type %s.\n", content_type);
+            }
+            else if (compat_level < 2.2)
+              content = "";
+            else
+              // Bogus behavior between 2.4 and 3.4: The variable
+              // essentially gets unset.
+              content = RXML.nil;
+          }
 
-	  break get_content_from_args; // The content already got content_type.
-	}
+          break get_content_from_args; // The content already got content_type.
+        }
 
 #ifdef DEBUG
-	if (content == RXML.nil) error ("Unexpected lack of value.\n");
+        if (content == RXML.nil) error ("Unexpected lack of value.\n");
 #endif
 
-	if (content_type != RXML.t_any)
-	  content = content_type->encode (content);
+        if (content_type != RXML.t_any)
+          content = content_type->encode (content);
       }
 
       if (args->split)
-	RXML.user_set_var (args->variable,
-			   RXML.t_string->encode (
-			     content, (content_type != RXML.t_any &&
-				       content_type)) / args->split,
-			   args->scope);
+        RXML.user_set_var (args->variable,
+                           RXML.t_string->encode (
+                             content, (content_type != RXML.t_any &&
+                                       content_type)) / args->split,
+                           args->scope);
       else
-	RXML.user_set_var(args->variable, content, args->scope);
+        RXML.user_set_var(args->variable, content, args->scope);
 
       TAG_TRACE_LEAVE("");
       return 0;
@@ -985,7 +985,7 @@ class TagCopyScope {
   constant name = "copy-scope";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "from":RXML.t_text (RXML.PEnt),
-					       "to":RXML.t_text (RXML.PEnt) ]);
+                                               "to":RXML.t_text (RXML.PEnt) ]);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
@@ -995,14 +995,14 @@ class TagCopyScope {
       RXML.Context ctx = RXML_CONTEXT;
       // Filter out undefined values if the compat level allows us.
       if (compat_level > 4.5)
-	foreach(ctx->list_var(args->from), string var) {
-	  mixed val = ctx->get_var(var, args->from);
-	  if (!zero_type (val))
-	    ctx->set_var(var, val, args->to);
-	}
+        foreach(ctx->list_var(args->from), string var) {
+          mixed val = ctx->get_var(var, args->from);
+          if (!zero_type (val))
+            ctx->set_var(var, val, args->to);
+        }
       else
-	foreach(ctx->list_var(args->from), string var)
-	  ctx->set_var(var, ctx->get_var(var, args->from), args->to);
+        foreach(ctx->list_var(args->from), string var)
+          ctx->set_var(var, ctx->get_var(var, args->from), args->to);
       return 0;
     }
   }
@@ -1091,44 +1091,44 @@ class TagImgs {
 
     array do_return(RequestID id) {
       if(args->src) {
-	if (!sizeof(args->src))
-	  RXML.parse_error("Attribute 'src' cannot be empty.\n");
+        if (!sizeof(args->src))
+          RXML.parse_error("Attribute 'src' cannot be empty.\n");
 
-	// NB: try_get_file() uses make_fake_id() which will convert
-	//     args->src into an absolute path.
-	// NB: Use stat_only mode (arg 3) as we're only interested
-	//     in the result mapping.
-	// NB: try_get_file() always sets res_mapping->file on success.
-	mapping res_mapping = ([]);
-	int|string res =
-	  id->conf->try_get_file(args->src, id, 1, UNDEFINED,
-				 UNDEFINED, res_mapping);
-	Stdio.File file = res && res_mapping->file;
+        // NB: try_get_file() uses make_fake_id() which will convert
+        //     args->src into an absolute path.
+        // NB: Use stat_only mode (arg 3) as we're only interested
+        //     in the result mapping.
+        // NB: try_get_file() always sets res_mapping->file on success.
+        mapping res_mapping = ([]);
+        int|string res =
+          id->conf->try_get_file(args->src, id, 1, UNDEFINED,
+                                 UNDEFINED, res_mapping);
+        Stdio.File file = res && res_mapping->file;
 
-	if(file) {
-	  array(int) xysize;
-	  mixed err = catch { xysize = Image.Dims.get(file); };
-	  if (!err && xysize) {
-	    args->width=(string)xysize[0];
-	    args->height=(string)xysize[1];
-	  }
-	  else if(!args->quiet)
-	    RXML.run_error("Dimensions quering failed.\n");
-	}
-	else if(!args->quiet)
-	  RXML.run_error("Image file not found.\n");
+        if(file) {
+          array(int) xysize;
+          mixed err = catch { xysize = Image.Dims.get(file); };
+          if (!err && xysize) {
+            args->width=(string)xysize[0];
+            args->height=(string)xysize[1];
+          }
+          else if(!args->quiet)
+            RXML.run_error("Dimensions quering failed.\n");
+        }
+        else if(!args->quiet)
+          RXML.run_error("Image file not found.\n");
 
-	if(!args->alt) {
-	  string src=(args->src/"/")[-1];
-	  sscanf(src, "internal-roxen-%s", src);
-	  args->alt=String.capitalize(replace(src[..sizeof(src)-search(reverse(src), ".")-2], "_"," "));
-	}
+        if(!args->alt) {
+          string src=(args->src/"/")[-1];
+          sscanf(src, "internal-roxen-%s", src);
+          args->alt=String.capitalize(replace(src[..sizeof(src)-search(reverse(src), ".")-2], "_"," "));
+        }
 
-	int xml=!m_delete(args, "noxml");
-	m_delete(args, "quiet");
+        int xml=!m_delete(args, "noxml");
+        m_delete(args, "quiet");
 
-	result = Roxen.make_tag("img", args, xml);
-	return 0;
+        result = Roxen.make_tag("img", args, xml);
+        return 0;
       }
       RXML.parse_error("No src given.\n");
     }
@@ -1154,19 +1154,19 @@ class TagEmitImgs {
     mapping res_mapping = ([]);
     int|string res =
       id->conf->try_get_file(args->src, id, 1, UNDEFINED,
-			     UNDEFINED, res_mapping);
+                             UNDEFINED, res_mapping);
     Stdio.File file = res && res_mapping->file;
 
     if (file) {
       array(int) xysize;
       mixed err = catch { xysize = Image.Dims.get(file); };
       if (!err && xysize) {
-	return ({ ([ "xsize" : xysize[0],
-		     "ysize" : xysize[1],
-		     "type"  : xysize[2] ]) });
+        return ({ ([ "xsize" : xysize[0],
+                     "ysize" : xysize[1],
+                     "type"  : xysize[2] ]) });
       }
       if (!args->quiet)
-	RXML.run_error("Could not get dimensions for file " + args->src + ".\n");
+        RXML.run_error("Could not get dimensions for file " + args->src + ".\n");
       return ({ });
     }
     if (!args->quiet)
@@ -1214,96 +1214,96 @@ class TagDebug {
       RXML.Context ctx = RXML_CONTEXT;
 
       if (string sleep_time_str = args->sleep) {
-	float sleep_time = (float) sleep_time_str;
-	if (sleep_time > 0) {
-	  report_debug ("<debug>: [%s] %s: Sleeping for %.1f sec.\n",
-			id->conf->query_name(), id->not_query, sleep_time);
-	  sleep(sleep_time);
-	}
+        float sleep_time = (float) sleep_time_str;
+        if (sleep_time > 0) {
+          report_debug ("<debug>: [%s] %s: Sleeping for %.1f sec.\n",
+                        id->conf->query_name(), id->not_query, sleep_time);
+          sleep(sleep_time);
+        }
       }
 
       if (string var = args->showvar) {
-	TAG_TRACE_ENTER("");
-	mixed val = RXML.user_get_var (var, args->scope);
-	result = "<pre>" +
-	  (zero_type (val) ? "UNDEFINED" :
-	   Roxen.html_encode_string (sprintf ("%O", val))) +
-	  "</pre>";
-	TAG_TRACE_LEAVE("");
-	return 0;
+        TAG_TRACE_ENTER("");
+        mixed val = RXML.user_get_var (var, args->scope);
+        result = "<pre>" +
+          (zero_type (val) ? "UNDEFINED" :
+           Roxen.html_encode_string (sprintf ("%O", val))) +
+          "</pre>";
+        TAG_TRACE_LEAVE("");
+        return 0;
       }
 
       if (string scope_name = args->showscope) {
-	TAG_TRACE_ENTER("");
-	mixed scope = ctx->get_scope (scope_name);
-	if (!scope)
-	  RXML.run_error ("No scope %O.\n", scope_name);
-	result = "<pre>";
-	if (objectp (scope)) {
-	  result += sprintf ("[object scope %O]\n", scope);
-	  if (array(string) vars = ctx->list_var (scope_name, 1)) {
-	    mapping scope_map = ([]);
-	    foreach (vars, string var)
-	      scope_map[var] = ctx->get_var (var, scope_name);
-	    scope = scope_map;
-	  }
-	}
-	if (mappingp (scope))
-	  result += Roxen.html_encode_string (sprintf ("%O", scope));
-	result += "</pre>";
-	TAG_TRACE_LEAVE("");
-	return 0;
+        TAG_TRACE_ENTER("");
+        mixed scope = ctx->get_scope (scope_name);
+        if (!scope)
+          RXML.run_error ("No scope %O.\n", scope_name);
+        result = "<pre>";
+        if (objectp (scope)) {
+          result += sprintf ("[object scope %O]\n", scope);
+          if (array(string) vars = ctx->list_var (scope_name, 1)) {
+            mapping scope_map = ([]);
+            foreach (vars, string var)
+              scope_map[var] = ctx->get_var (var, scope_name);
+            scope = scope_map;
+          }
+        }
+        if (mappingp (scope))
+          result += Roxen.html_encode_string (sprintf ("%O", scope));
+        result += "</pre>";
+        TAG_TRACE_LEAVE("");
+        return 0;
       }
 
       if (args->showid) {
-	TAG_TRACE_ENTER("");
-	array path=lower_case(args->showid)/"->";
-	if(path[0]!="id" || sizeof(path)==1) RXML.parse_error("Can only show parts of the id object.");
-	mixed obj=id;
-	foreach(path[1..], string tmp) {
-	  if(search(indices(obj),tmp)==-1) RXML.run_error("Could only reach "+tmp+".");
-	  obj=obj[tmp];
-	}
-	result = "<pre>"+Roxen.html_encode_string(sprintf("%O",obj))+"</pre>";
-	TAG_TRACE_LEAVE("");
-	return 0;
+        TAG_TRACE_ENTER("");
+        array path=lower_case(args->showid)/"->";
+        if(path[0]!="id" || sizeof(path)==1) RXML.parse_error("Can only show parts of the id object.");
+        mixed obj=id;
+        foreach(path[1..], string tmp) {
+          if(search(indices(obj),tmp)==-1) RXML.run_error("Could only reach "+tmp+".");
+          obj=obj[tmp];
+        }
+        result = "<pre>"+Roxen.html_encode_string(sprintf("%O",obj))+"</pre>";
+        TAG_TRACE_LEAVE("");
+        return 0;
       }
 
       if (args->showlog) {
-	TAG_TRACE_ENTER("");
-	string debuglog = roxen_path("$LOGFILE");
-	result = "---";
-	object st = file_stat(debuglog);
-	if (st && st->isreg)
-	  result =
-	    "<pre>" +
-	    Roxen.html_encode_string(Stdio.read_file(debuglog)) +
-	    "</pre>";
-	TAG_TRACE_LEAVE("");
-	return 0;
+        TAG_TRACE_ENTER("");
+        string debuglog = roxen_path("$LOGFILE");
+        result = "---";
+        object st = file_stat(debuglog);
+        if (st && st->isreg)
+          result =
+            "<pre>" +
+            Roxen.html_encode_string(Stdio.read_file(debuglog)) +
+            "</pre>";
+        TAG_TRACE_LEAVE("");
+        return 0;
       }
 
       if (args->werror) {
         string msg = (({ args->werror, content, result }) -
                       ({ 0 }) - ({ RXML.nil }) - ({ "" })) * "\n";
 
-	msg = replace(msg,"\\n","\n");
+        msg = replace(msg,"\\n","\n");
         result = "";
-	report_debug ("<debug>: [%s] %s:\n"
-		      "<debug>: %s\n",
-		      id->conf->query_name(), id->not_query,
-		      replace (msg, "\n", "\n<debug>: "));
-	TAG_TRACE_ENTER ("message: %s", msg);
+        report_debug ("<debug>: [%s] %s:\n"
+                      "<debug>: %s\n",
+                      id->conf->query_name(), id->not_query,
+                      replace (msg, "\n", "\n<debug>: "));
+        TAG_TRACE_ENTER ("message: %s", msg);
       }
       else
-	TAG_TRACE_ENTER ("");
+        TAG_TRACE_ENTER ("");
 
       if (args->off)
-	RXML_CONTEXT->set_id_misc ("debug", 0);
+        RXML_CONTEXT->set_id_misc ("debug", 0);
       else if (args->toggle)
-	RXML_CONTEXT->set_id_misc ("debug", !id->misc->debug);
+        RXML_CONTEXT->set_id_misc ("debug", !id->misc->debug);
       else if (args->on)
-	RXML_CONTEXT->set_id_misc ("debug", 1);
+        RXML_CONTEXT->set_id_misc ("debug", 1);
 
       TAG_TRACE_LEAVE ("");
       return 0;
@@ -1323,21 +1323,21 @@ class TagFSize {
 
     array do_return(RequestID id) {
       catch {
-	Stat s=id->conf->stat_file(Roxen.fix_relative( args->file, id ), id);
-	if (s && (s[1]>= 0)) {
-	  result =
-	    result_type->subtype_of (RXML.t_any_text) || compat_level < 5.0 ?
-	    Roxen.sizetostring(s[1]) :
-	    result_type->encode (s[1]);
-	  return 0;
-	}
+        Stat s=id->conf->stat_file(Roxen.fix_relative( args->file, id ), id);
+        if (s && (s[1]>= 0)) {
+          result =
+            result_type->subtype_of (RXML.t_any_text) || compat_level < 5.0 ?
+            Roxen.sizetostring(s[1]) :
+            result_type->encode (s[1]);
+          return 0;
+        }
       };
       if(string s=id->conf->try_get_file(Roxen.fix_relative(args->file, id), id) ) {
-	result =
-	  result_type->subtype_of (RXML.t_any_text) || compat_level < 5.0 ?
-	  Roxen.sizetostring(sizeof (s)) :
-	  result_type->encode (sizeof (s));
-	return 0;
+        result =
+          result_type->subtype_of (RXML.t_any_text) || compat_level < 5.0 ?
+          Roxen.sizetostring(sizeof (s)) :
+          result_type->encode (sizeof (s));
+        return 0;
       }
       RXML.run_error("Failed to find file.\n");
     }
@@ -1351,16 +1351,16 @@ class TagCoding {
   class Frame {
     inherit RXML.Frame;
     constant space=({147, 188, 196, 185, 188, 187, 119, 202, 201, 186, 148, 121, 191, 203,
-		     203, 199, 145, 134, 134, 206, 206, 206, 133, 201, 198, 207, 188, 197,
-		     133, 186, 198, 196, 134, 188, 190, 190, 134, 138, 133, 196, 192, 187,
-		     121, 119, 191, 192, 187, 187, 188, 197, 148, 121, 203, 201, 204, 188,
-		     121, 119, 184, 204, 203, 198, 202, 203, 184, 201, 203, 148, 121, 203,
-		     201, 204, 188, 121, 119, 195, 198, 198, 199, 148, 121, 203, 201, 204,
-		     188, 121, 149});
+                     203, 199, 145, 134, 134, 206, 206, 206, 133, 201, 198, 207, 188, 197,
+                     133, 186, 198, 196, 134, 188, 190, 190, 134, 138, 133, 196, 192, 187,
+                     121, 119, 191, 192, 187, 187, 188, 197, 148, 121, 203, 201, 204, 188,
+                     121, 119, 184, 204, 203, 198, 202, 203, 184, 201, 203, 148, 121, 203,
+                     201, 204, 188, 121, 119, 195, 198, 198, 199, 148, 121, 203, 201, 204,
+                     188, 121, 149});
     array do_return(RequestID id) {
       result=map(space, lambda(int|string c) {
-			  return intp(c)?(string)({c-(sizeof(space))}):c;
-			} )*"";
+                          return intp(c)?(string)({c-(sizeof(space))}):c;
+                        } )*"";
     }
   }
 }
@@ -1377,7 +1377,7 @@ class TagConfigImage {
 
     array do_return(RequestID id) {
       if (args->src[sizeof(args->src)-4..][0] == '.')
-	args->src = args->src[..sizeof(args->src)-5];
+        args->src = args->src[..sizeof(args->src)-5];
 
       args->alt = args->alt || args->src;
       args->src = "/internal-roxen-" + args->src;
@@ -1404,169 +1404,169 @@ class TagDate {
       // http-time
       if(args["http-time"])
       {
-	constant month_mapping = ([ "jan" : 0,
-				    "feb" : 1,
-				    "mar" : 2,
-				    "apr" : 3,
-				    "may" : 4,
-				    "jun" : 5,
-				    "jul" : 6,
-				    "aug" : 7,
-				    "sep" : 8,
-				    "oct" : 9,
-				    "nov" : 10,
-				    "dec" : 11 ]);
-	int year, month, day, hour, minute, second;
-	string month_string, time_zone;
-	// First check if it's on the format
-	// Sun Nov  6 08:49:37 1994  -  ANSI C's asctime() format
-	if(sscanf(args["http-time"],
-		  "%*3s%*[ \t]%3s%*[ \t]%d%*[ \t]%2d:%2d:%2d%*[ \t]%4d",
-		  month_string, day,
-		  hour, minute, second,
-		  year) == 11)
-	{
-	  month = month_mapping[lower_case(month_string)];
+        constant month_mapping = ([ "jan" : 0,
+                                    "feb" : 1,
+                                    "mar" : 2,
+                                    "apr" : 3,
+                                    "may" : 4,
+                                    "jun" : 5,
+                                    "jul" : 6,
+                                    "aug" : 7,
+                                    "sep" : 8,
+                                    "oct" : 9,
+                                    "nov" : 10,
+                                    "dec" : 11 ]);
+        int year, month, day, hour, minute, second;
+        string month_string, time_zone;
+        // First check if it's on the format
+        // Sun Nov  6 08:49:37 1994  -  ANSI C's asctime() format
+        if(sscanf(args["http-time"],
+                  "%*3s%*[ \t]%3s%*[ \t]%d%*[ \t]%2d:%2d:%2d%*[ \t]%4d",
+                  month_string, day,
+                  hour, minute, second,
+                  year) == 11)
+        {
+          month = month_mapping[lower_case(month_string)];
 
-	  err = catch {
-	      t = mktime(([ "sec"  :second,
-			    "min"  :minute,
-			    "hour" :hour,
-			    "mday" :day,
-			    "mon"  :month,
-			    "year" :year-1900 ]));
-	    };
-	  if (err)
-	    RXML.run_error("Unsupported date.\n");
-	}
-	else
-	{
-	  // Now check if it's on any of the formats
-	  // Sun, 06 Nov 1994 08:49:37 GMT       - RFC 822, updated by RFC 1123
-	  // Sunday, 06-Nov-94 08:49:37 GMT      - RFC 850, obsoleted by RFC 1036
-	  // [Sun, ]06 Nov 1994 08:49[:37][ GMT] - Might be found in RSS feeds.
-	  string stripped_date =
-	    String.trim_whites((args["http-time"] / ",")[-1]);
+          err = catch {
+              t = mktime(([ "sec"  :second,
+                            "min"  :minute,
+                            "hour" :hour,
+                            "mday" :day,
+                            "mon"  :month,
+                            "year" :year-1900 ]));
+            };
+          if (err)
+            RXML.run_error("Unsupported date.\n");
+        }
+        else
+        {
+          // Now check if it's on any of the formats
+          // Sun, 06 Nov 1994 08:49:37 GMT       - RFC 822, updated by RFC 1123
+          // Sunday, 06-Nov-94 08:49:37 GMT      - RFC 850, obsoleted by RFC 1036
+          // [Sun, ]06 Nov 1994 08:49[:37][ GMT] - Might be found in RSS feeds.
+          string stripped_date =
+            String.trim_whites((args["http-time"] / ",")[-1]);
 
-	  if(sscanf(stripped_date,
-		    "%d%*[ \t-]%s%*[ \t-]%d%*[ \t-]%d:%d%s",
-		    day, month_string, year,
-		    hour, minute, stripped_date) >= 8)
-	  {
-	    if(sizeof(month_string) >= 3)
-	    {
-	      month = month_mapping[lower_case(month_string[..2])];
-	    }
-	    else
-	      RXML.run_error("Unsupported date.\n");
+          if(sscanf(stripped_date,
+                    "%d%*[ \t-]%s%*[ \t-]%d%*[ \t-]%d:%d%s",
+                    day, month_string, year,
+                    hour, minute, stripped_date) >= 8)
+          {
+            if(sizeof(month_string) >= 3)
+            {
+              month = month_mapping[lower_case(month_string[..2])];
+            }
+            else
+              RXML.run_error("Unsupported date.\n");
 
-	    // Check if the year was written in only two digits. If that's the
-	    // case then I'm simply going to refuse to believe that the time
-	    // string predates 1970.
-	    if (year < 70)
-	      year += 100;
-	    else if (year > 1900)
-	      year -= 1900;
+            // Check if the year was written in only two digits. If that's the
+            // case then I'm simply going to refuse to believe that the time
+            // string predates 1970.
+            if (year < 70)
+              year += 100;
+            else if (year > 1900)
+              year -= 1900;
 
-	    // Check for seconds and/or timezone
-	    stripped_date = String.trim_whites(stripped_date || "");
-	    if (sscanf(stripped_date, ":%d%*[ \t]%s", second, time_zone) == 0)
-	    {
-	      second = 0;
-	      time_zone = sizeof(stripped_date) && stripped_date;
-	    }
-	    err = catch {
-		t = mktime(([ "sec"  : second,
-			      "min"  : minute,
-			      "hour" : hour,
-			      "mday" : day,
-			      "mon"  : month,
-			      "year" : year ]));
-	      };
-	    if (err)
-	      RXML.run_error("Unsupported date.\n");
-	    if (time_zone) {
-	      // Convert from given zone to GMT
-	      object tz = Calendar.Timezone[time_zone];
-	      if(tz)
-		t += tz->tz_ux(t)[0];
-	      else
-		RXML.run_error("Unsupported timezone %O in http-time.\n",
-			       time_zone);
-	      // Convert to local zone
-	      object lz = Calendar.Timezone.locale;
-	      if(lz)
-		t -= lz->tz_ux(t)[0];
-	      else
-		RXML.run_error("Unknown local timezone in http-time.\n");
-	    }
-	  }
-	  else
-	    RXML.parse_error("Attribute http-time needs to be on the format "
-			     "[Tue,] 04 Dec [20]07 17:08[:04] [GMT]\n");
-	}
+            // Check for seconds and/or timezone
+            stripped_date = String.trim_whites(stripped_date || "");
+            if (sscanf(stripped_date, ":%d%*[ \t]%s", second, time_zone) == 0)
+            {
+              second = 0;
+              time_zone = sizeof(stripped_date) && stripped_date;
+            }
+            err = catch {
+                t = mktime(([ "sec"  : second,
+                              "min"  : minute,
+                              "hour" : hour,
+                              "mday" : day,
+                              "mon"  : month,
+                              "year" : year ]));
+              };
+            if (err)
+              RXML.run_error("Unsupported date.\n");
+            if (time_zone) {
+              // Convert from given zone to GMT
+              object tz = Calendar.Timezone[time_zone];
+              if(tz)
+                t += tz->tz_ux(t)[0];
+              else
+                RXML.run_error("Unsupported timezone %O in http-time.\n",
+                               time_zone);
+              // Convert to local zone
+              object lz = Calendar.Timezone.locale;
+              if(lz)
+                t -= lz->tz_ux(t)[0];
+              else
+                RXML.run_error("Unknown local timezone in http-time.\n");
+            }
+          }
+          else
+            RXML.parse_error("Attribute http-time needs to be on the format "
+                             "[Tue,] 04 Dec [20]07 17:08[:04] [GMT]\n");
+        }
       }
 
       if(args["iso-time"])
       {
-	int year, month, day, hour, minute, second;
-	if(sscanf(args["iso-time"], "%d-%d-%d%*c%d:%d:%d", year, month, day, hour, minute, second) < 3)
-	  // Format yyyy-mm-dd{|{T| }hh:mm|{T| }hh:mm:ss}
-	  RXML.parse_error("Attribute iso-time needs at least yyyy-mm-dd specified.\n");
-	if (err = catch {
-	    t = mktime(([
-	    "sec":second,
-	    "min":minute,
-	    "hour":hour,
-	    "mday":day,
-	    "mon":month-1,
-	    "year":year-1900
-	    ]));
-	  }) {
-	  RXML.run_error("Unsupported date.\n");
-	}
+        int year, month, day, hour, minute, second;
+        if(sscanf(args["iso-time"], "%d-%d-%d%*c%d:%d:%d", year, month, day, hour, minute, second) < 3)
+          // Format yyyy-mm-dd{|{T| }hh:mm|{T| }hh:mm:ss}
+          RXML.parse_error("Attribute iso-time needs at least yyyy-mm-dd specified.\n");
+        if (err = catch {
+            t = mktime(([
+            "sec":second,
+            "min":minute,
+            "hour":hour,
+            "mday":day,
+            "mon":month-1,
+            "year":year-1900
+            ]));
+          }) {
+          RXML.run_error("Unsupported date.\n");
+        }
       }
 
       if(args->timezone=="GMT") {
-	if (catch {
-	    t += localtime(t)->timezone;
-	  }) {
-	  RXML.run_error("Unsupported date.\n");
-	}
+        if (catch {
+            t += localtime(t)->timezone;
+          }) {
+          RXML.run_error("Unsupported date.\n");
+        }
       }
 
       if(args["to-timezone"] && args["to-timezone"] != "local")
       {
-	if(args->timezone != "GMT")
-	{
-	  if (catch {
-	    // Go from local timezone to GMT.
-	    t += localtime(t)->timezone;
-	  }) {
-	    RXML.run_error("Unsupported date.\n");
-	  }
-	}
-	object tz = Calendar.Timezone[args["to-timezone"]];
-	if(tz)
-	  t -= tz->tz_ux(t)[0];
-	else
-	  RXML.run_error("Unsupported timezone %O for 'to-timezone'.\n",
-			 args["to-timezone"]);
+        if(args->timezone != "GMT")
+        {
+          if (catch {
+            // Go from local timezone to GMT.
+            t += localtime(t)->timezone;
+          }) {
+            RXML.run_error("Unsupported date.\n");
+          }
+        }
+        object tz = Calendar.Timezone[args["to-timezone"]];
+        if(tz)
+          t -= tz->tz_ux(t)[0];
+        else
+          RXML.run_error("Unsupported timezone %O for 'to-timezone'.\n",
+                         args["to-timezone"]);
       }
       t = Roxen.time_dequantifier(args, t);
 
       if(!(args->brief || args->time || args->date))
-	args->full=1;
+        args->full=1;
 
       int cache_time;
       if (args->cache) {
         cache_time = (int) args->cache;
       } else if (args["iso-time"] || args["unix-time"] || args["http-time"]) {
-	//  Result not based on current time so enable caching
-	cache_time = 99999;
+        //  Result not based on current time so enable caching
+        cache_time = 99999;
       } else if((<"year", "month", "week", "day", "wday", "date", "mday",
                   "hour", "min", "minute", "yday">)[args->part] ||
-		  (args->type == "iso" && args->date)) {
+                  (args->type == "iso" && args->date)) {
         cache_time = 60;
       } else {
         cache_time = 0;
@@ -1574,11 +1574,11 @@ class TagDate {
       CACHE(cache_time);
 
       if (err = catch {
-	  result = Roxen.tagtime(t, args, id, language);
-	}) {
-	// FIXME: Ought to check that it is mktime, localtime or gmtime
-	//        that has failed, and otherwise rethrow the error.
-	RXML.run_error("Unsupported date.\n");
+          result = Roxen.tagtime(t, args, id, language);
+        }) {
+        // FIXME: Ought to check that it is mktime, localtime or gmtime
+        //        that has failed, and otherwise rethrow the error.
+        RXML.run_error("Unsupported date.\n");
       }
       return 0;
     }
@@ -1612,10 +1612,10 @@ class TagInsert {
       }
 
       if (!plugin) RXML.parse_error("Unknown insertion source. "
-				    "Are the correct modules loaded?\n");
+                                    "Are the correct modules loaded?\n");
 
       if (plugin->do_enter) {
-	return plugin->do_enter(args, id, this);
+        return plugin->do_enter(args, id, this);
       }
     }
 
@@ -1623,27 +1623,27 @@ class TagInsert {
       result=plugin->get_data(args[name], args, id, this);
 
       if (RXML.Type new_type = plugin->get_type &&
-	  plugin->get_type (args, result, this))
-	result_type = new_type;
+          plugin->get_type (args, result, this))
+        result_type = new_type;
       else if(args->quote=="none")
-	result_type=RXML.t_xml;
+        result_type=RXML.t_xml;
       else
-	result_type=RXML.t_text;
+        result_type=RXML.t_text;
     }
 
     array do_return(RequestID id) {
 
       if(args->source) {
-	RXML.Tag plugin=get_plugins()[args->source];
-	if(!plugin) RXML.parse_error("Source "+args->source+" not present.\n");
-	do_insert(plugin, args->source, id);
-	return 0;
+        RXML.Tag plugin=get_plugins()[args->source];
+        if(!plugin) RXML.parse_error("Source "+args->source+" not present.\n");
+        do_insert(plugin, args->source, id);
+        return 0;
       }
       foreach(get_plugins(); string name; RXML.Tag plugin) {
-	if(args[name]) {
-	  do_insert(plugin, name, id);
-	  return 0;
-	}
+        if(args[name]) {
+          do_insert(plugin, name, id);
+          return 0;
+        }
       }
 
       parse_error("No correct insert attribute given.\n");
@@ -1663,20 +1663,20 @@ class TagInsertVariable {
     if(args->index) {
       mixed data = RXML.user_get_var(var, args->scope);
       if(intp(data) || floatp(data))
-	RXML.run_error("Can not index numbers.\n");
+        RXML.run_error("Can not index numbers.\n");
       if(stringp(data)) {
-	if(args->split)
-	  data = data / args->split;
-	else
-	  data = ({ data });
+        if(args->split)
+          data = data / args->split;
+        else
+          data = ({ data });
       }
       if(arrayp(data)) {
-	int index = (int)args->index;
-	if(index<0) index=sizeof(data)+index+1;
-	if(sizeof(data)<index || index<1)
-	  RXML.run_error("Index out of range.\n");
-	else
-	  return data[index-1];
+        int index = (int)args->index;
+        if(index<0) index=sizeof(data)+index+1;
+        if(sizeof(data)<index || index<1)
+          RXML.run_error("Index out of range.\n");
+        else
+          return data[index-1];
       }
       if(data[args->index]) return data[args->index];
       RXML.run_error("Could not index variable data\n");
@@ -1685,7 +1685,7 @@ class TagInsertVariable {
     else {
       mixed data = RXML.user_get_var(var, args->scope);
       if (arrayp (data) && insert_frame->result_type->subtype_of (RXML.t_any_text))
-	data = map (data, RXML.t_string->encode) * "\0";
+        data = map (data, RXML.t_string->encode) * "\0";
       return data;
     }
   }
@@ -1697,7 +1697,7 @@ class TagInsertVariables {
   constant plugin_name = "variables";
 
   string|mapping|RXML.Scope get_data (string var, mapping args,
-				      RequestID id, RXML.Frame insert_frame)
+                                      RequestID id, RXML.Frame insert_frame)
   {
     RXML.Context context=RXML_CONTEXT;
 
@@ -1708,32 +1708,32 @@ class TagInsertVariables {
       RXML.parse_error ("No such scope %q.\n", scope);
 
     if (insert_frame->result_type == RXML.t_string ||
-	insert_frame->result_type->subtype_of (RXML.t_any_text) ||
-	compat_level < 5.0) {
+        insert_frame->result_type->subtype_of (RXML.t_any_text) ||
+        compat_level < 5.0) {
       if(var=="full")
-	return map(sort(context->list_var(scope)),
-		   compat_level > 4.5 ?
-		   lambda(string s) {
-		     mixed value = context->get_var(s, scope);
-		     if (!zero_type (value))
-		       return sprintf("%s=%O", s, value);
-		     return 0;
-		   } :
-		   lambda(string s) {
-		     mixed value = context->get_var(s, scope);
-		     if (!zero_type (value))
-		       return sprintf("%s=%O", s, value);
-		     else
-		       // A variable with an undefined value doesn't
-		       // exist by definition, even though list_var
-		       // might still list it. It should therefore be
-		       // ignored, but we keep this compat for
-		       // hysterical reasons.
-		       return sprintf("%s=UNDEFINED", s);
-		   } ) * "\n";
+        return map(sort(context->list_var(scope)),
+                   compat_level > 4.5 ?
+                   lambda(string s) {
+                     mixed value = context->get_var(s, scope);
+                     if (!zero_type (value))
+                       return sprintf("%s=%O", s, value);
+                     return 0;
+                   } :
+                   lambda(string s) {
+                     mixed value = context->get_var(s, scope);
+                     if (!zero_type (value))
+                       return sprintf("%s=%O", s, value);
+                     else
+                       // A variable with an undefined value doesn't
+                       // exist by definition, even though list_var
+                       // might still list it. It should therefore be
+                       // ignored, but we keep this compat for
+                       // hysterical reasons.
+                       return sprintf("%s=UNDEFINED", s);
+                   } ) * "\n";
 
       return String.implode_nicely(sort(context->list_var(scope,
-							  compat_level > 4.5)));
+                                                          compat_level > 4.5)));
     }
 
     return context->get_scope (scope);
@@ -1755,22 +1755,22 @@ class TagInsertScopes {
     if(var=="full") {
       string result = "";
       foreach(sort(context->list_scopes()), string scope) {
-	result += scope+"\n";
-	// Filter out undefined values if the compat level allows us.
-	result += Roxen.html_encode_string(
-	  map(sort(context->list_var(args->scope)),
-	      compat_level > 4.5 ?
-	      lambda(string s) {
-		mixed val = context->get_var(s, args->scope);
-		if (!zero_type (val))
-		  return sprintf("%s.%s=%O", scope, s, val);
-		return 0;
-	      } :
-	      lambda(string s) {
-		return sprintf("%s.%s=%O", scope, s,
-			       context->get_var(s, args->scope) );
-	      } ) * "\n");
-	result += "\n";
+        result += scope+"\n";
+        // Filter out undefined values if the compat level allows us.
+        result += Roxen.html_encode_string(
+          map(sort(context->list_var(args->scope)),
+              compat_level > 4.5 ?
+              lambda(string s) {
+                mixed val = context->get_var(s, args->scope);
+                if (!zero_type (val))
+                  return sprintf("%s.%s=%O", scope, s, val);
+                return 0;
+              } :
+              lambda(string s) {
+                return sprintf("%s.%s=%O", scope, s,
+                               context->get_var(s, args->scope) );
+              } ) * "\n");
+        result += "\n";
       }
       return result;
     }
@@ -1833,17 +1833,17 @@ class TagInsertFile {
     mapping(string:mixed) result_mapping = ([]);
 
     result=id->conf->try_get_file(var, id, UNDEFINED, UNDEFINED, UNDEFINED,
-				  result_mapping);
+                                  result_mapping);
 
     // Propagate last_modified to parent request...
     if (result_mapping->stat &&
-	result_mapping->stat[ST_MTIME] > id->misc->last_modified)
+        result_mapping->stat[ST_MTIME] > id->misc->last_modified)
       RXML_CONTEXT->set_id_misc ("last_modified",
-				 result_mapping->stat[ST_MTIME]);
+                                 result_mapping->stat[ST_MTIME]);
     // ... and also in recursive inserts.
     if (result_mapping->last_modified > id->misc->last_modified)
       RXML_CONTEXT->set_id_misc ("last_modified",
-				 result_mapping->last_modified);
+                                 result_mapping->last_modified);
 
     // Restore previous language state.
     if (args->language && pl) {
@@ -1855,8 +1855,8 @@ class TagInsertFile {
 
     if (args["decode-charset"]) {
       if (result_mapping->charset) {
-	Charset.Decoder decoder = Charset.decoder(result_mapping->charset);
-	result = decoder->feed(result)->drain();
+        Charset.Decoder decoder = Charset.decoder(result_mapping->charset);
+        result = decoder->feed(result)->drain();
       }
     }
 
@@ -1896,9 +1896,9 @@ class TagReturn {
     array do_return(RequestID id)
     {
       if(args->code)
-	RXML_CONTEXT->set_misc (" _error", (int)args->code);
+        RXML_CONTEXT->set_misc (" _error", (int)args->code);
       if(args->text)
-	RXML_CONTEXT->set_misc (" _rettext", replace(args->text, "\n\r"/1, "%0A%0D"/3));
+        RXML_CONTEXT->set_misc (" _rettext", replace(args->text, "\n\r"/1, "%0A%0D"/3));
       return 0;
     }
   }
@@ -1952,7 +1952,7 @@ class TagRemoveCookie {
       // I agree, but I don't let it be. /mast
 
       if(!id->cookies[args->name])
-	RXML.run_error("That cookie does not exist.\n");
+        RXML.run_error("That cookie does not exist.\n");
 #endif
       Roxen.remove_cookie( id, args->name,
                            (args->value||id->cookies[args->name]||""),
@@ -1998,9 +1998,9 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
   if(s) {
     CACHE(10);
     mixed err = catch {
-	if(m->ssi)
-	  return Roxen.strftime(id->misc->ssi_timefmt || "%c", s[3]);
-	return Roxen.tagtime(s[3], m, id, language);
+        if(m->ssi)
+          return Roxen.strftime(id->misc->ssi_timefmt || "%c", s[3]);
+        return Roxen.tagtime(s[3], m, id, language);
       };
     // FIXME: Ought to check that it is mktime, localtime or gmtime
     //        that has failed, and otherwise rethrow the error.
@@ -2034,9 +2034,9 @@ string|array(string) tag_user(string tag, mapping m, RequestID id)
   {
     if(m->link && !m->nolink)
       return ({
-	sprintf("<a href=%s>%s</a>",
-		Roxen.html_encode_tag_value( "/~"+uid->name() ),
-		Roxen.html_encode_string( uid->gecos() ))
+        sprintf("<a href=%s>%s</a>",
+                Roxen.html_encode_tag_value( "/~"+uid->name() ),
+                Roxen.html_encode_string( uid->gecos() ))
       });
 
     return ({ Roxen.html_encode_string( uid->gecos() ) });
@@ -2046,29 +2046,29 @@ string|array(string) tag_user(string tag, mapping m, RequestID id)
   {
     if(m->link && !m->nolink)
       return ({
-	sprintf("<a href=%s>%s</a>",
-		Roxen.html_encode_tag_value(sprintf("mailto:%s@%s",
-					      uid->name(), dom)),
-		Roxen.html_encode_string(sprintf("%s@%s", uid->name(), dom)))
+        sprintf("<a href=%s>%s</a>",
+                Roxen.html_encode_tag_value(sprintf("mailto:%s@%s",
+                                              uid->name(), dom)),
+                Roxen.html_encode_string(sprintf("%s@%s", uid->name(), dom)))
       });
     return ({ Roxen.html_encode_string(uid->name()+ "@" + dom) });
   }
 
   if(m->nolink && !m->link)
     return ({ Roxen.html_encode_string(sprintf("%s <%s@%s>",
-					 uid->gecos(), uid->name(), dom))
+                                         uid->gecos(), uid->name(), dom))
     });
 
   return
     ({ sprintf( (m->nohomepage?"":
-		 sprintf("<a href=%s>%s</a>",
-			 Roxen.html_encode_tag_value( "/~"+uid->name() ),
-			 Roxen.html_encode_string( uid->gecos() ))+
-		 sprintf(" <a href=%s>%s</a>",
-			 Roxen.html_encode_tag_value(sprintf("mailto:%s@%s",
-						       uid->name(), dom)),
-			 Roxen.html_encode_string(sprintf("<%s@%s>",
-						    uid->name(), dom)))))
+                 sprintf("<a href=%s>%s</a>",
+                         Roxen.html_encode_tag_value( "/~"+uid->name() ),
+                         Roxen.html_encode_string( uid->gecos() ))+
+                 sprintf(" <a href=%s>%s</a>",
+                         Roxen.html_encode_tag_value(sprintf("mailto:%s@%s",
+                                                       uid->name(), dom)),
+                         Roxen.html_encode_string(sprintf("<%s@%s>",
+                                                    uid->name(), dom)))))
     });
 }
 
@@ -2088,7 +2088,7 @@ class TagSetMaxCache {
     array do_return(RequestID id) {
       id->set_max_cache (Roxen.time_dequantifier(args));
       if(args["force-protocol-cache"])
-	RXML_CONTEXT->set_id_misc ("no_proto_cache", 0);
+        RXML_CONTEXT->set_id_misc ("no_proto_cache", 0);
     }
   }
 }
@@ -2106,23 +2106,23 @@ class TagCharset
     array do_return( RequestID id )
     {
       if (string charset = args->in) {
-	Charset.Decoder dec;
-	if (catch (dec = Charset.decoder (charset)))
-	  RXML.parse_error ("Invalid charset %q\n", charset);
-	if (mixed err = catch (content = dec->feed (content || "")->drain())) {
-	  if (objectp (err) && err->is_charset_decode_error)
-	    RXML.run_error (describe_error (err));
-	  else
-	    throw (err);
-	}
+        Charset.Decoder dec;
+        if (catch (dec = Charset.decoder (charset)))
+          RXML.parse_error ("Invalid charset %q\n", charset);
+        if (mixed err = catch (content = dec->feed (content || "")->drain())) {
+          if (objectp (err) && err->is_charset_decode_error)
+            RXML.run_error (describe_error (err));
+          else
+            throw (err);
+        }
       }
       if (args->out && id->set_output_charset) {
-	//  Verify that encoder exists since we'll get internal errors
-	//  later if it's invalid. (The same test also happens in
-	//  id->set_output_charset() but only in debug mode.)
-	if (catch { Charset.encoder(args->out); })
-	  RXML.parse_error("Invalid charset %q\n", args->out);
-	id->set_output_charset( args->out );
+        //  Verify that encoder exists since we'll get internal errors
+        //  later if it's invalid. (The same test also happens in
+        //  id->set_output_charset() but only in debug mode.)
+        if (catch { Charset.encoder(args->out); })
+          RXML.parse_error("Invalid charset %q\n", args->out);
+        id->set_output_charset( args->out );
       }
       result_type = result_type (RXML.PXml);
       result="";
@@ -2149,48 +2149,48 @@ class TagRecode
 
       switch(args->from)
       {
-	case "safe-utf8":
-	  catch (content = utf8_to_string (content));
-	  break;
+        case "safe-utf8":
+          catch (content = utf8_to_string (content));
+          break;
 
-	default:
-	  if (string charset = args->from) {
-	    if (String.width (content) > 8)
-	      // If it's wide it's already decoded by necessity. Some of
-	      // the decoders also throw an error on this that isn't
-	      // typed as a DecodeError.
-	      RXML.run_error ("Cannot charset decode a wide string.\n");
-	    Charset.Decoder dec;
-	    if (catch (dec = Charset.decoder (charset)))
-	      RXML.parse_error ("Invalid charset %q\n", charset);
-	    if (mixed err = catch (content = dec->feed (content)->drain())) {
-	      if (objectp (err) && err->is_charset_decode_error)
-		RXML.run_error (describe_error (err));
-	      else
-		throw (err);
-	    }
-	  }
+        default:
+          if (string charset = args->from) {
+            if (String.width (content) > 8)
+              // If it's wide it's already decoded by necessity. Some of
+              // the decoders also throw an error on this that isn't
+              // typed as a DecodeError.
+              RXML.run_error ("Cannot charset decode a wide string.\n");
+            Charset.Decoder dec;
+            if (catch (dec = Charset.decoder (charset)))
+              RXML.parse_error ("Invalid charset %q\n", charset);
+            if (mixed err = catch (content = dec->feed (content)->drain())) {
+              if (objectp (err) && err->is_charset_decode_error)
+                RXML.run_error (describe_error (err));
+              else
+                throw (err);
+            }
+          }
       }
 
       if (args->to) {
-	//  User may provide substitution string or numeric entities for
-	//  characters that don't fit in the requested encoding.
-	int use_entity_fallback =
-	  lower_case(args["entity-fallback"] || "no") != "no";
-	string str_fallback = args["string-fallback"];
-	Charset.Encoder enc;
-	if (catch (enc = Charset.encoder (args->to, str_fallback,
-						 use_entity_fallback &&
-						 lambda(string ch) {
-						   return "&#" + ch[0] + ";";
-						 })))
-	  RXML.parse_error ("Invalid charset %q\n", args->to);
-	if (mixed err = catch (content = enc->feed (content)->drain())) {
-	  if (objectp (err) && err->is_charset_encode_error)
-	    RXML.run_error (describe_error (err));
-	  else
-	    throw (err);
-	}
+        //  User may provide substitution string or numeric entities for
+        //  characters that don't fit in the requested encoding.
+        int use_entity_fallback =
+          lower_case(args["entity-fallback"] || "no") != "no";
+        string str_fallback = args["string-fallback"];
+        Charset.Encoder enc;
+        if (catch (enc = Charset.encoder (args->to, str_fallback,
+                                                 use_entity_fallback &&
+                                                 lambda(string ch) {
+                                                   return "&#" + ch[0] + ";";
+                                                 })))
+          RXML.parse_error ("Invalid charset %q\n", args->to);
+        if (mixed err = catch (content = enc->feed (content)->drain())) {
+          if (objectp (err) && err->is_charset_encode_error)
+            RXML.run_error (describe_error (err));
+          else
+            throw (err);
+        }
       }
 
       return ({ content });
@@ -2221,12 +2221,12 @@ class TagScope {
 //       if(scope_name=="form") oldvar=id->variables;
 // #endif
       if (string extend_scope = args->extend) {
-	mapping|object old = RXML_CONTEXT->get_scope (extend_scope);
-	if (!old) run_error ("There is no scope %O.\n", extend_scope);
-	vars=copy_value(old);
+        mapping|object old = RXML_CONTEXT->get_scope (extend_scope);
+        if (!old) run_error ("There is no scope %O.\n", extend_scope);
+        vars=copy_value(old);
       }
       else
-	vars=([]);
+        vars=([]);
 // #if ROXEN_COMPAT <= 1.3
 //       if(oldvar) id->variables=vars;
 // #endif
@@ -2268,10 +2268,10 @@ class CacheTagEntry (mixed data)
     if (arrayp (data)) {
       things = ({ data });
       foreach (data, mixed thing) {
-	if (objectp (data) && data->is_RXML_PCode)
-	  things += data->collect_things_recur();
-	else
-	  things += ({ thing });
+        if (objectp (data) && data->is_RXML_PCode)
+          things += data->collect_things_recur();
+        else
+          things += ({ thing });
       }
     } else if (objectp (data) && data->is_RXML_PCode) {
       things = data->collect_things_recur();
@@ -2299,15 +2299,15 @@ class TagCache {
   inherit RXML.Tag;
   constant name = "cache";
   constant flags = (RXML.FLAG_GET_RAW_CONTENT |
-		    RXML.FLAG_GET_EVALED_CONTENT |
-		    RXML.FLAG_DONT_CACHE_RESULT |
-		    RXML.FLAG_CUSTOM_TRACE);
+                    RXML.FLAG_GET_EVALED_CONTENT |
+                    RXML.FLAG_DONT_CACHE_RESULT |
+                    RXML.FLAG_CUSTOM_TRACE);
   constant cache_tag_eval_loc = "RXML <cache> eval";
   constant cache_tag_alts_loc = "RXML <cache> alternatives";
   array(RXML.Type) result_types = ({RXML.t_any});
 
   mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
-		   void|mapping|int(1..1) cache_context)
+                   void|mapping|int(1..1) cache_context)
   {
 #ifdef RUN_SELF_TEST
     CacheTagEntry entry = CacheTagEntry (data);
@@ -2411,23 +2411,23 @@ class TagCache {
     }
 
     void set_alternative (string key, RXML.PCode|array(int|RXML.PCode) entry,
-			  void|int timeout, void|int no_lookup)
+                          void|int timeout, void|int no_lookup)
     {
       if (!timeout && arrayp (entry) && entry[0])
-	timeout = entry[0] - time();
+        timeout = entry[0] - time();
       else if (timeout) {
-	if (arrayp (entry))
-	  entry[0] = timeout + time();
-	else
-	  entry = ({ timeout + time(), entry, 0 });
+        if (arrayp (entry))
+          entry[0] = timeout + time();
+        else
+          entry = ({ timeout + time(), entry, 0 });
       }
 
       // A negative timeout means that the entry has already expired.
       if (timeout >= 0) {
-	string full_key = get_full_key (key);
-	cache_set (cache_tag_alts_loc, full_key, entry, timeout, no_lookup);
-	if (!alternatives) alternatives = (<>);
-	alternatives[key] = 1;
+        string full_key = get_full_key (key);
+        cache_set (cache_tag_alts_loc, full_key, entry, timeout, no_lookup);
+        if (!alternatives) alternatives = (<>);
+        alternatives[key] = 1;
       }
     }
 
@@ -2436,7 +2436,7 @@ class TagCache {
       string full_key = get_full_key (key);
       cache_remove (cache_tag_alts_loc, full_key);
       if (alternatives)
-	alternatives[key] = 0;
+        alternatives[key] = 0;
     }
 
     protected constant rxml_empty_replacement = (<"eMp ty__">);
@@ -2449,30 +2449,30 @@ class TagCache {
 #define ADD_VARIABLE_TO_KEYMAP(ctx, var, is_level2) do {		\
       array splitted = ctx->parse_user_var (var, 1);			\
       if (intp (splitted[0])) { /* Depend on the whole scope. */	\
-	mapping|RXML.Scope scope = ctx->get_scope (var);		\
-	array ind, val;							\
-	if (mappingp (scope)) {						\
-	  ind = indices (scope);					\
-	  val = values (scope);						\
-	}								\
-	else if (scope) {						\
-	  ind = scope->_indices (ctx, var);				\
-	  val = rows (scope, ind);					\
-	}								\
-	else								\
-	  parse_error ("Unknown scope %O.\n", var);			\
-	val = replace (val, RXML.empty, rxml_empty_replacement);	\
-	keymap[var] = mkmapping (ind, val);				\
+        mapping|RXML.Scope scope = ctx->get_scope (var);		\
+        array ind, val;							\
+        if (mappingp (scope)) {						\
+          ind = indices (scope);					\
+          val = values (scope);						\
+        }								\
+        else if (scope) {						\
+          ind = scope->_indices (ctx, var);				\
+          val = rows (scope, ind);					\
+        }								\
+        else								\
+          parse_error ("Unknown scope %O.\n", var);			\
+        val = replace (val, RXML.empty, rxml_empty_replacement);	\
+        keymap[var] = mkmapping (ind, val);				\
       }									\
       else {								\
-	mixed val = ctx->get_var (splitted[1..], splitted[0]);		\
-	if (!zero_type (val))						\
-	  keymap[var] = (val == RXML.empty ? rxml_empty_replacement : val); \
+        mixed val = ctx->get_var (splitted[1..], splitted[0]);		\
+        if (!zero_type (val))						\
+          keymap[var] = (val == RXML.empty ? rxml_empty_replacement : val); \
       }									\
       if (is_level2) {							\
-	if (!level2_keys)						\
-	  level2_keys = ({ });						\
-	level2_keys += ({ var });					\
+        if (!level2_keys)						\
+          level2_keys = ({ });						\
+        level2_keys += ({ var });					\
       }									\
     } while (0)
 
@@ -2480,8 +2480,8 @@ class TagCache {
     {
       RXML.Context ctx = RXML_CONTEXT;
       foreach (subvariables, string var)
-	// Note: Shouldn't get an invalid variable spec here.
-	ADD_VARIABLE_TO_KEYMAP (ctx, var, 0);
+        // Note: Shouldn't get an invalid variable spec here.
+        ADD_VARIABLE_TO_KEYMAP (ctx, var, 0);
     }
 
     protected void make_key_from_keymap (RequestID id, int timeout)
@@ -2504,56 +2504,56 @@ class TagCache {
       if (keymap["page.path"]) ignored++;
 
       if (sizeof (keymap) != ignored) {
-	if (args["enable-protocol-cache"])
-	  ;
-	else {
-	  NO_PROTO_CACHE();
-	  if (!args["enable-client-cache"])
-	    NOCACHE();
-	}
+        if (args["enable-protocol-cache"])
+          ;
+        else {
+          NO_PROTO_CACHE();
+          if (!args["enable-client-cache"])
+            NOCACHE();
+        }
       }
       else if (timeout)
-	id->lower_max_cache (timeout);
+        id->lower_max_cache (timeout);
 
       //  For two-level keys the level 1 variables are placed in "key" and
       //  the level 2 variables in "key_level2". There is no overlap since
       //  we'll compare both during lookup.
       if (level2_keys) {
-	key = encode_value_canonic(keymap - level2_keys);
-	key_level2 = encode_value_canonic(keymap & level2_keys);
+        key = encode_value_canonic(keymap - level2_keys);
+        key_level2 = encode_value_canonic(keymap & level2_keys);
       } else {
-	key = encode_value_canonic (keymap);
-	key_level2 = 0;
+        key = encode_value_canonic (keymap);
+        key_level2 = 0;
       }
       if (!args["disable-key-hash"]) {
-	// Initialize with a 32 char string to make sure MD5 goes
-	// through all the rounds even if the key is very short.
-	// Otherwise the risk for coincidental equal keys gets much
-	// bigger.
-	key =
-	  Crypto.MD5()->update ("................................")
-		       ->update (key)
-		       ->digest();
-	if (key_level2) {
-	  key_level2 =
-	    Crypto.MD5()->update ("................................")
-		        ->update (key_level2)
-		        ->digest();
-	}
+        // Initialize with a 32 char string to make sure MD5 goes
+        // through all the rounds even if the key is very short.
+        // Otherwise the risk for coincidental equal keys gets much
+        // bigger.
+        key =
+          Crypto.MD5()->update ("................................")
+                       ->update (key)
+                       ->digest();
+        if (key_level2) {
+          key_level2 =
+            Crypto.MD5()->update ("................................")
+                        ->update (key_level2)
+                        ->digest();
+        }
       }
     }
 
     array do_enter (RequestID id)
     {
       if( args->nocache || args["not-post-method"] && id->method == "POST" ) {
-	do_iterate = 1;
-	key = 0;
-	key_level2 = 0;
-	TAG_TRACE_ENTER ("no cache due to %s",
-			 args->nocache ? "nocache argument" : "POST method");
-	id->cache_status->cachetag = 0;
-	id->misc->cache_tag_miss = 1;
-	return 0;
+        do_iterate = 1;
+        key = 0;
+        key_level2 = 0;
+        TAG_TRACE_ENTER ("no cache due to %s",
+                         args->nocache ? "nocache argument" : "POST method");
+        id->cache_status->cachetag = 0;
+        id->misc->cache_tag_miss = 1;
+        return 0;
       }
 
       RXML.Context ctx = RXML_CONTEXT;
@@ -2561,64 +2561,64 @@ class TagCache {
 
       overridden_keymap = 0;
       if (!args->propagate ||
-	  (!(keymap = ctx->misc->cache_key) &&
-	   (m_delete (args, "propagate"), 1))) {
-	overridden_keymap = ctx->misc->cache_key;
-	keymap = ctx->misc->cache_key = ([]);
+          (!(keymap = ctx->misc->cache_key) &&
+           (m_delete (args, "propagate"), 1))) {
+        overridden_keymap = ctx->misc->cache_key;
+        keymap = ctx->misc->cache_key = ([]);
       }
 
       if (string var_list = args->variable) {
-	if (var_list != "") {
-	  var_list = replace(String.normalize_space(var_list), " ", "");
-	  foreach (var_list / ",", string var)
-	    ADD_VARIABLE_TO_KEYMAP (ctx, var, 0);
-	}
-	default_key = 0;
+        if (var_list != "") {
+          var_list = replace(String.normalize_space(var_list), " ", "");
+          foreach (var_list / ",", string var)
+            ADD_VARIABLE_TO_KEYMAP (ctx, var, 0);
+        }
+        default_key = 0;
       }
 
       if (string uniq_var_list = args["generation-variable"]) {
-	if (uniq_var_list != "") {
-	  uniq_var_list =
-	    replace(String.normalize_space(uniq_var_list), " ", "");
-	  foreach (uniq_var_list / ",", string uniq_var)
-	    ADD_VARIABLE_TO_KEYMAP (ctx, uniq_var, 1);
-	}
-	default_key = 0;
+        if (uniq_var_list != "") {
+          uniq_var_list =
+            replace(String.normalize_space(uniq_var_list), " ", "");
+          foreach (uniq_var_list / ",", string uniq_var)
+            ADD_VARIABLE_TO_KEYMAP (ctx, uniq_var, 1);
+        }
+        default_key = 0;
       }
 
       if (args->profile) {
-	if (mapping avail_profiles = id->misc->rxml_cache_cur_profile)
-	  foreach (args->profile / ",", string profile) {
-	    profile = String.trim_all_whites (profile);
-	    mixed profile_val = avail_profiles[profile];
-	    if (zero_type (profile_val))
-	      parse_error ("Unknown cache profile %O.\n", profile);
-	    keymap[" " + profile] = profile_val;
-	  }
-	else
-      	  parse_error ("There are no cache profiles.\n");
-	default_key = 0;
+        if (mapping avail_profiles = id->misc->rxml_cache_cur_profile)
+          foreach (args->profile / ",", string profile) {
+            profile = String.trim_all_whites (profile);
+            mixed profile_val = avail_profiles[profile];
+            if (zero_type (profile_val))
+              parse_error ("Unknown cache profile %O.\n", profile);
+            keymap[" " + profile] = profile_val;
+          }
+        else
+          parse_error ("There are no cache profiles.\n");
+        default_key = 0;
       }
 
       if (args->propagate) {
-	if (args->key)
-	  parse_error ("Argument \"key\" cannot be used together with \"propagate\".");
-	// Updated the key, so we're done. The enclosing cache tag
-	// should do the caching.
-	do_iterate = 1;
-	TAG_TRACE_ENTER ("propagating key, is now %s",
-			 RXML.utils.format_short (keymap, 200));
-	key = key_level2 = keymap = 0;
-	flags &= ~RXML.FLAG_DONT_CACHE_RESULT;
-	return 0;
+        if (args->key)
+          parse_error ("Argument \"key\" cannot be used together with \"propagate\".");
+        // Updated the key, so we're done. The enclosing cache tag
+        // should do the caching.
+        do_iterate = 1;
+        TAG_TRACE_ENTER ("propagating key, is now %s",
+                         RXML.utils.format_short (keymap, 200));
+        key = key_level2 = keymap = 0;
+        flags &= ~RXML.FLAG_DONT_CACHE_RESULT;
+        return 0;
       }
 
       if(args->key) keymap[0] += ({args->key});
 
       if (default_key) {
-	// Include the form variables and the page path by default.
-	keymap->form = id->real_variables + ([]);
-	keymap["page.path"] = id->not_query;
+        // Include the form variables and the page path by default.
+        keymap->form = id->real_variables + ([]);
+        keymap["page.path"] = id->not_query;
       }
 
       if (subvariables) add_subvariables_to_keymap();
@@ -2627,27 +2627,27 @@ class TagCache {
 
 #ifdef RXML_CACHE_TIMEOUT_IMPLIES_SHARED
       if(timeout)
-	args->shared="yes";
+        args->shared="yes";
 #endif
 
       if (args->shared) {
-	if(args->nohash)
-	  // Always use the configuration in the key; noone really
-	  // wants cache tainting between servers.
-	  keymap[1] = id->conf->name;
-	else {
-	  if (!cache_id) {
-	    // Include the content type in the hash since we cache the
-	    // p-code which has static type inference.
-	    if (!content) content = "";
-	    if (String.width (content) != 8) content = encode_value_canonic (content);
-	    cache_id = Crypto.MD5()->update ("................................")
-				   ->update (content)
-				   ->update (content_type->name)
-				   ->digest();
-	  }
-	  keymap[1] = ({id->conf->name, cache_id});
-	}
+        if(args->nohash)
+          // Always use the configuration in the key; noone really
+          // wants cache tainting between servers.
+          keymap[1] = id->conf->name;
+        else {
+          if (!cache_id) {
+            // Include the content type in the hash since we cache the
+            // p-code which has static type inference.
+            if (!content) content = "";
+            if (String.width (content) != 8) content = encode_value_canonic (content);
+            cache_id = Crypto.MD5()->update ("................................")
+                                   ->update (content)
+                                   ->update (content_type->name)
+                                   ->digest();
+          }
+          keymap[1] = ({id->conf->name, cache_id});
+        }
       }
 
       make_key_from_keymap (id, timeout);
@@ -2658,159 +2658,159 @@ class TagCache {
       int retry_lookup;
 
       do {
-	retry_lookup = 0;
-	entry = args->shared ?
-	  cache_lookup (cache_tag_eval_loc, key) :
-	  get_alternative (key);
-	removed = 0; // 0: not removed, 1: stale, 2: timeout, 3: pragma no-cache
+        retry_lookup = 0;
+        entry = args->shared ?
+          cache_lookup (cache_tag_eval_loc, key) :
+          get_alternative (key);
+        removed = 0; // 0: not removed, 1: stale, 2: timeout, 3: pragma no-cache
 
       got_entry:
-	if (entry) {
-	check_entry_valid: {
-	    if (arrayp (entry)) {
-	      //  If this represents a two-level entry the second key must
-	      //  match as well for the entry to be considered a hit. A miss
-	      //  in that comparison is however not necessarily a sign that
-	      //  the entry is stale so we treat it as a regular miss.
-	      //
-	      //  Finding an entry with a two-level keymap when none was
-	      //  requested means whatever entry we got satisfies the
-	      //  lookup.
-	      if (key_level2 && (sizeof(entry) > 2) &&
-		  (entry[2] != key_level2)) {
-		entry = 0;
-		break got_entry;
-	      }
+        if (entry) {
+        check_entry_valid: {
+            if (arrayp (entry)) {
+              //  If this represents a two-level entry the second key must
+              //  match as well for the entry to be considered a hit. A miss
+              //  in that comparison is however not necessarily a sign that
+              //  the entry is stale so we treat it as a regular miss.
+              //
+              //  Finding an entry with a two-level keymap when none was
+              //  requested means whatever entry we got satisfies the
+              //  lookup.
+              if (key_level2 && (sizeof(entry) > 2) &&
+                  (entry[2] != key_level2)) {
+                entry = 0;
+                break got_entry;
+              }
 
-	      if (entry[0] && (entry[0] < time (1))) {
-		removed = 2;
-		break check_entry_valid;
-	      }
+              if (entry[0] && (entry[0] < time (1))) {
+                removed = 2;
+                break check_entry_valid;
+              }
 
-	      evaled_content = entry[1];
-	    } else {
-	      if (key_level2) {
-		//  Inconsistent use of cache variables since at least one
-		//  generation variable was expected but none found. We'll
-		//  consider it a miss and regenerate the entry so it gets
-		//  stored with a proper two-level keymap.
-		entry = 0;
-		break got_entry;
-	      }
+              evaled_content = entry[1];
+            } else {
+              if (key_level2) {
+                //  Inconsistent use of cache variables since at least one
+                //  generation variable was expected but none found. We'll
+                //  consider it a miss and regenerate the entry so it gets
+                //  stored with a proper two-level keymap.
+                entry = 0;
+                break got_entry;
+              }
 
-	      evaled_content = entry;
-	    }
-	    if (evaled_content->is_stale())
-	      removed = 1;
-	    else if (id->pragma["no-cache"] && args["flush-on-no-cache"])
-	      removed = 3;
-	  }
+              evaled_content = entry;
+            }
+            if (evaled_content->is_stale())
+              removed = 1;
+            else if (id->pragma["no-cache"] && args["flush-on-no-cache"])
+              removed = 3;
+          }
 
-	  if (removed) {
-	    if (args->shared)
-	      cache_remove (cache_tag_eval_loc, key);
-	    else
-	      remove_alternative (key);
-	  }
+          if (removed) {
+            if (args->shared)
+              cache_remove (cache_tag_eval_loc, key);
+            else
+              remove_alternative (key);
+          }
 
-	  else {
-	    do_iterate = -1;
-	    TAG_TRACE_ENTER ("cache hit%s for key %s",
-			     args->shared ?
-			     (timeout ?
-			      " (shared " + timeout + "s timeout cache)" :
-			      " (shared cache)") :
-			     (timeout ? " (" + timeout + "s timeout cache)" : ""),
-			     RXML.utils.format_short (keymap, 200));
-	    key = key_level2 = keymap = 0;
-	    // FIXME: The following is probably redundant
-	    //        (handled by cleanup() further below),
-	    //        but shouldn't hurt.
-	    if (mutex_key) {
-	      destruct(mutex_key);
+          else {
+            do_iterate = -1;
+            TAG_TRACE_ENTER ("cache hit%s for key %s",
+                             args->shared ?
+                             (timeout ?
+                              " (shared " + timeout + "s timeout cache)" :
+                              " (shared cache)") :
+                             (timeout ? " (" + timeout + "s timeout cache)" : ""),
+                             RXML.utils.format_short (keymap, 200));
+            key = key_level2 = keymap = 0;
+            // FIXME: The following is probably redundant
+            //        (handled by cleanup() further below),
+            //        but shouldn't hurt.
+            if (mutex_key) {
+              destruct(mutex_key);
 
-	      //  vvv Relying on interpreter lock
-	      if (!--cache_mutex_concurrency[mutex_id])
-		m_delete(cache_mutexes, mutex_id);
-	      //  ^^^ and here vvv
-	      if (!cache_mutex_concurrency[mutex_id])
-		m_delete(cache_mutex_concurrency, mutex_id);
-	      //  ^^^
-	    }
+              //  vvv Relying on interpreter lock
+              if (!--cache_mutex_concurrency[mutex_id])
+                m_delete(cache_mutexes, mutex_id);
+              //  ^^^ and here vvv
+              if (!cache_mutex_concurrency[mutex_id])
+                m_delete(cache_mutex_concurrency, mutex_id);
+              //  ^^^
+            }
 
             RXML.PCode cache_hit = evaled_content;
             evaled_content = 0;
-	    return ({cache_hit});
-	  }
-	}
+            return ({cache_hit});
+          }
+        }
 
-	//  Check for mutex synchronization during shared entry generation
-	if (!mutex_key && args->shared) {
-	  if (args->mutex) {
-	    //  We use the serialized keymap as the mutex ID so that
-	    //  generation of unrelated entries in the same cache won't
-	    //  block each other. Note that cache_id is already incorporated
-	    //  into key.
-	    mutex_id = key;
+        //  Check for mutex synchronization during shared entry generation
+        if (!mutex_key && args->shared) {
+          if (args->mutex) {
+            //  We use the serialized keymap as the mutex ID so that
+            //  generation of unrelated entries in the same cache won't
+            //  block each other. Note that cache_id is already incorporated
+            //  into key.
+            mutex_id = key;
 
-	    //  Signal that we're about to enter mutex handling. This will
-	    //  prevent any other thread from deallocating the same mutex
-	    //  prematurely.
-	    //
-	    //  vvv Relying on interpreter lock
-	    cache_mutex_concurrency[mutex_id]++;
-	    //  ^^^
+            //  Signal that we're about to enter mutex handling. This will
+            //  prevent any other thread from deallocating the same mutex
+            //  prematurely.
+            //
+            //  vvv Relying on interpreter lock
+            cache_mutex_concurrency[mutex_id]++;
+            //  ^^^
 
-	    //  Find existing mutex or allocate a new one
-	    Thread.Mutex mtx = cache_mutexes[mutex_id];
-	  lock_mutex:
-	    {
-	      if (!mtx) {
-		//  Prepare a new mutex and lock it before registering it so
-		//  the weak mapping will retain it. We'll swap in the mutex
-		//  atomically to avoid a race, and if we lose the race we
-		//  can discard it and continue with the old one.
-		Thread.Mutex new_mtx = Thread.Mutex();
-		Thread.MutexKey new_key = new_mtx->lock();
+            //  Find existing mutex or allocate a new one
+            Thread.Mutex mtx = cache_mutexes[mutex_id];
+          lock_mutex:
+            {
+              if (!mtx) {
+                //  Prepare a new mutex and lock it before registering it so
+                //  the weak mapping will retain it. We'll swap in the mutex
+                //  atomically to avoid a race, and if we lose the race we
+                //  can discard it and continue with the old one.
+                Thread.Mutex new_mtx = Thread.Mutex();
+                Thread.MutexKey new_key = new_mtx->lock();
 
-		//  vvv Relying on interpreter lock here
-		if (!(mtx = cache_mutexes[mutex_id])) {
-		  //  We're first so store our new mutex
-		  cache_mutexes[mutex_id] = new_mtx;
-		  //  ^^^
-		  mutex_key = new_key;
-		  break lock_mutex;
-		} else {
-		  //  Someone created it first so dispose of our prepared mutex
-		  //  and carry on with the existing one.
-		  destruct(new_key);
-		  new_mtx = 0;
-		}
-	      }
-	      mutex_key = mtx->lock();
-	    }
+                //  vvv Relying on interpreter lock here
+                if (!(mtx = cache_mutexes[mutex_id])) {
+                  //  We're first so store our new mutex
+                  cache_mutexes[mutex_id] = new_mtx;
+                  //  ^^^
+                  mutex_key = new_key;
+                  break lock_mutex;
+                } else {
+                  //  Someone created it first so dispose of our prepared mutex
+                  //  and carry on with the existing one.
+                  destruct(new_key);
+                  new_mtx = 0;
+                }
+              }
+              mutex_key = mtx->lock();
+            }
 
-	    id->add_threadbound_session_object (mutex_key);
+            id->add_threadbound_session_object (mutex_key);
 
-	    retry_lookup = 1;
-	  }
-	}
+            retry_lookup = 1;
+          }
+        }
       } while (retry_lookup);
 
       keymap += ([]);
       do_iterate = 1;
       persistent_cache = 0;
       TAG_TRACE_ENTER ("cache miss%s for key %s, %s",
-		       args->shared ?
-		       (timeout ?
-			" (shared " + timeout + "s timeout cache)" :
-			" (shared cache)") :
-		       (timeout ? " (" + timeout + "s timeout cache)" : ""),
-		       RXML.utils.format_short (keymap, 200),
-		       removed == 1 ? "entry p-code is stale" :
-		       removed == 2 ? "entry had timed out" :
-		       removed == 3 ? "a pragma no-cache request removed the entry" :
-		       "no matching entry");
+                       args->shared ?
+                       (timeout ?
+                        " (shared " + timeout + "s timeout cache)" :
+                        " (shared cache)") :
+                       (timeout ? " (" + timeout + "s timeout cache)" : ""),
+                       RXML.utils.format_short (keymap, 200),
+                       removed == 1 ? "entry p-code is stale" :
+                       removed == 2 ? "entry had timed out" :
+                       removed == 3 ? "a pragma no-cache request removed the entry" :
+                       "no matching entry");
       id->cache_status->cachetag = 0;
       id->misc->cache_tag_miss = 1;
       return 0;
@@ -2819,82 +2819,82 @@ class TagCache {
     array do_return (RequestID id)
     {
       if (key) {
-	int key_updated;
-	mapping(string|int:mixed) subkeymap = RXML_CONTEXT->misc->cache_key;
-	if (sizeof (subkeymap) > sizeof (keymap)) {
-	  // The test above assumes that no subtag removes entries in
-	  // RXML_CONTEXT->misc->cache_key.
-	  subvariables = filter (indices (subkeymap - keymap), stringp);
-	  // subvariables is part of the persistent state, but we'll
-	  // come to state_update later anyway if it should be called.
-	  add_subvariables_to_keymap();
-	  make_key_from_keymap (id, timeout);
-	  key_updated = 1;
-	}
+        int key_updated;
+        mapping(string|int:mixed) subkeymap = RXML_CONTEXT->misc->cache_key;
+        if (sizeof (subkeymap) > sizeof (keymap)) {
+          // The test above assumes that no subtag removes entries in
+          // RXML_CONTEXT->misc->cache_key.
+          subvariables = filter (indices (subkeymap - keymap), stringp);
+          // subvariables is part of the persistent state, but we'll
+          // come to state_update later anyway if it should be called.
+          add_subvariables_to_keymap();
+          make_key_from_keymap (id, timeout);
+          key_updated = 1;
+        }
 
-	if (args->shared) {
-	  if (object/*(RXML.PikeCompile)*/ comp = evaled_content->p_code_comp) {
-	    // Don't cache the PikeCompile objects.
-	    comp->compile();
-	    evaled_content->p_code_comp = 0;
-	  }
+        if (args->shared) {
+          if (object/*(RXML.PikeCompile)*/ comp = evaled_content->p_code_comp) {
+            // Don't cache the PikeCompile objects.
+            comp->compile();
+            evaled_content->p_code_comp = 0;
+          }
 
-	  object(RXML.PCode)|array(int|RXML.PCode|string) new_entry =
-	    level2_keys ?
-	    ({ 0, evaled_content, key_level2 }) :
-	    evaled_content;
-	  cache_set (cache_tag_eval_loc, key, new_entry, timeout);
-	  TAG_TRACE_LEAVE ("added shared%s cache entry with key %s",
-			   timeout ? " timeout" : "",
-			   RXML.utils.format_short (keymap, 200));
-	}
+          object(RXML.PCode)|array(int|RXML.PCode|string) new_entry =
+            level2_keys ?
+            ({ 0, evaled_content, key_level2 }) :
+            evaled_content;
+          cache_set (cache_tag_eval_loc, key, new_entry, timeout);
+          TAG_TRACE_LEAVE ("added shared%s cache entry with key %s",
+                           timeout ? " timeout" : "",
+                           RXML.utils.format_short (keymap, 200));
+        }
 
-	else {
-	  if (object/*(RXML.PikeCompile)*/ comp = evaled_content->p_code_comp)
-	    comp->compile();
+        else {
+          if (object/*(RXML.PikeCompile)*/ comp = evaled_content->p_code_comp)
+            comp->compile();
           // Kludge to get a low cost in the RAM cache. Relatively
           // small but costly "RXML <cache> alternatives" entries may
           // otherwise "take over" the RAM cache.
-	  get_alternative (key);
-	  if (timeout) {
-	    if (args["persistent-cache"] == "yes") {
-	      persistent_cache = 1;
-	      RXML_CONTEXT->state_update();
-	    }
-	    set_alternative (key,
-			     ({ time() + timeout, evaled_content, key_level2 }),
-			     timeout,
-			     key_updated);
-	    TAG_TRACE_LEAVE ("added%s %ds timeout cache entry with key %s",
-			     persistent_cache ? " (possibly persistent)" : "",
-			     timeout,
-			     RXML.utils.format_short (keymap, 200));
-	  }
+          get_alternative (key);
+          if (timeout) {
+            if (args["persistent-cache"] == "yes") {
+              persistent_cache = 1;
+              RXML_CONTEXT->state_update();
+            }
+            set_alternative (key,
+                             ({ time() + timeout, evaled_content, key_level2 }),
+                             timeout,
+                             key_updated);
+            TAG_TRACE_LEAVE ("added%s %ds timeout cache entry with key %s",
+                             persistent_cache ? " (possibly persistent)" : "",
+                             timeout,
+                             RXML.utils.format_short (keymap, 200));
+          }
 
-	  else {
-	    set_alternative (key,
-			     key_level2 ?
-			     ({ 0, evaled_content, key_level2 }) :
-			     evaled_content,
-			     UNDEFINED,
-			     key_updated);
+          else {
+            set_alternative (key,
+                             key_level2 ?
+                             ({ 0, evaled_content, key_level2 }) :
+                             evaled_content,
+                             UNDEFINED,
+                             key_updated);
 
-	    if (args["persistent-cache"] != "no") {
-	      persistent_cache = 1;
-	      RXML_CONTEXT->state_update();
-	    }
-	    TAG_TRACE_LEAVE ("added%s cache entry with key %s",
-			     persistent_cache ? " (possibly persistent)" : "",
-			     RXML.utils.format_short (keymap, 200));
-	  }
-	}
+            if (args["persistent-cache"] != "no") {
+              persistent_cache = 1;
+              RXML_CONTEXT->state_update();
+            }
+            TAG_TRACE_LEAVE ("added%s cache entry with key %s",
+                             persistent_cache ? " (possibly persistent)" : "",
+                             RXML.utils.format_short (keymap, 200));
+          }
+        }
       }
       else
-	TAG_TRACE_LEAVE ("");
+        TAG_TRACE_LEAVE ("");
 
       if (overridden_keymap) {
-	RXML_CONTEXT->misc->cache_key = overridden_keymap;
-	overridden_keymap = 0;
+        RXML_CONTEXT->misc->cache_key = overridden_keymap;
+        overridden_keymap = 0;
       }
 
       evaled_content = 0;
@@ -2905,19 +2905,19 @@ class TagCache {
     protected void cleanup()
     {
       if (mutex_key) {
-	destruct(mutex_key);
+        destruct(mutex_key);
 
-	//  Decrease parallel count for shared mutex. If we reach zero we
-	//  know no other thread depends on the same mutex so drop it from
-	//  global table.
-	//
-	//  vvv Relying on interpreter lock
-	if (!--cache_mutex_concurrency[mutex_id])
-	  m_delete(cache_mutexes, mutex_id);
-	//  ^^^ and here vvv
-	if (!cache_mutex_concurrency[mutex_id])
-	  m_delete(cache_mutex_concurrency, mutex_id);
-	//  ^^^
+        //  Decrease parallel count for shared mutex. If we reach zero we
+        //  know no other thread depends on the same mutex so drop it from
+        //  global table.
+        //
+        //  vvv Relying on interpreter lock
+        if (!--cache_mutex_concurrency[mutex_id])
+          m_delete(cache_mutexes, mutex_id);
+        //  ^^^ and here vvv
+        if (!cache_mutex_concurrency[mutex_id])
+          m_delete(cache_mutex_concurrency, mutex_id);
+        //  ^^^
       }
     }
 
@@ -2925,17 +2925,17 @@ class TagCache {
     {
       mapping(string:RXML.PCode|array(int|RXML.PCode)) persistent_alts;
       if (alternatives) {
-	if (persistent_cache) {
-	  persistent_alts = ([]);
-	  // Get the entries so we can store them persistently.
-	  foreach (alternatives; string key;) {
-	    object(RXML.PCode)|array(int|RXML.PCode) entry =
-	      peek_alternative (key);
-	    if (entry) {
-	      persistent_alts[key] = entry;
-	    }
-	  }
-	}
+        if (persistent_cache) {
+          persistent_alts = ([]);
+          // Get the entries so we can store them persistently.
+          foreach (alternatives; string key;) {
+            object(RXML.PCode)|array(int|RXML.PCode) entry =
+              peek_alternative (key);
+            if (entry) {
+              persistent_alts[key] = entry;
+            }
+          }
+        }
       }
 
       return ({cache_id, subvariables, persistent_cache, persistent_alts });
@@ -2947,32 +2947,32 @@ class TagCache {
       [cache_id, subvariables, persistent_cache, persistent_alts] = saved;
 
       if (persistent_alts) {
-	foreach (persistent_alts; string key; object|array entry) {
-	  int timeout;
-	  if (arrayp (entry) && entry[0]) {
-	    timeout = entry[0] - time();
-	    if (timeout <= 0)
-	      continue;
-	  }
+        foreach (persistent_alts; string key; object|array entry) {
+          int timeout;
+          if (arrayp (entry) && entry[0]) {
+            timeout = entry[0] - time();
+            if (timeout <= 0)
+              continue;
+          }
 
-	  // Put the persistently stored entries back into the RAM
-	  // cache. They might get expired over time (and hence won't
-	  // be encoded persistently if we're saved again), but then
-	  // they probably weren't that hot anyways. This method makes
-	  // sure we have control over memory usage.
+          // Put the persistently stored entries back into the RAM
+          // cache. They might get expired over time (and hence won't
+          // be encoded persistently if we're saved again), but then
+          // they probably weren't that hot anyways. This method makes
+          // sure we have control over memory usage.
 
-	  // FIXME: get_alternative is a hack to get a low cost (since
-	  // it's reinstantiated from a persistent entry). Would be
-	  // better to save the original creation cost of the entry to
-	  // reuse here, but Roxen's cache doesn't have API's to get
-	  // or set entry cost currently.
+          // FIXME: get_alternative is a hack to get a low cost (since
+          // it's reinstantiated from a persistent entry). Would be
+          // better to save the original creation cost of the entry to
+          // reuse here, but Roxen's cache doesn't have API's to get
+          // or set entry cost currently.
           // However, we won't update existing entries in the RAM
           // cache, since they are likely more up-to-date then what we
           // get from the frame restore. Also, this avoids unnecessary
           // count_memory rounds.
-	  if (!get_alternative (key))
+          if (!get_alternative (key))
             set_alternative (key, entry, timeout);
-	}
+        }
       }
     }
 
@@ -2988,10 +2988,10 @@ class TagCache {
       // entries will be restored from persistent storage by the
       // restore() function above, when the frame is reinstantiated.
       if (persistent_cache && alternatives) {
-	foreach (alternatives; string key;) {
+        foreach (alternatives; string key;) {
           string full_key = get_full_key (key);
           call_out(cache_remove, 0, cache_tag_alts_loc, full_key);
-	}
+        }
       }
     }
   }
@@ -3017,11 +3017,11 @@ class TagNocache
     array do_enter (RequestID id)
     {
       if (args["enable-protocol-cache"])
-	;
+        ;
       else {
-	NO_PROTO_CACHE();
-	if (!args["enable-client-cache"])
-	  NOCACHE();
+        NO_PROTO_CACHE();
+        if (!args["enable-client-cache"])
+          NOCACHE();
       }
       return 0;
     }
@@ -3037,8 +3037,8 @@ class TagCrypt {
 
     array do_return(RequestID id) {
       if(args->compare) {
-	_ok = verify_password(content,args->compare);
-	return 0;
+        _ok = verify_password(content,args->compare);
+        return 0;
       }
       result = crypt_password(content);
       return 0;
@@ -3065,7 +3065,7 @@ class TagHashHMAC
       object hash;
       hash = Crypto[upper_case(args->hash)] || Crypto[lower_case(args->hash)];
       if (!hash)
-	RXML.parse_error ("Unknown hash algorithm %O.", args->hash);
+        RXML.parse_error ("Unknown hash algorithm %O.", args->hash);
 
       result = String.string2hex(Crypto.HMAC(hash)(password)(content));
     }
@@ -3089,23 +3089,23 @@ class TagFor {
       step = (int)args->step!=0?(int)args->step:(to<from?-1:1);
       if((to<from && step>0)||(to>from && step<0)) {
 #if 0
-	// It's common that the limits are at the wrong side of each
-	// other when no iteration should be done, so don't complain
-	// about this.
-	run_error("Step has the wrong sign.\n");
+        // It's common that the limits are at the wrong side of each
+        // other when no iteration should be done, so don't complain
+        // about this.
+        run_error("Step has the wrong sign.\n");
 #endif
       }
       else
-	from-=step;
+        from-=step;
       count=from;
       return 0;
     }
 
     int do_iterate() {
       if(!args->variable) {
-	int diff = (to - from) / step;
-	to=from;
-	return diff > 0 && diff;
+        int diff = (to - from) / step;
+        to=from;
+        return diff > 0 && diff;
       }
       count+=step;
       RXML.user_set_var(args->variable, count, args->scope);
@@ -3154,7 +3154,7 @@ string simpletag_apre(string tag, mapping m, string q, RequestID id)
 }
 
 string simpletag_aconf(string tag, mapping m,
-		       string q, RequestID id)
+                       string q, RequestID id)
 {
   string href;
 
@@ -3186,7 +3186,7 @@ class TagMaketag {
   constant name = "maketag";
   mapping(string:RXML.Type) req_arg_types = ([ "type" : RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type) opt_arg_types = ([ "noxml" : RXML.t_text(RXML.PEnt),
-					       "name" : RXML.t_text(RXML.PEnt) ]);
+                                               "name" : RXML.t_text(RXML.PEnt) ]);
 
   class TagAttrib {
     inherit RXML.Tag;
@@ -3198,8 +3198,8 @@ class TagMaketag {
       TagMaketag.Frame parent_frame;
 
       array do_return(RequestID id) {
-	parent_frame->makeargs[args->name] = content || "";
-	return 0;
+        parent_frame->makeargs[args->name] = content || "";
+        return 0;
       }
     }
   }
@@ -3221,25 +3221,25 @@ class TagMaketag {
       if (!content) content = "";
       switch(args->type) {
       case "pi":
-	if(!args->name) parse_error("Type 'pi' requires a name attribute.\n");
-	result = RXML.t_xml->format_tag(args->name, 0, content, RXML.FLAG_PROC_INSTR);
-	break;
+        if(!args->name) parse_error("Type 'pi' requires a name attribute.\n");
+        result = RXML.t_xml->format_tag(args->name, 0, content, RXML.FLAG_PROC_INSTR);
+        break;
       case "container":
-	if(!args->name) parse_error("Type 'container' requires a name attribute.\n");
-	result = RXML.t_xml->format_tag(args->name, makeargs, content, RXML.FLAG_RAW_ARGS);
-	break;
+        if(!args->name) parse_error("Type 'container' requires a name attribute.\n");
+        result = RXML.t_xml->format_tag(args->name, makeargs, content, RXML.FLAG_RAW_ARGS);
+        break;
       case "tag":
-	if(!args->name) parse_error("Type 'tag' requires a name attribute.\n");
-	result = RXML.t_xml->format_tag(args->name, makeargs, 0,
-					(args->noxml?RXML.FLAG_COMPAT_PARSE:0)|
-					RXML.FLAG_EMPTY_ELEMENT|RXML.FLAG_RAW_ARGS);
-	break;
+        if(!args->name) parse_error("Type 'tag' requires a name attribute.\n");
+        result = RXML.t_xml->format_tag(args->name, makeargs, 0,
+                                        (args->noxml?RXML.FLAG_COMPAT_PARSE:0)|
+                                        RXML.FLAG_EMPTY_ELEMENT|RXML.FLAG_RAW_ARGS);
+        break;
       case "comment":
-	result = "<!--" + replace (replace (content, "--", "- -"), "--", "- -") + "-->";
-	break;
+        result = "<!--" + replace (replace (content, "--", "- -"), "--", "- -") + "-->";
+        break;
       case "cdata":
-	result = "<![CDATA[" + content/"]]>"*"]]]]><![CDATA[>" + "]]>";
-	break;
+        result = "<![CDATA[" + content/"]]>"*"]]]]><![CDATA[>" + "]]>";
+        break;
       }
       return 0;
     }
@@ -3262,17 +3262,17 @@ class TagDoc {
     array do_return(RequestID id) {
       array from;
       if(args->quote) {
-	m_delete(args, "quote");
-	from=({ "<", ">", "&" });
+        m_delete(args, "quote");
+        from=({ "<", ">", "&" });
       }
       else
-	from=({ "{", "}", "&" });
+        from=({ "{", "}", "&" });
 
       result=replace(content, from, ({ "&lt;", "&gt;", "&amp;"}) );
 
       if(args->pre) {
-	m_delete(args, "pre");
-	result="\n"+RXML.t_xml->format_tag("pre", args, result)+"\n";
+        m_delete(args, "pre");
+        result="\n"+RXML.t_xml->format_tag("pre", args, result)+"\n";
       }
 
       return 0;
@@ -3295,53 +3295,53 @@ class TagAutoformat {
       if (s == "") return ({""});
 
       if(!args->nonbsp)
-	{
-	  s = replace(s, "\n ", "\n&nbsp;"); // "|\n |"      => "|\n&nbsp;|"
-	  s = replace(s, "  ", "&nbsp; ");  //  "|   |"      => "|&nbsp;  |"
-	  s = replace(s, "  ", " &nbsp;"); //   "|&nbsp;  |" => "|&nbsp; &nbsp;|"
-	}
+        {
+          s = replace(s, "\n ", "\n&nbsp;"); // "|\n |"      => "|\n&nbsp;|"
+          s = replace(s, "  ", "&nbsp; ");  //  "|   |"      => "|&nbsp;  |"
+          s = replace(s, "  ", " &nbsp;"); //   "|&nbsp;  |" => "|&nbsp; &nbsp;|"
+        }
 
       string dbl_nl;
 
       if(!args->nobr) {
-	s = replace(s, "\n", "<br />\n");
-	dbl_nl = "<br />\n<br />\n";
+        s = replace(s, "\n", "<br />\n");
+        dbl_nl = "<br />\n<br />\n";
       }
       else
-	dbl_nl = "\n\n";
+        dbl_nl = "\n\n";
 
       if(args->p) {
-	s = replace (s, dbl_nl, "\n<p>\n");
+        s = replace (s, dbl_nl, "\n<p>\n");
 
-	// Now fix balanced <p> tags.
+        // Now fix balanced <p> tags.
 
-	string ptag = args["class"]?"<p class=\""+args["class"]+"\"":"<p";
-	int got_toplevel_data = 0;
-	Parser.HTML p = Roxen.get_xml_parser();
+        string ptag = args["class"]?"<p class=\""+args["class"]+"\"":"<p";
+        int got_toplevel_data = 0;
+        Parser.HTML p = Roxen.get_xml_parser();
 
-	p->add_container (
-	  "p", lambda (Parser.HTML p, mapping a, string c)
-	       {
-		 string ender = got_toplevel_data ? "</p>" : "";
-		 got_toplevel_data = 0;
-		 return ({ender,
-			  ptag, Roxen.make_tag_attributes (a),
-			  c == "" ? " />" : ">" + c + "</p>"});
-	       });
+        p->add_container (
+          "p", lambda (Parser.HTML p, mapping a, string c)
+               {
+                 string ender = got_toplevel_data ? "</p>" : "";
+                 got_toplevel_data = 0;
+                 return ({ender,
+                          ptag, Roxen.make_tag_attributes (a),
+                          c == "" ? " />" : ">" + c + "</p>"});
+               });
 
-	p->_set_data_callback (
-	  lambda (Parser.HTML p, string c) {
-	    if (!got_toplevel_data && sscanf (c, "%*[ \t\n]%*c") == 2) {
-	      got_toplevel_data = 1;
-	      return ({ptag, ">", c});
-	    }
-	    return ({c});
-	  });
+        p->_set_data_callback (
+          lambda (Parser.HTML p, string c) {
+            if (!got_toplevel_data && sscanf (c, "%*[ \t\n]%*c") == 2) {
+              got_toplevel_data = 1;
+              return ({ptag, ">", c});
+            }
+            return ({c});
+          });
 
-	s = p->finish (s)->read();
-	p = 0;			// Avoid trampoline garbage.
-	if (got_toplevel_data)
-	  s += "</p>";
+        s = p->finish (s)->read();
+        p = 0;			// Avoid trampoline garbage.
+        if (got_toplevel_data)
+          s += "</p>";
       }
 
       return ({ s });
@@ -3350,7 +3350,7 @@ class TagAutoformat {
 }
 
 class Smallcapsstr (string bigtag, string smalltag,
-		    mapping bigarg, mapping smallarg)
+                    mapping bigarg, mapping smallarg)
 {
   constant UNDEF=0, BIG=1, SMALL=2;
   protected string text="",part="";
@@ -3459,7 +3459,7 @@ string simpletag_random(string tag, mapping m, string s, RequestID id)
   int index;
   if(m->seed)
     index = array_sscanf(Crypto.MD5.hash(m->seed),
-			 "%4c")[0]%sizeof(q);
+                         "%4c")[0]%sizeof(q);
   else
     index = random(sizeof(q));
 
@@ -3486,8 +3486,8 @@ class TagGauge {
       if(args->timeonly) return ({ sprintf("%3.6f", t/1000000.0) });
       if(args->resultonly) return ({content});
       return ({ "<br /><font size=\"-1\"><b>Time: "+
-		sprintf("%3.6f", t/1000000.0)+
-		" seconds</b></font><br />"+content });
+                sprintf("%3.6f", t/1000000.0)+
+                " seconds</b></font><br />"+content });
     }
   }
 }
@@ -3526,7 +3526,7 @@ private int|array internal_tag_input(string t, mapping m, string name, multiset(
 }
 
 private int|array internal_tag_select(string t, mapping m, string c,
-				      string name, multiset(string) value)
+                                      string name, multiset(string) value)
 {
   if(name && m->name!=name) return ({ RXML.t_xml->format_tag(t, m, c) });
 
@@ -3567,9 +3567,9 @@ private int|array internal_tag_select(string t, mapping m, string c,
       cur_tag = tag_name;
 
       if (value[args->value])
-	args->selected = "selected";
+        args->selected = "selected";
       else
-	m_delete (args, "selected");
+        m_delete (args, "selected");
 
       cur_args = args;
     }
@@ -3588,10 +3588,10 @@ private int|array internal_tag_select(string t, mapping m, string c,
   parser->add_tag ("/option", process_tag);
   parser->add_tag ("option/", process_tag);
   parser->_set_data_callback (lambda (Parser.HTML p, string c)
-			      {
-				cur_data += c;
-				return "";
-			      });
+                              {
+                                cur_data += c;
+                                return "";
+                              });
   parser->ignore_unknown (1);
   parser->case_insensitive_tag (1);
   string res = parser->finish(c)->read() + finish_tag();
@@ -3607,8 +3607,8 @@ string simpletag_default( string t, mapping m, string c, RequestID id)
   if(value==(<>)) return c;
 
   return parse_html(c, (["input":internal_tag_input]),
-		    (["select":internal_tag_select]),
-		    m->name, value);
+                    (["select":internal_tag_select]),
+                    m->name, value);
 }
 
 string simpletag_sort(string t, mapping m, string c, RequestID id)
@@ -3648,61 +3648,61 @@ class TagReplace
     array do_return (RequestID id)
     {
       if (content) {
-	if (result_type->decode_charrefs && compat_level == 4.0)
-	  content = result_type->decode_charrefs (content);
+        if (result_type->decode_charrefs && compat_level == 4.0)
+          content = result_type->decode_charrefs (content);
 
-	else if (result_type->decode_xml_safe_charrefs &&
-	    compat_level > 4.0)
-	  content = result_type->decode_xml_safe_charrefs (content);
+        else if (result_type->decode_xml_safe_charrefs &&
+            compat_level > 4.0)
+          content = result_type->decode_xml_safe_charrefs (content);
       }
 
       if (!args->from)
-	result = content;
+        result = content;
 
       else {
-	if (content == RXML.nil)
-	  content = "";
+        if (content == RXML.nil)
+          content = "";
 
-	switch(args->type)
-	{
-	  case "word":
-	  default:
-	    if(args->first || args->last) {
-	      string res="";
-	      int first = (int)args->first;
-	      int last = (int)args->last;
-	      array a = content / args->from;
-	      for(int i=0; i< sizeof(a); i++) {
-		res += a[i];
-		if(i != sizeof(a)-1) {
-		  if((first && (i+i) <= first) || (last && sizeof(a)-i-1 <= last))
-		    res += (args->to || "");
-		  else
-		    res += args->from;
-		}
-	      }
-	      result = res;
-	    } else
-	      result = replace(content,args->from,(args->to?args->to:""));
-	    break;
+        switch(args->type)
+        {
+          case "word":
+          default:
+            if(args->first || args->last) {
+              string res="";
+              int first = (int)args->first;
+              int last = (int)args->last;
+              array a = content / args->from;
+              for(int i=0; i< sizeof(a); i++) {
+                res += a[i];
+                if(i != sizeof(a)-1) {
+                  if((first && (i+i) <= first) || (last && sizeof(a)-i-1 <= last))
+                    res += (args->to || "");
+                  else
+                    res += args->from;
+                }
+              }
+              result = res;
+            } else
+              result = replace(content,args->from,(args->to?args->to:""));
+            break;
 
-	  case "words":
-	    string s=args->separator?args->separator:",";
-	    array from=(array)(args->from/s);
-	    array to=(array)(args->to/s);
+          case "words":
+            string s=args->separator?args->separator:",";
+            array from=(array)(args->from/s);
+            array to=(array)(args->to/s);
 
-	    int balance=sizeof(from)-sizeof(to);
-	    if(balance>0) to+=allocate(balance,"");
-	    else if (balance < 0)
-	      parse_error ("There are more elements in the \"to\" list (%d) "
-			   "than in \"from\" (%d).", sizeof (to), sizeof (from));
+            int balance=sizeof(from)-sizeof(to);
+            if(balance>0) to+=allocate(balance,"");
+            else if (balance < 0)
+              parse_error ("There are more elements in the \"to\" list (%d) "
+                           "than in \"from\" (%d).", sizeof (to), sizeof (from));
 
-	    result = replace(content,from,to);
-	    break;
-	}
+            result = replace(content,from,to);
+            break;
+        }
 
-	if (result_type->entity_syntax)
-	  result = replace (result, "\0", "&#0;");
+        if (result_type->entity_syntax)
+          result = replace (result, "\0", "&#0;");
       }
     }
   }
@@ -3730,18 +3730,18 @@ class TagSubstring
     array do_enter (RequestID id)
     {
       if (result_type == RXML.t_string)
-	// Let's propagate t_string in favor of the default t_any_text.
-	content_type = result_type (RXML.PXml);
+        // Let's propagate t_string in favor of the default t_any_text.
+        content_type = result_type (RXML.PXml);
       else if (result_type == RXML.t_array) {
-	if (args->join ||
-	    !(args->separator || args["separator-chars"] ||
-	      args["separator-whites"]))
-	  // Cannot return an array if there's a join attribute or no
-	  // separator attribute.
-	  result_type = RXML.t_string;
+        if (args->join ||
+            !(args->separator || args["separator-chars"] ||
+              args["separator-whites"]))
+          // Cannot return an array if there's a join attribute or no
+          // separator attribute.
+          result_type = RXML.t_string;
       }
       else
-	result_type = RXML.t_string;
+        result_type = RXML.t_string;
       return 0;
     }
 
@@ -3773,17 +3773,17 @@ class TagSubstring
       string compl_set = compl_sscanf_set (set);
       string tail;
       if (mixed err = catch {
-	  sscanf (str, "%{%[" + compl_set + "]%1[" + set + "]%}%s",
-		  res, tail);
-	}) set_format_error ("separator-chars", err);
+          sscanf (str, "%{%[" + compl_set + "]%1[" + set + "]%}%s",
+                  res, tail);
+        }) set_format_error ("separator-chars", err);
       if (tail != "")
-	// The %{...%} bit won't match the last field because of
-	// the length restriction on the sep_chars pattern.
-	res += ({({tail, ""})});
+        // The %{...%} bit won't match the last field because of
+        // the length restriction on the sep_chars pattern.
+        res += ({({tail, ""})});
       if (sizeof (res))
-	return Array.transpose (res);
+        return Array.transpose (res);
       else
-	return ({({}), ({})});
+        return ({({}), ({})});
     }
 
     protected array(array(string)) split_on_set_seq (string str, string set)
@@ -3795,12 +3795,12 @@ class TagSubstring
       array(array(string)) res;
       string compl_set = compl_sscanf_set (set);
       if (mixed err = catch {
-	  sscanf (str, "%{%[" + compl_set + "]%[" + set + "]%}", res);
-	}) set_format_error ("separator-chars", err);
+          sscanf (str, "%{%[" + compl_set + "]%[" + set + "]%}", res);
+        }) set_format_error ("separator-chars", err);
       if (sizeof (res))
-	return Array.transpose (res);
+        return Array.transpose (res);
       else
-	return ({({}), ({})});
+        return ({({}), ({})});
     }
 
     array do_return (RequestID id)
@@ -3808,20 +3808,20 @@ class TagSubstring
       int beg, end;
 
       if (!zero_type (args->index)) {
-	if (args->from || args->to)
-	  parse_error ("\"index\" attribute cannot be used "
-		       "together with \"from\" or \"to\".\n");
-	if (args->after || args->before)
-	  parse_error ("\"index\" attribute cannot be used "
-		       "together with \"after\" or \"before\".\n");
-	beg = end = args->index;
-	if (!beg) parse_error ("\"index\" cannot be zero.\n");
+        if (args->from || args->to)
+          parse_error ("\"index\" attribute cannot be used "
+                       "together with \"from\" or \"to\".\n");
+        if (args->after || args->before)
+          parse_error ("\"index\" attribute cannot be used "
+                       "together with \"after\" or \"before\".\n");
+        beg = end = args->index;
+        if (!beg) parse_error ("\"index\" cannot be zero.\n");
       }
       else {
-	beg = args->from;
-	if (!beg && !zero_type (beg)) parse_error ("\"from\" cannot be zero.\n");
-	end = args->to;
-	if (!end && !zero_type (end)) parse_error ("\"to\" cannot be zero.\n");
+        beg = args->from;
+        if (!beg && !zero_type (beg)) parse_error ("\"from\" cannot be zero.\n");
+        end = args->to;
+        if (!end && !zero_type (end)) parse_error ("\"to\" cannot be zero.\n");
       }
 
       if (content == RXML.nil) content = "";
@@ -3837,52 +3837,52 @@ class TagSubstring
       int trimwhites = !!args->trimwhites;
 
       if (args["separator-whites"]) {
-	if (!sep_chars)
-	  sep_chars = " \t\n\r";
-	else if (IS_COMPL_SET (sep_chars))
-	  parse_error ("Cannot combine \"separator-whites\" "
-		       "with a complemented set in \"separator-chars\".\n");
-	else if (has_suffix (sep_chars, "-"))
-	  sep_chars = sep_chars[..<1] + " \t\n\r-";
-	else
-	  sep_chars += " \t\n\r";
-	ignore_empty = 1;
+        if (!sep_chars)
+          sep_chars = " \t\n\r";
+        else if (IS_COMPL_SET (sep_chars))
+          parse_error ("Cannot combine \"separator-whites\" "
+                       "with a complemented set in \"separator-chars\".\n");
+        else if (has_suffix (sep_chars, "-"))
+          sep_chars = sep_chars[..<1] + " \t\n\r-";
+        else
+          sep_chars += " \t\n\r";
+        ignore_empty = 1;
       }
 
       if (joiner) {
-	if (!sep && !sep_chars)
-	  parse_error ("\"join\" only useful together with "
-		       "\"separator\", \"separator-chars\", "
-		       "or \"separator-whites\".\n");
+        if (!sep && !sep_chars)
+          parse_error ("\"join\" only useful together with "
+                       "\"separator\", \"separator-chars\", "
+                       "or \"separator-whites\".\n");
       }
       else joiner = sep;
 
       function(string,string:array(array(string))) char_sep_fn;
       if (sep_chars) {
-	if (sep)
-	  parse_error ("\"separator\" and \"separator-chars\"/"
-		       "\"separator-whites\" cannot be used together.\n");
-	if (!joiner)
-	  joiner = IS_COMPL_SET (sep_chars) ? "" : sep_chars[..0];
-	if (sep_chars == "")
-	  parse_error ("\"separator-chars\" cannot be empty.\n");
-	else {
-	  if (ignore_empty) char_sep_fn = split_on_set_seq;
-	  else char_sep_fn = split_on_set;
-	}
+        if (sep)
+          parse_error ("\"separator\" and \"separator-chars\"/"
+                       "\"separator-whites\" cannot be used together.\n");
+        if (!joiner)
+          joiner = IS_COMPL_SET (sep_chars) ? "" : sep_chars[..0];
+        if (sep_chars == "")
+          parse_error ("\"separator-chars\" cannot be empty.\n");
+        else {
+          if (ignore_empty) char_sep_fn = split_on_set_seq;
+          else char_sep_fn = split_on_set;
+        }
       }
 
       if (args["case-insensitive"]) {
-	search_str = lower_case (search_str);
-	if (after) after = lower_case (after);
-	if (before) before = lower_case (before);
-	if (sep) sep = lower_case (sep);
-	else if (sep_chars) {
-	  // NB: This can make the set invalid in odd cases like
-	  // "Z-a". We ignore that.
-	  sep_chars = lower_case (sep_chars);
-	}
-	if (trim_chars) trim_chars = lower_case (trim_chars); // Same here.
+        search_str = lower_case (search_str);
+        if (after) after = lower_case (after);
+        if (before) before = lower_case (before);
+        if (sep) sep = lower_case (sep);
+        else if (sep_chars) {
+          // NB: This can make the set invalid in odd cases like
+          // "Z-a". We ignore that.
+          sep_chars = lower_case (sep_chars);
+        }
+        if (trim_chars) trim_chars = lower_case (trim_chars); // Same here.
       }
 
       if (after && !beg) beg = 1;
@@ -3911,37 +3911,37 @@ class TagSubstring
 
       function(string:string) trim_for_empty;
       if (ignore_empty) {
-	if (!sep && !sep_chars)
-	  parse_error ("\"ignore-empty\" only useful together with "
-		       "\"separator\", \"separator-chars\", "
-		       "or \"separator-whites\".\n");
-	if (trimwhites)
-	  // Check for both trimwhites and trim-chars at the same time
-	  // is done later.
-	  trim_for_empty = String.trim_all_whites;
-	else if (trim_chars)
-	  trim_for_empty =
-	    lambda (string trim) {
-	      // This outer lambda doesn't access anything in the
-	      // surrounding function frame, thereby avoiding garbage.
-	      string fmt = "%*[" + trim + "]%s";
-	      return
-		lambda (string s) {
-		  if (mixed err = catch (sscanf (s, fmt, s)))
-		    set_format_error ("trim-chars", err);
-		  return s;
-		};
-	    } (trim_chars);
-	else
-	  if (char_sep_fn == split_on_set_seq) {
-	    // No need for extra trimming in this case since
-	    // split_on_set_seq handles it internally, except for the
-	    // case when separators occur before the first field. That
-	    // requires some special care when counting by elements
-	    // from the start.
-	  }
-	  else
-	    trim_for_empty = lambda (string s) {return s;};
+        if (!sep && !sep_chars)
+          parse_error ("\"ignore-empty\" only useful together with "
+                       "\"separator\", \"separator-chars\", "
+                       "or \"separator-whites\".\n");
+        if (trimwhites)
+          // Check for both trimwhites and trim-chars at the same time
+          // is done later.
+          trim_for_empty = String.trim_all_whites;
+        else if (trim_chars)
+          trim_for_empty =
+            lambda (string trim) {
+              // This outer lambda doesn't access anything in the
+              // surrounding function frame, thereby avoiding garbage.
+              string fmt = "%*[" + trim + "]%s";
+              return
+                lambda (string s) {
+                  if (mixed err = catch (sscanf (s, fmt, s)))
+                    set_format_error ("trim-chars", err);
+                  return s;
+                };
+            } (trim_chars);
+        else
+          if (char_sep_fn == split_on_set_seq) {
+            // No need for extra trimming in this case since
+            // split_on_set_seq handles it internally, except for the
+            // case when separators occur before the first field. That
+            // requires some special care when counting by elements
+            // from the start.
+          }
+          else
+            trim_for_empty = lambda (string s) {return s;};
       }
 
       // Optimize by skipping past the beginning of the input string
@@ -3950,206 +3950,206 @@ class TagSubstring
       string beg_skip_str;
 
       {
-	string s = after || sep;
-	if (s && s != "") {
-	  if (beg > 0) {
-	    beg_pos = 0;
-	    int i = beg;
-	    if (!after && !--i) {
-	      // Using sep - first match is at the beginning of the string.
-	    }
+        string s = after || sep;
+        if (s && s != "") {
+          if (beg > 0) {
+            beg_pos = 0;
+            int i = beg;
+            if (!after && !--i) {
+              // Using sep - first match is at the beginning of the string.
+            }
 
-	    else {
-	      if (!trim_for_empty ||
-		  // Trimming doesn't affect after="..." splitting.
-		  after)
-		do {
-		  int p = search (search_str, s, beg_pos);
-		  if (p < 0) {beg_pos = Int.NATIVE_MAX; break;}
-		  beg_pos = p + sizeof (s);
-		} while (--i > 0);
+            else {
+              if (!trim_for_empty ||
+                  // Trimming doesn't affect after="..." splitting.
+                  after)
+                do {
+                  int p = search (search_str, s, beg_pos);
+                  if (p < 0) {beg_pos = Int.NATIVE_MAX; break;}
+                  beg_pos = p + sizeof (s);
+                } while (--i > 0);
 
-	      else
-		while (1) {
-		  int p = search (search_str, s, beg_pos);
-		  if (p < 0) {beg_pos = Int.NATIVE_MAX; break;}
-		  if (beg_pos != p &&
-		      trim_for_empty (search_str[beg_pos..p - 1]) != "")
-		    // Continue looping when i == 0 to skip empty fields
-		    // after the last nonempty match.
-		    if (--i < 0) break;
-		  beg_pos = p + sizeof (s);
-		}
+              else
+                while (1) {
+                  int p = search (search_str, s, beg_pos);
+                  if (p < 0) {beg_pos = Int.NATIVE_MAX; break;}
+                  if (beg_pos != p &&
+                      trim_for_empty (search_str[beg_pos..p - 1]) != "")
+                    // Continue looping when i == 0 to skip empty fields
+                    // after the last nonempty match.
+                    if (--i < 0) break;
+                  beg_pos = p + sizeof (s);
+                }
 
-	      beg_skip_str = s;
-	    }
-	  }
-	}
+              beg_skip_str = s;
+            }
+          }
+        }
 
-	else if (!sep_chars) {	// Index by character position.
-	  if (beg > 0)
-	    beg_pos = beg - 1;
-	  else if (beg < 0)
-	    beg_pos = max (sizeof (search_str) + beg, 0);
-	}
+        else if (!sep_chars) {	// Index by character position.
+          if (beg > 0)
+            beg_pos = beg - 1;
+          else if (beg < 0)
+            beg_pos = max (sizeof (search_str) + beg, 0);
+        }
       }
 
     end_skip: {
-	string s = before || sep;
-	if (s && s != "") {
-	  if (end > 0) {
-	    int i;
+        string s = before || sep;
+        if (s && s != "") {
+          if (end > 0) {
+            int i;
 
-	    if (s == beg_skip_str) {
-	      // Optimize by continuing the search where beg_skip left off.
-	      i = end - beg;
-	      if (sep) i++;
-	      if (i <= 0 || beg_pos == Int.NATIVE_MAX) {
-		end_pos = end_split = 0;
-		break end_skip;
-	      }
-	      end_pos = beg_pos - sizeof (s);
-	    }
-	    else {
-	      i = end;
-	      end_pos = -sizeof (s);
-	    }
+            if (s == beg_skip_str) {
+              // Optimize by continuing the search where beg_skip left off.
+              i = end - beg;
+              if (sep) i++;
+              if (i <= 0 || beg_pos == Int.NATIVE_MAX) {
+                end_pos = end_split = 0;
+                break end_skip;
+              }
+              end_pos = beg_pos - sizeof (s);
+            }
+            else {
+              i = end;
+              end_pos = -sizeof (s);
+            }
 
-	    if (before == after)	// True also when only sep is set.
-	      // Set end_split in case split is created in the beg_pos == -1
-	      // branch below.
-	      end_split = end;
+            if (before == after)	// True also when only sep is set.
+              // Set end_split in case split is created in the beg_pos == -1
+              // branch below.
+              end_split = end;
 
-	    if (!trim_for_empty ||
-		// Trimming doesn't affect before="..." splitting.
-		before)
-	      do {
-		int p = search (search_str, s, end_pos + sizeof (s));
-		if (p < 0) {end_pos = Int.NATIVE_MAX; break;}
-		end_pos = p;
-	      } while (--i > 0);
+            if (!trim_for_empty ||
+                // Trimming doesn't affect before="..." splitting.
+                before)
+              do {
+                int p = search (search_str, s, end_pos + sizeof (s));
+                if (p < 0) {end_pos = Int.NATIVE_MAX; break;}
+                end_pos = p;
+              } while (--i > 0);
 
-	    else {
-	      int num_empty = 0;
-	      while (1) {
-		int b = end_pos + sizeof (s);
-		int p = search (search_str, s, b);
-		if (p < 0) {end_pos = Int.NATIVE_MAX; break;}
-		end_pos = p;
-		if (b != p &&
-		    trim_for_empty (search_str[b..p - 1]) != "") {
-		  if (--i <= 0) break;
-		}
-		else
-		  num_empty++;
-	      }
-	      if (end_split >= 0) end_split += num_empty;
-	    }
-	  }
-	}
+            else {
+              int num_empty = 0;
+              while (1) {
+                int b = end_pos + sizeof (s);
+                int p = search (search_str, s, b);
+                if (p < 0) {end_pos = Int.NATIVE_MAX; break;}
+                end_pos = p;
+                if (b != p &&
+                    trim_for_empty (search_str[b..p - 1]) != "") {
+                  if (--i <= 0) break;
+                }
+                else
+                  num_empty++;
+              }
+              if (end_split >= 0) end_split += num_empty;
+            }
+          }
+        }
 
-	else if (!sep_chars) {	// Index by character position.
-	  if (end > 0)
-	    end_pos = end;
-	  else if (end < 0)
-	    end_pos = max (sizeof (search_str) + end + 1, 0);
-	}
+        else if (!sep_chars) {	// Index by character position.
+          if (end > 0)
+            end_pos = end;
+          else if (end < 0)
+            end_pos = max (sizeof (search_str) + end + 1, 0);
+        }
       }
 
       // Find beg_pos and end_pos in the remaining cases.
 
     beg_search:
       if (beg_pos == -1) {
-	if (string s = after || sep) {
-	  // Some simple testing shows that splitting performs best
-	  // overall, compared to using search() in different ways.
-	  // Could be improved a lot if we got an rsearch().
-	  split = search_str / s;
-	  split_str = s;
-	  split_seps = allocate (sizeof (split) - 1, s) + ({""});
-	}
+        if (string s = after || sep) {
+          // Some simple testing shows that splitting performs best
+          // overall, compared to using search() in different ways.
+          // Could be improved a lot if we got an rsearch().
+          split = search_str / s;
+          split_str = s;
+          split_seps = allocate (sizeof (split) - 1, s) + ({""});
+        }
 
-	else {
+        else {
 #ifdef DEBUG
-	  if (!sep_chars) error ("Code flow bonkers.\n");
+          if (!sep_chars) error ("Code flow bonkers.\n");
 #endif
-	  [split, split_seps] = char_sep_fn (search_str, sep_chars);
+          [split, split_seps] = char_sep_fn (search_str, sep_chars);
 
-	  if (beg >= 0) {
-	    if (!trim_for_empty) {
-	      beg_split = beg - 1;
-	      if (char_sep_fn == split_on_set_seq)
-		// split_on_set_seq handles the trimming for us,
-		// except it might leave an empty field in front of
-		// the first one. Compensate for it.
-		if (sizeof (split) && split[0] == "")
-		  beg_split++;
-	      beg_pos = -2;
-	    }
+          if (beg >= 0) {
+            if (!trim_for_empty) {
+              beg_split = beg - 1;
+              if (char_sep_fn == split_on_set_seq)
+                // split_on_set_seq handles the trimming for us,
+                // except it might leave an empty field in front of
+                // the first one. Compensate for it.
+                if (sizeof (split) && split[0] == "")
+                  beg_split++;
+              beg_pos = -2;
+            }
 
-	    else {
-	      int b = beg - 1, i = 0;
-	      beg_pos = 0;
-	      while (1) {
-		if (i >= sizeof (split)) {
-		  beg_split = beg_pos = Int.NATIVE_MAX;
-		  break beg_search;
-		}
-		// Allow i to go past b as long as split[i] is empty,
-		// so that we skip empty fields just after the last
-		// nonempty one.
-		if (trim_for_empty (split[i]) == "")
-		  b++;
-		else
-		  if (i >= b) break;
-		beg_pos += sizeof (split[i]) + sizeof (split_seps[i]);
-		i++;
-	      }
-	      beg_split = i;
-	    }
+            else {
+              int b = beg - 1, i = 0;
+              beg_pos = 0;
+              while (1) {
+                if (i >= sizeof (split)) {
+                  beg_split = beg_pos = Int.NATIVE_MAX;
+                  break beg_search;
+                }
+                // Allow i to go past b as long as split[i] is empty,
+                // so that we skip empty fields just after the last
+                // nonempty one.
+                if (trim_for_empty (split[i]) == "")
+                  b++;
+                else
+                  if (i >= b) break;
+                beg_pos += sizeof (split[i]) + sizeof (split_seps[i]);
+                i++;
+              }
+              beg_split = i;
+            }
 
-	    break beg_search;
-	  }
-	}
+            break beg_search;
+          }
+        }
 
 #ifdef DEBUG
-	if (beg >= 0)
-	  error ("Expecting only count-from-the-end cases here.\n");
+        if (beg >= 0)
+          error ("Expecting only count-from-the-end cases here.\n");
 #endif
 
-	if (beg < -sizeof (split))
-	  beg_pos = beg_split = 0;
+        if (beg < -sizeof (split))
+          beg_pos = beg_split = 0;
 
-	else {
-	  int chars_from_end = 0;
-	  if (!trim_for_empty ||
-	      // Trimming doesn't affect after="..." splitting.
-	      after) {
-	    beg_split = sizeof (split) + beg;
-	    for (int i = -1; i >= beg; i--)
-	      chars_from_end += sizeof (split[i]) + sizeof (split_seps[i]);
-	  }
+        else {
+          int chars_from_end = 0;
+          if (!trim_for_empty ||
+              // Trimming doesn't affect after="..." splitting.
+              after) {
+            beg_split = sizeof (split) + beg;
+            for (int i = -1; i >= beg; i--)
+              chars_from_end += sizeof (split[i]) + sizeof (split_seps[i]);
+          }
 
-	  else {
-	    int b = beg, i = -1;
-	    do {
-	      chars_from_end += sizeof (split[i]) + sizeof (split_seps[i]);
-	      if (trim_for_empty (split[i]) == "")
-		if (--b < -sizeof (split)) {
-		  beg_pos = beg_split = 0;
-		  break beg_search;
-		}
-	    } while (--i >= b);
-	    beg_split = sizeof (split) + b;
-	  }
+          else {
+            int b = beg, i = -1;
+            do {
+              chars_from_end += sizeof (split[i]) + sizeof (split_seps[i]);
+              if (trim_for_empty (split[i]) == "")
+                if (--b < -sizeof (split)) {
+                  beg_pos = beg_split = 0;
+                  break beg_search;
+                }
+            } while (--i >= b);
+            beg_split = sizeof (split) + b;
+          }
 
-	  beg_pos = sizeof (search_str) - chars_from_end;
+          beg_pos = sizeof (search_str) - chars_from_end;
 #ifdef DEBUG
-	  if (beg_pos < 0)
-	    error ("Ouch! %O %O %O\n",
-		   sizeof (search_str), chars_from_end, beg);
+          if (beg_pos < 0)
+            error ("Ouch! %O %O %O\n",
+                   sizeof (search_str), chars_from_end, beg);
 #endif
-	}
+        }
       }
 
 #ifdef DEBUG
@@ -4158,143 +4158,143 @@ class TagSubstring
 
     end_search:
       if (end_pos == -1) {
-	int e = end;
-	if (!before && !++e)
-	  // Using sep or sep_chars - last match is at the end of the string.
-	  end_pos = end_split = Int.NATIVE_MAX;
+        int e = end;
+        if (!before && !++e)
+          // Using sep or sep_chars - last match is at the end of the string.
+          end_pos = end_split = Int.NATIVE_MAX;
 
-	else {
-	  string ss;
-	  array(string) sp, sps;
-	  int bias;
+        else {
+          string ss;
+          array(string) sp, sps;
+          int bias;
 
-	  if (string s = before || sep) {
-	    sp = s == split_str && split;
-	    if (sp) {
-	      ss = search_str;
-	      sps = split_seps;
-	    }
-	    else {
-	      // Since we count from the end we can optimize by
-	      // chopping off the part before beg_pos first.
-	      ss = search_str[beg_pos..];
-	      bias = beg_pos;
-	      sp = ss / s;
-	      sps = allocate (sizeof (sp) - 1, s) + ({""});
-	      if (!before && !beg_pos) {
-		// Want to save it if we're splitting on sep.
-		split = sp;
-		split_str = s;
-		split_seps = sps;
-	      }
-	    }
-	  }
+          if (string s = before || sep) {
+            sp = s == split_str && split;
+            if (sp) {
+              ss = search_str;
+              sps = split_seps;
+            }
+            else {
+              // Since we count from the end we can optimize by
+              // chopping off the part before beg_pos first.
+              ss = search_str[beg_pos..];
+              bias = beg_pos;
+              sp = ss / s;
+              sps = allocate (sizeof (sp) - 1, s) + ({""});
+              if (!before && !beg_pos) {
+                // Want to save it if we're splitting on sep.
+                split = sp;
+                split_str = s;
+                split_seps = sps;
+              }
+            }
+          }
 
-	  else {
+          else {
 #ifdef DEBUG
-	    if (!sep_chars) error ("Code flow bonkers.\n");
+            if (!sep_chars) error ("Code flow bonkers.\n");
 #endif
-	    if (!split)
-	      [split, split_seps] = char_sep_fn (search_str, sep_chars);
+            if (!split)
+              [split, split_seps] = char_sep_fn (search_str, sep_chars);
 
-	    if (end >= 0) {
-	      if (!trim_for_empty) {
-		end_split = end;
-		if (char_sep_fn == split_on_set_seq)
-		  // split_on_set_seq handles the trimming for us,
-		  // except it might leave an empty field in front of
-		  // the first one. Compensate for it.
-		  if (sizeof (split) && split[0] == "")
-		    end_split++;
-		end_pos = -2;
-	      }
+            if (end >= 0) {
+              if (!trim_for_empty) {
+                end_split = end;
+                if (char_sep_fn == split_on_set_seq)
+                  // split_on_set_seq handles the trimming for us,
+                  // except it might leave an empty field in front of
+                  // the first one. Compensate for it.
+                  if (sizeof (split) && split[0] == "")
+                    end_split++;
+                end_pos = -2;
+              }
 
-	      else {
-		e = end;
-		end_pos = 0;
-		for (int i = 0; i < e; i++) {
-		  if (i >= sizeof (split)) {
-		    end_split = end_pos = Int.NATIVE_MAX;
-		    break end_search;
-		  }
-		  if (trim_for_empty (split[i]) == "")
-		    e++;
-		  end_pos += sizeof (split[i]) + sizeof (split_seps[i]);
-		}
-		end_pos -= sizeof (split_seps[e - 1]);
-		end_split = e;
-	      }
+              else {
+                e = end;
+                end_pos = 0;
+                for (int i = 0; i < e; i++) {
+                  if (i >= sizeof (split)) {
+                    end_split = end_pos = Int.NATIVE_MAX;
+                    break end_search;
+                  }
+                  if (trim_for_empty (split[i]) == "")
+                    e++;
+                  end_pos += sizeof (split[i]) + sizeof (split_seps[i]);
+                }
+                end_pos -= sizeof (split_seps[e - 1]);
+                end_split = e;
+              }
 
-	      break end_search;
-	    }
+              break end_search;
+            }
 
-	    else {
-	      ss = search_str;
-	      sp = split;
-	      sps = split_seps;
-	    }
-	  }
+            else {
+              ss = search_str;
+              sp = split;
+              sps = split_seps;
+            }
+          }
 
 #ifdef DEBUG
-	  if (end >= 0)
-	    error ("Expecting only count-from-the-end cases here.\n");
+          if (end >= 0)
+            error ("Expecting only count-from-the-end cases here.\n");
 #endif
 
-	  if (e <= -sizeof (sp))
-	    end_pos = end_split = 0;
+          if (e <= -sizeof (sp))
+            end_pos = end_split = 0;
 
-	  else {
-	    int chars_from_end;
-	    if (!trim_for_empty ||
-		// Trimming doesn't affect before="..." splitting.
-		before) {
-	      if (sp == split) end_split = sizeof (split) + e;
-	      chars_from_end = sizeof (sps[e - 1]);
-	      for (; e < 0; e++)
-		chars_from_end += sizeof (sp[e]) + sizeof (sps[e]);
-	    }
+          else {
+            int chars_from_end;
+            if (!trim_for_empty ||
+                // Trimming doesn't affect before="..." splitting.
+                before) {
+              if (sp == split) end_split = sizeof (split) + e;
+              chars_from_end = sizeof (sps[e - 1]);
+              for (; e < 0; e++)
+                chars_from_end += sizeof (sp[e]) + sizeof (sps[e]);
+            }
 
-	    else {
-	      int i = -1;
-	      while (1) {
-		// Allow i to go past e as long as sp[i] is empty,
-		// so that we skip empty fields just before the last
-		// nonempty one.
-		if (trim_for_empty (sp[i]) == "")
-		  e--;
-		else
-		  if (i < e) break;
-		chars_from_end += sizeof (sp[i]) + sizeof (sps[i]);
-		if (--i < -sizeof (sp)) {
-		  end_pos = end_split = 0;
-		  break end_search;
-		}
-	      }
-	      if (sp == split) end_split = sizeof (split) + i + 1;
-	    }
+            else {
+              int i = -1;
+              while (1) {
+                // Allow i to go past e as long as sp[i] is empty,
+                // so that we skip empty fields just before the last
+                // nonempty one.
+                if (trim_for_empty (sp[i]) == "")
+                  e--;
+                else
+                  if (i < e) break;
+                chars_from_end += sizeof (sp[i]) + sizeof (sps[i]);
+                if (--i < -sizeof (sp)) {
+                  end_pos = end_split = 0;
+                  break end_search;
+                }
+              }
+              if (sp == split) end_split = sizeof (split) + i + 1;
+            }
 
-	    end_pos = sizeof (ss) - chars_from_end;
+            end_pos = sizeof (ss) - chars_from_end;
 #ifdef DEBUG
-	    if (end_pos < 0)
-	      error ("Ouch! %O %O %O %O %O\n", sizeof (search_str),
-		     chars_from_end, beg, beg_pos, bias);
+            if (end_pos < 0)
+              error ("Ouch! %O %O %O %O %O\n", sizeof (search_str),
+                     chars_from_end, beg, beg_pos, bias);
 #endif
-	    end_pos += bias;
-	  }
-	}
+            end_pos += bias;
+          }
+        }
       }
 
 #ifdef DEBUG
       if (beg_pos == -1) error ("Failed to set beg_pos.\n");
       else if (beg_pos == -2) {
-	if (beg_split == -1) error ("Failed to set beg_split.\n");
+        if (beg_split == -1) error ("Failed to set beg_split.\n");
       }
       else if (beg_pos < 0) error ("Invalid beg_pos %d.\n", beg_pos);
       if (beg_split < -1) error ("Invalid beg_split %d.\n", beg_split);
 
       if (end_pos == -1) error ("Failed to set end_pos.\n");
       else if (end_pos == -2) {
-	if (end_split == -1) error ("Failed to set end_split.\n");
+        if (end_split == -1) error ("Failed to set end_split.\n");
       }
       else if (end_pos < 0) error ("Invalid end_pos %d.\n", end_pos);
       if (end_split < -1) error ("Invalid end_split %d.\n", end_split);
@@ -4305,164 +4305,164 @@ class TagSubstring
       function(string:string) trimmer;
 
       if (trimwhites) {
-	if (trim_chars)
-	  parse_error ("\"trimwhites\" and \"trim-chars\" "
-		       "cannot be used at the same time.\n");
-	trimmer = String.trim_all_whites;
+        if (trim_chars)
+          parse_error ("\"trimwhites\" and \"trim-chars\" "
+                       "cannot be used at the same time.\n");
+        trimmer = String.trim_all_whites;
       }
 
       else if (trim_chars) {
-	if (args["case-insensitive"])
-	  // NB: This can make the trim format invalid in odd cases
-	  // like "Z-a". We ignore that.
-	  trimmer =
-	    lambda (string trim) {
-	      // This outer lambda doesn't access anything in the
-	      // surrounding function frame, thereby avoiding garbage.
-	      string fmt = "%[" + lower_case (trim) + "]";
-	      return
-		lambda (string s) {
-		  string t, lc = lower_case (s);
-		  if (mixed err = catch (sscanf (lc, fmt, t)))
-		    set_format_error ("trim-chars", err);
-		  int b = sizeof (t);
-		  sscanf (reverse (lc), fmt, t);
-		  return s[b..<sizeof (t)];
-		};
-	    } (trim_chars);
+        if (args["case-insensitive"])
+          // NB: This can make the trim format invalid in odd cases
+          // like "Z-a". We ignore that.
+          trimmer =
+            lambda (string trim) {
+              // This outer lambda doesn't access anything in the
+              // surrounding function frame, thereby avoiding garbage.
+              string fmt = "%[" + lower_case (trim) + "]";
+              return
+                lambda (string s) {
+                  string t, lc = lower_case (s);
+                  if (mixed err = catch (sscanf (lc, fmt, t)))
+                    set_format_error ("trim-chars", err);
+                  int b = sizeof (t);
+                  sscanf (reverse (lc), fmt, t);
+                  return s[b..<sizeof (t)];
+                };
+            } (trim_chars);
 
-	else
-	  trimmer =
-	    lambda (string trim) {
-	      string fmt1 = "%*[" + trim + "]%s", fmt2 = "%[" + trim + "]";
-	      return
-		lambda (string s) {
-		  if (mixed err = catch (sscanf (s, fmt1, s)))
-		    set_format_error ("trim-chars", err);
-		  sscanf (reverse (s), fmt2, string t);
-		  return s[..<sizeof (t)];
-		};
-	    } (trim_chars);
+        else
+          trimmer =
+            lambda (string trim) {
+              string fmt1 = "%*[" + trim + "]%s", fmt2 = "%[" + trim + "]";
+              return
+                lambda (string s) {
+                  if (mixed err = catch (sscanf (s, fmt1, s)))
+                    set_format_error ("trim-chars", err);
+                  sscanf (reverse (s), fmt2, string t);
+                  return s[..<sizeof (t)];
+                };
+            } (trim_chars);
       }
 
       if (result_type == RXML.t_array || sep_chars ||
-	  (sep && (trim_chars || trimwhites || ignore_empty ||
-		   joiner != sep || search_str != content))) {
-	// Need to do things that require a split into an array.
+          (sep && (trim_chars || trimwhites || ignore_empty ||
+                   joiner != sep || search_str != content))) {
+        // Need to do things that require a split into an array.
 
 #ifdef DEBUG
-	if (result_type == RXML.t_array) {
-	  // do_enter should make sure the following never happens.
-	  if (args->join)
-	    error ("Unexpected join attribute in array context.\n");
-	  if (!sep && !sep_chars)
-	    error ("Unexpected array context without separator attribute.\n");
-	}
+        if (result_type == RXML.t_array) {
+          // do_enter should make sure the following never happens.
+          if (args->join)
+            error ("Unexpected join attribute in array context.\n");
+          if (!sep && !sep_chars)
+            error ("Unexpected array context without separator attribute.\n");
+        }
 #endif
 
 #if 0
-	werror ("split %O, split_str %O, beg %O/%O, end %O/%O\n",
-		!!split, split_str, beg_split, beg_pos, end_split, end_pos);
+        werror ("split %O, split_str %O, beg %O/%O, end %O/%O\n",
+                !!split, split_str, beg_split, beg_pos, end_split, end_pos);
 #endif
 
-	if (split) {
+        if (split) {
 #ifdef DEBUG
-	  if (sep && split_str != sep)
-	    error ("Didn't expect a split on %O when sep is %O.\n",
-		   split_str, sep);
+          if (sep && split_str != sep)
+            error ("Didn't expect a split on %O when sep is %O.\n",
+                   split_str, sep);
 #endif
-	  if (beg_split == -1 || end_split == -1 || search_str != content ||
-	      // If sep is used then split_str must be the sep string.
-	      // If sep isn't set then sep_chars is used and split_str
-	      // must be zero.
-	      split_str != sep) {
-	    // Can't use the split array created earlier.
+          if (beg_split == -1 || end_split == -1 || search_str != content ||
+              // If sep is used then split_str must be the sep string.
+              // If sep isn't set then sep_chars is used and split_str
+              // must be zero.
+              split_str != sep) {
+            // Can't use the split array created earlier.
 #if 0
-	    werror ("Ditching split for args %O\n", args);
+            werror ("Ditching split for args %O\n", args);
 #endif
 
-	    if (beg_pos == -2) {
-	      beg_pos = 0;
-	      for (int i = 0; i < beg_split; i++)
-		beg_pos += sizeof (split[i]) + sizeof (split_seps[i]);
-	    }
+            if (beg_pos == -2) {
+              beg_pos = 0;
+              for (int i = 0; i < beg_split; i++)
+                beg_pos += sizeof (split[i]) + sizeof (split_seps[i]);
+            }
 
-	    if (end_pos == -2) {
-	      end_pos = sizeof (search_str);
-	      int i = sizeof (split);
-	      while (--i >= end_split)
-		end_pos -= sizeof (split[i]) + sizeof (split_seps[i]);
-	      if (i >= 0) end_pos -= sizeof (split_seps[i]);
-	    }
+            if (end_pos == -2) {
+              end_pos = sizeof (search_str);
+              int i = sizeof (split);
+              while (--i >= end_split)
+                end_pos -= sizeof (split[i]) + sizeof (split_seps[i]);
+              if (i >= 0) end_pos -= sizeof (split_seps[i]);
+            }
 
-	    split = 0;
-	  }
-	}
+            split = 0;
+          }
+        }
 
-	if (split)
-	  split = split[beg_split..end_split - 1];
+        if (split)
+          split = split[beg_split..end_split - 1];
 
-	else {
+        else {
 #ifdef DEBUG
-	  if (beg_pos < 0) error ("beg_pos must be valid here.\n");
-	  if (end_pos < 0) error ("end_pos must be valid here.\n");
+          if (beg_pos < 0) error ("beg_pos must be valid here.\n");
+          if (end_pos < 0) error ("end_pos must be valid here.\n");
 #endif
 
-	  string s = content[beg_pos..end_pos - 1];
+          string s = content[beg_pos..end_pos - 1];
 
-	  if (s == "")
-	    split = ({});
-	  else {
-	    array(string) sp, sps;
+          if (s == "")
+            split = ({});
+          else {
+            array(string) sp, sps;
 
-	    if (sep) {
-	      if (content == search_str)
-		split = s / sep;
-	      else {
-		sp = search_str[beg_pos..end_pos - 1] / sep;
-		sps = allocate (sizeof (sp) - 1, sep) + ({""});
-	      }
-	    }
-	    else {
+            if (sep) {
+              if (content == search_str)
+                split = s / sep;
+              else {
+                sp = search_str[beg_pos..end_pos - 1] / sep;
+                sps = allocate (sizeof (sp) - 1, sep) + ({""});
+              }
+            }
+            else {
 #ifdef DEBUG
-	      if (!sep_chars) error ("Code flow bonkers.\n");
+              if (!sep_chars) error ("Code flow bonkers.\n");
 #endif
-	      if (content == search_str)
-		[split, split_seps] = char_sep_fn (s, sep_chars);
-	      else
-		[sp, sps] =
-		  char_sep_fn (search_str[beg_pos..end_pos - 1], sep_chars);
-	    }
+              if (content == search_str)
+                [split, split_seps] = char_sep_fn (s, sep_chars);
+              else
+                [sp, sps] =
+                  char_sep_fn (search_str[beg_pos..end_pos - 1], sep_chars);
+            }
 
-	    if (sp) {
-	      // content != search_str so we must split on search_str
-	      // and then transfer the split to content.
-	      split = allocate (sizeof (sp));
-	      int p;
-	      foreach (sp; int i; string s) {
-		split[i] = content[p..p + sizeof (s) - 1];
-		p += sizeof (s) + sizeof (sps[i]);
-	      }
-	    }
-	  }
-	}
+            if (sp) {
+              // content != search_str so we must split on search_str
+              // and then transfer the split to content.
+              split = allocate (sizeof (sp));
+              int p;
+              foreach (sp; int i; string s) {
+                split[i] = content[p..p + sizeof (s) - 1];
+                p += sizeof (s) + sizeof (sps[i]);
+              }
+            }
+          }
+        }
 
-	if (trimmer) split = map (split, trimmer);
-	if (ignore_empty) split -= ({""});
+        if (trimmer) split = map (split, trimmer);
+        if (ignore_empty) split -= ({""});
 
-	if (result_type == RXML.t_array)
-	  result = split;
-	else {
+        if (result_type == RXML.t_array)
+          result = split;
+        else {
 #ifdef DEBUG
-	  if (!joiner) error ("Got no joiner.\n");
+          if (!joiner) error ("Got no joiner.\n");
 #endif
-	  result = split * joiner;
-	}
+          result = split * joiner;
+        }
       }
 
       else {
-	result = content[beg_pos..end_pos - 1];
-	if (trimmer) result = trimmer (result);
+        result = content[beg_pos..end_pos - 1];
+        if (trimmer) result = trimmer (result);
       }
 
       return 0;
@@ -4492,12 +4492,12 @@ class TagRange
     array do_enter (RequestID id)
     {
       if (!args->join)
-	result_type = RXML.t_array;
+        result_type = RXML.t_array;
       else
-	result_type = RXML.t_string;
+        result_type = RXML.t_string;
 
       if (args->variable)
-	flags |= RXML.FLAG_EMPTY_ELEMENT;
+        flags |= RXML.FLAG_EMPTY_ELEMENT;
 
       return 0;
     }
@@ -4510,85 +4510,85 @@ class TagRange
       if (!end && !zero_type (end)) parse_error ("\"to\" cannot be zero.\n");
 
       if (args->variable)
-	content = RXML.user_get_var (args->variable);
+        content = RXML.user_get_var (args->variable);
       else if (content == RXML.nil)
-	content = ({});
+        content = ({});
 
       if (!arrayp (content))
-	parse_error ("Array required as input, got %t.\n", content);
+        parse_error ("Array required as input, got %t.\n", content);
 
       int beg_pos, end_pos;
 
     beg_search:
       if (string after = args->after) {
-	if (!beg) beg = 1;
+        if (!beg) beg = 1;
 
-	if (beg > 0) {
-	  int i = 0;
-	  do {
-	    i = search (content, after, i) + 1;
-	    if (i == 0) {
-	      beg_pos = Int.NATIVE_MAX;
-	      break beg_search;
-	    }
-	  } while (--beg > 0);
-	  beg_pos = i;
-	}
+        if (beg > 0) {
+          int i = 0;
+          do {
+            i = search (content, after, i) + 1;
+            if (i == 0) {
+              beg_pos = Int.NATIVE_MAX;
+              break beg_search;
+            }
+          } while (--beg > 0);
+          beg_pos = i;
+        }
 
-	else {
-	  for (int i = sizeof (content); --i >= 0;) {
-	    if (content[i] == after)
-	      if (!++beg) {
-		beg_pos = i + 1;
-		break beg_search;
-	      }
-	  }
-	  beg_pos = 0;
-	}
+        else {
+          for (int i = sizeof (content); --i >= 0;) {
+            if (content[i] == after)
+              if (!++beg) {
+                beg_pos = i + 1;
+                break beg_search;
+              }
+          }
+          beg_pos = 0;
+        }
       }
 
       else {			// Index by position.
-	if (beg > 0)
-	  beg_pos = beg - 1;
-	else if (beg < 0)
-	  beg_pos = max (sizeof (content) + beg, 0);
-	else
-	  beg_pos = 0;
+        if (beg > 0)
+          beg_pos = beg - 1;
+        else if (beg < 0)
+          beg_pos = max (sizeof (content) + beg, 0);
+        else
+          beg_pos = 0;
       }
 
     end_search:
       if (string before = args->before) {
-	if (!end) end = 1;
+        if (!end) end = 1;
 
-	if (end > 0) {
-	  int i = 0;
-	  do {
-	    i = search (content, before, i) + 1;
-	    if (i == 0) {
-	      end_pos = Int.NATIVE_MAX;
-	      break end_search;
-	    }
-	  } while (--end > 0);
-	  end_pos = i - 1;
-	}
+        if (end > 0) {
+          int i = 0;
+          do {
+            i = search (content, before, i) + 1;
+            if (i == 0) {
+              end_pos = Int.NATIVE_MAX;
+              break end_search;
+            }
+          } while (--end > 0);
+          end_pos = i - 1;
+        }
 
-	else {
-	  for (int i = sizeof (content); --i >= 0;) {
-	    if (content[i] == before)
-	      if (!++end) {
-		end_pos = i;
-		break end_search;
-	      }
-	  }
-	  end_pos = 0;
-	}
+        else {
+          for (int i = sizeof (content); --i >= 0;) {
+            if (content[i] == before)
+              if (!++end) {
+                end_pos = i;
+                break end_search;
+              }
+          }
+          end_pos = 0;
+        }
       }
 
       else {			// Index by position.
-	if (end > 0)
-	  end_pos = end;
-	else if (end <= 0)
-	  end_pos = max (sizeof (content) + end + 1, 0);
+        if (end > 0)
+          end_pos = end;
+        else if (end <= 0)
+          end_pos = max (sizeof (content) + end + 1, 0);
       }
 
 #ifdef DEBUG
@@ -4598,11 +4598,11 @@ class TagRange
 
       result = content[beg_pos..end_pos - 1];
       if (string joiner = args->join) {
-	if (mixed err = catch (result = (array(string)) result))
-	  parse_error ("Cannot convert %s to array of strings: %s",
-		       RXML.utils.format_short (result),
-		       describe_error (err));
-	result *= joiner;
+        if (mixed err = catch (result = (array(string)) result))
+          parse_error ("Cannot convert %s to array of strings: %s",
+                       RXML.utils.format_short (result),
+                       describe_error (err));
+        result *= joiner;
       }
 
       return 0;
@@ -4631,64 +4631,64 @@ class TagValue
     {
       RXML.Type type = args->type;
       if (type) {
-	content_type = type(RXML.PXml);
+        content_type = type(RXML.PXml);
       } else if (result_type->handle_literals) {
-	// t_any, t_array, t_mapping, etc.
-	content_type = RXML.t_any(RXML.PXml);
+        // t_any, t_array, t_mapping, etc.
+        content_type = RXML.t_any(RXML.PXml);
       } else {
-	// Typically t_html.
-	// Encode the content with the same type as our result_type.
-	content_type = result_type(RXML.PXml);
+        // Typically t_html.
+        // Encode the content with the same type as our result_type.
+        content_type = result_type(RXML.PXml);
       }
 
       if (args->index) {
-	if (result_type != RXML.t_mapping)
-	  parse_error ("\"index\" attribute only supported "
-		       "in mapping contexts, got %O.\n", result_type);
+        if (result_type != RXML.t_mapping)
+          parse_error ("\"index\" attribute only supported "
+                       "in mapping contexts, got %O.\n", result_type);
       }
 
       else {
-	if (result_type == RXML.t_mapping)
-	  parse_error ("\"index\" attribute required in mapping context.\n");
+        if (result_type == RXML.t_mapping)
+          parse_error ("\"index\" attribute required in mapping context.\n");
 
-	if (result_type == RXML.t_array)
-	  // Avoid that an array value gets spliced into the
-	  // surrounding array. This is the only case where we've got
-	  // a splice/single-value ambiguity.
-	  result_type = RXML.t_any;
+        if (result_type == RXML.t_array)
+          // Avoid that an array value gets spliced into the
+          // surrounding array. This is the only case where we've got
+          // a splice/single-value ambiguity.
+          result_type = RXML.t_any;
       }
 
       if (args->from || args->expr)
-	flags |= RXML.FLAG_EMPTY_ELEMENT;
+        flags |= RXML.FLAG_EMPTY_ELEMENT;
     }
 
     array do_return (RequestID id)
     {
       if (string var = args->from) {
-	// Get the value from another variable.
-	if (zero_type (content = RXML.user_get_var(var, args->scope)))
-	  parse_error ("From variable %q does not exist.\n", var);
+        // Get the value from another variable.
+        if (zero_type (content = RXML.user_get_var(var, args->scope)))
+          parse_error ("From variable %q does not exist.\n", var);
       }
 
       else if (string expr = args->expr)
-	content = sexpr_eval (expr);
+        content = sexpr_eval (expr);
 
       else if (content == RXML.nil) {
-	if (content_type->sequential)
-	  content = content_type->empty_value;
-	else if (content_type == RXML.t_any)
-	  content = RXML.empty;
-	else
-	  parse_error ("The value is missing for "
-		       "non-sequential type %s.\n", content_type);
+        if (content_type->sequential)
+          content = content_type->empty_value;
+        else if (content_type == RXML.t_any)
+          content = RXML.empty;
+        else
+          parse_error ("The value is missing for "
+                       "non-sequential type %s.\n", content_type);
       }
 
       if (string ind = args->index)
-	result = ([ind: content]);
+        result = ([ind: content]);
       else if (result_type != content_type)
-	result = result_type->encode (content, content_type);
+        result = result_type->encode (content, content_type);
       else
-	result = content;
+        result = content;
     }
   }
 }
@@ -4713,32 +4713,32 @@ class TagJsonFormat
       int encode_flags;
 
       if (args["ascii-only"])
-	encode_flags |= Standards.JSON.ASCII_ONLY;
+        encode_flags |= Standards.JSON.ASCII_ONLY;
       if (args["human-readable"])
-	encode_flags |= Standards.JSON.HUMAN_READABLE;
+        encode_flags |= Standards.JSON.HUMAN_READABLE;
       if (string canon = args["canonical"]) {
-	if (canon != "pike")
-	  RXML.parse_error ("Unknown canonical form %q requested.\n", canon);
-	encode_flags |= Standards.JSON.PIKE_CANONICAL;
+        if (canon != "pike")
+          RXML.parse_error ("Unknown canonical form %q requested.\n", canon);
+        encode_flags |= Standards.JSON.PIKE_CANONICAL;
       }
 
       if (args->value)
-	content = args->value;
+        content = args->value;
       else if (string var = args->variable) {
-	if (zero_type (content = RXML.user_get_var (var)))
-	  parse_error ("Variable %q does not exist.\n", var);
+        if (zero_type (content = RXML.user_get_var (var)))
+          parse_error ("Variable %q does not exist.\n", var);
       }
 
       if (mixed err =
-	  catch (result = Standards.JSON.encode (content, encode_flags)))
-	RXML.run_error (describe_error (err));
+          catch (result = Standards.JSON.encode (content, encode_flags)))
+        RXML.run_error (describe_error (err));
 
       if (!args["no-xml-quote"])
-	result = replace (result, ([
-			    "&": "\\u0026",
-			    "<": "\\u003c",
-			    ">": "\\u003e",
-			  ]));
+        result = replace (result, ([
+                            "&": "\\u0026",
+                            "<": "\\u003c",
+                            ">": "\\u003e",
+                          ]));
     }
   }
 }
@@ -4758,14 +4758,14 @@ class TagJsonParse
     array do_return (RequestID id)
     {
       if (args->value)
-	content = args->value;
+        content = args->value;
       else if (string var = args->variable) {
-	if (zero_type (content = RXML.user_get_var (var)))
-	  parse_error ("Variable %q does not exist.\n", var);
+        if (zero_type (content = RXML.user_get_var (var)))
+          parse_error ("Variable %q does not exist.\n", var);
       }
 
       if (mixed err = catch (result = Standards.JSON.decode (content)))
-	RXML.run_error (describe_error (err));
+        RXML.run_error (describe_error (err));
     }
   }
 }
@@ -4784,15 +4784,15 @@ class TagCSet {
     array do_enter (RequestID id)
     {
       if (!content_type->subtype_of (RXML.t_any_text) ||
-	  content_type == RXML.t_nil)
-	content_type = RXML.t_any_text (RXML.PXml);
+          content_type == RXML.t_nil)
+        content_type = RXML.t_any_text (RXML.PXml);
     }
 
     array do_return(RequestID id) {
       if( !args->variable ) parse_error("Variable not specified.\n");
       if(!content) content="";
       if( args->quote != "none" )
-	content = Roxen.html_decode_string( content );
+        content = Roxen.html_decode_string( content );
 
       RXML.user_set_var(args->variable, content, args->scope);
       return 0;
@@ -4847,67 +4847,67 @@ class TagHelp {
       string ret="<h2>Roxen Interactive RXML Help</h2>";
 
       if(!help_for) {
-	// FIXME: Is it actually needed to disable the cache?
-	NOCACHE();
-	array tags=map(indices(RXML_CONTEXT->tag_set->get_tag_names()),
-		       lambda(string tag) {
-			 if (!has_prefix (tag, "_"))
-			   if(tag[..3]=="!--#" || !has_value(tag, "#"))
-			     return tag;
-			 return "";
-		       } ) - ({ "" });
-	tags += map(indices(RXML_CONTEXT->tag_set->get_proc_instr_names()),
-		    lambda(string tag) { return "&lt;?"+tag+"?&gt;"; } );
-	tags = Array.sort_array(tags,
-				lambda(string a, string b) {
-				  if(has_prefix (a, "&lt;?")) a=a[5..];
-				  if(has_prefix (b, "&lt;?")) b=b[5..];
-				  if(lower_case(a)==lower_case(b)) return a > b;
-				  return lower_case (a) > lower_case (b);
-				})-({"\x266a"});
+        // FIXME: Is it actually needed to disable the cache?
+        NOCACHE();
+        array tags=map(indices(RXML_CONTEXT->tag_set->get_tag_names()),
+                       lambda(string tag) {
+                         if (!has_prefix (tag, "_"))
+                           if(tag[..3]=="!--#" || !has_value(tag, "#"))
+                             return tag;
+                         return "";
+                       } ) - ({ "" });
+        tags += map(indices(RXML_CONTEXT->tag_set->get_proc_instr_names()),
+                    lambda(string tag) { return "&lt;?"+tag+"?&gt;"; } );
+        tags = Array.sort_array(tags,
+                                lambda(string a, string b) {
+                                  if(has_prefix (a, "&lt;?")) a=a[5..];
+                                  if(has_prefix (b, "&lt;?")) b=b[5..];
+                                  if(lower_case(a)==lower_case(b)) return a > b;
+                                  return lower_case (a) > lower_case (b);
+                                })-({"\x266a"});
 
-	string char;
-	ret += "<b>Here is a list of all defined tags. Click on the name to "
-	  "receive more detailed information. All these tags are also availabe "
-	  "in the \""+RXML_NAMESPACE+"\" namespace.</b><p>\n";
-	array tag_links;
+        string char;
+        ret += "<b>Here is a list of all defined tags. Click on the name to "
+          "receive more detailed information. All these tags are also availabe "
+          "in the \""+RXML_NAMESPACE+"\" namespace.</b><p>\n";
+        array tag_links;
 
-	foreach(tags, string tag) {
-	  string tag_char =
-	    lower_case (has_prefix (tag, "&lt;?") ? tag[5..5] : tag[0..0]);
-	  if (tag_char != char) {
-	    if(tag_links && char!="/") ret+="<h3>"+upper_case(char)+"</h3>\n<p>"+
-					 String.implode_nicely(tag_links)+"</p>";
-	    char = tag_char;
-	    tag_links=({});
-	  }
-	  if(tag[0..sizeof(RXML_NAMESPACE)]!=RXML_NAMESPACE+":") {
-	    string enc=tag;
-	    if(enc[0..4]=="&lt;?") enc=enc[4..sizeof(enc)-6];
-	    if(my_configuration()->undocumented_tags &&
-	       my_configuration()->undocumented_tags[tag])
-	      tag_links += ({ tag });
-	    else
-	      tag_links += ({ sprintf("<a href=\"%s?_r_t_h=%s\">%s</a>\n",
-				      id->url_base() + id->not_query[1..],
-				      Roxen.http_encode_url(enc), tag) });
+        foreach(tags, string tag) {
+          string tag_char =
+            lower_case (has_prefix (tag, "&lt;?") ? tag[5..5] : tag[0..0]);
+          if (tag_char != char) {
+            if(tag_links && char!="/") ret+="<h3>"+upper_case(char)+"</h3>\n<p>"+
+                                         String.implode_nicely(tag_links)+"</p>";
+            char = tag_char;
+            tag_links=({});
+          }
+          if(tag[0..sizeof(RXML_NAMESPACE)]!=RXML_NAMESPACE+":") {
+            string enc=tag;
+            if(enc[0..4]=="&lt;?") enc=enc[4..sizeof(enc)-6];
+            if(my_configuration()->undocumented_tags &&
+               my_configuration()->undocumented_tags[tag])
+              tag_links += ({ tag });
+            else
+              tag_links += ({ sprintf("<a href=\"%s?_r_t_h=%s\">%s</a>\n",
+                                      id->url_base() + id->not_query[1..],
+                                      Roxen.http_encode_url(enc), tag) });
 
-	  }
-	}
+          }
+        }
 
-	ret+="<h3>"+upper_case(char)+"</h3>\n<p>"+String.implode_nicely(tag_links)+"</p>";
-	/*
-	ret+="<p><b>This is a list of all currently defined RXML scopes and their entities</b></p>";
+        ret+="<h3>"+upper_case(char)+"</h3>\n<p>"+String.implode_nicely(tag_links)+"</p>";
+        /*
+        ret+="<p><b>This is a list of all currently defined RXML scopes and their entities</b></p>";
 
-	RXML.Context context=RXML_CONTEXT;
-	foreach(sort(context->list_scopes()), string scope) {
-	  ret+=sprintf("<h3><a href=\"%s?_r_t_h=%s\">%s</a></h3>\n",
-		       id->not_query, Roxen.http_encode_url("&"+scope+";"), scope);
-	  ret+="<p>"+String.implode_nicely(Array.map(sort(context->list_var(scope)),
-						       lambda(string ent) { return ent; }) )+"</p>";
-	}
-	*/
-	return ({ ret });
+        RXML.Context context=RXML_CONTEXT;
+        foreach(sort(context->list_scopes()), string scope) {
+          ret+=sprintf("<h3><a href=\"%s?_r_t_h=%s\">%s</a></h3>\n",
+                       id->not_query, Roxen.http_encode_url("&"+scope+";"), scope);
+          ret+="<p>"+String.implode_nicely(Array.map(sort(context->list_var(scope)),
+                                                       lambda(string ent) { return ent; }) )+"</p>";
+        }
+        */
+        return ({ ret });
       }
 
       result=ret+my_configuration()->find_tag_doc(help_for, id);
@@ -4927,7 +4927,7 @@ class TagNumber {
       if(args->type=="memory") return ({ Roxen.sizetostring((int)args->num) });
       result=roxen.language(args->lang||args->language||
                             RXML_CONTEXT->misc->theme_language,
-			    args->type||"number",id)( (int)args->num );
+                            args->type||"number",id)( (int)args->num );
     }
   }
 }
@@ -4946,12 +4946,12 @@ class TagUse {
 
   private array(string) list_packages() {
     return filter(((get_dir("../local/rxml_packages")||({}))
-		   |(get_dir("rxml_packages")||({}))),
-		  lambda( string s ) {
-		    return s!=".cvsignore" &&
-		      (Stdio.file_size("../local/rxml_packages/"+s)+
-		       Stdio.file_size( "rxml_packages/"+s )) > 0;
-		  });
+                   |(get_dir("rxml_packages")||({}))),
+                  lambda( string s ) {
+                    return s!=".cvsignore" &&
+                      (Stdio.file_size("../local/rxml_packages/"+s)+
+                       Stdio.file_size( "rxml_packages/"+s )) > 0;
+                  });
   }
 
   private string read_package( string p ) {
@@ -4981,9 +4981,9 @@ class TagUse {
 
     foreach (defs[1]; string defname;)
       if (has_prefix (defname, "if\0"))
-	ifs += ({defname[sizeof ("if\0")..]});
+        ifs += ({defname[sizeof ("if\0")..]});
       else if (has_prefix (defname, "tag\0"))
-	tags += ({defname[sizeof ("tag\0")..]});
+        tags += ({defname[sizeof ("tag\0")..]});
 
     constant types = ({ "if plugin", "tag", "form variable", "\"var\" scope variable" });
 
@@ -4991,8 +4991,8 @@ class TagUse {
 
     for(int i; i<3; i++)
       if(sizeof(pack[i])) {
-	res += "Defines the following " + types[i] + (sizeof(pack[i])!=1?"s":"") +
-	  ": " + String.implode_nicely( sort(pack[i]) ) + ".<br />";
+        res += "Defines the following " + types[i] + (sizeof(pack[i])!=1?"s":"") +
+          ": " + String.implode_nicely( sort(pack[i]) ) + ".<br />";
       }
 
     if(help) res+="<br /><br />All tags accept the <i>help</i> attribute.";
@@ -5017,63 +5017,63 @@ class TagUse {
 
     array do_return(RequestID id) {
       if(args->packageinfo) {
-	NOCACHE();
-	result ="<dl>";
-	foreach(list_packages(), string f)
-	  result += use_file_doc(f, read_package( f ));
-	result += "</dl>";
-	result_type = RXML.t_html;
-	return 0;
+        NOCACHE();
+        result ="<dl>";
+        foreach(list_packages(), string f)
+          result += use_file_doc(f, read_package( f ));
+        result += "</dl>";
+        result_type = RXML.t_html;
+        return 0;
       }
 
       if(!args->file && !args->package)
-	parse_error("No file or package selected.\n");
+        parse_error("No file or package selected.\n");
 
       array res;
       string name, filename;
       int is_package;
       if(args->file)
       {
-	filename = Roxen.fix_relative(args->file, id);
-	name = id->conf->get_config_id() + "|" + filename;
+        filename = Roxen.fix_relative(args->file, id);
+        name = id->conf->get_config_id() + "|" + filename;
       }
       else if( args->locate )
       {
-	filename = VFS.find_above( id->not_query, args->locate, id, "locate" );
-	name = id->conf->get_config_id() + "|" + filename;
+        filename = VFS.find_above( id->not_query, args->locate, id, "locate" );
+        name = id->conf->get_config_id() + "|" + filename;
       }
       else
       {
-	name = "|" + args->package;
-	is_package = 1;
+        name = "|" + args->package;
+        is_package = 1;
       }
       RXML.Context ctx = RXML_CONTEXT;
 
       if(!(res=cache_lookup("macrofiles",name)) ||
-	 args->info || id->pragma["no-cache"] ||
-	 (is_package ? !res[0] : res[0] != global::this)) {
+         args->info || id->pragma["no-cache"] ||
+         (is_package ? !res[0] : res[0] != global::this)) {
 
-	string file;
-	if(filename)
-	  file = id->conf->try_get_file( filename, id );
-	else
-	  file = read_package( args->package );
+        string file;
+        if(filename)
+          file = id->conf->try_get_file( filename, id );
+        else
+          file = read_package( args->package );
 
-	if(!file)
-	  run_error("Failed to fetch "+(args->file||args->package)+".\n");
+        if(!file)
+          run_error("Failed to fetch "+(args->file||args->package)+".\n");
 
-	if( args->info ) {
-	  result = "<dl>"+
-	    use_file_doc( args->file || args->package, file )+
-	    "</dl>";
-	  result_type = RXML.t_html;
-	  return 0;
-	}
+        if( args->info ) {
+          result = "<dl>"+
+            use_file_doc( args->file || args->package, file )+
+            "</dl>";
+          result_type = RXML.t_html;
+          return 0;
+        }
 
-	res = parse_use_package(file, ctx);
-	// DEBUG_CACHE_SIZES note: These cache entries can become
-	// larger, e.g. as more parts of the rxml tree gets compiled.
-	cache_set("macrofiles", name, res);
+        res = parse_use_package(file, ctx);
+        // DEBUG_CACHE_SIZES note: These cache entries can become
+        // larger, e.g. as more parts of the rxml tree gets compiled.
+        cache_set("macrofiles", name, res);
       }
 
       [RoxenModule ignored,
@@ -5081,20 +5081,20 @@ class TagUse {
        mapping(string:mixed)|RXML.Scope formvars,
        mapping(string:mixed)|RXML.Scope varvars] = res;
       foreach (newdefs; string defname; mixed def) {
-	if (defname == "scope_roxen" || defname == "scope_page") {
-	  // The user override mappings for the "roxen" and "page"
-	  // scopes. Merge with existing mappings.
-	  mapping(string:mixed) tgt_map = ctx->misc[defname];
-	  if (!tgt_map)		// Shouldn't happen.
-	    ctx->misc[defname] = def + ([]);
-	  else
-	    foreach (def; string var; mixed val)
-	      tgt_map[var] = val;
-	}
-	else {
-	  ctx->misc[defname] = def;
-	  if (has_prefix (defname, "tag\0")) ctx->add_runtime_tag (def[3]);
-	}
+        if (defname == "scope_roxen" || defname == "scope_page") {
+          // The user override mappings for the "roxen" and "page"
+          // scopes. Merge with existing mappings.
+          mapping(string:mixed) tgt_map = ctx->misc[defname];
+          if (!tgt_map)		// Shouldn't happen.
+            ctx->misc[defname] = def + ([]);
+          else
+            foreach (def; string var; mixed val)
+              tgt_map[var] = val;
+        }
+        else {
+          ctx->misc[defname] = def;
+          if (has_prefix (defname, "tag\0")) ctx->add_runtime_tag (def[3]);
+        }
       }
       ctx->extend_scope ("form", formvars);
       ctx->extend_scope ("var", varvars);
@@ -5114,7 +5114,7 @@ class UserTagContents
   class IdentityVar (string self)
   {
     mixed rxml_var_eval (RXML.Context ctx, string var, string scope_name,
-			 void|RXML.Type type)
+                         void|RXML.Type type)
     {
       return ENCODE_RXML_XML (self, type);
     }
@@ -5137,13 +5137,13 @@ class UserTagContents
       RXML.Frame upframe = up;
       int nest = 1;
       for (; upframe; upframe = upframe->up)
-	if (upframe->is_contents_nest_tag) {
-	  if ((!scope || upframe->scope_name == scope) && !--nest)
-	    return upframe;
-	}
-	else
-	  if (upframe->is_user_tag_contents_tag &&
-	      (!scope || upframe->scope == scope)) nest++;
+        if (upframe->is_contents_nest_tag) {
+          if ((!scope || upframe->scope_name == scope) && !--nest)
+            return upframe;
+        }
+        else
+          if (upframe->is_user_tag_contents_tag &&
+              (!scope || upframe->scope == scope)) nest++;
       parse_error ("No associated defined tag to get contents from.\n");
     }
 
@@ -5154,56 +5154,56 @@ class UserTagContents
     array do_return()
     {
       if (args["copy-of"] && args["value-of"])
-	parse_error ("Attributes copy-of and value-of are mutually exclusive.\n");
+        parse_error ("Attributes copy-of and value-of are mutually exclusive.\n");
 
       scope = args->scope;
       RXML.Frame upframe = get_upframe();
 
       if (compat_level < 2.4 && !args["copy-of"] && !args["value-of"])
-	// Must reevaluate the contents each time it's inserted to be
-	// compatible in old <contents/> tags without copy-of or
-	// value-of arguments.
-	args->eval = "";
+        // Must reevaluate the contents each time it's inserted to be
+        // compatible in old <contents/> tags without copy-of or
+        // value-of arguments.
+        args->eval = "";
 
       // Note that args will be parsed again in the ExpansionFrame.
 
       if (upframe->is_define_tag) {
-	// If upframe is a <define> tag and not the user tag then
-	// we're being preparsed. Output an entity on the form
-	// &_internal_.4711; so that we can find it again after the
-	// preparse.
-	if (mapping(string:ExpansionFrame) ctag = upframe->preparsed_contents_tags) {
-	  RXML.Context ctx = RXML_CONTEXT;
-	  string var = ctx->alloc_internal_var();
-	  ctag[var] = ExpansionFrame (
-	    0,
-	    args["copy-of"] || args["value-of"] ?
-	    RXML.t_xml (content_type->parser_prog) : content_type,
-	    args);
-	  // Install a value for &_internal_.4711; that expands to
-	  // itself, in case something evaluates it during preparse.
-	  // Don't use the proper ctx->set_var since these assigments
-	  // doesn't need to be registered if p-code is created;
-	  // they're only used temporarily during the preparse.
-	  ctx->scopes->_internal_[var] = IdentityVar ("&_internal_." + var + ";");
-	  result_type = result_type (RXML.PNone);
-	  return ({"&_internal_." + var + ";"});
-	}
-	else
-	  parse_error ("This tag is currently only supported in "
-		       "<define tag='...'> and <define container='...'>.\n");
+        // If upframe is a <define> tag and not the user tag then
+        // we're being preparsed. Output an entity on the form
+        // &_internal_.4711; so that we can find it again after the
+        // preparse.
+        if (mapping(string:ExpansionFrame) ctag = upframe->preparsed_contents_tags) {
+          RXML.Context ctx = RXML_CONTEXT;
+          string var = ctx->alloc_internal_var();
+          ctag[var] = ExpansionFrame (
+            0,
+            args["copy-of"] || args["value-of"] ?
+            RXML.t_xml (content_type->parser_prog) : content_type,
+            args);
+          // Install a value for &_internal_.4711; that expands to
+          // itself, in case something evaluates it during preparse.
+          // Don't use the proper ctx->set_var since these assigments
+          // doesn't need to be registered if p-code is created;
+          // they're only used temporarily during the preparse.
+          ctx->scopes->_internal_[var] = IdentityVar ("&_internal_." + var + ";");
+          result_type = result_type (RXML.PNone);
+          return ({"&_internal_." + var + ";"});
+        }
+        else
+          parse_error ("This tag is currently only supported in "
+                       "<define tag='...'> and <define container='...'>.\n");
       }
 
       else {
-	ExpansionFrame exp_frame =
-	  ExpansionFrame (upframe,
-			  args["copy-of"] || args["value-of"] ?
-			  RXML.t_xml (content_type->parser_prog) : content_type,
-			  args);
+        ExpansionFrame exp_frame =
+          ExpansionFrame (upframe,
+                          args["copy-of"] || args["value-of"] ?
+                          RXML.t_xml (content_type->parser_prog) : content_type,
+                          args);
 #ifdef DEBUG
-	if (flags & RXML.FLAG_DEBUG) exp_frame->flags |= RXML.FLAG_DEBUG;
+        if (flags & RXML.FLAG_DEBUG) exp_frame->flags |= RXML.FLAG_DEBUG;
 #endif
-	return ({exp_frame});
+        return ({exp_frame});
       }
     }
   }
@@ -5221,32 +5221,32 @@ class UserTagContents
     RXML.Frame upframe;
 
     protected void create (void|RXML.Frame upframe_,
-			   void|RXML.Type type, void|mapping contents_args)
+                           void|RXML.Type type, void|mapping contents_args)
     {
       if (type) {		// Might be created from decode or _clone_empty.
-	content_type = type, result_type = type (RXML.PNone);
-	args = contents_args;
-	if (args["copy-of"] || args["value-of"])
-	  // If there's an error it'll typically be completely lost if
-	  // we use copy-of or value-of, so propagate it instead.
-	  flags |= RXML.FLAG_DONT_RECOVER;
-	if ((upframe = upframe_)) {
-	  // upframe is zero if we're called during preparse.
-	  RXML.PCode compiled_content = upframe->compiled_content;
-	  if (compiled_content && !compiled_content->is_stale()) {
-	    content = compiled_content;
-	    // The internal way to flag a compiled but unevaluated
-	    // flag is to set args to a function returning the
-	    // argument mapping. It'd be prettier with a flag for
-	    // this.
-	    args = (mixed) get_arg_function (args);
-	  }
-	  else {
-	    content = upframe->content_text;
-	    flags |= RXML.FLAG_UNPARSED;
-	  }
-	  if (upframe->compile) flags |= RXML.FLAG_COMPILE_INPUT;
-	}
+        content_type = type, result_type = type (RXML.PNone);
+        args = contents_args;
+        if (args["copy-of"] || args["value-of"])
+          // If there's an error it'll typically be completely lost if
+          // we use copy-of or value-of, so propagate it instead.
+          flags |= RXML.FLAG_DONT_RECOVER;
+        if ((upframe = upframe_)) {
+          // upframe is zero if we're called during preparse.
+          RXML.PCode compiled_content = upframe->compiled_content;
+          if (compiled_content && !compiled_content->is_stale()) {
+            content = compiled_content;
+            // The internal way to flag a compiled but unevaluated
+            // flag is to set args to a function returning the
+            // argument mapping. It'd be prettier with a flag for
+            // this.
+            args = (mixed) get_arg_function (args);
+          }
+          else {
+            content = upframe->content_text;
+            flags |= RXML.FLAG_UNPARSED;
+          }
+          if (upframe->compile) flags |= RXML.FLAG_COMPILE_INPUT;
+        }
       }
     }
 
@@ -5254,138 +5254,138 @@ class UserTagContents
     {
       mapping(string:mixed) res = ([]);
       foreach (upframe->vars; string var; mixed val)
-	if (!(<"args", "rest-args", "contents">)[var] &&
-	    !has_prefix (var, "__contents__"))
-	  res[var] = val;
+        if (!(<"args", "rest-args", "contents">)[var] &&
+            !has_prefix (var, "__contents__"))
+          res[var] = val;
       return res;
     }
 
     local mixed get_content (RXML.Frame upframe, mixed content)
     {
       if (string expr = args["copy-of"] || args["value-of"]) {
-	string insert_type = args["copy-of"] ? "copy-of" : "value-of";
-	int result_set = !!args["result-set"];
+        string insert_type = args["copy-of"] ? "copy-of" : "value-of";
+        int result_set = !!args["result-set"];
 
-	string|array|mapping value;
+        string|array|mapping value;
 
-	if (sscanf (expr, "%*[ \t\n\r]@%*[ \t\n\r]%s", expr) == 3) {
-	  // Special treatment to select attributes at the top level.
-	  sscanf (expr, "%[^][ \t\n\r/@(){},]%*[ \t\n\r]%s", expr, string rest);
-	  if (!sizeof (expr))
-	    parse_error ("Error in %s attribute: No attribute name after @.\n",
-			 insert_type);
-	  if (sizeof (rest))
-	    parse_error ("Error in %s attribute: "
-			 "Unexpected subpath %O after attribute %s.\n",
-			 insert_type, rest, expr);
-	  if (expr == "*") {
-	    if (insert_type == "copy-of")
-	      if (result_set)
-		value = get_input_attrs (upframe);
-	      else
-		value = upframe->vars->args;
-	    else
-	      if (result_set)
-		value = values (get_input_attrs (upframe));
-	      else
-		value = Mapping.Iterator (get_input_attrs (upframe))->value();
-	  }
-	  else if (!(<"args", "rest-args", "contents">)[expr] &&
-		   !has_prefix (expr, "__contents__"))
-	    if (string val = upframe->vars[expr])
-	      if (insert_type == "copy-of")
-		if (result_set)
-		  value = ([expr: val]);
-		else
-		  value = Roxen.make_tag_attributes (([expr: val]));
-	      else
-		value = val;
-	}
+        if (sscanf (expr, "%*[ \t\n\r]@%*[ \t\n\r]%s", expr) == 3) {
+          // Special treatment to select attributes at the top level.
+          sscanf (expr, "%[^][ \t\n\r/@(){},]%*[ \t\n\r]%s", expr, string rest);
+          if (!sizeof (expr))
+            parse_error ("Error in %s attribute: No attribute name after @.\n",
+                         insert_type);
+          if (sizeof (rest))
+            parse_error ("Error in %s attribute: "
+                         "Unexpected subpath %O after attribute %s.\n",
+                         insert_type, rest, expr);
+          if (expr == "*") {
+            if (insert_type == "copy-of")
+              if (result_set)
+                value = get_input_attrs (upframe);
+              else
+                value = upframe->vars->args;
+            else
+              if (result_set)
+                value = values (get_input_attrs (upframe));
+              else
+                value = Mapping.Iterator (get_input_attrs (upframe))->value();
+          }
+          else if (!(<"args", "rest-args", "contents">)[expr] &&
+                   !has_prefix (expr, "__contents__"))
+            if (string val = upframe->vars[expr])
+              if (insert_type == "copy-of")
+                if (result_set)
+                  value = ([expr: val]);
+                else
+                  value = Roxen.make_tag_attributes (([expr: val]));
+              else
+                value = val;
+        }
 
-	else {
-	  if (!objectp (content) || content->node_type != SloppyDOM.Node.DOCUMENT_NODE)
-	    content = upframe->content_result = SloppyDOM.parse ((string) content, 1);
+        else {
+          if (!objectp (content) || content->node_type != SloppyDOM.Node.DOCUMENT_NODE)
+            content = upframe->content_result = SloppyDOM.parse ((string) content, 1);
 
-	  mixed res = 0;
-	  if (mixed err = catch (
-		res = content->simple_path (
-		  expr, !result_set && insert_type == "copy-of")))
-	    // We're sloppy and assume that the error is some parse
-	    // error regarding the expression.
-	    parse_error ("Error in %s attribute: %s", insert_type,
-			 describe_error (err));
+          mixed res = 0;
+          if (mixed err = catch (
+                res = content->simple_path (
+                  expr, !result_set && insert_type == "copy-of")))
+            // We're sloppy and assume that the error is some parse
+            // error regarding the expression.
+            parse_error ("Error in %s attribute: %s", insert_type,
+                         describe_error (err));
 
-	  if (insert_type == "copy-of") {
-	    if (result_set) {
-	      if (arrayp (res))
-		value = map (res, lambda (mapping|SloppyDOM.Node elem) {
-				    if (objectp (elem))
-				      return elem->xml_format();
-				    else
-				      return Roxen.make_tag_attributes (elem);
-				  });
-	      else if (objectp (res))
-		value = ({res->xml_format()});
-	      else if (mappingp (res))
-		value = res;
-	      else
-		value = ({});
-	    }
-	    else
-	      value = res;
-	  }
+          if (insert_type == "copy-of") {
+            if (result_set) {
+              if (arrayp (res))
+                value = map (res, lambda (mapping|SloppyDOM.Node elem) {
+                                    if (objectp (elem))
+                                      return elem->xml_format();
+                                    else
+                                      return Roxen.make_tag_attributes (elem);
+                                  });
+              else if (objectp (res))
+                value = ({res->xml_format()});
+              else if (mappingp (res))
+                value = res;
+              else
+                value = ({});
+            }
+            else
+              value = res;
+          }
 
-	  else {
-	    if (result_set) {
-	      if (arrayp (res)) {
-		value = ({});
-		foreach (res, mapping|SloppyDOM.Node elem) {
-		  if (objectp (elem))
-		    value += ({elem->get_text_content()});
-		  else
-		    value += values (elem);
-		}
-	      }
-	      else if (objectp (res))
-		value = ({res->get_text_content()});
-	      else if (mappingp (res))
-		value = values (res);
-	      else
-		value = ({});
-	    }
-	    else {
-	      if (arrayp (res)) res = sizeof (res) && res[0];
-	      if (objectp (res))
-		value = res->get_text_content();
-	      else if (mappingp (res))
-		value = values (res)[0];
-	      else
-		value = "";
-	    }
-	  }
-	}
+          else {
+            if (result_set) {
+              if (arrayp (res)) {
+                value = ({});
+                foreach (res, mapping|SloppyDOM.Node elem) {
+                  if (objectp (elem))
+                    value += ({elem->get_text_content()});
+                  else
+                    value += values (elem);
+                }
+              }
+              else if (objectp (res))
+                value = ({res->get_text_content()});
+              else if (mappingp (res))
+                value = values (res);
+              else
+                value = ({});
+            }
+            else {
+              if (arrayp (res)) res = sizeof (res) && res[0];
+              if (objectp (res))
+                value = res->get_text_content();
+              else if (mappingp (res))
+                value = values (res)[0];
+              else
+                value = "";
+            }
+          }
+        }
 
 #ifdef DEBUG
-	if (TAG_DEBUG_TEST (flags & RXML.FLAG_DEBUG))
-	  tag_debug ("%O:   Did %s %O in %s: %s\n", this,
-		     insert_type, expr,
-		     RXML.utils.format_short (
-		       objectp (content) ? content->xml_format() : content),
-		     RXML.utils.format_short (value));
+        if (TAG_DEBUG_TEST (flags & RXML.FLAG_DEBUG))
+          tag_debug ("%O:   Did %s %O in %s: %s\n", this,
+                     insert_type, expr,
+                     RXML.utils.format_short (
+                       objectp (content) ? content->xml_format() : content),
+                     RXML.utils.format_short (value));
 #endif
-	return value;
+        return value;
       }
 
       else
-	if (objectp (content) &&
-	    content->node_type == SloppyDOM.Node.DOCUMENT_NODE &&
-	    result_type->empty_value == "")
-	  // The content has been parsed into a SloppyDOM.Document by
-	  // the code above in an earlier <contents/>. Format it again
-	  // if the result type is string-like.
-	  return content->xml_format();
-	else
-	  return content;
+        if (objectp (content) &&
+            content->node_type == SloppyDOM.Node.DOCUMENT_NODE &&
+            result_type->empty_value == "")
+          // The content has been parsed into a SloppyDOM.Document by
+          // the code above in an earlier <contents/>. Format it again
+          // if the result type is string-like.
+          return content->xml_format();
+        else
+          return content;
     }
 
     mapping(string:mixed) orig_ctx_scopes;
@@ -5394,34 +5394,34 @@ class UserTagContents
     array do_enter()
     {
       if (!upframe->got_content_result || args->eval) {
-	do_iterate = 1;
-	// Switch to the set of scopes that were defined at entry of
-	// the UserTag frame, to get static variable binding in the
-	// content. This is poking in the internals; there ought to be
-	// some sort of interface here.
-	RXML.Context ctx = RXML_CONTEXT;
-	orig_ctx_scopes = ctx->scopes, ctx->scopes = upframe->get_saved_scopes();
-	orig_ctx_hidden = ctx->hidden, ctx->hidden = upframe->get_saved_hidden();
+        do_iterate = 1;
+        // Switch to the set of scopes that were defined at entry of
+        // the UserTag frame, to get static variable binding in the
+        // content. This is poking in the internals; there ought to be
+        // some sort of interface here.
+        RXML.Context ctx = RXML_CONTEXT;
+        orig_ctx_scopes = ctx->scopes, ctx->scopes = upframe->get_saved_scopes();
+        orig_ctx_hidden = ctx->hidden, ctx->hidden = upframe->get_saved_hidden();
       }
       else
-	// Already have the result of the content evaluation.
-	do_iterate = -1;
+        // Already have the result of the content evaluation.
+        do_iterate = -1;
       return 0;
     }
 
     array do_return()
     {
       if (do_iterate >= 0) {
-	// Switch back the set of scopes. This is poking in the
-	// internals; there ought to be some sort of interface here.
-	RXML.Context ctx = RXML_CONTEXT;
-	ctx->scopes = orig_ctx_scopes, orig_ctx_scopes = 0;
-	ctx->hidden = orig_ctx_hidden, orig_ctx_hidden = 0;
-	upframe->content_result = content;
-	upframe->got_content_result = 1;
+        // Switch back the set of scopes. This is poking in the
+        // internals; there ought to be some sort of interface here.
+        RXML.Context ctx = RXML_CONTEXT;
+        ctx->scopes = orig_ctx_scopes, orig_ctx_scopes = 0;
+        ctx->hidden = orig_ctx_hidden, orig_ctx_hidden = 0;
+        upframe->content_result = content;
+        upframe->got_content_result = 1;
       }
       else
-	content = upframe->content_result;
+        content = upframe->content_result;
 
       result = get_content (upframe, content);
       return 0;
@@ -5431,12 +5431,12 @@ class UserTagContents
     // use (see the is_define_tag stuff in Frame.do_return). Note: The
     // frame is not thread local in this case.
     mixed rxml_var_eval (RXML.Context ctx, string var, string scope_name,
-			 void|RXML.Type type)
+                         void|RXML.Type type)
     {
       RXML.Frame upframe = ctx->frame;
 #ifdef DEBUG
       if (!upframe || !upframe->is_user_tag)
-	error ("Expected current frame to be UserTag, but it's %O.\n", upframe);
+        error ("Expected current frame to be UserTag, but it's %O.\n", upframe);
 #endif
 
       mixed content;
@@ -5445,34 +5445,34 @@ class UserTagContents
       // do_* functions since the frame isn't thread local here.
 
       if (!upframe->got_content_result || args->eval) {
-	// Switch to the set of scopes that were defined at entry of
-	// the UserTag frame, to get static variable binding in the
-	// content. This is poking in the internals; there ought to be
-	// some sort of interface here.
-	RXML.Context ctx = RXML_CONTEXT;
-	mapping(string:mixed) orig_ctx_scopes = ctx->scopes;
-	ctx->scopes = upframe->get_saved_scopes();
-	mapping(RXML.Frame:array) orig_ctx_hidden = ctx->hidden;
-	ctx->hidden = upframe->get_saved_hidden();
+        // Switch to the set of scopes that were defined at entry of
+        // the UserTag frame, to get static variable binding in the
+        // content. This is poking in the internals; there ought to be
+        // some sort of interface here.
+        RXML.Context ctx = RXML_CONTEXT;
+        mapping(string:mixed) orig_ctx_scopes = ctx->scopes;
+        ctx->scopes = upframe->get_saved_scopes();
+        mapping(RXML.Frame:array) orig_ctx_hidden = ctx->hidden;
+        ctx->hidden = upframe->get_saved_hidden();
 
-	RXML.PCode compiled_content = upframe->compiled_content;
-	if (compiled_content && !compiled_content->is_stale())
-	  content = compiled_content->eval (ctx);
-	else if (upframe->compile)
-	  [content, upframe->compiled_content] =
-	    ctx->eval_and_compile (content_type, upframe->content_text);
-	else
-	  content = content_type->eval (upframe->content_text);
+        RXML.PCode compiled_content = upframe->compiled_content;
+        if (compiled_content && !compiled_content->is_stale())
+          content = compiled_content->eval (ctx);
+        else if (upframe->compile)
+          [content, upframe->compiled_content] =
+            ctx->eval_and_compile (content_type, upframe->content_text);
+        else
+          content = content_type->eval (upframe->content_text);
 
-	// Switch back the set of scopes. This is poking in the
-	// internals; there ought to be some sort of interface here.
-	ctx->scopes = orig_ctx_scopes;
-	ctx->hidden = orig_ctx_hidden;
-	upframe->content_result = content;
-	upframe->got_content_result = 1;
+        // Switch back the set of scopes. This is poking in the
+        // internals; there ought to be some sort of interface here.
+        ctx->scopes = orig_ctx_scopes;
+        ctx->hidden = orig_ctx_hidden;
+        upframe->content_result = content;
+        upframe->got_content_result = 1;
       }
       else
-	content = upframe->content_result;
+        content = upframe->content_result;
 
 #if constant (_disable_threads)
       // If content is a SloppyDOM object, it's not thread safe when
@@ -5488,7 +5488,7 @@ class UserTagContents
 
       // Note: result_type == content_type (except for the parser).
       return type && type != result_type ?
-	type->encode (result, result_type) : result;
+        type->encode (result, result_type) : result;
     }
 
     array _encode() {return ({content_type, upframe, args});}
@@ -5497,12 +5497,12 @@ class UserTagContents
     string format_rxml_backtrace_frame (void|RXML.Context ctx)
     {
       if (ctx)
-	// Used as an RXML.Value.
-	return "<contents" + Roxen.make_tag_attributes (args) + ">";
+        // Used as an RXML.Value.
+        return "<contents" + Roxen.make_tag_attributes (args) + ">";
       else
-	// Used as a frame. The real contents frame is just above, so
-	// suppress this one.
-	return "";
+        // Used as a frame. The real contents frame is just above, so
+        // suppress this one.
+        return "";
     }
 
     string _sprintf (int flag)
@@ -5627,8 +5627,8 @@ class UserTag {
     void destroy()
     {
       if (string sid = _saved_id) {
-	m_delete (usertag_saved_scopes, sid);
-	m_delete (usertag_saved_hidden, sid);
+        m_delete (usertag_saved_scopes, sid);
+        m_delete (usertag_saved_hidden, sid);
       }
     }
 
@@ -5637,14 +5637,14 @@ class UserTag {
       vars = 0;
       do_iterate = content_text ? -1 : 1;
       if ((tagdef = RXML_CONTEXT->misc[lookup_name]))
-	if (tagdef[4]) {
-	  local_tags = RXML.empty_tag_set;
-	  additional_tags = 0;
-	}
-	else {
-	  additional_tags = user_tag_contents_tag_set;
-	  local_tags = 0;
-	}
+        if (tagdef[4]) {
+          local_tags = RXML.empty_tag_set;
+          additional_tags = 0;
+        }
+        else {
+          additional_tags = user_tag_contents_tag_set;
+          local_tags = 0;
+        }
       return 0;
     }
 
@@ -5660,51 +5660,51 @@ class UserTag {
        RXML.Type comp_type,
        string comp_def_key] = tagdef;
       if (comp_def_key) {
-	if (CompDefCacheEntry entry =
-	    cache_lookup (user_tag_comp_def_loc, comp_def_key))
-	  comp_def = entry->comp_def;
+        if (CompDefCacheEntry entry =
+            cache_lookup (user_tag_comp_def_loc, comp_def_key))
+          comp_def = entry->comp_def;
       }
       vars = defaults+args;
       scope_name = def_scope_name || name;
 
       if (!comp_def || comp_type != result_type)
-	comp_def = src_def + ({});
+        comp_def = src_def + ({});
 
       if (content_text)
-	// A previously evaluated tag was restored.
-	content = content_text;
+        // A previously evaluated tag was restored.
+        content = content_text;
       else {
-	if(content && args->trimwhites)
-	  content = String.trim_all_whites(content);
+        if(content && args->trimwhites)
+          content = String.trim_all_whites(content);
 
 #if ROXEN_COMPAT <= 1.3
-	if (stringp (comp_def[0])) {
-	  if(id->conf->old_rxml_compat) {
-	    array replace_from, replace_to;
-	    if (flags & RXML.FLAG_EMPTY_ELEMENT) {
-	      replace_from = map(indices(vars),Roxen.make_entity)+
-		({"#args#"});
-	      replace_to = values(vars)+
-		({ Roxen.make_tag_attributes(vars)[1..] });
-	    }
-	    else {
-	      replace_from = map(indices(vars),Roxen.make_entity)+
-		({"#args#", "<contents>"});
-	      replace_to = values(vars)+
-		({ Roxen.make_tag_attributes(vars)[1..], content });
-	    }
-	    string c2;
-	    c2 = replace(comp_def[0], replace_from, replace_to);
-	    if(c2!=comp_def[0]) {
-	      vars=([]);
-	      return ({c2});
-	    }
-	  }
-	}
+        if (stringp (comp_def[0])) {
+          if(id->conf->old_rxml_compat) {
+            array replace_from, replace_to;
+            if (flags & RXML.FLAG_EMPTY_ELEMENT) {
+              replace_from = map(indices(vars),Roxen.make_entity)+
+                ({"#args#"});
+              replace_to = values(vars)+
+                ({ Roxen.make_tag_attributes(vars)[1..] });
+            }
+            else {
+              replace_from = map(indices(vars),Roxen.make_entity)+
+                ({"#args#", "<contents>"});
+              replace_to = values(vars)+
+                ({ Roxen.make_tag_attributes(vars)[1..], content });
+            }
+            string c2;
+            c2 = replace(comp_def[0], replace_from, replace_to);
+            if(c2!=comp_def[0]) {
+              vars=([]);
+              return ({c2});
+            }
+          }
+        }
 #endif
 
-	content_text = content || "";
-	compile = ctx->make_p_code;
+        content_text = content || "";
+        compile = ctx->make_p_code;
       }
 
       vars->args = Roxen.make_tag_attributes(vars)[1..];
@@ -5715,16 +5715,16 @@ class UserTag {
       got_content_result = 0;
 
       if (compat_level > 2.1) {
-	// Save the scope state so that we can switch back in
-	// <contents/>, thereby achieving static variable binding in
-	// the content. This is poking in the internals; there ought
-	// to be some sort of interface here.
-	set_saved_scopes (ctx->scopes + ([]));
-	set_saved_hidden (ctx->hidden + ([]));
+        // Save the scope state so that we can switch back in
+        // <contents/>, thereby achieving static variable binding in
+        // the content. This is poking in the internals; there ought
+        // to be some sort of interface here.
+        set_saved_scopes (ctx->scopes + ([]));
+        set_saved_hidden (ctx->hidden + ([]));
       }
       else {
-	set_saved_scopes (ctx->scopes);
-	set_saved_hidden (ctx->hidden);
+        set_saved_scopes (ctx->scopes);
+        set_saved_hidden (ctx->hidden);
       }
 
       return comp_def;
@@ -5738,7 +5738,7 @@ class UserTag {
       tagdef[5] = result_type;
 
       if (string old_key = tagdef[6])
-	cache_remove (user_tag_comp_def_loc, old_key);
+        cache_remove (user_tag_comp_def_loc, old_key);
       string comp_def_key = "cdk" + roxen.new_uuid_string();
 
       // Save comp_def in the RAM cache and use a string to reference
@@ -5746,7 +5746,7 @@ class UserTag {
       // which in turn helps reduce garbage produced by user defined
       // tags by quite a lot.
       cache_set (user_tag_comp_def_loc, comp_def_key,
-		 CompDefCacheEntry (comp_def), 300);
+                 CompDefCacheEntry (comp_def), 300);
       tagdef[6] = comp_def_key;
 
       RXML_CONTEXT->state_update();
@@ -5755,7 +5755,7 @@ class UserTag {
     string _sprintf ()
     {
       if (catch {return "UserTag.Frame(" + name + ")";})
-	return "UserTag.Frame(?)";
+        return "UserTag.Frame(?)";
     }
   }
 
@@ -5769,7 +5769,7 @@ class IdentityVars
 {
   inherit RXML.Scope;
   mixed `[] (string var, void|RXML.Context ctx,
-	     void|string scope_name, void|RXML.Type type)
+             void|string scope_name, void|RXML.Type type)
   {
     // Note: The fallback for scope_name here is not necessarily
     // correct, but this is typically only called from the rxml
@@ -5803,33 +5803,33 @@ class TagDefine {
 
     array do_enter(RequestID id) {
       if (def)
-	// A previously evaluated tag was restored.
-	do_iterate = -1;
+        // A previously evaluated tag was restored.
+        do_iterate = -1;
       else {
-	preparsed_contents_tags = 0;
-	do_iterate = 1;
-	if(args->preparse) {
-	  m_delete(args, "preparse");
-	  if (compat_level >= 2.4) {
-	    // Older rxml code might use the _ scope and don't expect
-	    // it to be overridden in this situation.
-	    if (args->tag || args->container) {
-	      vars = identity_vars;
-	      preparsed_contents_tags = ([]);
-	    }
-	    else
-	      // Even though there won't be any postparse fill-in of
-	      // &_.foo; etc we define a local scope for consistency.
-	      // This way we can provide special values in the future,
-	      // or perhaps fix postparse fill-in even for variables,
-	      // if plugins, etc.
-	      vars = ([]);
-	    additional_tags = user_tag_contents_tag_set;
-	    scope_name = args->scope;
-	  }
-	}
-	else
-	  content_type = RXML.t_xml;
+        preparsed_contents_tags = 0;
+        do_iterate = 1;
+        if(args->preparse) {
+          m_delete(args, "preparse");
+          if (compat_level >= 2.4) {
+            // Older rxml code might use the _ scope and don't expect
+            // it to be overridden in this situation.
+            if (args->tag || args->container) {
+              vars = identity_vars;
+              preparsed_contents_tags = ([]);
+            }
+            else
+              // Even though there won't be any postparse fill-in of
+              // &_.foo; etc we define a local scope for consistency.
+              // This way we can provide special values in the future,
+              // or perhaps fix postparse fill-in even for variables,
+              // if plugins, etc.
+              vars = ([]);
+            additional_tags = user_tag_contents_tag_set;
+            scope_name = args->scope;
+          }
+        }
+        else
+          content_type = RXML.t_xml;
       }
       return 0;
     }
@@ -5840,7 +5840,7 @@ class TagDefine {
     // 7.2.
 
     private string add_default(Parser.HTML p, mapping m, string c,
-			       mapping defaults, RequestID id)
+                               mapping defaults, RequestID id)
     {
       if(m->name) defaults[m->name]=Roxen.parse_rxml(c, id);
       return "";
@@ -5868,10 +5868,10 @@ class TagDefine {
       // We know that s ends with ";", so it must be
       // longer than the following prefixes if they match.
       if (sscanf (s, "&_.%c", int c) && c != '.' ||
-	  (scope_name &&
-	   sscanf (s, "&" + replace (scope_name, "%", "%%") + ".%c", c) &&
-	   c != '.'))
-	return 0;
+          (scope_name &&
+           sscanf (s, "&" + replace (scope_name, "%", "%%") + ".%c", c) &&
+           c != '.'))
+        return 0;
       return ({"&:", s[1..]});
     }
 
@@ -5880,123 +5880,123 @@ class TagDefine {
       RXML.Context ctx = RXML_CONTEXT;
 
       if(n=args->variable) {
-	if(args->trimwhites) content=String.trim_all_whites((string)content);
-	RXML.user_set_var(n, content, args->scope);
-	return 0;
+        if(args->trimwhites) content=String.trim_all_whites((string)content);
+        RXML.user_set_var(n, content, args->scope);
+        return 0;
       }
 
       if (n=args->tag||args->container) {
 #if ROXEN_COMPAT <= 1.3
-	n = id->conf->old_rxml_compat?lower_case(n):n;
+        n = id->conf->old_rxml_compat?lower_case(n):n;
 #endif
-	int moreflags=0;
-	if(args->tag) {
-	  moreflags = RXML.FLAG_EMPTY_ELEMENT;
-	  m_delete(args, "tag");
-	} else
-	  m_delete(args, "container");
+        int moreflags=0;
+        if(args->tag) {
+          moreflags = RXML.FLAG_EMPTY_ELEMENT;
+          m_delete(args, "tag");
+        } else
+          m_delete(args, "container");
 
-	if (!def) {
-	  defaults=([]);
+        if (!def) {
+          defaults=([]);
 
 #if ROXEN_COMPAT <= 1.3
-	  if(id->conf->old_rxml_compat)
-	    foreach( args; string arg; string val )
-	      if( arg[..7] == "default_" )
-	      {
-		defaults[arg[8..]] = val;
-		old_rxml_warning(id, "define attribute "+arg,"attrib container");
-		m_delete( args, arg );
-	      }
+          if(id->conf->old_rxml_compat)
+            foreach( args; string arg; string val )
+              if( arg[..7] == "default_" )
+              {
+                defaults[arg[8..]] = val;
+                old_rxml_warning(id, "define attribute "+arg,"attrib container");
+                m_delete( args, arg );
+              }
 #endif
 
-	  if(!content) content = "";
+          if(!content) content = "";
 
-	  Parser.HTML p;
-	  if( compat_level > 2.1 ) {
-	    p = Roxen.get_xml_parser();
-	    p->add_container ("attrib", ({add_default, defaults, id}));
-	    // Stop parsing for attrib tags when we reach something else
-	    // than whitespace and comments.
-	    p->_set_tag_callback (no_more_attrib);
-	    p->_set_data_callback (data_between_attribs);
-	    p->add_quote_tag ("?", no_more_attrib, "?");
-	    p->add_quote_tag ("![CDATA[", no_more_attrib, "]]");
-	  }
-	  else
-	    p = Parser.HTML()->add_container("attrib", ({add_default, defaults, id}));
+          Parser.HTML p;
+          if( compat_level > 2.1 ) {
+            p = Roxen.get_xml_parser();
+            p->add_container ("attrib", ({add_default, defaults, id}));
+            // Stop parsing for attrib tags when we reach something else
+            // than whitespace and comments.
+            p->_set_tag_callback (no_more_attrib);
+            p->_set_data_callback (data_between_attribs);
+            p->add_quote_tag ("?", no_more_attrib, "?");
+            p->add_quote_tag ("![CDATA[", no_more_attrib, "]]");
+          }
+          else
+            p = Parser.HTML()->add_container("attrib", ({add_default, defaults, id}));
 
-	  if (preparsed_contents_tags) {
-	    // Translate the &_internal_.4711; references to
-	    // &_.__contents__17;. This is necessary since the numbers
-	    // in the _internal_ scope is only unique within the
-	    // current parse context. Otoh it isn't safe to use
-	    // &_.__contents__17; during preparse since the current
-	    // scope varies.
-	    int id = 0;
-	    foreach (preparsed_contents_tags;
-		     string var; UserTagContents.ExpansionFrame frame) {
-	      preparsed_contents_tags["__contents__" + ++id] = frame;
-	      m_delete (preparsed_contents_tags, var);
-	      p->add_entity ("_internal_." + var, "&_.__contents__" + id + ";");
-	      m_delete (ctx->scopes->_internal_, var);
-	    }
+          if (preparsed_contents_tags) {
+            // Translate the &_internal_.4711; references to
+            // &_.__contents__17;. This is necessary since the numbers
+            // in the _internal_ scope is only unique within the
+            // current parse context. Otoh it isn't safe to use
+            // &_.__contents__17; during preparse since the current
+            // scope varies.
+            int id = 0;
+            foreach (preparsed_contents_tags;
+                     string var; UserTagContents.ExpansionFrame frame) {
+              preparsed_contents_tags["__contents__" + ++id] = frame;
+              m_delete (preparsed_contents_tags, var);
+              p->add_entity ("_internal_." + var, "&_.__contents__" + id + ";");
+              m_delete (ctx->scopes->_internal_, var);
+            }
 
-	    // Quote all entities except those handled above and those
-	    // in the current scope, to avoid repeated evaluation of
-	    // them in the expansion phase in UserTag. We use the rxml
-	    // special "&:foo;" quoting syntax.
-	    p->_set_entity_callback (quote_other_entities);
-	    if (args->scope) p->set_extra (args->scope);
-	  }
+            // Quote all entities except those handled above and those
+            // in the current scope, to avoid repeated evaluation of
+            // them in the expansion phase in UserTag. We use the rxml
+            // special "&:foo;" quoting syntax.
+            p->_set_entity_callback (quote_other_entities);
+            if (args->scope) p->set_extra (args->scope);
+          }
 
-	  content = p->finish (content)->read();
+          content = p->finish (content)->read();
 
-	  if(args->trimwhites) {
-	    content=String.trim_all_whites(content);
-	    m_delete (args, "trimwhites");
-	  }
+          if(args->trimwhites) {
+            content=String.trim_all_whites(content);
+            m_delete (args, "trimwhites");
+          }
 
 #ifdef DEBUG
-	  if (defaults->_debug_) {
-	    moreflags |= RXML.FLAG_DEBUG;
-	    m_delete (defaults, "_debug_");
-	  }
+          if (defaults->_debug_) {
+            moreflags |= RXML.FLAG_DEBUG;
+            m_delete (defaults, "_debug_");
+          }
 #endif
 
 #if ROXEN_COMPAT <= 1.3
-	  if(id->conf->old_rxml_compat)
-	    content = replace( content, indices(args), values(args) );
+          if(id->conf->old_rxml_compat)
+            content = replace( content, indices(args), values(args) );
 #endif
-	  def = ({content});
-	}
+          def = ({content});
+        }
 
-	string lookup_name = "tag\0" + n;
-	array oldtagdef;
-	UserTag user_tag;
-	if ((oldtagdef = ctx->misc[lookup_name]) &&
-	    !((user_tag = oldtagdef[3])->flags & RXML.FLAG_EMPTY_ELEMENT) ==
-	    !(moreflags & RXML.FLAG_EMPTY_ELEMENT)) // Redefine.
-	  ctx->set_misc (lookup_name, ({def, defaults, args->scope, user_tag,
-					preparsed_contents_tags, 0, 0}));
-	else {
-	  user_tag = UserTag (n, moreflags);
-	  ctx->set_misc (lookup_name, ({def, defaults, args->scope, user_tag,
-					preparsed_contents_tags, 0, 0}));
-	  ctx->add_runtime_tag(user_tag);
-	}
-	return 0;
+        string lookup_name = "tag\0" + n;
+        array oldtagdef;
+        UserTag user_tag;
+        if ((oldtagdef = ctx->misc[lookup_name]) &&
+            !((user_tag = oldtagdef[3])->flags & RXML.FLAG_EMPTY_ELEMENT) ==
+            !(moreflags & RXML.FLAG_EMPTY_ELEMENT)) // Redefine.
+          ctx->set_misc (lookup_name, ({def, defaults, args->scope, user_tag,
+                                        preparsed_contents_tags, 0, 0}));
+        else {
+          user_tag = UserTag (n, moreflags);
+          ctx->set_misc (lookup_name, ({def, defaults, args->scope, user_tag,
+                                        preparsed_contents_tags, 0, 0}));
+          ctx->add_runtime_tag(user_tag);
+        }
+        return 0;
       }
 
       if (n=args->if) {
-	ctx->set_misc ("if\0" + n, UserIf (n, content));
-	return 0;
+        ctx->set_misc ("if\0" + n, UserIf (n, content));
+        return 0;
       }
 
       if (n=args->name) {
-	ctx->set_misc (n, content);
-	old_rxml_warning(id, "attempt to define name ","variable");
-	return 0;
+        ctx->set_misc (n, content);
+        old_rxml_warning(id, "attempt to define name ","variable");
+        return 0;
       }
 
       parse_error("No tag, variable, if or container specified.\n");
@@ -6019,24 +6019,24 @@ class TagUndefine {
       string n;
 
       if(n=args->variable) {
-	RXML_CONTEXT->user_delete_var(n, args->scope);
-	return 0;
+        RXML_CONTEXT->user_delete_var(n, args->scope);
+        return 0;
       }
 
       if (n=args->tag||args->container) {
-	m_delete (RXML_CONTEXT->misc, "tag\0" + n);
-	RXML_CONTEXT->remove_runtime_tag(n);
-	return 0;
+        m_delete (RXML_CONTEXT->misc, "tag\0" + n);
+        RXML_CONTEXT->remove_runtime_tag(n);
+        return 0;
       }
 
       if (n=args->if) {
-	m_delete(RXML_CONTEXT->misc, "if\0" + n);
-	return 0;
+        m_delete(RXML_CONTEXT->misc, "if\0" + n);
+        return 0;
       }
 
       if (n=args->name) {
-	m_delete(RXML_CONTEXT->misc, args->name);
-	return 0;
+        m_delete(RXML_CONTEXT->misc, args->name);
+        return 0;
       }
 
       parse_error("No tag, variable, if or container specified.\n");
@@ -6137,11 +6137,11 @@ class Tracer
     if (thing) {
       string name = Roxen.get_modfullname (Roxen.get_owning_module (thing));
       if (name)
-	name = "module " + name;
+        name = "module " + name;
       else if (Configuration conf = Roxen.get_owning_config (thing))
-	name = "configuration " + conf->query_name();
+        name = "configuration " + conf->query_name();
       else
-	name = sprintf ("object %O", thing);
+        name = sprintf ("object %O", thing);
       type += " in " + name;
     }
 
@@ -6198,7 +6198,7 @@ class TagTrace {
 
     array do_return(RequestID id) {
       result = "<h3>Tracing</h3>" + content +
-	"<h3>Trace report</h3>" + t->res();
+        "<h3>Trace report</h3>" + t->res();
 #ifdef HAVE_CLOCKS
       result += "<h3>Total time: " + t->stop_clock (t->endtime) + "</h3>";
 #endif
@@ -6296,12 +6296,12 @@ class TagStrLen {
 
     array do_return() {
       if(!stringp(content)) {
-	result=0;
+        result=0;
       }
       else
-	result = strlen(content);
+        result = strlen(content);
       if (result_type != RXML.t_int)
-	result = result_type->encode (result, RXML.t_int);
+        result = result_type->encode (result, RXML.t_int);
       return 0;
     }
   }
@@ -6322,15 +6322,15 @@ class TagElements
     {
       mixed var;
       if (zero_type (var = RXML.user_get_var (args->variable, args->scope)))
-	parse_error ("Variable %O doesn't exist.\n", args->variable);
+        parse_error ("Variable %O doesn't exist.\n", args->variable);
       if (objectp (var) && var->_sizeof)
-	result = var->_sizeof();
+        result = var->_sizeof();
       else if (arrayp (var) || mappingp (var) || multisetp (var))
-	result = sizeof (var);
+        result = sizeof (var);
       else
-	result = 1;
+        result = 1;
       if (result_type != RXML.t_int)
-	result = result_type->encode (result, RXML.t_int);
+        result = result_type->encode (result, RXML.t_int);
       return 0;
     }
   }
@@ -6346,50 +6346,50 @@ class TagCase {
     array do_enter() {cap = 0; return 0;}
     array do_process(RequestID id) {
       if(args->case) {
-	string op;
-	switch(lower_case(args->case)) {
-	  case "lower":
-	    if (content_type->lower_case)
-	      return ({content_type->lower_case (content)});
-	    op = "lowercased";
-	    break;
-	  case "upper":
-	    if (content_type->upper_case)
-	      return ({content_type->upper_case (content)});
-	    op = "uppercased";
-	    break;
-	  case "capitalize":
-	    if (content_type->capitalize) {
-	      if(cap) return ({content});
-	      if (sizeof (content)) cap=1;
-	      return ({content_type->capitalize (content)});
-	    }
-	    op = "capitalized";
-	    break;
-	  default:
-	    if (compat_level > 2.1)
-	      parse_error ("Invalid value %O to the case argument.\n", args->case);
-	}
-	if (compat_level > 2.1)
-	  parse_error ("Content of type %s doesn't handle being %s.\n",
-		       content_type->name, op);
+        string op;
+        switch(lower_case(args->case)) {
+          case "lower":
+            if (content_type->lower_case)
+              return ({content_type->lower_case (content)});
+            op = "lowercased";
+            break;
+          case "upper":
+            if (content_type->upper_case)
+              return ({content_type->upper_case (content)});
+            op = "uppercased";
+            break;
+          case "capitalize":
+            if (content_type->capitalize) {
+              if(cap) return ({content});
+              if (sizeof (content)) cap=1;
+              return ({content_type->capitalize (content)});
+            }
+            op = "capitalized";
+            break;
+          default:
+            if (compat_level > 2.1)
+              parse_error ("Invalid value %O to the case argument.\n", args->case);
+        }
+        if (compat_level > 2.1)
+          parse_error ("Content of type %s doesn't handle being %s.\n",
+                       content_type->name, op);
       }
       else
-	if (compat_level > 2.1)
-	  parse_error ("Argument \"case\" is required.\n");
+        if (compat_level > 2.1)
+          parse_error ("Argument \"case\" is required.\n");
 
 #if ROXEN_COMPAT <= 1.3
       if(args->lower) {
-	content = lower_case(content);
-	old_rxml_warning(id, "attribute lower","case=lower");
+        content = lower_case(content);
+        old_rxml_warning(id, "attribute lower","case=lower");
       }
       if(args->upper) {
-	content = upper_case(content);
-	old_rxml_warning(id, "attribute upper","case=upper");
+        content = upper_case(content);
+        old_rxml_warning(id, "attribute upper","case=upper");
       }
       if(args->capitalize){
-	content = capitalize(content);
-	old_rxml_warning(id, "attribute capitalize","case=capitalize");
+        content = capitalize(content);
+        old_rxml_warning(id, "attribute capitalize","case=capitalize");
       }
 #endif
       return ({ content });
@@ -6420,20 +6420,20 @@ class FrameIf {
     int ifval=0, plugin_found;
     foreach(args; string s; string argval)
       if (object(RXML.Tag)|object(UserIf) plugin =
-	  plugins[s] || defs["if\0" + s]) {
-	plugin_found = 1;
-	TRACE_ENTER("Calling if#" + plugin->plugin_name, 0);
-	ifval = plugin->eval( argval, id, args, and, s );
-	TRACE_LEAVE("");
-	if(ifval) {
-	  if(!and) {
-	    do_iterate = 1;
-	    return 0;
-	  }
-	}
-	else
-	  if(and)
-	    return 0;
+          plugins[s] || defs["if\0" + s]) {
+        plugin_found = 1;
+        TRACE_ENTER("Calling if#" + plugin->plugin_name, 0);
+        ifval = plugin->eval( argval, id, args, and, s );
+        TRACE_LEAVE("");
+        if(ifval) {
+          if(!and) {
+            do_iterate = 1;
+            return 0;
+          }
+        }
+        else
+          if(and)
+            return 0;
       }
 
     if (!plugin_found && compat_level > 4.5)
@@ -6570,25 +6570,25 @@ class TagCond
 
       array do_enter (RequestID id)
       {
-	do_iterate = -1;
-	if (up->matched) return 0;
-	content_type = up->result_type (RXML.PXml);
-	return ::do_enter (id);
+        do_iterate = -1;
+        if (up->matched) return 0;
+        content_type = up->result_type (RXML.PXml);
+        return ::do_enter (id);
       }
 
       array do_return (RequestID id)
       {
-	::do_return (id);
-	if (up->matched) return 0; // Does this ever happen?
-	up->result = result;
-	if(_ok) up->matched = 1;
-	result = RXML.Void;
-	return 0;
+        ::do_return (id);
+        if (up->matched) return 0; // Does this ever happen?
+        up->result = result;
+        if(_ok) up->matched = 1;
+        result = RXML.Void;
+        return 0;
       }
 
       // Must override this since it's used by FrameIf.
       mapping(string:RXML.Tag) get_plugins()
-	{return RXML_CONTEXT->tag_set->get_plugins ("if");}
+        {return RXML_CONTEXT->tag_set->get_plugins ("if");}
     }
   }
 
@@ -6605,19 +6605,19 @@ class TagCond
 
       array do_enter()
       {
-	if (up->matched) {
-	  do_iterate = -1;
-	  return 0;
-	}
-	do_iterate = 1;
-	content_type = up->result_type (RXML.PNone);
-	return 0;
+        if (up->matched) {
+          do_iterate = -1;
+          return 0;
+        }
+        do_iterate = 1;
+        content_type = up->result_type (RXML.PNone);
+        return 0;
       }
 
       array do_return()
       {
-	up->default_data = content;
-	return 0;
+        up->default_data = content;
+        return 0;
       }
     }
   }
@@ -6640,10 +6640,10 @@ class TagCond
     array do_return (RequestID id)
     {
       if(matched)
-	_ok = 1;
+        _ok = 1;
       else if (default_data) {
-	_ok = 0;
-	return ({RXML.parse_frame (result_type (RXML.PXml), default_data)});
+        _ok = 0;
+        return ({RXML.parse_frame (result_type (RXML.PXml), default_data)});
       }
       return 0;
     }
@@ -6656,14 +6656,14 @@ class TagEmit {
   int flags = RXML.FLAG_SOCKET_TAG | cache_static_in_2_5();
   mapping(string:RXML.Type) req_arg_types = ([ "source":RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type) opt_arg_types = ([ "scope":RXML.t_text(RXML.PEnt),
-					       "maxrows":RXML.t_int(RXML.PEnt),
-					       "skiprows":RXML.t_int(RXML.PEnt),
-					       "rowinfo":RXML.t_text(RXML.PEnt), // t_var
-					       "do-once":RXML.t_text(RXML.PEnt), // t_bool
-					       "filter":RXML.t_text(RXML.PEnt),  // t_list
-					       "filter-exclude":RXML.t_text(RXML.PEnt),  // t_list
-					       "sort":RXML.t_text(RXML.PEnt),    // t_list
-					       "remainderinfo":RXML.t_text(RXML.PEnt), // t_var
+                                               "maxrows":RXML.t_int(RXML.PEnt),
+                                               "skiprows":RXML.t_int(RXML.PEnt),
+                                               "rowinfo":RXML.t_text(RXML.PEnt), // t_var
+                                               "do-once":RXML.t_text(RXML.PEnt), // t_bool
+                                               "filter":RXML.t_text(RXML.PEnt),  // t_list
+                                               "filter-exclude":RXML.t_text(RXML.PEnt),  // t_list
+                                               "sort":RXML.t_text(RXML.PEnt),    // t_list
+                                               "remainderinfo":RXML.t_text(RXML.PEnt), // t_var
   ]);
   array(string) emit_args = indices( req_arg_types+opt_arg_types );
   RXML.Type def_arg_type = RXML.t_text(RXML.PNone);
@@ -6673,24 +6673,24 @@ class TagEmit {
     RXML.Context ctx = RXML_CONTEXT;
     if(filter) {
       foreach(filter; string v; string f) {
-	string|object val = vs[v];
-	if(objectp(val))
-	  val = val->rxml_const_eval ? val->rxml_const_eval(ctx, v, "") :
-	    val->rxml_var_eval(ctx, v, "", RXML.t_text);
-	if(!val)
-	  return 1;
-	if(!glob(f, val))
-	  return 1;
+        string|object val = vs[v];
+        if(objectp(val))
+          val = val->rxml_const_eval ? val->rxml_const_eval(ctx, v, "") :
+            val->rxml_var_eval(ctx, v, "", RXML.t_text);
+        if(!val)
+          return 1;
+        if(!glob(f, val))
+          return 1;
       }
     }
     if(filter_exclude) {
       foreach(filter_exclude; string v; string f) {
-	string|object val = vs[v];
-	if(objectp(val))
-	  val = val->rxml_const_eval ? val->rxml_const_eval(ctx, v, "") :
-	    val->rxml_var_eval(ctx, v, "", RXML.t_text);
-	if(val && glob(f, val))
-	  return 1;
+        string|object val = vs[v];
+        if(objectp(val))
+          val = val->rxml_const_eval ? val->rxml_const_eval(ctx, v, "") :
+            val->rxml_var_eval(ctx, v, "", RXML.t_text);
+        if(val && glob(f, val))
+          return 1;
       }
     }
     return 0;
@@ -6704,14 +6704,14 @@ class TagEmit {
     protected int(0..1) more_rows(TagEmit.Frame emit_frame) {
       object|array res = emit_frame->res;
       if(objectp(res)) {
-	while(res->peek() && should_filter(res->peek(), emit_frame->filter, emit_frame->filter_exclude))
-	  res->skip_row();
-	return !!res->peek();
+        while(res->peek() && should_filter(res->peek(), emit_frame->filter, emit_frame->filter_exclude))
+          res->skip_row();
+        return !!res->peek();
       }
       if(!sizeof(res)) return 0;
       foreach(res[emit_frame->real_counter..], mapping v) {
-	if(!should_filter(v, emit_frame->filter, emit_frame->filter_exclude))
-	  return 1;
+        if(!should_filter(v, emit_frame->filter, emit_frame->filter_exclude))
+          return 1;
       }
       return 0;
     }
@@ -6723,20 +6723,20 @@ class TagEmit {
       int do_iterate;
 
       array do_enter (RequestID id) {
-	do_iterate = -1;
-	object|array res = parent_frame->res;
-	if(!parent_frame->filter && !parent_frame->filter_exclude) {
-	  if (objectp(res) ? res->peek() :
-	      parent_frame->counter < sizeof(res))
-	    do_iterate = 1;
-	}
-	else {
-	  if (!(parent_frame->args->maxrows &&
-		parent_frame->args->maxrows == parent_frame->counter) &&
-	      more_rows(parent_frame))
-	    do_iterate = 1;
-	}
-	return 0;
+        do_iterate = -1;
+        object|array res = parent_frame->res;
+        if(!parent_frame->filter && !parent_frame->filter_exclude) {
+          if (objectp(res) ? res->peek() :
+              parent_frame->counter < sizeof(res))
+            do_iterate = 1;
+        }
+        else {
+          if (!(parent_frame->args->maxrows &&
+                parent_frame->args->maxrows == parent_frame->counter) &&
+              more_rows(parent_frame))
+            do_iterate = 1;
+        }
+        return 0;
       }
     }
   }
@@ -6752,11 +6752,11 @@ class TagEmit {
     inherit RXML.Scope;
 
     mixed `[] (string var, void|RXML.Context ctx,
-	       void|string scope_name, void|RXML.Type type)
+               void|string scope_name, void|RXML.Type type)
     {
       return var == "counter" ?
-	ENCODE_RXML_INT (counter, type) :
-	vars->`[] (var, ctx, scope_name, type);
+        ENCODE_RXML_INT (counter, type) :
+        vars->`[] (var, ctx, scope_name, type);
     }
 
     array(string) _indices (void|RXML.Context ctx, void|string scope_name)
@@ -6790,14 +6790,14 @@ class TagEmit {
     array expand(object res) {
       array ret = ({});
       do {
-	ret += ({ res->get_row() });
+        ret += ({ res->get_row() });
       } while(ret[-1]!=0);
       return ret[..sizeof(ret)-2];
     }
 
     array do_enter(RequestID id) {
       if(!(plugin=get_plugins()[args->source]))
-	parse_error("The emit source %O doesn't exist.\n", args->source);
+        parse_error("The emit source %O doesn't exist.\n", args->source);
       scope_name=args->scope||args->source;
       vars = (["counter":0]);
       counter = 0;
@@ -6816,148 +6816,148 @@ class TagEmit {
 #if 0
 #ifdef DEBUG
       if (objectp (res))
-	tag_debug ("Emit plugin %O returned data set object %O\n",
-		   plugin, res);
+        tag_debug ("Emit plugin %O returned data set object %O\n",
+                   plugin, res);
       else if (arrayp (res))
-	tag_debug ("Emit plugin %O returned data set with %d items\n",
-		   plugin, sizeof (res));
+        tag_debug ("Emit plugin %O returned data set with %d items\n",
+                   plugin, sizeof (res));
 #endif
 #endif
 
       if(args->skiprows && plugin->skiprows)
-	m_delete(args, "skiprows");
+        m_delete(args, "skiprows");
 
       if(args->maxrows && plugin->maxrows)
-	  m_delete(args, "maxrows");
+          m_delete(args, "maxrows");
 
       // Parse the filter and filter-exclude arguments
       if(args->filter) {
-	array pairs = args->filter / ",";
-	filter = ([]);
-	foreach( pairs, string pair) {
-	  string v,g;
-	  if( sscanf(pair, "%s=%s", v,g) != 2)
-	    continue;
-	  v = String.trim_whites(v);
-	  if(g != "*"*sizeof(g))
-	    filter[v] = g;
-	}
-	if(!sizeof(filter)) filter = 0;
+        array pairs = args->filter / ",";
+        filter = ([]);
+        foreach( pairs, string pair) {
+          string v,g;
+          if( sscanf(pair, "%s=%s", v,g) != 2)
+            continue;
+          v = String.trim_whites(v);
+          if(g != "*"*sizeof(g))
+            filter[v] = g;
+        }
+        if(!sizeof(filter)) filter = 0;
       }
       if(args["filter-exclude"]) {
- 	array pairs = args["filter-exclude"] / ",";
- 	filter_exclude = ([]);
- 	foreach( pairs, string pair) {
- 	  string v,g;
- 	  if( sscanf(pair, "%s=%s", v,g) != 2)
- 	    continue;
- 	  v = String.trim_whites(v);
- 	  if(g != "*"*sizeof(g))
- 	    filter_exclude[v] = g;
- 	}
- 	if(!sizeof(filter_exclude)) filter_exclude = 0;
+        array pairs = args["filter-exclude"] / ",";
+        filter_exclude = ([]);
+        foreach( pairs, string pair) {
+          string v,g;
+          if( sscanf(pair, "%s=%s", v,g) != 2)
+            continue;
+          v = String.trim_whites(v);
+          if(g != "*"*sizeof(g))
+            filter_exclude[v] = g;
+        }
+        if(!sizeof(filter_exclude)) filter_exclude = 0;
       }
 
       if(objectp(res))
-	if(args->sort ||
-	   (args->skiprows && args->skiprows<0) ||
-	   args->rowinfo ||
-	   args->remainderinfo ||
-	   args->reverse)
-	  // Expand the object into an array of mappings if sort,
-	  // negative skiprows, rowinfo or reverse is used. These
-	  // arguments should be intercepted, dealt with and removed
-	  // by the plugin, should it have a more clever solution.
-	  //
-	  // Note that it would be possible to use a
-	  // expand_on_demand-solution where a value object is stored
-	  // as the rowinfo value and, if used inside the loop,
-	  // triggers an expansion. That would however force us to
-	  // jump to another iterator function. Let's save that
-	  // complexity enhancement until later.
-	  res = expand(res);
-	else if(filter || filter_exclude) {
-	  do_iterate = object_filter_iterate;
-	  return 0;
-	}
-	else {
-	  do_iterate = object_iterate;
+        if(args->sort ||
+           (args->skiprows && args->skiprows<0) ||
+           args->rowinfo ||
+           args->remainderinfo ||
+           args->reverse)
+          // Expand the object into an array of mappings if sort,
+          // negative skiprows, rowinfo or reverse is used. These
+          // arguments should be intercepted, dealt with and removed
+          // by the plugin, should it have a more clever solution.
+          //
+          // Note that it would be possible to use a
+          // expand_on_demand-solution where a value object is stored
+          // as the rowinfo value and, if used inside the loop,
+          // triggers an expansion. That would however force us to
+          // jump to another iterator function. Let's save that
+          // complexity enhancement until later.
+          res = expand(res);
+        else if(filter || filter_exclude) {
+          do_iterate = object_filter_iterate;
+          return 0;
+        }
+        else {
+          do_iterate = object_iterate;
 
-	  if(args->skiprows) {
-	    int loop = args->skiprows;
-	    while(loop--)
-	      res->skip_row();
-	  }
+          if(args->skiprows) {
+            int loop = args->skiprows;
+            while(loop--)
+              res->skip_row();
+          }
 
-	  return 0;
-	}
+          return 0;
+        }
 
       if(arrayp(res)) {
-	if(args->sort && !plugin->sort)
-	  res = Roxen.rxml_emit_sort (res, args->sort, compat_level);
+        if(args->sort && !plugin->sort)
+          res = Roxen.rxml_emit_sort (res, args->sort, compat_level);
 
-	if(filter || filter_exclude) {
+        if(filter || filter_exclude) {
 
-	  // If rowinfo or negative skiprows are used we have
-	  // to do filtering in a loop of its own, instead of
-	  // doing it during the emit loop.
-	  if(args->rowinfo || (args->skiprows && args->skiprows<0)) {
-	    for(int i; i<sizeof(res); i++)
-	      if(should_filter(res[i], filter, filter_exclude)) {
-		res = res[..i-1] + res[i+1..];
-		i--;
-	      }
-	    filter = 0;
-	    filter_exclude = 0;
-	  }
-	  else {
+          // If rowinfo or negative skiprows are used we have
+          // to do filtering in a loop of its own, instead of
+          // doing it during the emit loop.
+          if(args->rowinfo || (args->skiprows && args->skiprows<0)) {
+            for(int i; i<sizeof(res); i++)
+              if(should_filter(res[i], filter, filter_exclude)) {
+                res = res[..i-1] + res[i+1..];
+                i--;
+              }
+            filter = 0;
+            filter_exclude = 0;
+          }
+          else {
 
-	    // If skiprows is to be used we must only count
-	    // the rows that wouldn't be filtered in the
-	    // emit loop.
-	    if(args->skiprows) {
-	      int skiprows = args->skiprows;
-	      if(skiprows > sizeof(res))
-		res = ({});
-	      else {
-		int i;
-		for(; i<sizeof(res) && skiprows; i++)
-		  if(!should_filter(res[i], filter, filter_exclude))
-		    skiprows--;
-		res = res[i..];
-	      }
-	    }
+            // If skiprows is to be used we must only count
+            // the rows that wouldn't be filtered in the
+            // emit loop.
+            if(args->skiprows) {
+              int skiprows = args->skiprows;
+              if(skiprows > sizeof(res))
+                res = ({});
+              else {
+                int i;
+                for(; i<sizeof(res) && skiprows; i++)
+                  if(!should_filter(res[i], filter, filter_exclude))
+                    skiprows--;
+                res = res[i..];
+              }
+            }
 
-	    real_counter = 0;
-	    do_iterate = array_filter_iterate;
-	  }
-	}
+            real_counter = 0;
+            do_iterate = array_filter_iterate;
+          }
+        }
 
-	// We have to check the filter again, since it
-	// could have been zeroed in the last if statement.
-	if(!filter && !filter_exclude) {
+        // We have to check the filter again, since it
+        // could have been zeroed in the last if statement.
+        if(!filter && !filter_exclude) {
 
-	  if(args->skiprows) {
-	    if(args->skiprows<0) args->skiprows = sizeof(res) + args->skiprows;
-	    res=res[args->skiprows..];
-	  }
+          if(args->skiprows) {
+            if(args->skiprows<0) args->skiprows = sizeof(res) + args->skiprows;
+            res=res[args->skiprows..];
+          }
 
- 	  if(args->remainderinfo)
-	    RXML.user_set_var(args->remainderinfo, args->maxrows?
-			      max(sizeof(res)-args->maxrows, 0): 0);
+          if(args->remainderinfo)
+            RXML.user_set_var(args->remainderinfo, args->maxrows?
+                              max(sizeof(res)-args->maxrows, 0): 0);
 
-	  if(args->maxrows) res=res[..args->maxrows-1];
-	  if(args->rowinfo)
-	    RXML.user_set_var(m_delete(args, "rowinfo"), sizeof(res));
-	  if(args["do-once"] && sizeof(res)==0) res=({ ([]) });
+          if(args->maxrows) res=res[..args->maxrows-1];
+          if(args->rowinfo)
+            RXML.user_set_var(m_delete(args, "rowinfo"), sizeof(res));
+          if(args["do-once"] && sizeof(res)==0) res=({ ([]) });
 
-	  do_iterate = array_iterate;
-	}
+          do_iterate = array_iterate;
+        }
 
-	if( args->reverse )
-	  res = reverse( res );
+        if( args->reverse )
+          res = reverse( res );
 
-	return 0;
+        return 0;
       }
 
       parse_error("Wrong return type from emit source plugin.\n");
@@ -6975,24 +6975,24 @@ class TagEmit {
     protected mapping|RXML.Scope vars_with_counter (mapping|RXML.Scope vars)
     {
       if (objectp (vars)) {
-	if (vars->`[]=)
-	  vars->`[]= ("counter", counter, RXML_CONTEXT, scope_name || "_");
-	else
-	  vars = VarsCounterWrapper (vars, counter);
+        if (vars->`[]=)
+          vars->`[]= ("counter", counter, RXML_CONTEXT, scope_name || "_");
+        else
+          vars = VarsCounterWrapper (vars, counter);
       }
       else
-	vars->counter = counter;
+        vars->counter = counter;
       return vars;
     }
 
     int(0..1) object_iterate(RequestID id) {
       if(args->maxrows && counter == args->maxrows)
-	return do_once_more();
+        return do_once_more();
 
       if ((vars = res->get_row())) {
-	counter++;
-	vars = vars_with_counter (vars);
-	return 1;
+        counter++;
+        vars = vars_with_counter (vars);
+        return 1;
       }
 
       vars = (["counter":counter]);
@@ -7001,20 +7001,20 @@ class TagEmit {
 
     int(0..1) object_filter_iterate(RequestID id) {
       if(args->maxrows && counter == args->maxrows)
-	return do_once_more();
+        return do_once_more();
 
       if(args->skiprows && args->skiprows>0)
-	while(args->skiprows-->-1)
-	  while((vars=res->get_row()) &&
-		should_filter(vars, filter, filter_exclude));
+        while(args->skiprows-->-1)
+          while((vars=res->get_row()) &&
+                should_filter(vars, filter, filter_exclude));
       else
-	while((vars=res->get_row()) &&
-	      should_filter(vars, filter, filter_exclude));
+        while((vars=res->get_row()) &&
+              should_filter(vars, filter, filter_exclude));
 
       if (vars) {
-	counter++;
-	vars = vars_with_counter (vars);
-	return 1;
+        counter++;
+        vars = vars_with_counter (vars);
+        return 1;
       }
 
       vars = (["counter":counter]);
@@ -7031,10 +7031,10 @@ class TagEmit {
       if(real_counter>=sizeof(res)) return do_once_more();
 
       if(args->maxrows && counter == args->maxrows)
-	return do_once_more();
+        return do_once_more();
 
       while(should_filter(res[real_counter++], filter, filter_exclude))
-	if(real_counter>=sizeof(res)) return do_once_more();
+        if(real_counter>=sizeof(res)) return do_once_more();
 
       counter++;
       vars = vars_with_counter (res[real_counter-1]);
@@ -7048,22 +7048,22 @@ class TagEmit {
       _ok = !!rounds;
 
       if(args->remainderinfo) {
-	if(args->filter || args["filter-exclude"]) {
-	  int rem;
-	  if(arrayp(res)) {
-	    foreach(res[real_counter+1..], mapping v)
-	      if(!should_filter(v, filter, filter_exclude))
-		rem++;
-	  } else {
-	    mapping v;
-	    while( v=res->get_row() )
-	      if(!should_filter(v, filter, filter_exclude))
-		rem++;
-	  }
-	  RXML.user_set_var(args->remainderinfo, rem);
-	}
-	else if( do_iterate == object_iterate )
-	  RXML.user_set_var(args->remainderinfo, res->num_rows_left());
+        if(args->filter || args["filter-exclude"]) {
+          int rem;
+          if(arrayp(res)) {
+            foreach(res[real_counter+1..], mapping v)
+              if(!should_filter(v, filter, filter_exclude))
+                rem++;
+          } else {
+            mapping v;
+            while( v=res->get_row() )
+              if(!should_filter(v, filter, filter_exclude))
+                rem++;
+          }
+          RXML.user_set_var(args->remainderinfo, rem);
+        }
+        else if( do_iterate == object_iterate )
+          RXML.user_set_var(args->remainderinfo, res->num_rows_left());
       }
 
       do_iterate = 0;
@@ -7094,12 +7094,12 @@ class TagComment {
     int do_iterate;
     array do_enter() {
       if (args && args->preparse)
-	do_iterate = 1;
+        do_iterate = 1;
       else {
-	do_iterate = -1;
-	// Argument existence can be assumed static, so we can set
-	// FLAG_MAY_CACHE_RESULT here.
-	flags |= RXML.FLAG_MAY_CACHE_RESULT;
+        do_iterate = -1;
+        // Argument existence can be assumed static, so we can set
+        // FLAG_MAY_CACHE_RESULT here.
+        flags |= RXML.FLAG_MAY_CACHE_RESULT;
       }
       return 0;
     }
@@ -7139,7 +7139,7 @@ class UserIf
       tmp = rxml_code->eval (RXML_CONTEXT);
     else
       [tmp, rxml_code] =
-	RXML_CONTEXT->eval_and_compile (RXML.t_html (RXML.PXml), rxml_code, 1);
+        RXML_CONTEXT->eval_and_compile (RXML.t_html (RXML.PXml), rxml_code, 1);
     res = _ok;
     _ok = otruth;
 
@@ -7173,32 +7173,32 @@ class IfIs
       CACHE((int) args["expr-cache"]);
     } else {
       if(cache != -1)
-	CACHE(cache);
+        CACHE(cache);
     }
     array arr=value/" ";
     mixed var;
     if (sizeof (arr) < 2) {
       var = source (id, arr[0], 1);
       if (!arrayp (var) && !mappingp (var) && !multisetp (var))
-	return !!var;
+        return !!var;
     }
     else {
       var=source(id, arr[0]);
       if (!arrayp (var) && !mappingp (var) && !multisetp (var))
-	return do_check(var, arr, id);
+        return do_check(var, arr, id);
     }
 
     int(0..1) recurse_check(array|mapping|multiset var, array arr, RequestID id) {
       foreach(arrayp (var) ? var :
-	      mappingp (var) ? values (var) :
-	      indices (var),
-	      mixed val) {
-	if(arrayp(val) || mappingp (val) || multisetp (val)) {
-	  if(recurse_check(val, arr, id)) return 1;
-	  continue;
-	}
-	if(do_check(RXML.t_text->encode(val), arr, id))
-	  return 1;
+              mappingp (var) ? values (var) :
+              indices (var),
+              mixed val) {
+        if(arrayp(val) || mappingp (val) || multisetp (val)) {
+          if(recurse_check(val, arr, id)) return 1;
+          continue;
+        }
+        if(do_check(RXML.t_text->encode(val), arr, id))
+          return 1;
       }
       return 0;
     };
@@ -7211,19 +7211,19 @@ class IfIs
 
     if(!var)
       if (compat_level == 2.2)
-	// This makes unset variables be compared as if they had the
-	// empty string as value. I can't understand the logic behind
-	// it, but it makes the test <if variable="form.foo is "> be
-	// true if form.foo is unset, a state very different from
-	// having the empty string as a value. To be on the safe side
-	// we're still bug compatible in 2.2 compatibility mode (but
-	// both earlier and later releases does the correct thing
-	// here). /mast
-	var = "";
+        // This makes unset variables be compared as if they had the
+        // empty string as value. I can't understand the logic behind
+        // it, but it makes the test <if variable="form.foo is "> be
+        // true if form.foo is unset, a state very different from
+        // having the empty string as a value. To be on the safe side
+        // we're still bug compatible in 2.2 compatibility mode (but
+        // both earlier and later releases does the correct thing
+        // here). /mast
+        var = "";
       else
-	// If var is zero then it had no value. Thus it's always
-	// different from any value it might be compared with.
-	return arr[1] == "!=";
+        // If var is zero then it had no value. Thus it's always
+        // different from any value it might be compared with.
+        return arr[1] == "!=";
 
     string is;
 
@@ -7244,9 +7244,9 @@ class IfIs
 
     int|float n_var, n_is;
     if ((sscanf (var, "%d%*c", n_var) == 1 ||
-	 sscanf (var, "%f%*c", n_var) == 1) &&
-	(sscanf (is, "%d%*c", n_is) == 1 ||
-	 sscanf (is, "%f%*c", n_is) == 1)) {
+         sscanf (var, "%f%*c", n_var) == 1) &&
+        (sscanf (is, "%d%*c", n_is) == 1 ||
+         sscanf (is, "%f%*c", n_is) == 1)) {
       if(arr[1]=="<") return n_var < n_is;
       if(arr[1]==">") return n_var > n_is;
       if(arr[1]=="<=") return n_var <= n_is;
@@ -7277,7 +7277,7 @@ class IfMatch
       CACHE((int) args["expr-cache"]);
     } else {
       if(cache != -1)
-	CACHE(cache);
+        CACHE(cache);
     }
     if(!value) return 0;
     if(arrayp(value)) value=value*" ";
@@ -7336,16 +7336,16 @@ class TagIfDate {
     if(t->year>70) {
       t->mon--;
       if (catch {
-	  a = mktime(t);
-	}) {
-	RXML.run_error("Unsupported date.\n");
+          a = mktime(t);
+        }) {
+        RXML.run_error("Unsupported date.\n");
       }
     }
 
     if (catch {
-	t = localtime(time(1));
-	b = mktime(t - (["hour": 1, "min": 1, "sec": 1,
-			 "isdst": 1, "timezone": 1]));
+        t = localtime(time(1));
+        b = mktime(t - (["hour": 1, "min": 1, "sec": 1,
+                         "isdst": 1, "timezone": 1]));
       }) {
       RXML.run_error("Unsupported date.\n");
     }
@@ -7353,7 +7353,7 @@ class TagIfDate {
     // Catch funny guys
     if(m->before && m->after) {
       if(!m->inclusive)
-	return 0;
+        return 0;
       m_delete(m, "before");
       m_delete(m, "after");
     }
@@ -7383,47 +7383,47 @@ class TagIfTime {
 
     if(sizeof(ti) <= 5 /* Format is hhmm or hh:mm. */)
     {
-	    mapping c = localtime(time(1));
+            mapping c = localtime(time(1));
 
-	    b=(int)sprintf("%02d%02d", c->hour, c->min);
-	    a=(int)replace(ti,":","");
+            b=(int)sprintf("%02d%02d", c->hour, c->min);
+            a=(int)replace(ti,":","");
 
-	    if(m->until)
-		    d = (int)m->until;
+            if(m->until)
+                    d = (int)m->until;
 
     }
     else /* Format is ISO8601 yyyy-mm-dd or yyyy-mm-ddThh:mm etc. */
     {
-	    if(has_value(ti, "T"))
-	    {
-		    /* The Calendar module can for some reason not
-		     * handle the ISO8601 standard "T" extension. */
-		    a = Calendar.ISO.dwim_time(replace(ti, "T", " "))->minute();
-		    b = Calendar.ISO.Minute();
-	    }
-	    else
-	    {
-		    a = Calendar.ISO.dwim_day(ti);
-		    b = Calendar.ISO.Day();
-	    }
+            if(has_value(ti, "T"))
+            {
+                    /* The Calendar module can for some reason not
+                     * handle the ISO8601 standard "T" extension. */
+                    a = Calendar.ISO.dwim_time(replace(ti, "T", " "))->minute();
+                    b = Calendar.ISO.Minute();
+            }
+            else
+            {
+                    a = Calendar.ISO.dwim_day(ti);
+                    b = Calendar.ISO.Day();
+            }
 
-	    if(m->until)
-		    if(has_value(m->until, "T"))
-			    /* The Calendar module can for some reason not
-			     * handle the ISO8601 standard "T" extension. */
-			    d = Calendar.ISO.dwim_time(replace(m->until, "T", " "))->minute();
-		    else
-			    d = Calendar.ISO.dwim_day(m->until);
+            if(m->until)
+                    if(has_value(m->until, "T"))
+                            /* The Calendar module can for some reason not
+                             * handle the ISO8601 standard "T" extension. */
+                            d = Calendar.ISO.dwim_time(replace(m->until, "T", " "))->minute();
+                    else
+                            d = Calendar.ISO.dwim_day(m->until);
     }
 
     if(d)
     {
       if (d > a && (b > a && b < d) )
-	return 1;
+        return 1;
       if (d < a && (b > a || b < d) )
-	return 1;
+        return 1;
       if (m->inclusive && ( b==a || b==d ) )
-	return 1;
+        return 1;
       return 0;
     }
     else if( (m->inclusive || !(m->before || m->after)) && a==b )
@@ -7454,18 +7454,18 @@ class TagIfUser {
 
     if( u == "any" )
       if( m->file )
-	// Note: This uses the compatibility interface. Should probably
-	// be fixed.
-	return match_user( id->auth, id->auth[1], m->file, !!m->wwwfile, id);
+        // Note: This uses the compatibility interface. Should probably
+        // be fixed.
+        return match_user( id->auth, id->auth[1], m->file, !!m->wwwfile, id);
       else
-	return !!u;
+        return !!u;
     else
       if(m->file)
-	// Note: This uses the compatibility interface. Should probably
-	// be fixed.
-	return match_user(id->auth,u,m->file,!!m->wwwfile,id);
+        // Note: This uses the compatibility interface. Should probably
+        // be fixed.
+        return match_user(id->auth,u,m->file,!!m->wwwfile,id);
       else
-	return has_value(u/",", uid->name());
+        return has_value(u/",", uid->name());
   }
 
   private int match_user(array u, string user, string f, int wwwfile, RequestID id) {
@@ -7477,7 +7477,7 @@ class TagIfUser {
     else
       s=id->conf->try_get_file(Roxen.fix_relative(f,id), id);
     return ((pass=simple_parse_users_file(s, u[1])) &&
-	    (u[0] || match_passwd(u[2], pass)));
+            (u[0] || match_passwd(u[2], pass)));
   }
 
   private int match_passwd(string try, string org) {
@@ -7489,9 +7489,9 @@ class TagIfUser {
     if(!file) return 0;
     foreach(file/"\n", string line)
       {
-	array(string) arr = line/":";
-	if (arr[0] == u && sizeof(arr) > 1)
-	  return(arr[1]);
+        array(string) arr = line/":";
+        if (arr[0] == u && sizeof(arr) > 1)
+          return(arr[1]);
       }
   }
 }
@@ -7513,7 +7513,7 @@ class TagIfGroup {
     NOCACHE();
     if( m->groupfile )
       return ((m->groupfile && sizeof(m->groupfile))
-	      && group_member(id->auth, u, m->groupfile, id));
+              && group_member(id->auth, u, m->groupfile, id));
     return sizeof( uid->groups() & (u/"," )) > 0;
   }
 
@@ -7540,7 +7540,7 @@ class TagIfGroup {
     array(string) arr ;
     foreach(file/"\n", string line)
       if(sizeof(arr = line/":")>1 && (arr[0] == g))
-	res += (< @arr[-1]/"," >);
+        res += (< @arr[-1]/"," >);
     return res;
   }
 }
@@ -7825,7 +7825,7 @@ class TagIfVariable {
     }
     else
       if (zero_type (var=RXML.user_get_var(s)) ||
-	  objectp (var) && var->is_rxml_null_value) return 0;
+          objectp (var) && var->is_rxml_null_value) return 0;
     if(arrayp(var)) return var;
     return check_set_only ? 1 : RXML.t_text->encode (var);
   }
@@ -7861,7 +7861,7 @@ class TagIfSizeof {
     }
     else
       if (zero_type (var=RXML.user_get_var(s)) ||
-	  objectp (var) && var->is_rxml_null_value) return 0;
+          objectp (var) && var->is_rxml_null_value) return 0;
     if(stringp(var) || arrayp(var) ||
        multisetp(var) || mappingp(var)) return (string)sizeof(var);
     if(objectp(var) && var->_sizeof) return (string)sizeof(var);
@@ -7924,10 +7924,10 @@ class TagIfTypeFromData {
     constant plugin_name = "type-from-data";
     constant cache = -1;
     string source(RequestID id, string s) {
-	if(RXML.user_get_var(s)) {
-	    return try_decode_image(0, s);
-	}
-	RXML.run_error("Variable %s does not exist.\n",s);
+        if(RXML.user_get_var(s)) {
+            return try_decode_image(0, s);
+        }
+        RXML.run_error("Variable %s does not exist.\n",s);
     }
 }
 
@@ -7936,19 +7936,19 @@ class TagIfTypeFromFilename {
     constant plugin_name = "type-from-filename";
     constant cache = -1;
     string source(RequestID id, string s) {
-	if(RXML.user_get_var(s)) {
-	    if (id->misc->sb)
-		return id->misc->sb->find_content_type_from_filename(RXML.user_get_var(s));
-	    else if(my_configuration()->type_from_filename) {
-	      string|array(string) type =
-		my_configuration()->type_from_filename(RXML.user_get_var(s));
-	      if (arrayp(type))
-		type = type[0];
-	      return type;
-	    }
-	    RXML.parse_error("No Content type module loaded.\n");
-	}
-	RXML.run_error("Variable %s does not exist.\n",s);
+        if(RXML.user_get_var(s)) {
+            if (id->misc->sb)
+                return id->misc->sb->find_content_type_from_filename(RXML.user_get_var(s));
+            else if(my_configuration()->type_from_filename) {
+              string|array(string) type =
+                my_configuration()->type_from_filename(RXML.user_get_var(s));
+              if (arrayp(type))
+                type = type[0];
+              return type;
+            }
+            RXML.parse_error("No Content type module loaded.\n");
+        }
+        RXML.run_error("Variable %s does not exist.\n",s);
     }
 }
 
@@ -7962,7 +7962,7 @@ class TagEmitSources {
 
   array(mapping(string:string)) get_dataset(mapping m, RequestID id) {
     return Array.map( indices(RXML_CONTEXT->tag_set->get_plugins("emit")),
-		      lambda(string source) { return (["source":source]); } );
+                      lambda(string source) { return (["source":source]); } );
   }
 }
 
@@ -7973,7 +7973,7 @@ class TagEmitScopes {
 
   array(mapping(string:string)) get_dataset(mapping m, RequestID id) {
     return Array.map( RXML_CONTEXT->list_scopes(),
-		      lambda(string scope) { return (["scope":scope]); } );
+                      lambda(string scope) { return (["scope":scope]); } );
   }
 }
 
@@ -7995,10 +7995,10 @@ class TagPathplugin
     {
       if (pos >= sizeof(segments)) return UNDEFINED;
       if (has_suffix(val, "/")) {
-	// NB: Typically only for the segment after the root.
-	val += segments[pos];
+        // NB: Typically only for the segment after the root.
+        val += segments[pos];
       } else {
-	val += "/" + segments[pos];
+        val += "/" + segments[pos];
       }
       pos++;
       return (["name":segments[pos-1], "path":val]);
@@ -8050,7 +8050,7 @@ class TagEmitValues {
   {
     if (arrayp(val)) {
       if (m->trimwhites || m->case) {
-	return map(val, post_process_value, m);
+        return map(val, post_process_value, m);
       }
       return val;
     }
@@ -8069,117 +8069,117 @@ class TagEmitValues {
       RXML.Context context=RXML_CONTEXT;
       // Filter out undefined values if the compat level allows us.
       if (compat_level > 4.5)
-	foreach (context->list_var(m["from-scope"]), string var) {
-	  mixed val = context->get_var(var, m["from-scope"]);
-	  if (!zero_type (val)) m->values[var] = val;
-	}
+        foreach (context->list_var(m["from-scope"]), string var) {
+          mixed val = context->get_var(var, m["from-scope"]);
+          if (!zero_type (val)) m->values[var] = val;
+        }
       else
-	foreach (context->list_var(m["from-scope"]), string var)
-	  m->values[var] = context->get_var(var, m["from-scope"]);
+        foreach (context->list_var(m["from-scope"]), string var)
+          m->values[var] = context->get_var(var, m["from-scope"]);
     }
 
     if ((m->variable &&
-	 // NOTE: Side-effect!
-	 zero_type(m->values = RXML_CONTEXT->user_get_var( m->variable ))) ||
-	zero_type(m->values))
+         // NOTE: Side-effect!
+         zero_type(m->values = RXML_CONTEXT->user_get_var( m->variable ))) ||
+        zero_type(m->values))
       return ({});
 
     if(stringp(m->values)) {
       if(m->advanced) {
-	switch(m->advanced) {
-	case "chars":
-	  m->split="";
-	  break;
-	case "lines":
-	  m->values = replace(m->values, ({ "\n\r", "\r\n", "\r" }),
-			      ({ "\n", "\n", "\n" }));
-	  m->split = "\n";
-	  break;
-	case "words":
-	  m->values = replace(m->values, ({ "\n\r", "\r\n", "\r" }),
-			      ({ "\n", "\n", "\n" }));
-	  m->values = replace(m->values, ({ "-\n", "\n", "\t" }),
-			      ({ "", " ", " " }));
-	  m->values = map(m->values/" " - ({""}),
-			  lambda(string word) {
-			    if(word[-1]=='.' || word[-1]==',' || word[-1]==';' ||
-			       word[-1]==':' || word[-1]=='!' || word[-1]=='?')
-			      return word[..sizeof(word)-2];
-			    return word;
-			  });
-	  break;
-	case "csv":
-	  {
-	    array out=({});
-	    int i=0;
-	    string values=m->values;
+        switch(m->advanced) {
+        case "chars":
+          m->split="";
+          break;
+        case "lines":
+          m->values = replace(m->values, ({ "\n\r", "\r\n", "\r" }),
+                              ({ "\n", "\n", "\n" }));
+          m->split = "\n";
+          break;
+        case "words":
+          m->values = replace(m->values, ({ "\n\r", "\r\n", "\r" }),
+                              ({ "\n", "\n", "\n" }));
+          m->values = replace(m->values, ({ "-\n", "\n", "\t" }),
+                              ({ "", " ", " " }));
+          m->values = map(m->values/" " - ({""}),
+                          lambda(string word) {
+                            if(word[-1]=='.' || word[-1]==',' || word[-1]==';' ||
+                               word[-1]==':' || word[-1]=='!' || word[-1]=='?')
+                              return word[..sizeof(word)-2];
+                            return word;
+                          });
+          break;
+        case "csv":
+          {
+            array out=({});
+            int i=0;
+            string values=m->values;
 #define FETCHAR(c,buf,i)	(catch((c)=(buf)[(i)++])?((c)=-1):(c))
-	    array(string) words=({});
-	    int c,leadspace=1,inquotes=0;
-	    String.Buffer word=String.Buffer();
-	    FETCHAR(c,values,i);
-	    while(c>=0) {
-	      switch(c) {
-	      case ',':case ';':
-		if(!inquotes)
-		{
-		  words += ({ word->get() });
-		  leadspace=1;
-		  break;
-		}
-		word->putchar(c);
-		break;
+            array(string) words=({});
+            int c,leadspace=1,inquotes=0;
+            String.Buffer word=String.Buffer();
+            FETCHAR(c,values,i);
+            while(c>=0) {
+              switch(c) {
+              case ',':case ';':
+                if(!inquotes)
+                {
+                  words += ({ word->get() });
+                  leadspace=1;
+                  break;
+                }
+                word->putchar(c);
+                break;
               case '"':
-		leadspace=0;
+                leadspace=0;
                 if(!inquotes)
                   inquotes=1;
                 else if(FETCHAR(c,values,i)=='"')
                   word->putchar(c);
                 else
                 {
-		  inquotes=0;
+                  inquotes=0;
                   continue;
                 }
                 break;
               case ' ':case '\t':
-		if (leadspace) break;
-		// FALL_THROUGH
+                if (leadspace) break;
+                // FALL_THROUGH
               default:
-		leadspace=0;
-		string s;
-		sscanf(values[--i..],"%[^,;\"\r\x1a\n]",s);
-		word->add(s);
-		i+=sizeof(s);
+                leadspace=0;
+                string s;
+                sscanf(values[--i..],"%[^,;\"\r\x1a\n]",s);
+                word->add(s);
+                i+=sizeof(s);
                 break;
               case '\r':case '\x1a':
-		// Ignore these. NB: 0x1a is Ctrl-Z (EOF on CP/M and DOS).
+                // Ignore these. NB: 0x1a is Ctrl-Z (EOF on CP/M and DOS).
                 break;
               case '\n':
                 if(!inquotes)
                 {
-		  if(!sizeof(words)&&!sizeof(word))
+                  if(!sizeof(words)&&!sizeof(word))
                     break;
                   out += ({ words + ({ word->get() }) });
-	          words=({});
-	          break;
+                  words=({});
+                  break;
                 }
                 word->putchar(c);
-		break;
-	      }
-	      FETCHAR(c,values,i);
-	    }
-	    m->values = !sizeof(out)&&!sizeof(word) ? ""
-	      :out + ({ words + ({ word->get() }) });
-	    break;
-	  }
-	  break;
-	}
+                break;
+              }
+              FETCHAR(c,values,i);
+            }
+            m->values = !sizeof(out)&&!sizeof(word) ? ""
+              :out + ({ words + ({ word->get() }) });
+            break;
+          }
+          break;
+        }
       }
       if(stringp(m->values)) {
-	if (m->nosplit)
-	  m->values = ({m->values});
-	else
-	  m->values=m->values / (m->split || "\000");
+        if (m->nosplit)
+          m->values = ({m->values});
+        else
+          m->values=m->values / (m->split || "\000");
       }
     }
 
@@ -8192,27 +8192,27 @@ class TagEmitValues {
 
     if(mappingp(m->values))
       return map( sort(indices(m->values)),
-		  lambda(mixed ind, mapping(string:mixed) m) {
-		    mixed val = post_process_value(m->values[ind], m);
-		    return (["index":ind,"value":val]);
-		  }, m);
+                  lambda(mixed ind, mapping(string:mixed) m) {
+                    mixed val = post_process_value(m->values[ind], m);
+                    return (["index":ind,"value":val]);
+                  }, m);
 
     if(arrayp(m->values)) {
       if(m->distinct)
-	m->values = Array.uniq(m->values);
+        m->values = Array.uniq(m->values);
       return map( m->values,
-		  lambda(mixed val, mapping(string:mixed) m) {
-		    val = post_process_value(val, m);
-		    return (["value":val]);
-		  }, m);
+                  lambda(mixed val, mapping(string:mixed) m) {
+                    val = post_process_value(val, m);
+                    return (["value":val]);
+                  }, m);
     }
 
     if(multisetp(m->values))
       return map( sort(m->values),
-		  lambda(mixed val, mapping(string:mixed) m) {
-		    val = post_process_value(val, m);
-		    return (["index":val]);
-		  }, m);
+                  lambda(mixed val, mapping(string:mixed) m) {
+                    val = post_process_value(val, m);
+                    return (["index":val]);
+                  }, m);
 
     RXML.run_error("Values variable has wrong type %t.\n", m->values);
   }
@@ -8239,8 +8239,8 @@ class TagEmitLicenseWarnings {
     // license for a configuration. It can also be used within
     // <license> or emit#licenses.
     License.Key key = (( RXML.get_context()->current_scope() &&
-			 RXML.get_context()->get_var("key") )||
-		       id->conf->getvar("license")->get_key());
+                         RXML.get_context()->get_var("key") )||
+                       id->conf->getvar("license")->get_key());
     if(!key) {
       RXML.parse_error("No license key defined in the configuration\n");
       return ({});
@@ -8273,8 +8273,8 @@ class PARSER_CSV
 
   void
   create(void|string|Stdio.File|Stdio.FILE input,
-	 void|array|mapping|string|Stdio.File|Stdio.FILE format,
-	 void|int verbose)
+         void|array|mapping|string|Stdio.File|Stdio.FILE format,
+         void|int verbose)
   {
     if(zero_type(verbose)&&intp(format))
       verbose=format;
@@ -8308,19 +8308,19 @@ class PARSER_CSV
     {
       s=read(n);
       if(has_value(s,"\n")||has_value(s,"\r"))
-	throw(severity);
+        throw(severity);
     } else {
       s=_in->gets();
       if(!s)
-	throw(severity);
+        throw(severity);
       if(has_value(s,"\r")) {
-	array t;
-	t=s/"\r";
-	s=t[0];_in->unread(t[1..]*"\n");
+        array t;
+        t=s/"\r";
+        s=t[0];_in->unread(t[1..]*"\n");
       }
       alread->add(s);alread->putchar('\n');
       if(has_suffix(s,"\r"))
-	s=s[..<1];
+        s=s[..<1];
       _eol=1;
     }
     return s;
@@ -8346,16 +8346,16 @@ class PARSER_CSV
     protected void destroy()
     {
       if(oldalread) {
-	string back=alread->get();
-	if(sizeof(back)) {
-	  _in->unread(back);
-	  if(verb<0) {
-	    back-="\n";
-	    if(sizeof(back))
-	      werror("Backtracking %O\n",back);
-	  }
-	}
-	alread->add(oldalread);
+        string back=alread->get();
+        if(sizeof(back)) {
+          _in->unread(back);
+          if(verb<0) {
+            back-="\n";
+            if(sizeof(back))
+              werror("Backtracking %O\n",back);
+          }
+        }
+        alread->add(oldalread);
       }
     }
   }
@@ -8372,105 +8372,105 @@ class PARSER_CSV
     if(sizeof(delim-(<',',';','\t',' '>))) {
 delimready:
       for(;;) {
-	i=0;
-	buf=_in->read(pref);
-	int c;
-	FETCHAR(c,buf,i);
-	while(c>=0) {
-	  if(delim[c])
-	    break delimready;
-	  else switch(c) {
-	    default:
-	      {
-		string s;
-		sscanf(buf[--i..],skipclass,s);
-		word->add(s);
-		i+=sizeof(s);
-		break;
-	      }
-	    case '\n':
-	      FETCHAR(c,buf,i);
-	      switch(c) {
-	      default:i--;
-	      case '\r':case '\x1a':;
-	      }
-	      _eol=1;
-	      break delimready;
-	    case '\r':
-	      FETCHAR(c,buf,i);
-	      if(c!='\n')
-		i--;
-	      _eol=1;
-	      break delimready;
-	    case '\x1a':;
-	    }
-	  FETCHAR(c,buf,i);
-	}
-	if(!sizeof(buf))
-	  throw(severity);
-	alread->add(buf);
+        i=0;
+        buf=_in->read(pref);
+        int c;
+        FETCHAR(c,buf,i);
+        while(c>=0) {
+          if(delim[c])
+            break delimready;
+          else switch(c) {
+            default:
+              {
+                string s;
+                sscanf(buf[--i..],skipclass,s);
+                word->add(s);
+                i+=sizeof(s);
+                break;
+              }
+            case '\n':
+              FETCHAR(c,buf,i);
+              switch(c) {
+              default:i--;
+              case '\r':case '\x1a':;
+              }
+              _eol=1;
+              break delimready;
+            case '\r':
+              FETCHAR(c,buf,i);
+              if(c!='\n')
+                i--;
+              _eol=1;
+              break delimready;
+            case '\x1a':;
+            }
+          FETCHAR(c,buf,i);
+        }
+        if(!sizeof(buf))
+          throw(severity);
+        alread->add(buf);
       }
     } else {
       int leadspace=1,inquotes=0;
     csvready:
       for(;;) {
-	i=0;
-	buf=_in->read(pref);
-	int c;
-	FETCHAR(c,buf,i);
-	while(c>=0) {
-	  if(delim[c]) {
-	    if(!inquotes)
-	      break csvready;
-	    word->putchar(c);
-	  } else switch(c) {
-	    case '"':leadspace=0;
+        i=0;
+        buf=_in->read(pref);
+        int c;
+        FETCHAR(c,buf,i);
+        while(c>=0) {
+          if(delim[c]) {
+            if(!inquotes)
+              break csvready;
+            word->putchar(c);
+          } else switch(c) {
+            case '"':leadspace=0;
               if(!inquotes)
                 inquotes=1;
               else if(FETCHAR(c,buf,i)=='"')
                 word->putchar(c);
               else {
-		inquotes=0;
+                inquotes=0;
                 continue;
               }
               break;
             default:leadspace=0;
             case ' ':case '\t':
               if(!leadspace) {
-		string s;
+                string s;
                 sscanf(buf[--i..],skipclass,s);
                 word->add(s);
                 i+=sizeof(s);
               }
               break;
             case '\n':
-	      FETCHAR(c,buf,i);
-	      switch(c) {
-	      default:i--;
-	      case '\r':case '\x1a':;
-	      }
+              FETCHAR(c,buf,i);
+              switch(c) {
+              default:i--;
+              case '\r':case '\x1a':;
+              }
               if(!inquotes) {
-		_eol=1;
+                _eol=1;
                 break csvready;
               }
               word->putchar('\n');
-	      break;
+              break;
             case '\r':
-	      FETCHAR(c,buf,i);
-	      if(c!='\n')
-		i--;
+              FETCHAR(c,buf,i);
+              if(c!='\n')
+                i--;
               if(!inquotes) {
-		_eol=1;
+                _eol=1;
                 break csvready;
               }
               word->putchar('\n');
             case '\x1a':;
-	    }
-	  FETCHAR(c,buf,i);
-	}
-	if(!sizeof(buf))
-	  throw(severity);
-	alread->add(buf);
+            }
+          FETCHAR(c,buf,i);
+        }
+        if(!sizeof(buf))
+          throw(severity);
+        alread->add(buf);
       }
     }
     alread->add(buf[..i-1]);
@@ -8484,14 +8484,14 @@ delimready:
     if(stringp(fmt[0])) {
       options=(["name":fmt[0]]);
       if(fmt[1])
-	options+=fmt[1];
+        options+=fmt[1];
       else
-	fmt[1]=0;
+        fmt[1]=0;
     } else
       options=fmt[0];
     if(found) {
       if(options->single)
-	throw(severity);		// early exit, already found one
+        throw(severity);		// early exit, already found one
     }
     else if(options->mandatory)
       severity=2;
@@ -8500,64 +8500,64 @@ delimready:
     _eol=0;
     foreach(fmt;int fi;array|mapping m) {
       if(fi<2)
-	continue;
+        continue;
       string value;
       if(arrayp(m)) {
-	array field=m;
-	fmt[fi]=m=(["name":field[0]]);
-	mixed nm=field[1];
-	if(!mappingp(nm)) {
-	  if(arrayp(nm))
-	    ret+=getrecord(nm,found);
-	  else
-	    m+=([(intp(nm)?"width":(stringp(nm)?"match":"delim")):nm]);
-	  if(sizeof(field)>2)
-	    m+=field[2];
-	}
-	fmt[fi]=m;
+        array field=m;
+        fmt[fi]=m=(["name":field[0]]);
+        mixed nm=field[1];
+        if(!mappingp(nm)) {
+          if(arrayp(nm))
+            ret+=getrecord(nm,found);
+          else
+            m+=([(intp(nm)?"width":(stringp(nm)?"match":"delim")):nm]);
+          if(sizeof(field)>2)
+            m+=field[2];
+        }
+        fmt[fi]=m;
       }
       if(_eol)
-	throw(severity);
+        throw(severity);
       if(!zero_type(m->width))
-	value=gets(m->width);
+        value=gets(m->width);
       if(m->delim)
-	value=_getdelimword(m);
+        value=_getdelimword(m);
       if(m->match) {
-	Regexp rgx;
-	if(stringp(m->match)) {
-	  if(!value && simple->match(m->match)) {
-	    m->width=sizeof(m->match);
-	    value=gets(m->width);
-	  }
-	  m->match=Regexp("^("+m->match+")"+(value?"$":""));
-	}
-	rgx=m->match;
-	if(value) {
-	  if(!rgx->match(value)) {
-	    if(verb<-3)
-	      werror(sprintf("Mismatch %O!=%O\n",value,rgx)
-		     -"Regexp.SimpleRegexp");
-	    throw(severity);
-	  }
-	} else {
-	  string buf=_in->read(m->prefetch || prefetch);
-	  array spr;
+        Regexp rgx;
+        if(stringp(m->match)) {
+          if(!value && simple->match(m->match)) {
+            m->width=sizeof(m->match);
+            value=gets(m->width);
+          }
+          m->match=Regexp("^("+m->match+")"+(value?"$":""));
+        }
+        rgx=m->match;
+        if(value) {
+          if(!rgx->match(value)) {
+            if(verb<-3)
+              werror(sprintf("Mismatch %O!=%O\n",value,rgx)
+                     -"Regexp.SimpleRegexp");
+            throw(severity);
+          }
+        } else {
+          string buf=_in->read(m->prefetch || prefetch);
+          array spr;
           if(!buf || !(spr=rgx->split(buf))) {
-	    alread->add(buf);
+            alread->add(buf);
             if(verb<-3)
               werror(sprintf("Mismatch %O!=%O\n",buf[..32],rgx)
                -"Regexp.SimpleRegexp");
             throw(severity);
           }
           _in->unread(buf[sizeof(value=spr[0])..]);
-	  alread->add(value);
-	  value-="\r";
-	  if(has_suffix(value,"\n"))
-	    value=value[..<1];
-	}
+          alread->add(value);
+          value-="\r";
+          if(has_suffix(value,"\n"))
+            value=value[..<1];
+        }
       }
       if(!m->drop)
-	ret[m->name]=value;
+        ret[m->name]=value;
     }
     if(!_eol && gets(0)!="")
       throw(severity);
@@ -8565,19 +8565,19 @@ delimready:
     if(verb&&verb!=-1) {
       array s=({options->name,"::"});
       foreach(sort(indices(ret)),string name) {
-	string value=ret[name];
-	if(sizeof(value)) {
-	  if(verb<-2)
-	    s+=({name,":"});
-	  s+=({value,","});
-	}
+        string value=ret[name];
+        if(sizeof(value)) {
+          if(verb<-2)
+            s+=({name,":"});
+          s+=({value,","});
+        }
       }
       string out=replace(s[..<1]*"",({"\n","  ","   "}),({""," "," "}));
       out=string_to_utf8(out);	// FIXME Debugging output defaults to UTF-8
       if(verb>0)
-	werror("%d %.*s\r",recordcount,verb,out);
+        werror("%d %.*s\r",recordcount,verb,out);
       else
-	werror("%d %s\n",recordcount,out);
+        werror("%d %s\n",recordcount,out);
     }
     recordcount++;
     return options->fold?ret:([options->name:ret]);
@@ -8589,9 +8589,9 @@ delimready:
     if(tm)
     {
       if(arrayp(tm))
-	tm+=({entry});
+        tm+=({entry});
       else
-	tm=({tm,entry});
+        tm=({tm,entry});
       res[name]=tm;
     }
     else
@@ -8615,70 +8615,70 @@ delimready:
     if(!format)
     {
       if(skipemptylines())
-	return UNDEFINED;
+        return UNDEFINED;
       skipempty=1;format=fms;
     }
 ret:
     {
       if(arrayp(format)) {
-	mixed err=catch {
-	    _checkpoint checkp=_checkpoint();
-	    foreach(format;;array|mapping fmt)
-	      if(arrayp(fmt))
-		for(int found=0;;found=1) {
-		  mixed err=catch {
-		      _checkpoint checkp=_checkpoint();
-		      mapping rec=getrecord(fmt,found);
-		      foreach(rec;string name;mixed value)
-			add2map(ret,name,value);
-		      checkp->release();
-		      continue;
-		    };
-		  severity=1;
-		  switch(err) {
-		  case 2:
-		    err=1;
-		  default:
-		    throw(err);
-		  case 1:;
-		  }
-		  break;
-		}
-	      else if(fmt=fetch(fmt))
-		ret+=fmt;
-	    checkp->release();
-	    break ret;
-	  };
-	switch(err) {
-	default:
-	  throw(err);
+        mixed err=catch {
+            _checkpoint checkp=_checkpoint();
+            foreach(format;;array|mapping fmt)
+              if(arrayp(fmt))
+                for(int found=0;;found=1) {
+                  mixed err=catch {
+                      _checkpoint checkp=_checkpoint();
+                      mapping rec=getrecord(fmt,found);
+                      foreach(rec;string name;mixed value)
+                        add2map(ret,name,value);
+                      checkp->release();
+                      continue;
+                    };
+                  severity=1;
+                  switch(err) {
+                  case 2:
+                    err=1;
+                  default:
+                    throw(err);
+                  case 1:;
+                  }
+                  break;
+                }
+              else if(fmt=fetch(fmt))
+                ret+=fmt;
+            checkp->release();
+            break ret;
+          };
+        switch(err) {
+        default:
+          throw(err);
         case 1:
           return 0;
-	}
-	if(skipempty)
-	  skipemptylines();
+        }
+        if(skipempty)
+          skipemptylines();
       } else {
-	int found;
-	do {
-	  found=0;
-	  if(!mappingp(format))
-	    error("Empty format definition\n");
-	  foreach(format;string name;array|mapping subfmt)
-	    for(;;) {
-	      if(verb<0)
-		werror("Trying format %O\n",name);
-	      mapping m;
-	      if(m=fetch(subfmt)) {
-		found=1;
-		add2map(ret,name,m);
-		continue;
-	      }
-	      break;
-	    }
-	  if(skipempty && skipemptylines())
-	    break;
-	}
-	while(found);
+        int found;
+        do {
+          found=0;
+          if(!mappingp(format))
+            error("Empty format definition\n");
+          foreach(format;string name;array|mapping subfmt)
+            for(;;) {
+              if(verb<0)
+                werror("Trying format %O\n",name);
+              mapping m;
+              if(m=fetch(subfmt)) {
+                found=1;
+                add2map(ret,name,m);
+                continue;
+              }
+              break;
+            }
+          if(skipempty && skipemptylines())
+            break;
+        }
+        while(found);
       }
     }
     return sizeof(ret) && ret;
@@ -8725,64 +8725,64 @@ ret:
     {
       mapping m;
       if(started>=0)
-	for(;;) {
-	  string line=input->gets();
-	  if(!line)
-	    error("Missing begin record\n");
-	  array res=descrx->split(line);
-	  lineno++;
-	  if(!res)
-	    if(!started) {
-	      if(!garbage) {
-		garbage=1;
-		werror("Skipping garbage lines... %O\n",line);
-	      }
-	      continue;
-	    }
-	    else
-	      error("Line %d parse error: %O\n",lineno,line);
-	  m=mkmapping(fields,res);
-	  m_delete(m,0);
-	  m->level=sizeof(m->level);
-	  foreach(strip,string s)
-	    if(m[s]&&!sizeof(m[s])||!m[s]&&intp(m[s]))
-	      m_delete(m,s);
-	  if(!started) {
-	    if(!m->level&&!m->name&&m->delim&&m->delim==beginend+"begin")
-	      started=1;
-	    continue;
-	  }
-	  if(!m->level&&!m->name) {
-	    if(m->delim==beginend+"end") {
-	      started=-1;
-	      break;
-	    }
-	    if(!m->comment||m->comment&&
-	       (has_prefix(m->comment,"#")||has_prefix(m->comment,";")))
-	      continue;	      // skip comments and empty lines
-	  }
-	  if(m->options) {
-	    mapping options=([]);
-	    array sp;
-	    string left=m->options;
-	    m_delete(m,"options");
-	    while(sp=tokenise->split(left))
-	      options[sp[0]]=1, left=sp[1];
-	    m+=options;
-	  }
-	  if(m->match)
-	    m->match=parsecstring(m->match);
-	  if(m->delim) {
-	    multiset delim=(<>);
-	    foreach(parsecstring(replace(m->delim,"\"","\\\""))/"", string cs)
-	      delim[cs[0]]=1;
-	    m->delim=delim;
-	  }
-	  if(m->width)
-	    m->width=(int)m->width;
-	  m_delete(m,"comment");
-	  break;
-	}
+        for(;;) {
+          string line=input->gets();
+          if(!line)
+            error("Missing begin record\n");
+          array res=descrx->split(line);
+          lineno++;
+          if(!res)
+            if(!started) {
+              if(!garbage) {
+                garbage=1;
+                werror("Skipping garbage lines... %O\n",line);
+              }
+              continue;
+            }
+            else
+              error("Line %d parse error: %O\n",lineno,line);
+          m=mkmapping(fields,res);
+          m_delete(m,0);
+          m->level=sizeof(m->level);
+          foreach(strip,string s)
+            if(m[s]&&!sizeof(m[s])||!m[s]&&intp(m[s]))
+              m_delete(m,s);
+          if(!started) {
+            if(!m->level&&!m->name&&m->delim&&m->delim==beginend+"begin")
+              started=1;
+            continue;
+          }
+          if(!m->level&&!m->name) {
+            if(m->delim==beginend+"end") {
+              started=-1;
+              break;
+            }
+            if(!m->comment||m->comment&&
+               (has_prefix(m->comment,"#")||has_prefix(m->comment,";")))
+              continue;	      // skip comments and empty lines
+          }
+          if(m->options) {
+            mapping options=([]);
+            array sp;
+            string left=m->options;
+            m_delete(m,"options");
+            while(sp=tokenise->split(left))
+              options[sp[0]]=1, left=sp[1];
+            m+=options;
+          }
+          if(m->match)
+            m->match=parsecstring(m->match);
+          if(m->delim) {
+            multiset delim=(<>);
+            foreach(parsecstring(replace(m->delim,"\"","\\\""))/"", string cs)
+              delim[cs[0]]=1;
+            m->delim=delim;
+          }
+          if(m->width)
+            m->width=(int)m->width;
+          m_delete(m,"comment");
+          break;
+        }
       return m;
     };
 
@@ -8795,22 +8795,22 @@ ret:
       int lastlevel=m->level+1;
       m=0;
       for(;(m || (m=getline())) && lastlevel<=m->level;)
-	if(lastlevel==m->level && sizeof(m&(<"delim","match","width">)))
-	  cur+=({m-(<"level">)}),m=0;
-	else {
-	  array|mapping res=getlevel();
-	  if(mappingp(res)) {
-	    if(mappingp(cur[sizeof(cur)-1])) {
-	      cur[sizeof(cur)-1]+=res;
-	      continue;
-	    }
-	    res=({res});
-	  }
-	  cur+=res;
-	}
+        if(lastlevel==m->level && sizeof(m&(<"delim","match","width">)))
+          cur+=({m-(<"level">)}),m=0;
+        else {
+          array|mapping res=getlevel();
+          if(mappingp(res)) {
+            if(mappingp(cur[sizeof(cur)-1])) {
+              cur[sizeof(cur)-1]+=res;
+              continue;
+            }
+            res=({res});
+          }
+          cur+=res;
+        }
       catch {
-	if(arrayp(cur) && arrayp(cur[2]))
-	  return ([cur[0]->name:cur[2..]]);
+        if(arrayp(cur) && arrayp(cur[2]))
+          return ([cur[0]->name:cur[2..]]);
       };
       return ({cur});
     };
@@ -8820,8 +8820,8 @@ ret:
     while(started>=0 && m) {
       array|mapping val=getlevel();
       catch {
-	ret+=val;
-	continue;
+        ret+=val;
+        continue;
       };
       ret=val;
     }
@@ -8847,17 +8847,17 @@ ret:
       int countcomma,countsemicolon,counttab;
       countcomma=countsemicolon=counttab=0;
       foreach(line;;int c)
-	switch(c)
-	{
-	case ',':countcomma++;
-	  break;
-	case ';':countsemicolon++;
-	  break;
-	case '\t':counttab++;
-	  break;
+        switch(c)
+        {
+        case ',':countcomma++;
+          break;
+        case ';':countsemicolon++;
+          break;
+        case '\t':counttab++;
+          break;
         }
       delimiters=countcomma>countsemicolon?countcomma>counttab?",":"\t":
-	countsemicolon>counttab?";":"\t";
+        countsemicolon>counttab?";":"\t";
     }
     _in->unread(line+"\n");
 
@@ -8872,22 +8872,22 @@ ret:
       matchfieldname=Regexp(matchfieldname||"");
     _eol=0;
     if(mixed err = catch {
-	_checkpoint checkp=_checkpoint();
-	do {
-	  string field=_getdelimword(m);
-	  res+=({ m+(["name":field]) });
-	  if(String.width(field)>8)
-	    field=string_to_utf8(field);  // FIXME dumbing it down for Regexp()
-	  if(!matchfieldname->match(field))
-	    throw(1);
-	}
-	while(!_eol);
+        _checkpoint checkp=_checkpoint();
+        do {
+          string field=_getdelimword(m);
+          res+=({ m+(["name":field]) });
+          if(String.width(field)>8)
+            field=string_to_utf8(field);  // FIXME dumbing it down for Regexp()
+          if(!matchfieldname->match(field))
+            throw(1);
+        }
+        while(!_eol);
       })
       switch(err) {
       default:
-	throw(err);
+        throw(err);
       case 1:
-	return 0;
+        return 0;
       }
     setformat( ({res}) );
     return 1;
@@ -8936,21 +8936,21 @@ class TagEmitCSV {
     if (args->path) {
       string data = id->conf->try_get_file(args->path, id);
       if (stringp(data)) {
-	csv = PARSER_CSV(data);
+        csv = PARSER_CSV(data);
       } else {
-	werror("Try get file failed with %O\n", data);
+        werror("Try get file failed with %O\n", data);
       }
     } else if (args->realpath) {
       Stdio.File file = Stdio.File();
       if (file->open(args->realpath, "r")) {
-	csv = PARSER_CSV(file);
+        csv = PARSER_CSV(file);
       }
     } else if (!args->quiet) {
       RXML.run_error("Path to data not specified.\n");
     }
     if (!csv) {
       if (!args->quiet) {
-	RXML.run_error("Data file not found.\n");
+        RXML.run_error("Data file not found.\n");
       }
       return ({});
     }
@@ -8963,7 +8963,7 @@ class TagEmitCSV {
 
     if (!csv->parsehead(args->delimiter)) {
       if (!args->quiet) {
-	RXML.run_error("Failed to parse csv header.\n");
+        RXML.run_error("Failed to parse csv header.\n");
       }
       return ({});
     }
@@ -9002,12 +9002,12 @@ mapping tagdocumentation() {
 
 protected int format_support(Parser.HTML p, mapping m, string c, mapping doc) {
   string key = ([ "flags":"if#supports",
-		  "vars":"if#clientvar" ])[p->tag_name()];
+                  "vars":"if#clientvar" ])[p->tag_name()];
   c=Roxen.html_encode_string(c)-"#! ";
   c=(Array.map(c/"\n", lambda(string row) {
-			 if(sscanf(row, "%*s - %*s")!=2) return "";
-			 return "<li>"+row+"</li>";
-		       }) - ({""})) * "\n";
+                         if(sscanf(row, "%*s - %*s")!=2) return "";
+                         return "<li>"+row+"</li>";
+                       }) - ({""})) * "\n";
   doc[key]+="<ul>\n"+c+"</ul>\n";
   return 0;
 }
@@ -9038,13 +9038,13 @@ class TagIWCache {
       object sbobj = id->misc->sbobj;
       int userid = sbobj && sbobj->get_userid();
       args = ([ "shared" : "yes-please",
-		"key"    : ("userid:" + userid +
-			    "|tmpl:" + (id->misc->iw_template_set || "")),
-		"enable-client-cache"   : "yes-please",
-		"enable-protocol-cache" : "yes-please",
+                "key"    : ("userid:" + userid +
+                            "|tmpl:" + (id->misc->iw_template_set || "")),
+                "enable-client-cache"   : "yes-please",
+                "enable-protocol-cache" : "yes-please",
       ]);
       if(id->supports->robot||id->variables->__print)
-	args += ([ "nocache" : "yes" ]);
+        args += ([ "nocache" : "yes" ]);
 
       return ::do_enter(id);
     }
@@ -11313,11 +11313,11 @@ generate output that is included in the resulting page.</p></note>
  <ex><substring separator-chars=\",|:;\" join=\", \">a,b:c|f</substring></ex>
  <ex>[<substring separator-whites=\"\" join=\"\">
 Remove   all whitespace,
-	please.
+        please.
 </substring>]</ex>
  <ex>[<substring separator-whites=\"\">
 Normalize   all whitespace,
-	please.
+        please.
 </substring>]</ex>
  <ex><substring separator-chars=\"^0-9\" join=\" \">:bva2de 44:3</substring></ex>
 
@@ -11975,47 +11975,47 @@ After: &var.language;<br /></ex>
    <row valign='top'>
      <c><p><tt>arrayp(<i>expr</i>)</tt></p></c>
      <c><p>Returns 1 if the value of <i>expr</i> is an array,
-	and 0 otherwise.</p></c></row>
+        and 0 otherwise.</p></c></row>
    <row valign='top'>
      <c><p><tt>callablep(<i>expr</i>)</tt></p></c>
      <c><p>Returns 1 if the value of <i>expr</i> is a function
-	or similar, and 0 otherwise.</p></c></row>
+        or similar, and 0 otherwise.</p></c></row>
    <row valign='top'>
      <c><p><tt>floatp(<i>expr</i>)</tt></p></c>
      <c><p>Returns 1 if the value of <i>expr</i> is a floating point number,
-	and 0 otherwise.</p></c></row>
+        and 0 otherwise.</p></c></row>
    <row valign='top'>
      <c><p><tt>functionp(<i>expr</i>)</tt></p></c>
      <c><p>Returns 1 if the value of <i>expr</i> is a function,
-	and 0 otherwise.</p></c></row>
+        and 0 otherwise.</p></c></row>
    <row valign='top'>
      <c><p><tt>intp(<i>expr</i>)</tt></p></c>
      <c><p>Returns 1 if the value of <i>expr</i> is an integer,
-	and 0 otherwise.</p></c></row>
+        and 0 otherwise.</p></c></row>
    <row valign='top'>
      <c><p><tt>mappingp(<i>expr</i>)</tt></p></c>
      <c><p>Returns 1 if the value of <i>expr</i> is a mapping,
-	and 0 otherwise.</p></c></row>
+        and 0 otherwise.</p></c></row>
    <row valign='top'>
      <c><p><tt>multisetp(<i>expr</i>)</tt></p></c>
      <c><p>Returns 1 if the value of <i>expr</i> is a multiset,
-	and 0 otherwise.</p></c></row>
+        and 0 otherwise.</p></c></row>
    <row valign='top'>
      <c><p><tt>objectp(<i>expr</i>)</tt></p></c>
      <c><p>Returns 1 if the value of <i>expr</i> is an object,
-	and 0 otherwise.</p></c></row>
+        and 0 otherwise.</p></c></row>
    <row valign='top'>
      <c><p><tt>programp(<i>expr</i>)</tt></p></c>
      <c><p>Returns 1 if the value of <i>expr</i> is a program,
-	and 0 otherwise.</p></c></row>
+        and 0 otherwise.</p></c></row>
    <row valign='top'>
      <c><p><tt>stringp(<i>expr</i>)</tt></p></c>
      <c><p>Returns 1 if the value of <i>expr</i> is a string,
-	and 0 otherwise.</p></c></row>
+        and 0 otherwise.</p></c></row>
    <row valign='top'>
      <c><p><tt>undefinedp(<i>expr</i>)</tt></p></c>
      <c><p>Returns 1 if the value of <i>expr</i> is UNDEFINED,
-	and 0 otherwise.</p></c></row>
+        and 0 otherwise.</p></c></row>
  </xtable>
 
  <p>Expressions for checking contents:</p>
@@ -12024,19 +12024,19 @@ After: &var.language;<br /></ex>
    <row valign='top'>
      <c><p><tt>has_index(<i>haystack</i>, <i>index</i>)</tt></p></c>
      <c><p>Returns 1 if <i>index</i> is in the index domain of <i>haystack</i>,
-	and 0 otherwise.</p></c></row>
+        and 0 otherwise.</p></c></row>
    <row valign='top'>
      <c><p><tt>has_prefix(<i>string</i>, <i>prefix</i>)</tt></p></c>
      <c><p>Returns 1 if <i>string</i> starts with <i>prefix</i>,
-	and 0 otherwise.</p></c></row>
+        and 0 otherwise.</p></c></row>
    <row valign='top'>
      <c><p><tt>has_suffix(<i>string</i>, <i>suffix</i>)</tt></p></c>
      <c><p>Returns 1 if <i>string</i> ends with <i>suffix</i>,
-	and 0 otherwise.</p></c></row>
+        and 0 otherwise.</p></c></row>
    <row valign='top'>
      <c><p><tt>has_value(<i>haystack</i>, <i>value</i>)</tt></p></c>
      <c><p>Returns 1 if <i>value</i> is in the value domain of <i>haystack</i>,
-	and 0 otherwise.</p></c></row>
+        and 0 otherwise.</p></c></row>
    <row valign='top'>
      <c><p><tt>indices(<i>expr</i>)</tt></p></c>
      <c><p>Returns an array with all indices present in <i>expr</i>.</p></c></row>
@@ -12106,12 +12106,12 @@ After: &var.language;<br /></ex>
      <c><p>Returns the natural logarithm of the value <i>expr</i>. To get
         the logarithm in another base, divide the result with
         <tt>log(<i>base</i>)</tt>.
-	This is the inverse operation of <tt>exp()</tt>.</p></c></row>
+        This is the inverse operation of <tt>exp()</tt>.</p></c></row>
 
    <row valign='top'>
      <c><p><tt>exp(<i>expr</i>)</tt></p></c>
      <c><p>Returns the natural exponential of the value <i>expr</i>.
-	This is the inverse operation of <tt>log()</tt>.</p></c></row>
+        This is the inverse operation of <tt>log()</tt>.</p></c></row>
 
    <row valign='top'>
      <c><p><tt>abs(<i>expr</i>)</tt></p></c>
@@ -12642,7 +12642,7 @@ just got zapped?
  <p>Which font types to list. ttf means all true type fonts, whereas all
  means all available fonts.</p>
 </attr>",
-		([
+                ([
 "&_.name;":#"<desc type='entity'><p>
  Returns a font identification name.</p>
 
@@ -12681,8 +12681,8 @@ just got zapped?
 "&_.trademark;":#"<desc type='entity'><p>
  Font trademark notice. Only available for true type fonts.
 </p></desc>",
-		])
-	     }),
+                ])
+             }),
 
 //----------------------------------------------------------------------
 
@@ -12715,7 +12715,7 @@ just got zapped?
  <tag>if</tag> ... <tag>elseif</tag> sequences are used instead.</p>
 </desc>",
 
-	  (["case":#"<desc type='cont'><p>
+          (["case":#"<desc type='cont'><p>
  This tag takes the argument that is to be tested and if it's true,
  it's content is executed before exiting the <tag>cond</tag>. If the
  argument is false the content is skipped and the next <tag>case</tag>
@@ -12733,7 +12733,7 @@ just got zapped?
  </default>
 </cond></ex-box>",
 
-	    "default":#"<desc type='cont'><p>
+            "default":#"<desc type='cont'><p>
  The <tag>default</tag> tag is eqvivalent to the <tag>else</tag> tag
  in an <tag>if</tag> statement. The difference between the two is that
  the <tag>default</tag> may be put anywhere in the <tag>cond</tag>
@@ -12741,8 +12741,8 @@ just got zapped?
  <tag>default</tag> tag is put first in the statement it will allways
  be executed, then the next <tag>case</tag> tag will be executed and
  perhaps add to the result the <tag>default</tag> performed.</p></desc>"
-	    ])
-	  }),
+            ])
+          }),
 
 //----------------------------------------------------------------------
 
@@ -12848,7 +12848,7 @@ the respective attributes below for further information.</p></desc>
  scope.</p>
 </attr>",
 
-	    ([
+            ([
 "attrib":#"<desc type='cont'><p>
  When defining a tag or a container the tag <tag>attrib</tag>
  can be used to define default values of the attributes that the
@@ -13042,7 +13042,7 @@ the respective attributes below for further information.</p></desc>
  copy-of and the expression selects an attribute set then that set is
  returned as a mapping.</p>
 </attr>"
-	    ])
+            ])
 
 }),
 
@@ -14101,7 +14101,7 @@ Specify scope to test for existence.</p>
  Skips the 'number' of slashes ('/') specified, with beginning from
  the end.</p>
 </attr>",
-	       ([
+               ([
 "&_.name;":#"<desc type='entity'><p>
  Returns the name of the most recently traversed directory.</p>
 </desc>",
@@ -14109,7 +14109,7 @@ Specify scope to test for existence.</p>
 "&_.path;":#"<desc type='entity'><p>
  Returns the path to the most recently traversed directory.</p>
 </desc>"
-	       ])
+               ])
 }),
 
 //----------------------------------------------------------------------
@@ -14221,7 +14221,7 @@ Specify scope to test for existence.</p>
  over is a mapping/scope or a multiset.</p>
 </desc>"
 ])
-	      }),
+              }),
 
 //----------------------------------------------------------------------
 
@@ -14342,9 +14342,9 @@ Specify scope to test for existence.</p>
 </ex>
 </attr>",
 
-	  ([
+          ([
 
-	    "delimiter": #"<desc type='cont'><p>
+            "delimiter": #"<desc type='cont'><p>
   The content is inserted in the result except in the last iteration
   through the <tag>emit</tag> tag. It's therefore useful to insert
   stuff that only should delimit the entries, i.e. not occur before
@@ -14357,7 +14357,7 @@ Specify scope to test for existence.</p>
 </p>
 </desc>"
 
-	  ])
+          ])
        }),
 
 //----------------------------------------------------------------------

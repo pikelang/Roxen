@@ -9,7 +9,7 @@
 
 *
 {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
 }
 
 #roxen-product {  
@@ -43,12 +43,12 @@
 
 tt, pre, textarea
 {
-	font-family: monospace;
+        font-family: monospace;
 }
 
 .dimtext
 {
-	color: #aaa;
+        color: #aaa;
 }
 
 a { text-decoration: none; color: #2331d1 }
@@ -72,54 +72,54 @@ img, input {
 
 li
 {
-	/*margin-left: -1em;*/
-	/*margin-bottom: 0.3em;*/
-	list-style-image: URL(/themes/default/bullet.gif);
+        /*margin-left: -1em;*/
+        /*margin-bottom: 0.3em;*/
+        list-style-image: URL(/themes/default/bullet.gif);
 }
 
 h3
 {
-	color: #778;
-	border-bottom: 1px solid #bbc;
-	padding: 6px 0 4px 0;
+        color: #778;
+        border-bottom: 1px solid #bbc;
+        padding: 6px 0 4px 0;
 }
 
 /* For Mozilla */
 .add-module-select option
 {
-	font-family: monospace;
+        font-family: monospace;
 }
 
 /* IE */
 .add-module-select
 {
-	font-family: monospace;
+        font-family: monospace;
 }
 
 
 li.item-indicator
 {
-	/*margin-left: 0;*/
-	/*margin-bottom: 0.3em;*/
-	/*list-style-image: URL(/themes/default/bullet.gif);*/
+        /*margin-left: 0;*/
+        /*margin-bottom: 0.3em;*/
+        /*list-style-image: URL(/themes/default/bullet.gif);*/
 }
 
 li.selected-indicator
 {
-	/*margin-left: 0;*/
-	/*margin-bottom: 0.3em;*/
-	list-style-image: URL(/themes/default/sel2.gif);
+        /*margin-left: 0;*/
+        /*margin-bottom: 0.3em;*/
+        list-style-image: URL(/themes/default/sel2.gif);
 }
 
 td.selected-indicator
 {
-	/*font-size: 80%;*/
-	background-color: #e0e0e0;
+        /*font-size: 80%;*/
+        background-color: #e0e0e0;
 }
 
 div.bottom-div
 {
-	padding-right: 10px;
+        padding-right: 10px;
 }
 
 table.logitems td:first-child {
@@ -130,116 +130,116 @@ table.logitems td:first-child {
 
 ul.module-list
 {
-	font-size: 90%;
-	margin-left: 20px;
-	margin-right: 5px;
-	margin-top: 5px;
-	margin-bottom: 5px;
-	padding: 0;
+        font-size: 90%;
+        margin-left: 20px;
+        margin-right: 5px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        padding: 0;
 }
 
 table.module-list
 {
-	font-size: 90%;
-	/*margin-left: 20px;*/
-	/*margin-right: 5px;*/
-	/*margin-top: 5px;*/
-	/*margin-bottom: 5px;*/
-	/*padding: 0;*/
-	/*cursor: default;*/
+        font-size: 90%;
+        /*margin-left: 20px;*/
+        /*margin-right: 5px;*/
+        /*margin-top: 5px;*/
+        /*margin-bottom: 5px;*/
+        /*padding: 0;*/
+        /*cursor: default;*/
 }
 
 table.module-list th
 {
-	white-space: nowrap;
+        white-space: nowrap;
 }
 
 ul.module-sub-list
 {
-	font-size: 90%;
-	margin-left: 15px;
-	padding: 0;
+        font-size: 90%;
+        margin-left: 15px;
+        padding: 0;
 }
 
 table.module-sub-list
 {
-	font-size: 90%;
+        font-size: 90%;
 }
 
 table.module-sub-list-2
 {
-	font-size: 100%;
+        font-size: 100%;
 }
 
 table tr.tr-sticky {
- 	position:  -webkit-sticky;
- 	position:  -moz-sticky;
- 	position:  -ms-sticky;
- 	position:  -o-sticky;
-	position:  sticky;
+        position:  -webkit-sticky;
+        position:  -moz-sticky;
+        position:  -ms-sticky;
+        position:  -o-sticky;
+        position:  sticky;
         top:       0px;
 }
 
 table th.td-left,
 table td.td-left {
-	text-align: left;
+        text-align: left;
 }
 
 table th.td-right,
 table td.td-right {
-	text-align: right;
+        text-align: right;
 }
 
 
 table.hilite-1stcol > tr > td:first-child,
 table.hilite-1stcol > tbody > tr > td:first-child {
-	font-weight: bold;
-	white-space: nowrap;
-	padding-right:	12px;
+        font-weight: bold;
+        white-space: nowrap;
+        padding-right:	12px;
 }
 
 .module-list-item-hover,
 .module-list-item-hover a,
 .module-list-item-hover a:hover
 {
-	color: #ffffff;
-	background-color: #5f89d3;
-	text-decoration: none;
-	cursor: pointer;
+        color: #ffffff;
+        background-color: #5f89d3;
+        text-decoration: none;
+        cursor: pointer;
 }
 
 .module-sub-list-item-hover,
 .module-sub-list-item-hover a,
 .module-sub-list-item-hover a:hover
 {
-	/*font-size: 90%;*/
-	color: #ffffff;
-	background-color: #5f89d3;
-	text-decoration: none;
-	cursor: pointer;
+        /*font-size: 90%;*/
+        color: #ffffff;
+        background-color: #5f89d3;
+        text-decoration: none;
+        cursor: pointer;
 }
 
 
 /* popups */
 
 .module-popup-list {
-	font-size: 81%;
-	margin: 0;
-	padding: 2px;
-	cursor: default;
+        font-size: 81%;
+        margin: 0;
+        padding: 2px;
+        cursor: default;
 }
 
 .module-popup-list-item td {
-	/*color: #215dc6;*/
-	padding-left: 16px;
-	padding-right: 16px;
+        /*color: #215dc6;*/
+        padding-left: 16px;
+        padding-right: 16px;
 }
 
 .module-popup-list-item-hover td {
-	color: #ffffff;
-	padding-left: 16px;
-	padding-right: 16px;
-	background-color:  #5f89d3;
+        color: #ffffff;
+        padding-left: 16px;
+        padding-right: 16px;
+        background-color:  #5f89d3;
 }
 
 

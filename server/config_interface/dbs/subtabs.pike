@@ -53,7 +53,7 @@ string parse( RequestID id )
     if( page[2] )
     {
       if( !config_perm( page[2] ) )
-	continue;
+        continue;
     }
 //     if( page[3] )
 //     {

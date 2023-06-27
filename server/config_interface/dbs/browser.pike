@@ -56,9 +56,9 @@ mixed change_group( string db, RequestID id )
       "<b>"+_(504,"New group")+":</b> <select name='group'>";
     foreach( DBManager.list_groups(), string g )
       if( g == DBManager.db_group( db ) )
-	res += "<option selected value='"+g+"'>"+DBManager.get_group( g )->lname;
+        res += "<option selected value='"+g+"'>"+DBManager.get_group( g )->lname;
       else
-	res += "<option value='"+g+"'>"+DBManager.get_group( g )->lname;
+        res += "<option value='"+g+"'>"+DBManager.get_group( g )->lname;
     return res + "</select><submit-gbutton2 name='ok'>"+(201,"OK")+
       "</submit-gbutton2>";
   }
@@ -76,7 +76,7 @@ mixed change_charset( string db, RequestID id )
       "<h2>"+sprintf(_(539,"Changing default character set for %s"), db )+
       "</h2>"+
       (old_charset?("<b>"+_(540, "Old default character set")+":</b> " +
-		    old_charset+"<br />"):"")+
+                    old_charset+"<br />"):"")+
       "<b>"+_(541,"New default character set")+":</b> "
       "<input type='string' name='default_charset' value='" +
       Roxen.html_encode_string(old_charset||"") +"' />";
@@ -94,8 +94,8 @@ mixed change_schedule( string db, RequestID id )
   {
     string old_schedule, old_schedule_id;
     array q = sql->query("SELECT schedule_id, schedule FROM dbs, db_schedules "
-			 " WHERE db_schedules.id = dbs.schedule_id "
-			 "   AND dbs.name = %s", db);
+                         " WHERE db_schedules.id = dbs.schedule_id "
+                         "   AND dbs.name = %s", db);
     if (sizeof(q)) {
       old_schedule = q[0]->schedule;
       old_schedule_id = q[0]->schedule_id;
@@ -105,28 +105,28 @@ mixed change_schedule( string db, RequestID id )
       "<h2>"+sprintf(_(1110,"Changing backup schedule for %s"), db )+
       "</h2>"+
       (old_schedule?("<b>"+_(1111, "Old backup schedule")+":</b> " +
-		     Roxen.html_encode_string(old_schedule)+"<br />"):"")+
+                     Roxen.html_encode_string(old_schedule)+"<br />"):"")+
       "<b>"+_(1112,"New backup schedule")+":</b> "
       "<default name='backup_schedule' value='" + old_schedule_id + "'>"
       "<select name='backup_schedule'>";
     foreach(sql->query("SELECT schedule, id FROM db_schedules "
-		       " ORDER BY schedule"), mapping(string:string) schedule) {
+                       " ORDER BY schedule"), mapping(string:string) schedule) {
       res += sprintf("<option value='%s'>%s</option>",
-		     schedule->id,
-		     Roxen.html_encode_string(schedule->schedule));
+                     schedule->id,
+                     Roxen.html_encode_string(schedule->schedule));
     }
     res += sprintf("<option value='0'>%s</option>",
-		   Roxen.html_encode_string(_(1113, "None"))) +
+                   Roxen.html_encode_string(_(1113, "None"))) +
       "</select></default>";
     return res + "<submit-gbutton2 name='ok'>"+(201,"OK")+
       "</submit-gbutton2>";
   }
   if (id->variables->backup_schedule == "0") {
     sql->query("UPDATE dbs SET schedule_id = NULL "
-	       " WHERE name = %s", db);
+               " WHERE name = %s", db);
   } else {
     sql->query("UPDATE dbs SET schedule_id = %d "
-	       " WHERE name = %s", (int)id->variables->backup_schedule, db);
+               " WHERE name = %s", (int)id->variables->backup_schedule, db);
   }
   return 0;
 }
@@ -177,22 +177,22 @@ mixed repair_db( string db, RequestID id )
       float t2;
 
       if ( mixed e = catch { q = query( "REPAIR TABLE `" + db + "`.`" + m->Name + "`" ); } ) {
-	result = "<font color='red'>Error: " + describe_error(e) + "</font>";
+        result = "<font color='red'>Error: " + describe_error(e) + "</font>";
       } else {
-	t2 = (time(t)-t1);
-	t3 += t2;
+        t2 = (time(t)-t1);
+        t3 += t2;
 
-	if (q->Msg_text = "OK")
-	  result = "<font color='green'>OK</font>";
-	else
-	  result = "<font color='red'>Failed: " + q->Msg_text + "</font>";
+        if (q->Msg_text = "OK")
+          result = "<font color='green'>OK</font>";
+        else
+          result = "<font color='red'>Failed: " + q->Msg_text + "</font>";
       }
 
       res += "<tr>" +
-	"<td><a href='browser.pike?db=" + db + "&amp;&usr.set-wiz-id;'>" + db + "</a>.<a href='browser.pike?db=" + db + "&amp;table=" + m->Name + "&amp;&usr.set-wiz-id;'>" + m->Name + "</a></td>" +
-	"<td><b>" + result + "</b></td>" +
-	"<td>" + t2 + " sec</td>" +
-	"</tr>";
+        "<td><a href='browser.pike?db=" + db + "&amp;&usr.set-wiz-id;'>" + db + "</a>.<a href='browser.pike?db=" + db + "&amp;table=" + m->Name + "&amp;&usr.set-wiz-id;'>" + m->Name + "</a></td>" +
+        "<td><b>" + result + "</b></td>" +
+        "<td>" + t2 + " sec</td>" +
+        "</tr>";
     }
   }
   res += "<tr><td colspan='2'>Total:</td><td>" + t3 + " sec</td></tr></tbody></table><br/>";
@@ -246,22 +246,22 @@ mixed optimize_db( string db, RequestID id )
       float t2;
 
       if ( mixed e = catch { q = query( "OPTIMIZE TABLE `" + db + "`.`" + m->Name + "`" ); } ) {
-	result = "<font color='red'>Error: " + describe_error(e) + "</font>";
+        result = "<font color='red'>Error: " + describe_error(e) + "</font>";
       } else {
-	t2 = (time(t)-t1);
-	t3 += t2;
+        t2 = (time(t)-t1);
+        t3 += t2;
 
-	if (q->Msg_text = "OK")
-	  result = "<font color='green'>OK</font>";
-	else
-	  result = "<font color='red'>Failed: " + q->Msg_text + "</font>";
+        if (q->Msg_text = "OK")
+          result = "<font color='green'>OK</font>";
+        else
+          result = "<font color='red'>Failed: " + q->Msg_text + "</font>";
       }
 
       res += "<tr>" +
-	"<td><a href='browser.pike?db=" + db + "&amp;&usr.set-wiz-id;'>" + db + "</a>.<a href='browser.pike?db=" + db + "&amp;table=" + m->Name + "&amp;&usr.set-wiz-id;'>" + m->Name + "</a></td>" +
-	"<td><b>" + result + "</b></td>" +
-	"<td>" + t2 + " sec</td>" +
-	"</tr>";
+        "<td><a href='browser.pike?db=" + db + "&amp;&usr.set-wiz-id;'>" + db + "</a>.<a href='browser.pike?db=" + db + "&amp;table=" + m->Name + "&amp;&usr.set-wiz-id;'>" + m->Name + "</a></td>" +
+        "<td><b>" + result + "</b></td>" +
+        "<td>" + t2 + " sec</td>" +
+        "</tr>";
     }
   }
   res += "<tr><td colspan='2'>Total:</td><td>" + t3 + " sec</td></tr></table><br/>";
@@ -269,7 +269,7 @@ mixed optimize_db( string db, RequestID id )
   return res;}
 
 mixed query( mixed ... args ) {
-	return connect_to_my_mysql( 0, "roxen" )->query( @args );
+        return connect_to_my_mysql( 0, "roxen" )->query( @args );
 }
 
 mixed backup_db( string db, RequestID id )
@@ -278,10 +278,10 @@ mixed backup_db( string db, RequestID id )
   {
     if (roxenloader->parse_mysql_location()->mysqldump) {
       DBManager.dump
-	(db, id->variables->dir == "auto" ? 0 : id->variables->dir);
+        (db, id->variables->dir == "auto" ? 0 : id->variables->dir);
     } else {
       DBManager.backup
-	(db, id->variables->dir == "auto" ? 0 : id->variables->dir);
+        (db, id->variables->dir == "auto" ? 0 : id->variables->dir);
     }
     return 0;
   }
@@ -291,7 +291,7 @@ mixed backup_db( string db, RequestID id )
 The directory the backup will be saved in. If you chose auto, Roxen
 will generate a directory name that includes the database name and
 today's date in <tt>$VARDIR/backup</tt> (%s)."),
-		     combine_path (getcwd(), roxen_path ("$VARDIR/backup"))) +
+                     combine_path (getcwd(), roxen_path ("$VARDIR/backup"))) +
     "</i>"
     "<table width='100%'><tr><td valign=top>"
     "<input type=hidden name=action value='&form.action;' />"
@@ -327,24 +327,24 @@ mixed configure_ext_db_con( string db, RequestID id )
       switch( id->variables->name )
       {
        case "":
-	 warning =  "<font color='&usr.warncolor;'>"+
-	   _(1146,"Please specify a name for the database connection.")+
-	   "</font>";
+         warning =  "<font color='&usr.warncolor;'>"+
+           _(1146,"Please specify a name for the database connection.")+
+           "</font>";
          break;
        case "mysql":
        case "roxen":
          warning = sprintf("<font color='&usr.warncolor;'>"+
                          _(1147,"<tt>%s</tt> is an internal database, used by Roxen. "
-			   "Please select another name.")+
+                           "Please select another name.")+
                          "</font>", id->variables->name );
          break;
-	default:
-	 if( Roxen.is_mysql_keyword( id->variables->name ) )
-	   warning = sprintf("<font color='&usr.warncolor;'>"+
-			     _(1148,"<tt>%s</tt> is a MySQL keyword, used by MySQL. "
-			       "Please select another name.")+
-			     "</font>", id->variables->name );
-	 catch {
+        default:
+         if( Roxen.is_mysql_keyword( id->variables->name ) )
+           warning = sprintf("<font color='&usr.warncolor;'>"+
+                             _(1148,"<tt>%s</tt> is a MySQL keyword, used by MySQL. "
+                               "Please select another name.")+
+                             "</font>", id->variables->name );
+         catch {
            // Check name first since DBManager.get_db_url_info() ignores
            // trailing spaces in db name.
            if( !(DBManager.valid_db_name( id->variables->name )) )
@@ -365,8 +365,8 @@ mixed configure_ext_db_con( string db, RequestID id )
                                  "already exists. Please select another name.")+
                                "</font>", id->variables->name );
            }
-	 };
-	 break;
+         };
+         break;
       }
     if( !strlen( warning ) )
     {
@@ -433,14 +433,14 @@ mixed delete_db( string db, RequestID id )
   string msg;
   if( DBManager.is_internal( db ) )
     msg = (string)_(361, "Are you sure you want to delete the database %s "
-		    "and the data?");
+                    "and the data?");
   else
     msg = (string)_(362,"Are you sure you want to delete the database %s?"
-		    " No data will be deleted from the remote database.");
+                    " No data will be deleted from the remote database.");
     
   VERIFY(msg);
   report_notice( _(424,"The database %s was deleted by %s")+"\n",
-		 db, id->misc->authenticated_user->name() );
+                 db, id->misc->authenticated_user->name() );
   DBManager.drop_db( db );
   return Roxen.http_redirect( "/dbs/", id );
 }
@@ -462,7 +462,7 @@ mixed clear_db( string db, RequestID id )
     table_cnt = sizeof(remaining_tables);
     remaining_tables = DBManager.db_tables( db );
   } while (sizeof(remaining_tables) &&
-	   (table_cnt > sizeof(remaining_tables)));
+           (table_cnt > sizeof(remaining_tables)));
   if (sizeof(remaining_tables)) {
     // We've failed to drop some tables, try forcing an error.
     sq->query( "DROP TABLE " + remaining_tables[0]);
@@ -516,14 +516,14 @@ string format_decode_value( string what )
   if( (what[4] & 15) == 5 || (what[4] & 15) == 3 )
     return Roxen.html_encode_string(
       sprintf("<"+_(233,"bytecode data")+" ("+
-	      _(505,"%d bytes")+")>", strlen(what)));
+              _(505,"%d bytes")+")>", strlen(what)));
   
   catch
   {
     return
       "<pre>"+
       Roxen.html_encode_string(
-	String.trim_all_whites(sprintf("%O",decode_value(what))))+
+        String.trim_all_whites(sprintf("%O",decode_value(what))))+
       "</pre>";
   };
   return Roxen.html_encode_string( what );
@@ -585,12 +585,12 @@ string format_table_owner (mapping(string:string) mod_info, void|int skip_conf)
   if (!skip_conf) {
     if (c) {
       mn = "<a href='../sites/site.html/" +
-	Roxen.http_encode_url (mod_info->conf) + "/'>" +
-	Roxen.html_encode_string (c->query_name()) + "</a>";
+        Roxen.http_encode_url (mod_info->conf) + "/'>" +
+        Roxen.html_encode_string (c->query_name()) + "</a>";
     }
     else
       mn = Roxen.html_encode_string (
-	sprintf ((string) _(542, "the deleted site %O"), mod_info->conf));
+        sprintf ((string) _(542, "the deleted site %O"), mod_info->conf));
   }
 
   if( m ) {
@@ -606,13 +606,13 @@ string format_table_owner (mapping(string:string) mod_info, void|int skip_conf)
   else if( i ) {
     if (mn)
       mn = sprintf (
-	(string) _(544, "the deleted module %s in %s"),
-	Roxen.html_encode_string (sprintf ("%O", (string) i->get_name())),
-	mn);
+        (string) _(544, "the deleted module %s in %s"),
+        Roxen.html_encode_string (sprintf ("%O", (string) i->get_name())),
+        mn);
     else
       mn = sprintf (
-	(string) _(545, "the deleted module %s"),
-	Roxen.html_encode_string (sprintf ("%O", (string) i->get_name())));
+        (string) _(545, "the deleted module %s"),
+        Roxen.html_encode_string (sprintf ("%O", (string) i->get_name())));
   }
 
   return mn;
@@ -754,13 +754,13 @@ mapping|string parse( RequestID id )
     array sel_t_columns = ({});
     if( !(<0, "">)[id->variables->table] ) {
       if (mixed err = catch {
-	  sel_t_columns = DBManager.db_table_fields( id->variables->db,
-						     id->variables->table )
-	    ->name;
-	}) {
-	report_debug ("Error listing fields for table %s.%s: %s",
-		      id->variables->db, id->variables->table,
-		      describe_error (err));
+          sel_t_columns = DBManager.db_table_fields( id->variables->db,
+                                                     id->variables->table )
+            ->name;
+        }) {
+        report_debug ("Error listing fields for table %s.%s: %s",
+                      id->variables->db, id->variables->table,
+                      describe_error (err));
       }
     }
 
@@ -770,19 +770,19 @@ mapping|string parse( RequestID id )
     if (DBManager.is_mysql (id->variables->db))
       // FIXME: Ought to be generalized and put into Sql.pmod.
       quote_name = lambda (string s) {
-		     if (db && db->master_sql->is_keyword (s))
-		       return "`" + s + "`";
-		     return s;
-		   };
+                     if (db && db->master_sql->is_keyword (s))
+                       return "`" + s + "`";
+                     return s;
+                   };
 
     if( !id->variables["reset_q.x"] &&
-	h[id->variables->db+"."+id->variables->table] )
+        h[id->variables->db+"."+id->variables->table] )
       id->variables->query = h[id->variables->db+"."+id->variables->table];
     else if( !(<0, "">)[id->variables->table] )
       id->variables->query = "SELECT "+
-	(sizeof (sel_t_columns) ?
-	 map (sel_t_columns, quote_name) *", " : "*") +
-	" FROM "+ quote_name (id->variables->table);
+        (sizeof (sel_t_columns) ?
+         map (sel_t_columns, quote_name) *", " : "*") +
+        " FROM "+ quote_name (id->variables->table);
     else if( DBManager.is_mysql( id->variables->db ) )
       id->variables->query = "SHOW TABLES";
     else
@@ -805,7 +805,7 @@ mapping|string parse( RequestID id )
       q = String.trim_all_whites (q);
       if (q == "--") break;
       if (q != "")
-	query = (query == "" ? q : query + "\n" + q);
+        query = (query == "" ? q : query + "\n" + q);
     }
 
     foreach( (query/";\n")-({""}); int i; string q )
@@ -814,191 +814,191 @@ mapping|string parse( RequestID id )
 
       int h = gethrtime();
       if (mixed err = catch (big_q = db->big_query( q ))) {
-	qres += "<p><font color='&usr.warncolor;'>"+
-	  sprintf((string)_(1062,"Error running query %d: %s"), i + 1,
-		  replace (Roxen.html_encode_string (
-			     String.trim_all_whites (describe_error(err))),
-			   "\n", "<br/>\n"))+
-	  "</font></p>\n";
-	continue;
+        qres += "<p><font color='&usr.warncolor;'>"+
+          sprintf((string)_(1062,"Error running query %d: %s"), i + 1,
+                  replace (Roxen.html_encode_string (
+                             String.trim_all_whites (describe_error(err))),
+                           "\n", "<br/>\n"))+
+          "</font></p>\n";
+        continue;
       }
       float qtime = (gethrtime()-h)/1000000.0;
 
       if (!big_q)
-	// Query had no result or was empty/commented out.
-	continue;
+        // Query had no result or was empty/commented out.
+        continue;
 
       do {
-	int qrows;
-	qres += "<p>\n"
-	  "<table id='res'><tr class='tr-sticky'>";
-	// FIXME: Using id='res' above is wrong, as the tag
-	//        can be generated multiple times in the same
-	//        document. See also similar code further below.
-	multiset right_columns = (<>);
-	int column;
+        int qrows;
+        qres += "<p>\n"
+          "<table id='res'><tr class='tr-sticky'>";
+        // FIXME: Using id='res' above is wrong, as the tag
+        //        can be generated multiple times in the same
+        //        document. See also similar code further below.
+        multiset right_columns = (<>);
+        int column;
 
-	array(string) col_types = ({});
-	array(string) col_names = ({});
+        array(string) col_types = ({});
+        array(string) col_names = ({});
 
-	foreach( big_q->fetch_fields(), mapping field )
-	{
-	  switch( field->type  )
-	  {
-	  case "char":	// Actually a TINYINT.
-	  case "tiny integer":
-	  case "short":
-	  case "int":
-	  case "integer":
-	  case "long":
-	  case "long integer":
-	  case "int24":
-	  case "longlong":
-	    right_columns[column]=1;
-	    qres += "<th class='num'>";
-	    col_types += ({"int"});
-	    break;
-	  case "real":
-	  case "float":
-	  case "double":
-	    right_columns[column]=1;
-	    qres += "<th class='num'>";
-	    col_types += ({"float"});
-	    break;
-	  case "decimal":
-	  case "numeric":
-	    qres += "<th class='num'>";
-	    col_types += ({"string"});
-	    break;
-	  case "bit":
-	  default:
-	    qres += "<th>";
-	    col_types += ({"string"});
-	  }
-	  qres += Roxen.html_encode_string (field->name) + "</th>\n";
-	  col_names += ({ field->name });
-	  column++;
-	}
-	qres += "</tr>";
+        foreach( big_q->fetch_fields(), mapping field )
+        {
+          switch( field->type  )
+          {
+          case "char":	// Actually a TINYINT.
+          case "tiny integer":
+          case "short":
+          case "int":
+          case "integer":
+          case "long":
+          case "long integer":
+          case "int24":
+          case "longlong":
+            right_columns[column]=1;
+            qres += "<th class='num'>";
+            col_types += ({"int"});
+            break;
+          case "real":
+          case "float":
+          case "double":
+            right_columns[column]=1;
+            qres += "<th class='num'>";
+            col_types += ({"float"});
+            break;
+          case "decimal":
+          case "numeric":
+            qres += "<th class='num'>";
+            col_types += ({"string"});
+            break;
+          case "bit":
+          default:
+            qres += "<th>";
+            col_types += ({"string"});
+          }
+          qres += Roxen.html_encode_string (field->name) + "</th>\n";
+          col_names += ({ field->name });
+          column++;
+        }
+        qres += "</tr>";
 
-	mapping(string:string) mod_info =
-	  DBManager.module_table_info (id->variables->db, "");
+        mapping(string:string) mod_info =
+          DBManager.module_table_info (id->variables->db, "");
 
-	Configuration c = !(<0, "">)[mod_info->conf] &&
-	  roxen.find_configuration (mod_info->conf);
-	RoxenModule m = c && !(<0, "">)[mod_info->module] &&
-	  c->find_module (mod_info->module);
+        Configuration c = !(<0, "">)[mod_info->conf] &&
+          roxen.find_configuration (mod_info->conf);
+        RoxenModule m = c && !(<0, "">)[mod_info->module] &&
+          c->find_module (mod_info->module);
 
-	// Find any column formatter callback in the DB's owner
-	// module. See function prototype in base_server/module.pike.
-	function(string,string,string,array(string),array(string),array(string),
-		 RequestID:string) format_col_cb =
-	  m && m->format_db_browser_value;
-	array(int) formatted_total_size = allocate(sizeof(col_names), 0);
-	if (id->variables->exp_fields == "disabled")
-	  format_col_cb = 0;
+        // Find any column formatter callback in the DB's owner
+        // module. See function prototype in base_server/module.pike.
+        function(string,string,string,array(string),array(string),array(string),
+                 RequestID:string) format_col_cb =
+          m && m->format_db_browser_value;
+        array(int) formatted_total_size = allocate(sizeof(col_names), 0);
+        if (id->variables->exp_fields == "disabled")
+          format_col_cb = 0;
       
-	while( array q = big_q->fetch_row() )
-	{
-	  qrows++;
-	  qres += "<tr>";
-	  for( int i = 0; i<sizeof(q); i++ ) {
-	    qres += right_columns[i] ? "<td class='num'>" : "<td>";
-	    if( !q[i] )
-	      qres += "<i>NULL</i>";
-	    else if( intp( q[i] ) || col_types[i] == "int" )
-	      qres += (string) (int) q[i];
-	    else if( floatp( q[i] ) || col_types[i] == "float" )
-	      qres += (string) (float) q[i];
-	    else if( is_image( q[i] ) )
-	      qres +=
-		"<img src='browser.pike?image=" + store_image( q[i] ) +
-		"&amp;&usr.set-wiz-id;' />";
-	    else {
-	      mixed tmp = q[i];
-	      int got_result;
-	      if (format_col_cb) {
-		//  Check for excessive amount of formatted data
-		if (formatted_total_size[i] > MAX_TOTAL_FORMATTED_SIZE) {
-		  qres +=
-		    "<span class='warn_exp'>" +
-		    "Total formatted data length exceeded &ndash; limit your query."
-		    "</span>";
-		  got_result = 1;
-		} else if (mixed formatted =
-			   format_col_cb (id->variables->db,
-					  id->variables->table,
-					  col_names[i], col_names,
-					  col_types, q, id)) {
-		  int formatted_len = sizeof(formatted);
-		  if ((formatted_len >= MAX_FIELD_FORMATTED_SIZE) &&
-		      (id->variables->exp_fields == "auto")) {
-		    //  This field alone is too big to display
-		    qres +=
-		      "<span class='warn_exp'>" +
-		      "Skipping " + (formatted_len / 1024) + "K formatted data."
-		      "</span>";
-		    got_result = 1;
-		  } else {
-		    formatted_total_size[i] += formatted_len;
-		    qres += formatted;
-		    got_result = 1;
-		  }
-		}
-	      }
+        while( array q = big_q->fetch_row() )
+        {
+          qrows++;
+          qres += "<tr>";
+          for( int i = 0; i<sizeof(q); i++ ) {
+            qres += right_columns[i] ? "<td class='num'>" : "<td>";
+            if( !q[i] )
+              qres += "<i>NULL</i>";
+            else if( intp( q[i] ) || col_types[i] == "int" )
+              qres += (string) (int) q[i];
+            else if( floatp( q[i] ) || col_types[i] == "float" )
+              qres += (string) (float) q[i];
+            else if( is_image( q[i] ) )
+              qres +=
+                "<img src='browser.pike?image=" + store_image( q[i] ) +
+                "&amp;&usr.set-wiz-id;' />";
+            else {
+              mixed tmp = q[i];
+              int got_result;
+              if (format_col_cb) {
+                //  Check for excessive amount of formatted data
+                if (formatted_total_size[i] > MAX_TOTAL_FORMATTED_SIZE) {
+                  qres +=
+                    "<span class='warn_exp'>" +
+                    "Total formatted data length exceeded &ndash; limit your query."
+                    "</span>";
+                  got_result = 1;
+                } else if (mixed formatted =
+                           format_col_cb (id->variables->db,
+                                          id->variables->table,
+                                          col_names[i], col_names,
+                                          col_types, q, id)) {
+                  int formatted_len = sizeof(formatted);
+                  if ((formatted_len >= MAX_FIELD_FORMATTED_SIZE) &&
+                      (id->variables->exp_fields == "auto")) {
+                    //  This field alone is too big to display
+                    qres +=
+                      "<span class='warn_exp'>" +
+                      "Skipping " + (formatted_len / 1024) + "K formatted data."
+                      "</span>";
+                    got_result = 1;
+                  } else {
+                    formatted_total_size[i] += formatted_len;
+                    qres += formatted;
+                    got_result = 1;
+                  }
+                }
+              }
 
-	      if (!got_result) {
-		if (is_deflated (tmp)) {
-		  // is_deflated _may_ give false positives, hence the catch.
-		  catch {
-		    tmp = Gz.inflate()->inflate (tmp);
-		  };
-		}
+              if (!got_result) {
+                if (is_deflated (tmp)) {
+                  // is_deflated _may_ give false positives, hence the catch.
+                  catch {
+                    tmp = Gz.inflate()->inflate (tmp);
+                  };
+                }
 
-		if( is_encode_value( tmp ) )
-		  qres += format_decode_value(tmp);
-		else if (String.width (tmp) > 8) {
-		  // Let wide chars skip past the %q quoting, because
-		  // it'll quote them to \u escapes otherwise.
-		  string q = "";
-		  int s;
-		  foreach (tmp; int i; int c)
-		    if (c >= 256) {
-		      if (s < i) q += sprintf ("%q", tmp[s..i - 1])[1..<1];
-		      q += sprintf ("%c", c);
-		      s = i + 1;
-		    }
-		  q += sprintf ("%q", tmp[s..])[1..<1];
-		  qres += Roxen.html_encode_string (q);
-		}
-		else
-		  qres += Roxen.html_encode_string(sprintf("%q", tmp)[1..<1]);
-	      }
-	    }
-	    qres += "</td>";
-	  }
-	  qres += "</tr>\n";
-	}
+                if( is_encode_value( tmp ) )
+                  qres += format_decode_value(tmp);
+                else if (String.width (tmp) > 8) {
+                  // Let wide chars skip past the %q quoting, because
+                  // it'll quote them to \u escapes otherwise.
+                  string q = "";
+                  int s;
+                  foreach (tmp; int i; int c)
+                    if (c >= 256) {
+                      if (s < i) q += sprintf ("%q", tmp[s..i - 1])[1..<1];
+                      q += sprintf ("%c", c);
+                      s = i + 1;
+                    }
+                  q += sprintf ("%q", tmp[s..])[1..<1];
+                  qres += Roxen.html_encode_string (q);
+                }
+                else
+                  qres += Roxen.html_encode_string(sprintf("%q", tmp)[1..<1]);
+              }
+            }
+            qres += "</td>";
+          }
+          qres += "</tr>\n";
+        }
 
-	qres += "</table>"+
-	  sprintf( _(426,"Query took %[0].3fs, %[1]d rows in the reply")+
-		   "\n</p>\n", qtime, qrows);
+        qres += "</table>"+
+          sprintf( _(426,"Query took %[0].3fs, %[1]d rows in the reply")+
+                   "\n</p>\n", qtime, qrows);
 
-	if (!big_q->next_result) break;
-	h = gethrtime();
-	if (mixed err = catch (big_q = big_q->next_result())) {
-	  qres += "<p><font color='&usr.warncolor;'>"+
-	    sprintf((string)_(1062,"Error running query %d: %s"), i + 1,
-		    replace (Roxen.html_encode_string (
-			       String.trim_all_whites (describe_error(err))),
-			     "\n", "<br/>\n"))+
-	    "</font></p>\n";
-	  break;
-	}
-	qtime = (gethrtime()-h)/1000000.0;
-	if (!big_q) break;
+        if (!big_q->next_result) break;
+        h = gethrtime();
+        if (mixed err = catch (big_q = big_q->next_result())) {
+          qres += "<p><font color='&usr.warncolor;'>"+
+            sprintf((string)_(1062,"Error running query %d: %s"), i + 1,
+                    replace (Roxen.html_encode_string (
+                               String.trim_all_whites (describe_error(err))),
+                             "\n", "<br/>\n"))+
+            "</font></p>\n";
+          break;
+        }
+        qtime = (gethrtime()-h)/1000000.0;
+        if (!big_q) break;
 
-	// More results available.
+        // More results available.
       } while(1);
     }
   }
@@ -1070,22 +1070,22 @@ mapping|string parse( RequestID id )
 
   res +="<li>" +
     sprintf( (string)
-	     _(506,"Member of the %s database group."),
-	     "<a href='edit_group.pike?group="+
-	     Roxen.http_encode_url(DBManager.db_group( id->variables->db ))+
-	     "&amp;&usr.set-wiz-id;'>" +
-	     DBManager.get_group( DBManager.db_group( id->variables->db ) )
-	     ->lname +
-	     "</a>")
+             _(506,"Member of the %s database group."),
+             "<a href='edit_group.pike?group="+
+             Roxen.http_encode_url(DBManager.db_group( id->variables->db ))+
+             "&amp;&usr.set-wiz-id;'>" +
+             DBManager.get_group( DBManager.db_group( id->variables->db ) )
+             ->lname +
+             "</a>")
     + "</li>";
 
   string schedule = DBManager.db_schedule(id->variables->db);
   if (schedule) {
     res += "<li>" +
       sprintf( (string)_(1114, "Backuped via the %s backup schedule."),
-	       "<a href='schedules.html'>" +
-	       Roxen.html_encode_string(schedule) +
-	       "</a>") +
+               "<a href='schedules.html'>" +
+               Roxen.html_encode_string(schedule) +
+               "</a>") +
       "</li>";
   } else {
     res += "<li><b>" +
@@ -1105,60 +1105,60 @@ mapping|string parse( RequestID id )
     string deep_table_info( string table )
     {
       array(mapping(string:mixed)) data =
-	DBManager.db_table_fields( id->variables->db, table );
+        DBManager.db_table_fields( id->variables->db, table );
       if( !data )
-	return sprintf((string)_(507,"Cannot list fields in %s databases"),
-		       DBManager.db_driver(id->variables->db) );
+        return sprintf((string)_(507,"Cannot list fields in %s databases"),
+                       DBManager.db_driver(id->variables->db) );
 
       multiset(string) props = (<>);
       foreach (data, mapping(string:mixed) r)
-	foreach (r; string prop;)
-	  props[prop] = 1;
+        foreach (r; string prop;)
+          props[prop] = 1;
       props->name = 0;		// Always listed first.
       props->type = 0;		// Always listed second.
       props->table = 0;		// Just our own table - ignored.
       array(string) sort_props = sort (indices (props));
 
       string res = "<table id='tbl-details'>"
-	"<tr>"
-	"<th>Column</th>"
-	"<th>Type</th>" +
-	map (sort_props,
-	     lambda (string prop) {
-	       return "<th>" + Roxen.html_encode_string (
-		 String.capitalize (prop)) + "</th>";
-	     }) * "" +
-	"</tr>\n";
+        "<tr>"
+        "<th>Column</th>"
+        "<th>Type</th>" +
+        map (sort_props,
+             lambda (string prop) {
+               return "<th>" + Roxen.html_encode_string (
+                 String.capitalize (prop)) + "</th>";
+             }) * "" +
+        "</tr>\n";
 
       foreach( data, mapping(string:mixed) r )
       {
-	res += "<tr>"
-	  "<td>" + Roxen.html_encode_string (r->name) + "</td>"
-	  "<td>" + Roxen.html_encode_string (r->type) + "</td>";
+        res += "<tr>"
+          "<td>" + Roxen.html_encode_string (r->name) + "</td>"
+          "<td>" + Roxen.html_encode_string (r->type) + "</td>";
 
-	foreach (sort_props, string prop) {
-	  mixed val = r[prop];
-	  if (zero_type (val))
-	    res += "<td></td>";
-	  else if (intp (val) || floatp (val))
-	    res += "<td class='num'>" + val + "</td>";
-	  else if (stringp (val))
-	    res += "<td>" + Roxen.html_encode_string (val) + "</td>";
-	  else if (arrayp (val) &&
-		   !catch (val = (array(string)) val))
-	    res += "<td>" + Roxen.html_encode_string (val * ", ") + "</td>";
-	  else if (multisetp (val) &&
-		   !catch (val = (array(string)) indices (val)))
-	    res += "<td>" + Roxen.html_encode_string (val * ", ") + "</td>";
-	  else if (objectp (val))
-	    res += "<td>" + Roxen.html_encode_string (sprintf ("%O", val)) +
-	      "</td>";
-	  else
-	    res += "<td>" + Roxen.html_encode_string (sprintf ("<%t>", val)) +
-	      "</td>";
-	}
+        foreach (sort_props, string prop) {
+          mixed val = r[prop];
+          if (zero_type (val))
+            res += "<td></td>";
+          else if (intp (val) || floatp (val))
+            res += "<td class='num'>" + val + "</td>";
+          else if (stringp (val))
+            res += "<td>" + Roxen.html_encode_string (val) + "</td>";
+          else if (arrayp (val) &&
+                   !catch (val = (array(string)) val))
+            res += "<td>" + Roxen.html_encode_string (val * ", ") + "</td>";
+          else if (multisetp (val) &&
+                   !catch (val = (array(string)) indices (val)))
+            res += "<td>" + Roxen.html_encode_string (val * ", ") + "</td>";
+          else if (objectp (val))
+            res += "<td>" + Roxen.html_encode_string (sprintf ("%O", val)) +
+              "</td>";
+          else
+            res += "<td>" + Roxen.html_encode_string (sprintf ("<%t>", val)) +
+              "</td>";
+        }
 
-	res += "</tr>\n";
+        res += "</tr>\n";
       }
 
       return res+ "</table>";
@@ -1167,105 +1167,105 @@ mapping|string parse( RequestID id )
     void add_table_info( string table, mapping tbi )
     {
       mapping(string:string) tbl_info =
-	DBManager.module_table_info (id->variables->db, table);
+        DBManager.module_table_info (id->variables->db, table);
 
       int deep_info = id->variables->table == table;
 
       string res =
-	"<tr" +
-	(tbl_info->inhibit_backups == "yes"?
-	 " bgcolor='&usr.fade1;' fgcolor='&usr.top-fgcolor;'":"") +
-	">"
-	"<td style='white-space: nowrap'>"
-	"<a href='browser.pike?sort=&form.sort:http;&amp;"
-	"db=&form.db:http;&amp;&usr.set-wiz-id;" +
-	(deep_info ? "" : "&amp;table="+Roxen.http_encode_url(table)) +"'>"+
-	"<cimg style='vertical-align: -2px' border='0' format='gif'"
-	" src='&usr.table-small;' alt='' max-height='12'/> " +
-	table+"</a></td>"
-	"<td class='num'>"+
-	(!tbi || zero_type (tbi->rows) ? "" : tbi->rows) + "</td>"
-	"<td class='num'>" +
-	(!tbi || zero_type (tbi->data_length) ? "" :
-	 sprintf ("%d KiB",
-		  ((int)tbi->data_length+(int)tbi->index_length) / 1024)) +
-	"</td>";
+        "<tr" +
+        (tbl_info->inhibit_backups == "yes"?
+         " bgcolor='&usr.fade1;' fgcolor='&usr.top-fgcolor;'":"") +
+        ">"
+        "<td style='white-space: nowrap'>"
+        "<a href='browser.pike?sort=&form.sort:http;&amp;"
+        "db=&form.db:http;&amp;&usr.set-wiz-id;" +
+        (deep_info ? "" : "&amp;table="+Roxen.http_encode_url(table)) +"'>"+
+        "<cimg style='vertical-align: -2px' border='0' format='gif'"
+        " src='&usr.table-small;' alt='' max-height='12'/> " +
+        table+"</a></td>"
+        "<td class='num'>"+
+        (!tbi || zero_type (tbi->rows) ? "" : tbi->rows) + "</td>"
+        "<td class='num'>" +
+        (!tbi || zero_type (tbi->data_length) ? "" :
+         sprintf ("%d KiB",
+                  ((int)tbi->data_length+(int)tbi->index_length) / 1024)) +
+        "</td>";
 
       string owner;
       if ((db_info->conf || "") != (tbl_info->conf || ""))
-	owner = format_table_owner (tbl_info, 0);
+        owner = format_table_owner (tbl_info, 0);
       else if ((db_info->module || "") != (tbl_info->module || ""))
-	owner = format_table_owner (tbl_info, 1);
+        owner = format_table_owner (tbl_info, 1);
       res += "<td>";
       if (owner) {
-	res += owner;
-	got_owner_column = 1;
+        res += owner;
+        got_owner_column = 1;
       }
       res += "</td>";
 
       if (deep_info) {
-	res += "</tr>\n<tr class='tbl-details'><td colspan='5'>";
+        res += "</tr>\n<tr class='tbl-details'><td colspan='5'>";
 
-	if (tbl_info->comment)
-	  sscanf( tbl_info->comment, "%s\0%s",
-		  tbl_info->tbl, tbl_info->comment );
+        if (tbl_info->comment)
+          sscanf( tbl_info->comment, "%s\0%s",
+                  tbl_info->tbl, tbl_info->comment );
 
-	if( tbl_info->tbl && tbl_info->tbl != table)
-	  if( tbl_info->tbl != (string)0 )
-	    res +=
-	      sprintf((string) _(429,"The table is known as %O "
-				 "in the module."), tbl_info->tbl ) + "<br/>\n";
-	  else
-	    res +=
-	      sprintf((string) _(430,"The table is an anonymous table defined "
-				 "by the module."), tbl_info->tbl ) + "<br/>\n";
+        if( tbl_info->tbl && tbl_info->tbl != table)
+          if( tbl_info->tbl != (string)0 )
+            res +=
+              sprintf((string) _(429,"The table is known as %O "
+                                 "in the module."), tbl_info->tbl ) + "<br/>\n";
+          else
+            res +=
+              sprintf((string) _(430,"The table is an anonymous table defined "
+                                 "by the module."), tbl_info->tbl ) + "<br/>\n";
 
-	if (string c = tbl_info->comment) {
-	  c = String.trim_all_whites (c);
-	  if (c != "" && c != "0")
-	    res += Roxen.html_encode_string (c) + "<br/>\n";
-	}
+        if (string c = tbl_info->comment) {
+          c = String.trim_all_whites (c);
+          if (c != "" && c != "0")
+            res += Roxen.html_encode_string (c) + "<br/>\n";
+        }
 
-	if (tbl_info->inhibit_backups == "yes") {
-	  res += _(1142, "The table is not included in backups of this database.") +
-	    "<br />\n";
-	}
+        if (tbl_info->inhibit_backups == "yes") {
+          res += _(1142, "The table is not included in backups of this database.") +
+            "<br />\n";
+        }
 
-	res += deep_table_info (table) + "</td></tr>\n";
+        res += deep_table_info (table) + "</td></tr>\n";
       }
       else
-	res += "</tr>\n";
+        res += "</tr>\n";
 
       if( tbi )
-	sort_ok = 1;
+        sort_ok = 1;
 
       table_data += ({({
-			table,
-			(tbi ?(int)tbi->data_length+ (int)tbi->index_length:0),
-			(tbi ?(int)tbi->rows:0),
-			res
-		      })});
+                        table,
+                        (tbi ?(int)tbi->data_length+ (int)tbi->index_length:0),
+                        (tbi ?(int)tbi->rows:0),
+                        res
+                      })});
     };
 
     foreach( DBManager.db_tables( id->variables->db )-({0}), string tb )
       add_table_info(tb,
-		     DBManager.db_table_information(id->variables->db, tb));
+                     DBManager.db_table_information(id->variables->db, tb));
 
     switch( id->variables->sort )
     {
       default:
-	sort( column( table_data, 0 ), table_data );
-	break;
+        sort( column( table_data, 0 ), table_data );
+        break;
 
       case "rows":
-	sort( column( table_data, 2 ), table_data );
-	table_data = reverse( table_data );
-	break;
+        sort( column( table_data, 2 ), table_data );
+        table_data = reverse( table_data );
+        break;
 
       case "size":
-	sort( column( table_data, 1 ), table_data );
-	table_data = reverse( table_data );
-	break;
+        sort( column( table_data, 1 ), table_data );
+        table_data = reverse( table_data );
+        break;
     }
 #define SEL(X,Y)							\
     ((id->variables->sort == X || (Y && !id->variables->sort)) ?	\
@@ -1276,22 +1276,22 @@ mapping|string parse( RequestID id )
     if( sort_ok )
     {
       if (!got_owner_column)
-	// Try to hide the owner column when it's empty. Doesn't work
-	// in firefox 2.0, though.
-	res += "<col span='3'/><col style='visiblity: collapse'/>\n";
+        // Try to hide the owner column when it's empty. Doesn't work
+        // in firefox 2.0, though.
+        res += "<col span='3'/><col style='visiblity: collapse'/>\n";
       res +=
-	"<thead><tr class='tr-sticky'>"
-	"<th><a href='browser.pike?db=&form.db:http;&amp;table=&form.table:http;&amp;sort=name&amp;&usr.set-wiz-id;'>"+
-	SEL("name", 1) + _(376,"Name")+
-	"</a></th>\n"
-	"<th class='num'><a href='browser.pike?db=&form.db:http;&amp;table=&form.table:http;&amp;sort=rows&amp;&usr.set-wiz-id;'>"+
-	SEL("rows",0)+String.capitalize(_(374,"rows"))+
-	"</a></th>\n"
-	"<th class='num'><a href='browser.pike?db=&form.db:http;&amp;table=&form.table:http;&amp;sort=size&amp;&usr.set-wiz-id;'>"+
-	SEL("size",0)+_(377,"Size")+
-	"</a></th>\n"
-	"<th>Owner</th>\n"
-	"</tr></thead>\n";
+        "<thead><tr class='tr-sticky'>"
+        "<th><a href='browser.pike?db=&form.db:http;&amp;table=&form.table:http;&amp;sort=name&amp;&usr.set-wiz-id;'>"+
+        SEL("name", 1) + _(376,"Name")+
+        "</a></th>\n"
+        "<th class='num'><a href='browser.pike?db=&form.db:http;&amp;table=&form.table:http;&amp;sort=rows&amp;&usr.set-wiz-id;'>"+
+        SEL("rows",0)+String.capitalize(_(374,"rows"))+
+        "</a></th>\n"
+        "<th class='num'><a href='browser.pike?db=&form.db:http;&amp;table=&form.table:http;&amp;sort=size&amp;&usr.set-wiz-id;'>"+
+        SEL("size",0)+_(377,"Size")+
+        "</a></th>\n"
+        "<th>Owner</th>\n"
+        "</tr></thead>\n";
     }
 
     res += "<tbody>" + column( table_data, 3 )*"\n" +
@@ -1313,11 +1313,11 @@ mapping|string parse( RequestID id )
     int db_has_formatters = 0;
     if (id->variables->db) {
       mapping(string:string) mod_info =
-	DBManager.module_table_info (id->variables->db, "");
+        DBManager.module_table_info (id->variables->db, "");
       Configuration c = !(<0, "">)[mod_info->conf] &&
-	roxen.find_configuration (mod_info->conf);
+        roxen.find_configuration (mod_info->conf);
       RoxenModule m = c && !(<0, "">)[mod_info->module] &&
-	c->find_module (mod_info->module);
+        c->find_module (mod_info->module);
       db_has_formatters = m && m->format_db_browser_value;
     }
     
@@ -1356,13 +1356,13 @@ mapping|string parse( RequestID id )
 
 #define ADD_ACTION(X) if(!actions[X][2] || (actions[X][2] & flags) )	\
    res += sprintf("<a href='%s?db=%s&amp;action=%s&amp;&usr.set-wiz-id;'><gbutton>%s</gbutton></a>\n",\
-		  id->not_query, id->variables->db, X, actions[X][0] )
+                  id->not_query, id->variables->db, X, actions[X][0] )
   
   switch( id->variables->db )
   {
     case "local":
       foreach( ({ "backup","optimize","repair","schedule" }), string x )
-	ADD_ACTION( x );
+        ADD_ACTION( x );
       break;
       
     default:
@@ -1371,7 +1371,7 @@ mapping|string parse( RequestID id )
         action_ids -= ({ "configure_ext_db_con" });
       }
       foreach( action_ids, string x )
-	ADD_ACTION( x );
+        ADD_ACTION( x );
       break;
   }
   return res+"</p></st-page></subtablist></cv-split></content></tmpl>";

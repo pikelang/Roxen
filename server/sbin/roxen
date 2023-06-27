@@ -8,19 +8,19 @@ parse_args()
 {
     while [ ! c"$1" = "c" ]
     do
-	case "$1" in
-	    --config-dir=*)
-		ROXEN_CONFIGDIR=`echo "$1" | sed -e 's/--config-dir=//'`
-	    ;;
-	esac
+        case "$1" in
+            --config-dir=*)
+                ROXEN_CONFIGDIR=`echo "$1" | sed -e 's/--config-dir=//'`
+            ;;
+        esac
     
-	case "$1" in
-	    --roxen-dir=*)
-		ROXEN_DIR=`echo "$1" | sed -e 's/--roxen-dir=//'`
-	    ;;
-	esac
+        case "$1" in
+            --roxen-dir=*)
+                ROXEN_DIR=`echo "$1" | sed -e 's/--roxen-dir=//'`
+            ;;
+        esac
     
-	shift
+        shift
     done
 }
 

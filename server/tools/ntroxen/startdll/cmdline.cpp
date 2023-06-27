@@ -1486,7 +1486,7 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
         }
         
         //DEFINES="-DRUN_SELF_TEST -DSELF_TEST_DIR=\"$SELF_TEST_DIR\" $DEFINES"
-	//DEFINES="$DEFINES \"-M$SELF_TEST_DIR/modules\""
+        //DEFINES="$DEFINES \"-M$SELF_TEST_DIR/modules\""
         //rm -rf $VARDIR/test_config*
         //cp -R etc/test/config $VARDIR/test_config
         //cp etc/test/filesystem/test_rxml_package rxml_packages/test_rxml_package
@@ -1495,7 +1495,7 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
         //remove_dumped=1
         m_saPikeArgs.Add("-DRUN_SELF_TEST");
         m_saPikeArgs.Add(("-DSELF_TEST_DIR=\\\"" + selfTestDirUnx + "\\\"").c_str());
-	m_saPikeArgs.Add(("-M" + selfTestDirUnx + "/modules").c_str());
+        m_saPikeArgs.Add(("-M" + selfTestDirUnx + "/modules").c_str());
 
         m_bOnce = TRUE;
         m_iDebug = max(m_iDebug, 1);
@@ -1513,22 +1513,22 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
         DWORD attr = GetFileAttributes(setupCmd.c_str());
         if (attr != -1 && !(attr & FILE_ATTRIBUTE_DIRECTORY))
         {
-	  // NB: Same behavior as stracat(), but I don't trust stracat().
-	  //     /grubba 2018-04-13
-	  char **arr = m_saPikeDefines.GetList();
-	  std::string defines = "";
-	  while (*arr) {
-	    if (strchr(*arr, ' ')) {
-	      defines += "\"";
-	      defines += *arr;
-	      defines += "\"";
-	    } else {
-	      defines += *arr;
-	    }
-	    defines += " ";
-	    arr++;
-	  }
-	  setupCmd = defines + setupCmd;
+          // NB: Same behavior as stracat(), but I don't trust stracat().
+          //     /grubba 2018-04-13
+          char **arr = m_saPikeDefines.GetList();
+          std::string defines = "";
+          while (*arr) {
+            if (strchr(*arr, ' ')) {
+              defines += "\"";
+              defines += *arr;
+              defines += "\"";
+            } else {
+              defines += *arr;
+            }
+            defines += " ";
+            arr++;
+          }
+          setupCmd = defines + setupCmd;
           setupCmd += " " + selfTestDirUnx + " ../var";
           CRoxen::RunPike(setupCmd.c_str());
         }

@@ -37,13 +37,13 @@ void start(int q, Configuration c)
 protected int is_connection_upgrade(string path, RequestID id)
 {
   return has_value(lower_case(id->request_headers->connection||"")/",",
-		   "upgrade");
+                   "upgrade");
 }
 
 protected int is_upgrade_websocket(string path, RequestID id)
 {
   return has_value(lower_case(id->request_headers->upgrade||"")/",",
-		   "websocket");
+                   "websocket");
 }
 
 protected int is_websocket_version_valid(string path, RequestID id)
@@ -111,15 +111,15 @@ mapping(string:mixed)|int(-1..0) first_try(RequestID id)
   }
 
   id->register_vary_callback("sec-websocket-version",
-			     is_websocket_version_valid);
+                             is_websocket_version_valid);
 
   if (!is_websocket_version_valid("", id)) {
     // Unsupported WebSocket version.
     TRACE_LEAVE("No - Unsupported websocket version.");
     return Roxen.http_status(Protocols.HTTP.HTTP_BAD,
-			     "Unsupported WebSocket version.") + ([
+                             "Unsupported WebSocket version.") + ([
       "extra_heads": ([
-	"Sec-WebSocket-Version": (string)Protocols.WebSocket.websocket_version,
+        "Sec-WebSocket-Version": (string)Protocols.WebSocket.websocket_version,
       ]),
     ]);
   }
@@ -130,7 +130,7 @@ mapping(string:mixed)|int(-1..0) first_try(RequestID id)
     // Invalid Sec-WebSocet-Key.
     TRACE_LEAVE("No - Invalid Sec-WebSocket-Key.");
     return Roxen.http_status(Protocols.HTTP.HTTP_BAD,
-			     "Invalid Sec-WebSocket-Key.");
+                             "Invalid Sec-WebSocket-Key.");
   }
 
   // FIXME: Fix vary support for http version.

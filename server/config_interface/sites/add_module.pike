@@ -48,7 +48,7 @@ array(string) module_class( ModuleInfo m, RequestID id )
 // NB: Unusual calling convention. Returns 0 when the module
 //     is to be kept and modinfo to filter it.
 ModuleInfo module_nomore(string name, ModuleInfo modinfo,
-			 Configuration conf, RequestID id)
+                         Configuration conf, RequestID id)
 {
   mapping module;
   object o;
@@ -104,7 +104,7 @@ string get_method(RequestID id)
 }
 
 string page_base( RequestID id, string content, int|void noform,
-		  int|void show_search_form)
+                  int|void show_search_form)
 {
   string method = get_method(id);
 
@@ -136,53 +136,53 @@ string page_base( RequestID id, string content, int|void noform,
                   "<subtablist width='100%%'>"
                   "<st-tabs></st-tabs>"
                   "<st-page>"
-		  "<h2>Site: '&form.config;'</h2>"
+                  "<h2>Site: '&form.config;'</h2>"
                   "<if not='1' variable='form.initial'>"
-		  "<table width='100%%' border='0' cellspacing='4' "
-		  "       cellpadding='0'>"
-		  "<tr><td nowrap='nowrap'>%s:</td><td>"
-		  "<form action='' style='margin: 0'>"
-		  "<roxen-wizard-id-variable />"
-		  "<input type='hidden' name='config' value='&form.config;'>"
-		  "<default variable='form.method' value='%s'>"
-		  "<select name='method' onchange='submit()'>"
-		  "<option value='normal'>%s</option>"
-		  //  "<option value='fast'>%s</option>"
-		  "<option value='faster'>%s</option>"
-		  "<option value='compact'>%s</option>"
-		  "<option value='really_compact'>%s</option>"
-		  "</select>"
-		  "</default>"
-		  "</form>"
-		  "</td>"
-		  "<td>&nbsp;&nbsp;</td>"
-		  "<td width='100%%' nowrap='nowrap'>%s</td>"  // search form
-		  "<td>&nbsp;&nbsp;</td>"
-		  "<td align='right'>"
+                  "<table width='100%%' border='0' cellspacing='4' "
+                  "       cellpadding='0'>"
+                  "<tr><td nowrap='nowrap'>%s:</td><td>"
+                  "<form action='' style='margin: 0'>"
+                  "<roxen-wizard-id-variable />"
+                  "<input type='hidden' name='config' value='&form.config;'>"
+                  "<default variable='form.method' value='%s'>"
+                  "<select name='method' onchange='submit()'>"
+                  "<option value='normal'>%s</option>"
+                  //  "<option value='fast'>%s</option>"
+                  "<option value='faster'>%s</option>"
+                  "<option value='compact'>%s</option>"
+                  "<option value='really_compact'>%s</option>"
+                  "</select>"
+                  "</default>"
+                  "</form>"
+                  "</td>"
+                  "<td>&nbsp;&nbsp;</td>"
+                  "<td width='100%%' nowrap='nowrap'>%s</td>"  // search form
+                  "<td>&nbsp;&nbsp;</td>"
+                  "<td align='right'>"
                   "<gbutton href='add_module.pike?config=&form.config:http;"
                   "&amp;reload_module_list=yes&amp;method=%s&amp;&usr.set-wiz-id;' "
-		  "> %s </gbutton>"
-		  "</td><td>"
+                  "> %s </gbutton>"
+                  "</td><td>"
                   "<gbutton href='site.html/&form.config;/' "
-		  "> %s </gbutton>"
-		  "</td></tr></table>"
+                  "> %s </gbutton>"
+                  "</td></tr></table>"
                   "<p>\n</if>%s\n</p>\n"
                   "</st-page></subtablist></td></tr></table>"
                   "</cv-split></content></tmpl>", 
-		  LOCALE(251,"Add Module"),
-		  noform?" noform='noform'":"",
-		  LOCALE(421, "List Type"),
-		  method,
-		  LOCALE(280, "Normal"),
-		  //  LOCALE(0, "Fast"),
-		  LOCALE(284, "Faster"),
-		  LOCALE(286, "Compact"),
-		  LOCALE(531, "Really Compact"),
-		  (show_search_form && search_form) || "",
-		  method,
+                  LOCALE(251,"Add Module"),
+                  noform?" noform='noform'":"",
+                  LOCALE(421, "List Type"),
+                  method,
+                  LOCALE(280, "Normal"),
+                  //  LOCALE(0, "Fast"),
+                  LOCALE(284, "Faster"),
+                  LOCALE(286, "Compact"),
+                  LOCALE(531, "Really Compact"),
+                  (show_search_form && search_form) || "",
+                  method,
                   LOCALE(272,"Reload Module List"),
-		  LOCALE(202,"Cancel"),
-		  content);
+                  LOCALE(202,"Cancel"),
+                  content);
 }
 
 
@@ -269,13 +269,13 @@ string pafeaw( string errors, string warnings, array(ModuleInfo) locked_modules)
       };
 
 #define RELOAD(X) sprintf("<gbutton "                                         \
-			  "img-align='middle' "                               \
+                          "img-align='middle' "                               \
                           "href='add_module.pike?config=&form.config:http;"   \
                           "&amp;method=&form.method;"			      \
                           "&amp;random=%d&amp;only=%s"			      \
-			  "&amp;reload_module_list=yes"			      \
-			  "&amp;&usr.set-wiz-id;"			      \
-			  "#errors_and_warnings'> %s </gbutton>",   	      \
+                          "&amp;reload_module_list=yes"			      \
+                          "&amp;&usr.set-wiz-id;"			      \
+                          "#errors_and_warnings'> %s </gbutton>",   	      \
                           random(4711111),                                    \
                           (X),                                                \
                           LOCALE(253, "Reload"))
@@ -367,17 +367,17 @@ array(string) get_module_list( function describe_module,
     search_modules = (< >);
     foreach(mods, ModuleInfo m) {
       string compare =
-	lower_case(((string) m->get_name() || "") + "\0" +
-		   m->sname + "\0" +
-		   m->filename + "\0" +
-		   Roxen.html_decode_string((string) m->get_description() ||
-					    LOCALE(1023, "Undocumented")));
+        lower_case(((string) m->get_name() || "") + "\0" +
+                   m->sname + "\0" +
+                   m->filename + "\0" +
+                   Roxen.html_decode_string((string) m->get_description() ||
+                                            LOCALE(1023, "Undocumented")));
     search_miss:
       {
-	foreach(mod_query_words, string w)
-	  if (!has_value(compare, w))
-	    break search_miss;
-	search_modules[m] = 1;
+        foreach(mod_query_words, string w)
+          if (!has_value(compare, w))
+            break search_miss;
+        search_modules[m] = 1;
       }
     }
   }
@@ -391,9 +391,9 @@ array(string) get_module_list( function describe_module,
     if( c == "" )
       continue;
     if( (r = class_visible( c, classes[c]->doc, sizeof(classes[c]->modules), id )) &&
-	r[0] &&
-	(!search_modules ||
-	 sizeof(classes[c]->modules & indices(search_modules))))
+        r[0] &&
+        (!search_modules ||
+         sizeof(classes[c]->modules & indices(search_modules))))
     {
       res += r[1];
       array(ModuleInfo) m = classes[c]->modules;
@@ -403,20 +403,20 @@ array(string) get_module_list( function describe_module,
         if( q->get_description() == "Undocumented" &&
             q->type == 0 )
           continue;
-	if (search_modules && !search_modules[q])
-	  continue;
+        if (search_modules && !search_modules[q])
+          continue;
         object b = module_nomore(q->sname, q, conf, id);
-	if( !b && q->locked &&
-	    (!license_key || !q->unlocked(license_key, conf)) )
-	{
-	  locked_modules += ({ q });
-	  continue;
-	}
+        if( !b && q->locked &&
+            (!license_key || !q->unlocked(license_key, conf)) )
+        {
+          locked_modules += ({ q });
+          continue;
+        }
         res += describe_module( q, b );
       }
     } else {
       if (!search_modules && r)
-	res += r[1];
+        res += r[1];
     }
   }
   master()->set_inhibit_compile_errors( 0 );
@@ -444,15 +444,15 @@ function describe_module_normal( int image )
     {
       string name = module->get_name();
       if (module->type & MODULE_EXPERIMENTAL) {
-	// Prefix the name with a construction sign.
-	name = "\x1f6a7\xa0" + name;
+        // Prefix the name with a construction sign.
+        name = "\x1f6a7\xa0" + name;
       }
       if (module->type & MODULE_DEPRECATED) {
-	// Prefix the name with a warning sign.
-	name = "\x26a0\xa0" + name;
+        // Prefix the name with a warning sign.
+        name = "\x26a0\xa0" + name;
       }
       return sprintf(
-	#"
+        #"
   <tr>
    <td colspan='2'>
      <table width='100%%'>
@@ -466,7 +466,7 @@ function describe_module_normal( int image )
    <tr>
      <td valign='top'>
        <form method='post' action='add_module.pike' 
-	     style='margin: 0 10px 0 0'>
+             style='margin: 0 10px 0 0'>
          <roxen-automatic-charset-variable/>
          <roxen-wizard-id-variable />
          <input type='hidden' name='module_to_add' value='%s'>
@@ -480,14 +480,14 @@ function describe_module_normal( int image )
     </td>
   </tr>
 ",
-	//Roxen.html_encode_string(strip_leading(module->get_name())),
-	Roxen.html_encode_string(name),
-	Roxen.html_encode_string (module->sname),
-	(image?module_image(module->type):""),
-	module->sname,
-	LOCALE(251, "Add Module"),
-	module->get_description() || LOCALE(1023, "Undocumented"),
-	LOCALE(266, "Will be loaded from: ")+module->filename
+        //Roxen.html_encode_string(strip_leading(module->get_name())),
+        Roxen.html_encode_string(name),
+        Roxen.html_encode_string (module->sname),
+        (image?module_image(module->type):""),
+        module->sname,
+        LOCALE(251, "Add Module"),
+        module->get_description() || LOCALE(1023, "Undocumented"),
+        LOCALE(266, "Will be loaded from: ")+module->filename
 );
     } else {
       if( block == module )
@@ -498,7 +498,7 @@ function describe_module_normal( int image )
 }
 
 array(int|string) class_visible_normal( string c, string d, int size,
-					RequestID id )
+                                        RequestID id )
 {
   int x;
   string method = get_method(id);
@@ -510,25 +510,25 @@ array(int|string) class_visible_normal( string c, string d, int size,
     x = 1;
   } else if( id->variables->unfolded == c) {
     header+=("<a name='"+Roxen.html_encode_string(c)+
-	     "'></a><gbutton hspace='5' vspace='5' "
-	     "href='add_module.pike?config=&form.config;"
-	     "&amp;method=" + method + "&amp;&usr.set-wiz-id;#"+
-	     Roxen.http_encode_url(c)+"' > "+
-	     LOCALE(168, "Hide")+" </gbutton>");
+             "'></a><gbutton hspace='5' vspace='5' "
+             "href='add_module.pike?config=&form.config;"
+             "&amp;method=" + method + "&amp;&usr.set-wiz-id;#"+
+             Roxen.http_encode_url(c)+"' > "+
+             LOCALE(168, "Hide")+" </gbutton>");
     x=1;
   } else {
     header+=("<a name='"+Roxen.html_encode_string(c)+
-	     "'></a><gbutton hspace='5' vspace='5' "
-	     "href='add_module.pike?config=&form.config;"
-	     "&amp;method=" + method +
-	     "&amp;unfolded="+Roxen.http_encode_url(c)+
-	     "&amp;&usr.set-wiz-id;#"+Roxen.http_encode_url(c)+"' > "+
-	     LOCALE(267, "View")+" </gbutton>");
+             "'></a><gbutton hspace='5' vspace='5' "
+             "href='add_module.pike?config=&form.config;"
+             "&amp;method=" + method +
+             "&amp;unfolded="+Roxen.http_encode_url(c)+
+             "&amp;&usr.set-wiz-id;#"+Roxen.http_encode_url(c)+"' > "+
+             LOCALE(267, "View")+" </gbutton>");
   }
 
   header+=("</td><td width='100%'>"
-	   "<font color='&usr.content-titlefg;' size='+2'>"+c+"</font>"
-	   "<br />"+d+"</td></tr></table></td></tr>\n");
+           "<font color='&usr.content-titlefg;' size='+2'>"+c+"</font>"
+           "<br />"+d+"</td></tr></table></td></tr>\n");
 
   return ({ x, header });
 }
@@ -614,7 +614,7 @@ return sprintf(
 }
 
 array(int|string) class_visible_faster( string c, string d, int size,
-					RequestID id )
+                                        RequestID id )
 {
   int x;
   string method = get_method(id);
@@ -624,30 +624,30 @@ array(int|string) class_visible_faster( string c, string d, int size,
 
   if (id->variables->mod_query) {
     header+=("<gbutton hspace='5' vspace='5' dim='1'> "+LOCALE(267, "View")+
-	     " </gbutton><br>"
-	     "<submit-gbutton hspace='5' vspace='2'> "+LOCALE(200, "Add Modules")+
-	     " </submit-gbutton>");
+             " </gbutton><br>"
+             "<submit-gbutton hspace='5' vspace='2'> "+LOCALE(200, "Add Modules")+
+             " </submit-gbutton>");
     x = 1;
   } else if( id->variables->unfolded == c ) {
     header+=("<a name='"+Roxen.html_encode_string(c)+
-	     "'></a><gbutton hspace='5' vspace='5' dim='1'> "+LOCALE(267, "View")+
-	     " </gbutton><br>"
-	     "<submit-gbutton hspace='5' vspace='2'> "+LOCALE(200, "Add Modules")+
-	     " </submit-gbutton>");
+             "'></a><gbutton hspace='5' vspace='5' dim='1'> "+LOCALE(267, "View")+
+             " </gbutton><br>"
+             "<submit-gbutton hspace='5' vspace='2'> "+LOCALE(200, "Add Modules")+
+             " </submit-gbutton>");
     x=1;
   }
   else
     header+=("<a name='"+Roxen.html_encode_string(c)+
-	     "'></a><gbutton hspace='5' vspace='5' "
-	     "href='add_module.pike?config=&form.config;"
-	     "&amp;method=" + method +
-	     "&amp;unfolded="+Roxen.http_encode_url(c)+
-	     "&amp;&usr.set-wiz-id;#"+Roxen.http_encode_url(c)+"' > "+
-	     LOCALE(267, "View")+" </gbutton>");
+             "'></a><gbutton hspace='5' vspace='5' "
+             "href='add_module.pike?config=&form.config;"
+             "&amp;method=" + method +
+             "&amp;unfolded="+Roxen.http_encode_url(c)+
+             "&amp;&usr.set-wiz-id;#"+Roxen.http_encode_url(c)+"' > "+
+             LOCALE(267, "View")+" </gbutton>");
 
   header+=("</td><td width='100%'>"
-	   "<font color='&usr.content-titlefg;' size='+2'>"+c+"</font>"
-	   "<br />"+d+"</td></tr></table></td></tr>\n");
+           "<font color='&usr.content-titlefg;' size='+2'>"+c+"</font>"
+           "<br />"+d+"</td></tr></table></td></tr>\n");
 
   return ({ x, header });
 }
@@ -691,7 +691,7 @@ string page_faster( RequestID id )
 int first;
 
 array(int|string) class_visible_compact( string c, string d, int size,
-					 RequestID id )
+                                         RequestID id )
 {
   string res="";
   if(first++)
@@ -733,7 +733,7 @@ string page_compact( RequestID id )
                                 class_visible_compact, id );
   return page_base(id,
                    "<form action='add_module.pike' method='POST'>"
-		   "<roxen-wizard-id-variable />"
+                   "<roxen-wizard-id-variable />"
                    "<input type='hidden' name='config' value='&form.config;'>"+
                    desc+"</select><br /><submit-gbutton vspace='3'> "
                    +LOCALE(200, "Add Modules")+" </submit-gbutton><p>"
@@ -767,10 +767,10 @@ string page_really_compact( RequestID id )
   roxenloader.pop_compile_error_handler();
 
   sort(map(mods->get_name(), lambda(LocaleString in) {
-			       in = lower_case((string)in);
-			       //sscanf(in, "%*s: %s", in);
-			       return in;
-			     }), mods);
+                               in = lower_case((string)in);
+                               //sscanf(in, "%*s: %s", in);
+                               return in;
+                             }), mods);
   string res = "";
 
   mixed r;
@@ -778,20 +778,20 @@ string page_really_compact( RequestID id )
   array(RoxenModule) locked_modules = ({});
   
   if( (r = class_visible_compact( LOCALE(200,"Add Modules"),
-				  LOCALE(273,"Select one or several modules to add."),
-				  sizeof(mods), id )) && r[0] ) {
+                                  LOCALE(273,"Select one or several modules to add."),
+                                  sizeof(mods), id )) && r[0] ) {
     res += r[1];
     foreach(mods, object q) {
       if( (!q->get_description() ||
-	   (q->get_description() == "Undocumented")) &&
-	  q->type == 0 )
-	continue;
+           (q->get_description() == "Undocumented")) &&
+          q->type == 0 )
+        continue;
       object b = module_nomore(q->sname, q, conf, id);
       if( !b && q->locked &&
-	  (!license_key || !q->unlocked(license_key, conf)) )
+          (!license_key || !q->unlocked(license_key, conf)) )
       {
-	locked_modules += ({ q });
-	continue;
+        locked_modules += ({ q });
+        continue;
       }
       res += describe_module_compact( q, b );
     }
@@ -803,12 +803,12 @@ string page_really_compact( RequestID id )
 
   return page_base(id,
                    "<form action=\"add_module.pike\" method=\"post\">"
-		   "<roxen-wizard-id-variable />"
+                   "<roxen-wizard-id-variable />"
                    "<input type=\"hidden\" name=\"config\" value=\"&form.config;\" />"+
                    res+"</select><br /><submit-gbutton> "
                    +LOCALE(200, "Add Modules")+" </submit-gbutton><br />"
                    +pafeaw(ec->get(),ec->get_warnings(),
-			   locked_modules)+"</form>",
+                           locked_modules)+"</form>",
                    );
 }
 
@@ -841,14 +841,14 @@ array initial_form( RequestID id, Configuration conf, array modules )
         num++;
         res += "<tr><td colspan='3'><h2>"
         +LOCALE(1,"Initial variables for ")+
-	  //Roxen.html_encode_string(strip_leading(mi->get_name()))
-	  Roxen.html_encode_string(mi->get_name())
-	  +"</h2></td></tr>"
+          //Roxen.html_encode_string(strip_leading(mi->get_name()))
+          Roxen.html_encode_string(mi->get_name())
+          +"</h2></td></tr>"
         "<emit source='module-variables' "
-	  " configuration=\""+conf->name+"\""
+          " configuration=\""+conf->name+"\""
         " module=\""+mod+#"\"/>
         <emit noset='1' source='module-variables' "
-	  " configuration=\""+conf->name+"\""
+          " configuration=\""+conf->name+"\""
         " module=\""+mod+#"\">
  <tr>
  <td width='150' valign='top' colspan='2'><b>&_.name;</b></td>
@@ -880,15 +880,15 @@ mixed do_it_pass_2( array modules, Configuration conf,
       RoxenModule mm = conf->enable_module( mod,0,0,1 );
       if( !mm || !conf->otomod[mm] )
       {
-	report_error(LOCALE(382,"Failed to enable %s")+"\n");
-	return Roxen.http_redirect( site_url(id,conf->name), id );
+        report_error(LOCALE(382,"Failed to enable %s")+"\n");
+        return Roxen.http_redirect( site_url(id,conf->name), id );
       }      
       conf->call_low_start_callbacks( mm, 
                                       roxen.find_module( (mod/"!")[0] ), 
                                       conf->modules[ mod ] );
       modules = replace( modules, mod,
-			 (already_added[mod]=(mod/"!")[0]+"!"+
-			  (conf->otomod[mm]/"#")[-1]) );
+                         (already_added[mod]=(mod/"!")[0]+"!"+
+                          (conf->otomod[mm]/"#")[-1]) );
     }
   }
 
@@ -899,8 +899,8 @@ mixed do_it_pass_2( array modules, Configuration conf,
     if( num ) Roxen.parse_rxml( cf_form, id );
     foreach( modules, string mod )
      conf->call_high_start_callbacks( conf->find_module( replace(mod,"!","#") ),
-				      roxen.find_module( (mod/"!")[0] ),
-				      1);
+                                      roxen.find_module( (mod/"!")[0] ),
+                                      1);
     already_added = ([ ]);
     conf->save( ); // save it all in one go
     conf->forcibly_added = ([]);
@@ -915,7 +915,7 @@ mixed do_it_pass_2( array modules, Configuration conf,
                                           "value='"+q+"' />";
                                  } )*"\n" 
                    +"<input type='hidden' name='config' "
-		   "value='"+conf->name+"' />"+cf_form+"</table><p><cf-ok />");
+                   "value='"+conf->name+"' />"+cf_form+"</table><p><cf-ok />");
 }
 
 mixed do_it( RequestID id )
@@ -933,7 +933,7 @@ mixed do_it( RequestID id )
 
   if (!conf) {
     return sprintf(LOCALE(356, "Configuration %O not found."),
-		   id->variables->config);
+                   id->variables->config);
   }
 
   if( !conf->inited )
@@ -980,8 +980,8 @@ mixed parse( RequestID id )
     
     //  This can be invoked from both Normal and Faster methods
     return (method == "faster" ?
-	    page_faster_search(id) :
-	    page_normal_search(id, 1));
+            page_faster_search(id) :
+            page_normal_search(id, 1));
   }
   
   return this_object()["page_" + method]( id );

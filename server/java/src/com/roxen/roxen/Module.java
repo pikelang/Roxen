@@ -274,7 +274,7 @@ public abstract class Module {
    *               variable
    */
   protected void defvar(String var, Object value, String name, int type,
-			String doc)
+                        String doc)
   {
     addDefvar(new Defvar(var, value, name, type, doc));
   }

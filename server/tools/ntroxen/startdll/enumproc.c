@@ -297,13 +297,13 @@ BOOL WINAPI Enum16( DWORD dwThreadId, WORD hMod16, WORD hTask16,
    
 BOOL CALLBACK Proc( DWORD dw, WORD w16, /*LPCSTR*/ LPSTR lpstr, LPARAM lParam )
 {
-	int iKill = 0, iRoxenMysql = 0;
-	HANDLE hProc;
-	
-	if(lParam & KillProc)
-	{
-		iKill = 1;
-	}
+        int iKill = 0, iRoxenMysql = 0;
+        HANDLE hProc;
+        
+        if(lParam & KillProc)
+        {
+                iKill = 1;
+        }
 
     switch (lParam & ProcMask)
     {
@@ -319,19 +319,19 @@ BOOL CALLBACK Proc( DWORD dw, WORD w16, /*LPCSTR*/ LPSTR lpstr, LPARAM lParam )
     // convert the process path/name to lowercase
     _strlwr(lpstr);
 
-	if(iRoxenMysql && (strstr(lpstr, "roxen_mysql.exe") != NULL))
-	{
-		FoundProc = 1;
-		if(iKill)
-		{
-			hProc = OpenProcess(SYNCHRONIZE|PROCESS_TERMINATE, FALSE, dw);
-			if(hProc != NULL)
-				TerminateProcess(hProc, 0);
-			CloseHandle(hProc);
-		}
-	}
+        if(iRoxenMysql && (strstr(lpstr, "roxen_mysql.exe") != NULL))
+        {
+                FoundProc = 1;
+                if(iKill)
+                {
+                        hProc = OpenProcess(SYNCHRONIZE|PROCESS_TERMINATE, FALSE, dw);
+                        if(hProc != NULL)
+                                TerminateProcess(hProc, 0);
+                        CloseHandle(hProc);
+                }
+        }
 
-	return TRUE;
+        return TRUE;
 }
 
 void Kill(DWORD id)
@@ -340,13 +340,13 @@ void Kill(DWORD id)
 
   hProc = OpenProcess(SYNCHRONIZE|PROCESS_TERMINATE, FALSE, id);
   if(hProc != NULL)
-				TerminateProcess(hProc, 0);
+                                TerminateProcess(hProc, 0);
   CloseHandle(hProc);
 }
 
 
 BOOL GetMySQLBinaryPath(char *inProgramName, char *outPath,
-			unsigned int maxlen);
+                        unsigned int maxlen);
 
 BOOL KillMySql(const char *confdir)
 {
@@ -401,39 +401,39 @@ BOOL KillMySql(const char *confdir)
     
     if (GetMySQLBinaryPath("mysqladmin", mysqladmin_path, _MAX_PATH)) {
       sprintf(cmd, "\"%s\" "
-		   "-u rw "
-		   "--pipe "
-		   "--socket=\"%s\" "
-		   "shutdown "
-	      /*">NUL: 2>&1"*/,
-	      mysqladmin_path,
-	      long_pipe_path);
+                   "-u rw "
+                   "--pipe "
+                   "--socket=\"%s\" "
+                   "shutdown "
+              /*">NUL: 2>&1"*/,
+              mysqladmin_path,
+              long_pipe_path);
       {
-	TCHAR cwd[_MAX_PATH];
-	STARTUPINFO info;
-	PROCESS_INFORMATION proc;
-	int ret;
-	
-	cwd[0] = 0;
-	GetCurrentDirectory(_MAX_PATH, cwd);
-	GetStartupInfo(&info);
-	/* info.wShowWindow = SW_HIDE; */
-	info.dwFlags |= STARTF_USESHOWWINDOW;
-	ret = CreateProcess(NULL,
-			    cmd,
-			    NULL,  /* process security attribute */
-			    NULL,  /* thread security attribute */
-			    1,     /* inherithandles */
-			    0,     /* create flags */
-			    NULL,  /* environment */
-			    cwd,   /* current dir */
-			    &info,
-			    &proc);
-	if (ret) {
-	  WaitForSingleObject(proc.hProcess, INFINITE);
-	  CloseHandle(proc.hThread);
-	  CloseHandle(proc.hProcess);
-	}
+        TCHAR cwd[_MAX_PATH];
+        STARTUPINFO info;
+        PROCESS_INFORMATION proc;
+        int ret;
+        
+        cwd[0] = 0;
+        GetCurrentDirectory(_MAX_PATH, cwd);
+        GetStartupInfo(&info);
+        /* info.wShowWindow = SW_HIDE; */
+        info.dwFlags |= STARTF_USESHOWWINDOW;
+        ret = CreateProcess(NULL,
+                            cmd,
+                            NULL,  /* process security attribute */
+                            NULL,  /* thread security attribute */
+                            1,     /* inherithandles */
+                            0,     /* create flags */
+                            NULL,  /* environment */
+                            cwd,   /* current dir */
+                            &info,
+                            &proc);
+        if (ret) {
+          WaitForSingleObject(proc.hProcess, INFINITE);
+          CloseHandle(proc.hThread);
+          CloseHandle(proc.hProcess);
+        }
       }
     }
   }
@@ -478,7 +478,7 @@ BOOL KillMySql(const char *confdir)
 
 
 BOOL GetMySQLBinaryPath(char *inProgramName, char *outPath,
-			unsigned int maxlen)
+                        unsigned int maxlen)
 {
   FILE *fd;
   char basedir[_MAX_PATH];
@@ -504,70 +504,70 @@ BOOL GetMySQLBinaryPath(char *inProgramName, char *outPath,
     while (1) {
       char line[1000];
       if (!fgets(line, sizeof(line), fd))
-	break;
+        break;
       
       key = NULL;
       val = NULL;
       
       //  Look for comment and terminate line
       if (p = strchr(line, '#'))
-	*p = 0;
+        *p = 0;
       
       //  Skip leading whitespace
       p = line;
       while (*p == ' ' || *p == '\t')
-	p++;
+        p++;
       
       //  Extract key name
       key = p;
       while (*p && !(*p == ' ' || *p == '\t' || *p == '='))
-	p++;
+        p++;
       if (!*p)
-	continue;
+        continue;
       if (*p == '=') {
-	*p++ = 0;
+        *p++ = 0;
       } else {
-	*p++ = 0;
-	while (*p == ' ' || *p == '\t')
-	  p++;
-	if (!*p || *p != '=')
-	  continue;
-	p++;
+        *p++ = 0;
+        while (*p == ' ' || *p == '\t')
+          p++;
+        if (!*p || *p != '=')
+          continue;
+        p++;
       }
       
       //  Extract key value and trim whitespace and optional quotes
       while (*p == ' ' || *p == '\t')
-	p++;
+        p++;
       if (*p == '"' || *p == '\'')
-	p++;
+        p++;
       val = p;
       p = val + strlen(val) - 1;
       while (p > val) {
-	if (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r')
-	  *p = 0;
-	else if (*p == '"' || *p == '\'') {
-	  *p = 0;
-	  break;
-	} else {
-	  break;
-	}
-	--p;
+        if (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r')
+          *p = 0;
+        else if (*p == '"' || *p == '\'') {
+          *p = 0;
+          break;
+        } else {
+          break;
+        }
+        --p;
       }
       if (!strlen(val))
-	continue;
+        continue;
       
       //  Is this the key we are looking for?
       if (_stricmp(key, inProgramName) == 0) {
-	//  Yes, direct match!
-	if (strlen(val) < maxlen)
-	  strcpy(outPath, val);
-	break;
+        //  Yes, direct match!
+        if (strlen(val) < maxlen)
+          strcpy(outPath, val);
+        break;
       }
       
       //  If base directory is given, save for later in case more specific
       //  key remains to be seen.
       if (_stricmp(key, "basedir") == 0) {
-	strcpy(basedir, val);
+        strcpy(basedir, val);
       }
     }
     fclose(fd);
@@ -575,10 +575,10 @@ BOOL GetMySQLBinaryPath(char *inProgramName, char *outPath,
     //  If exact path isn't known, try built it from base directory
     if (!strlen(outPath) && strlen(basedir)) {
       if ((strlen(basedir) + strlen(inProgramName) + 9) < maxlen) {
-	strcpy(outPath, basedir);
-	strcat(outPath, "\\bin\\");
-	strcat(outPath, inProgramName);
-	strcat(outPath, ".exe");
+        strcpy(outPath, basedir);
+        strcat(outPath, "\\bin\\");
+        strcat(outPath, inProgramName);
+        strcat(outPath, ".exe");
       }
     }
     

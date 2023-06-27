@@ -9,8 +9,8 @@ constant action = "maintenance";
 
 string name= LOCALE(24, "Reload configurations from disk");
 string doc = LOCALE(25, 
-		    "Force a reload of all configuration information from "
-		    "the configuration files.");
+                    "Force a reload of all configuration information from "
+                    "the configuration files.");
 
 mixed parse( RequestID id )
 {

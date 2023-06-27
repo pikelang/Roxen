@@ -12,34 +12,34 @@ constant known_flags = ([ "restart" : "Need to restart server" ]);
 // NB: Platforms added here also need to be added to the test patch
 //     etc/test/tests/patcher/2009-02-25T1124.rxp.
 constant known_platforms = (< "macosx_arm64",
-			      "macosx_ppc32",
-			      "macosx_x86",
-			      "macosx_x86_64",
-			      "macosx1014_x86_64",
-			      "rhel4_x86",
-			      "rhel4_x86_64",
-			      "rhel5_x86",
-			      "rhel5_x86_64",
-			      "rhel6_x86_64",
-			      "rhel7_x86_64",
-			      "rhel8_x86_64",
+                              "macosx_ppc32",
+                              "macosx_x86",
+                              "macosx_x86_64",
+                              "macosx1014_x86_64",
+                              "rhel4_x86",
+                              "rhel4_x86_64",
+                              "rhel5_x86",
+                              "rhel5_x86_64",
+                              "rhel6_x86_64",
+                              "rhel7_x86_64",
+                              "rhel8_x86_64",
                               "rhel9_x86_64",
-			      "ubuntu1604_x86_64",
-			      "ubuntu1804_x86_64",
-			      "sol10_x86_64",
-			      "sol11_x86_64",
-			      "win32_x86",
-			      "win32_x86_64",
+                              "ubuntu1604_x86_64",
+                              "ubuntu1804_x86_64",
+                              "sol10_x86_64",
+                              "sol11_x86_64",
+                              "win32_x86",
+                              "win32_x86_64",
 >);
 
 //! All currently supported subfeatures.
 constant features = (<
   "pike-support",		// Support patching master.pike.in and
-				// removal of .o-files, etc.
+                                // removal of .o-files, etc.
   "file-modes",			// Support patching and restoring of
-				// files with eg the exec bit set (broken).
+                                // files with eg the exec bit set (broken).
   "file-modes-2",		// Support patching and restoring of
-				// files with eg the exec bit set.
+                                // files with eg the exec bit set.
   "force-new",			// Support new for files that already exist.
   "save-orig",			// Save .orig-files before patching.
 >);
@@ -152,12 +152,12 @@ protected class Privs(string reason, int|string|void uid, int|string|void gid)
 string wash_output(string s)
 {
   return replace(s, ([ "<green>":"",
-		       "</green>":"",
-		       "<b>":"",
-		       "</b>":"",
-		       "<u>":"",
-		       "</u>":"" ])
-		 );
+                       "</green>":"",
+                       "<b>":"",
+                       "</b>":"",
+                       "<u>":"",
+                       "</u>":"" ])
+                 );
 }
 
 // Encode <, > and & of our own since this must be able to work outside Roxen.
@@ -165,8 +165,8 @@ string html_encode(string s)
 {
   s = replace(s, (["&":"&amp;", "<":"&lt;", ">":"&gt;"]));
   return replace(s, (["&amp;amp;":"&amp;",
-		      "&amp;lt;" :"&lt;",
-		      "&amp;gt;" :"&gt;"]));
+                      "&amp;lt;" :"&lt;",
+                      "&amp;gt;" :"&gt;"]));
 }
 
 string unixify_path(string s)
@@ -245,10 +245,10 @@ class Patcher
   private string http_cluster_last_modified;
 
   void create(function      message_callback,
-	      function      error_callback,
+              function      error_callback,
               string        server_dir,
-	      void | string local_dir,
-	      void | string temp_dir)
+              void | string local_dir,
+              void | string temp_dir)
   //! Instantiate the Patcher class.
   //! @param message_callback
   //!   A callback function which is used for status callback.
@@ -267,14 +267,14 @@ class Patcher
   {
     // Set callback functions
     write_mess = lambda(mixed ... arg)
-		 {
-		   message_callback(sprintf(@arg));
-		 };
+                 {
+                   message_callback(sprintf(@arg));
+                 };
 
     write_err  = lambda(mixed ... arg)
-		 {
-		   error_callback(sprintf(@arg));
-		 };
+                 {
+                   error_callback(sprintf(@arg));
+                 };
 
     // Verify server dir
     server_path = combine_and_check_path(server_dir);
@@ -291,8 +291,8 @@ class Patcher
     {
       if(!mkdirhier(import_path))
       {
-	// If the dir does not exist and we failed to create it.
-	error("Can't access import dir!\n");
+        // If the dir does not exist and we failed to create it.
+        error("Can't access import dir!\n");
       }
     }
 //     write_mess("Import dir set to %s\n", import_path);
@@ -303,8 +303,8 @@ class Patcher
     {
       if(!mkdirhier(installed_path))
       {
-	// If the dir does not exist and we failed to create it.
-	error("Can't access installed dir!\n");
+        // If the dir does not exist and we failed to create it.
+        error("Can't access installed dir!\n");
       }
     }
 //     write_mess("Installed dir set to %s\n", installed_path);
@@ -315,11 +315,11 @@ class Patcher
     // Set external process environment and path to exectuables
     master()->putenv("PATH",
 #ifdef __NT__
-		     combine_path(server_path, "bin/msys/bin") + ";"
+                     combine_path(server_path, "bin/msys/bin") + ";"
 #else
-		     combine_path(server_path, "bin/gnu") + ":"
+                     combine_path(server_path, "bin/gnu") + ":"
 #endif
-		     + getenv("PATH"));
+                     + getenv("PATH"));
 
     // Set server version
     string version_h = combine_path(server_path, "etc/include/version.h");
@@ -368,17 +368,17 @@ class Patcher
       string packages_path = combine_path(server_path, "packages");
 
       int roxen_is_cms = !!file_stat(combine_path(modules_path, "sitebuilder")) ||
-	!!file_stat(combine_path(packages_path, "sitebuilder"));
+        !!file_stat(combine_path(packages_path, "sitebuilder"));
 
       if(roxen_is_cms) {
-	if (file_stat(combine_path(modules_path, "print")) ||
-	    file_stat(combine_path(packages_path, "print"))) {
-	  product_code = "rep";
-	} else {
-	  product_code = "cms";
-	}
+        if (file_stat(combine_path(modules_path, "print")) ||
+            file_stat(combine_path(packages_path, "print"))) {
+          product_code = "rep";
+        } else {
+          product_code = "cms";
+        }
       } else {
-	product_code = "webserver";
+        product_code = "webserver";
       }
     }
 #endif
@@ -440,7 +440,7 @@ class Patcher
     if (glob("*.tar", lower_case(path)))
       is_tar = 1;
     else if (glob("*.tar.gz", lower_case(path)) ||
-	     glob("*.tgz", lower_case(path)))
+             glob("*.tgz", lower_case(path)))
       is_tar_gz = 1;
 
     array(string) rxp_paths = ({});
@@ -456,19 +456,19 @@ class Patcher
 
       // Find rxp files recursively
       rxp_paths = lambda(string dirpath) {
-		    array(string) rxps = ({});
-		    foreach(get_dir(dirpath), string dp) {
-		      string fullpath = combine_path(dirpath, dp);
-		      if (Stdio.is_file(fullpath))
-			rxps += ({ fullpath });
-		      else
-			rxps += this_function(fullpath);
-		    }
-		    return rxps;
-		  } (target_tmp_dir);
+                    array(string) rxps = ({});
+                    foreach(get_dir(dirpath), string dp) {
+                      string fullpath = combine_path(dirpath, dp);
+                      if (Stdio.is_file(fullpath))
+                        rxps += ({ fullpath });
+                      else
+                        rxps += this_function(fullpath);
+                    }
+                    return rxps;
+                  } (target_tmp_dir);
 
       if (sizeof(rxp_paths) > 1)
-	write_mess("Extracted multiple patch files from tar file.\n");
+        write_mess("Extracted multiple patch files from tar file.\n");
 
     } else {
       rxp_paths = ({ path });
@@ -478,23 +478,23 @@ class Patcher
     foreach(rxp_paths, string rxp_path) {
       string patch_id = extract_id_from_filename(basename(rxp_path));
       if (!patch_id) {
-	write_err("<b>%s</b> is not a valid rxp package!\n", rxp_path);
-	patch_ids += ({ 0 });
-	continue;
+        write_err("<b>%s</b> is not a valid rxp package!\n", rxp_path);
+        patch_ids += ({ 0 });
+        continue;
       }
 
       // Check if it's installed already.
       if (is_installed(patch_id)) {
-	write_mess("Patch %s is already installed.\n", patch_id);
-	patch_ids += ({ -1 });
-	continue;
+        write_mess("Patch %s is already installed.\n", patch_id);
+        patch_ids += ({ -1 });
+        continue;
       }
 
       PatchObject po = extract_patch(rxp_path, import_path, dry_run);
       if (po)
-	patch_ids += ({ po->id });
+        patch_ids += ({ po->id });
       else
-	patch_ids += ({ 0 });
+        patch_ids += ({ 0 });
     }
 
     if (target_tmp_dir)
@@ -509,7 +509,7 @@ class Patcher
     mapping file;
 
     mixed err = catch {
-	file = fetch_latest_rxp_cluster_file();
+        file = fetch_latest_rxp_cluster_file();
       };
     if (err) {
       write_err("HTTPS import failed: %s\n", describe_backtrace(err));
@@ -578,9 +578,9 @@ class Patcher
 #endif
 
   int(0..1) install_patch(string patch_id,
-			  string user,
-			  void|int(0..1) dry_run,
-			  void|int(0..1) force)
+                          string user,
+                          void|int(0..1) dry_run,
+                          void|int(0..1) force)
   //! Install a patch. Patch must be imported.
   //! @returns
   //!   Returns 1 if the patch was successfully installed, otherwise 0
@@ -598,56 +598,56 @@ class Patcher
 
     // Create a tar ball for backed up files.
     string backup_file = combine_path(source_path,
-				      sprintf("backup_%s.tar",
-					      create_id(current_time)));
+                                      sprintf("backup_%s.tar",
+                                              create_id(current_time)));
 
     // We set log path by default to the source directory.
     // When the installation succeeds it's re-set to the installation dir.
     string log_path = combine_path(source_path,
-				   sprintf("failed_install_%s.log",
-					   create_id(current_time)));
+                                   sprintf("failed_install_%s.log",
+                                           create_id(current_time)));
 
     void write_log(int(0..1) error, mixed ... s)
     {
       log += wash_output(sprintf(@s));
 
       if(error)
-	write_err(@s);
+        write_err(@s);
       else
-	write_mess(@s);
+        write_mess(@s);
     };
 
     void undo_changes_and_dump_log_to_file()
     {
       Privs privs = Privs("RoxenPatch: Rollback");
       if(dry_run)
-	rm(backup_file);
+        rm(backup_file);
       else
       {
-	if (sizeof(new_files))
-	  foreach(new_files, string file)
-	    rm(file);
-	privs = 0;
+        if (sizeof(new_files))
+          foreach(new_files, string file)
+            rm(file);
+        privs = 0;
 
-	if (is_file(backup_file)) {
-	  write_log(1, "Restoring backed up files ... ");
-	  if (extract_tar_archive(backup_file, server_path))
-	  {
-	    write_log(0, "<green>ok</green>.\n");
-	    Privs privs = Privs("RoxenPatch: Rollback");
-	    rm(backup_file);
-	    privs = 0;
-	  }
-	  else
-	    write_log(1, "FAILED! Backup needs to be restored manually "
-			 "from <u>%s</u>\n", backup_file);
-	}
+        if (is_file(backup_file)) {
+          write_log(1, "Restoring backed up files ... ");
+          if (extract_tar_archive(backup_file, server_path))
+          {
+            write_log(0, "<green>ok</green>.\n");
+            Privs privs = Privs("RoxenPatch: Rollback");
+            rm(backup_file);
+            privs = 0;
+          }
+          else
+            write_log(1, "FAILED! Backup needs to be restored manually "
+                         "from <u>%s</u>\n", backup_file);
+        }
 
-	privs = Privs("RoxenPatch: Write to logfile: " + log_path);
-	write_file(log_path, log);
-	privs = 0;
+        privs = Privs("RoxenPatch: Write to logfile: " + log_path);
+        write_file(log_path, log);
+        privs = 0;
 
-	write_err("Writing log to <u>%s</u>\n", log_path);
+        write_err("Writing log to <u>%s</u>\n", log_path);
       }
       clear_installed_patches_cache();
     };
@@ -657,100 +657,100 @@ class Patcher
       string dest = path[sizeof(server_path)..];
       if (has_prefix(dest, "/")) dest = dest[1..];
       if (has_prefix(dest, "pike/lib/")) {
-	if (is_file(path + ".o")) {
-	  write_log(0, "Removing file <u>%s</u> ... ", path + ".o");
-	  write_log(0, "Backing up <u>%s</u> to <u>%s</u> ... ",
-		    path + ".o",
-		    basename(backup_file));
+        if (is_file(path + ".o")) {
+          write_log(0, "Removing file <u>%s</u> ... ", path + ".o");
+          write_log(0, "Backing up <u>%s</u> to <u>%s</u> ... ",
+                    path + ".o",
+                    basename(backup_file));
 
-	  if (add_file_to_tar_archive(dest + ".o",
-				      server_path,
-				      backup_file))
-	    write_log(0, "<green>ok.</green>\n");
-	  else
-	  {
-	    write_err("FAILED: Could not append tar file!\n");
-	    error_count++;
-	    if (!force) return 0;
-	  }
-	  Privs privs = Privs("RoxenPatch: Remove file: " + path + ".o");
-	  if (!dry_run) {
-	    if (rm(path + ".o"))
-	    {
-	      write_log(0, "<green>ok.</green>\n");
-	    } else {
-	      write_err("FAILED: Could not remove file.\n");
-	      error_count++;
-	      if (!force) return 0;
-	    }
-	  }
-	  privs = 0;
-	}
+          if (add_file_to_tar_archive(dest + ".o",
+                                      server_path,
+                                      backup_file))
+            write_log(0, "<green>ok.</green>\n");
+          else
+          {
+            write_err("FAILED: Could not append tar file!\n");
+            error_count++;
+            if (!force) return 0;
+          }
+          Privs privs = Privs("RoxenPatch: Remove file: " + path + ".o");
+          if (!dry_run) {
+            if (rm(path + ".o"))
+            {
+              write_log(0, "<green>ok.</green>\n");
+            } else {
+              write_err("FAILED: Could not remove file.\n");
+              error_count++;
+              if (!force) return 0;
+            }
+          }
+          privs = 0;
+        }
 
-	if (has_suffix(path, "/master.pike.in")) {
-	  string master = path[..sizeof(path)-4];
-	  write_log(0, "New Pike master file <u>%s</u> ... ", master);
-	  if (is_file(master)) {
-	    write_log(0, "Backing up <u>%s</u> to <u>%s</u> ... ",
-		      master, basename(backup_file));
+        if (has_suffix(path, "/master.pike.in")) {
+          string master = path[..sizeof(path)-4];
+          write_log(0, "New Pike master file <u>%s</u> ... ", master);
+          if (is_file(master)) {
+            write_log(0, "Backing up <u>%s</u> to <u>%s</u> ... ",
+                      master, basename(backup_file));
 
-	    if (add_file_to_tar_archive(dest[..sizeof(dest)-4],
-					server_path,
-					backup_file))
-	      write_log(0, "<green>ok.</green>\n");
-	    else
-	    {
-	      write_err("FAILED: Could not append tar file!\n");
-	      error_count++;
-	      if (!force) return 0;
-	    }
-	  }
-	  if (!dry_run) {
-	    string data = Stdio.read_bytes(path);
-	    string libdir = dirname(master);
-	    string cflags = predef::master()->cflags||"#cflags#";
-	    string ldflags = predef::master()->ldflags||"#ldflags#";
-	    string incdir = append_path(dirname(libdir), "include");
-	    string docdir = append_path(dirname(libdir), "doc");
+            if (add_file_to_tar_archive(dest[..sizeof(dest)-4],
+                                        server_path,
+                                        backup_file))
+              write_log(0, "<green>ok.</green>\n");
+            else
+            {
+              write_err("FAILED: Could not append tar file!\n");
+              error_count++;
+              if (!force) return 0;
+            }
+          }
+          if (!dry_run) {
+            string data = Stdio.read_bytes(path);
+            string libdir = dirname(master);
+            string cflags = predef::master()->cflags||"#cflags#";
+            string ldflags = predef::master()->ldflags||"#ldflags#";
+            string incdir = append_path(dirname(libdir), "include");
+            string docdir = append_path(dirname(libdir), "doc");
 
-	    string cppflags = " -I" + dirname(incdir);
-	    if (has_suffix(cflags, cppflags)) {
-	      // The default master appends this to cflags,
-	      // so we need to remove it here.
-	      cflags = cflags[..sizeof(cflags) - (sizeof(cppflags)+1)];
-	    }
+            string cppflags = " -I" + dirname(incdir);
+            if (has_suffix(cflags, cppflags)) {
+              // The default master appends this to cflags,
+              // so we need to remove it here.
+              cflags = cflags[..sizeof(cflags) - (sizeof(cppflags)+1)];
+            }
 
-	    data = replace(data, ({
-			     "#lib_prefix#",
-			     "#share_prefix#",
-			     "#cflags#",
-			     "#ldflags#",
-			     "#include_prefix#",
-			     "#doc_prefix#",
-			   }), ({
-			     libdir,
-			     "#share_prefix#",
-			     cflags,
-			     ldflags,
-			     incdir,
-			     docdir,
-			   }));
-	    Privs privs = Privs("RoxenPatch: Updating master " + master);
-	    if (catch {
-		Stdio.write_file(master, data);
-	      }) {
-	      privs = 0;
-	      write_err("FAILED: Could not write file.\n");
-	      error_count++;
-	      if (!force) return 0;
-	    }
-	    privs = 0;
-	    write_log(0, "<green>ok.</green>\n");
+            data = replace(data, ({
+                             "#lib_prefix#",
+                             "#share_prefix#",
+                             "#cflags#",
+                             "#ldflags#",
+                             "#include_prefix#",
+                             "#doc_prefix#",
+                           }), ({
+                             libdir,
+                             "#share_prefix#",
+                             cflags,
+                             ldflags,
+                             incdir,
+                             docdir,
+                           }));
+            Privs privs = Privs("RoxenPatch: Updating master " + master);
+            if (catch {
+                Stdio.write_file(master, data);
+              }) {
+              privs = 0;
+              write_err("FAILED: Could not write file.\n");
+              error_count++;
+              if (!force) return 0;
+            }
+            privs = 0;
+            write_log(0, "<green>ok.</green>\n");
 
-	    // NB: Clean the .o-file for the master.
-	    return post_process_path(master, file);
-	  }
-	}
+            // NB: Clean the .o-file for the master.
+            return post_process_path(master, file);
+          }
+        }
       }
       // Done.
       return 1;
@@ -784,9 +784,9 @@ class Patcher
 
     // Create a log file
     log = sprintf("Name:\t\t%s\nInstalled:\t%s\nUser:\t\t%s\n\n\n",
-		  ptchdata->name,
-		  current_time->format_mtime(),
-		  user);
+                  ptchdata->name,
+                  current_time->format_mtime(),
+                  user);
 
     // Check platform
     write_log(0, "Checking platform ... ");
@@ -794,19 +794,19 @@ class Patcher
     {
       if (!sizeof(filter(ptchdata->platform, check_platform)))
       {
-	write_log(1, "FAILED: current platform not supported by this patch.\n");
+        write_log(1, "FAILED: current platform not supported by this patch.\n");
 
-	// TO DO: Ask if the user wants to abort or continue
-	if (!force)
-	{
+        // TO DO: Ask if the user wants to abort or continue
+        if (!force)
+        {
 
-	  return 0;
-	}
-	else
-	  error_count++;
+          return 0;
+        }
+        else
+          error_count++;
       }
       else
-	write_log(0, "<green>ok.</green>\n");
+        write_log(0, "<green>ok.</green>\n");
     }
     else
       write_log(0, "<green>ok.</green>\n");
@@ -817,19 +817,19 @@ class Patcher
     {
       if (!sizeof(filter(ptchdata->version, check_server_version)))
       {
-	write_log(1, "FAILED: server version not supported by this patch.\n");
+        write_log(1, "FAILED: server version not supported by this patch.\n");
 
-	// TO DO: Ask if the user wants to abort or continue
-	if (!force)
-	{
+        // TO DO: Ask if the user wants to abort or continue
+        if (!force)
+        {
 
-	  return 0;
-	}
-	else
-	  error_count++;
+          return 0;
+        }
+        else
+          error_count++;
       }
       else
-	write_log(0, "<green>ok.</green>\n");
+        write_log(0, "<green>ok.</green>\n");
     }
     else
       write_log(0, "<green>ok.</green>\n");
@@ -841,48 +841,48 @@ class Patcher
       int error = 0;
       foreach(ptchdata->depends, string patch_id_list)
       {
-	array(string) patch_ids;
-	if (ptchdata->rxp_version > "1.0") {
-	  patch_ids = patch_id_list/"|";
-	} else {
-	  patch_ids = ({ patch_id_list });
-	}
-	int missing = 1;
-	foreach(patch_ids, string patch_id) {
-	  if (is_installed(patch_id, ptchdata->rxp_version > "1.0")) {
-	    missing = 0;
-	    break;
-	  }
-	}
-	if (missing) {
-	  if (sizeof(patch_ids) > 1) {
-	    if (!error) {
-	      write_log(1, "FAILED:\nNone of <b>%s</b> are installed!\n",
-			patch_id_list);
-	    } else {
-	      write_log(1, "Neither are any of <b>%s</b> installed.\n",
-			patch_id_list);
-	    }
-	  } else {
-	    if (!error) {
-	      write_log(1, "FAILED:\n<b>%s</b> is not installed!\n",
-			patch_id_list);
-	    } else {
-	      write_log(1, "<b>%s</b> is not installed either!\n",
-			patch_id_list);
-	    }
-	  }
-	  error_count++;
-	  error = 1;
-	}
+        array(string) patch_ids;
+        if (ptchdata->rxp_version > "1.0") {
+          patch_ids = patch_id_list/"|";
+        } else {
+          patch_ids = ({ patch_id_list });
+        }
+        int missing = 1;
+        foreach(patch_ids, string patch_id) {
+          if (is_installed(patch_id, ptchdata->rxp_version > "1.0")) {
+            missing = 0;
+            break;
+          }
+        }
+        if (missing) {
+          if (sizeof(patch_ids) > 1) {
+            if (!error) {
+              write_log(1, "FAILED:\nNone of <b>%s</b> are installed!\n",
+                        patch_id_list);
+            } else {
+              write_log(1, "Neither are any of <b>%s</b> installed.\n",
+                        patch_id_list);
+            }
+          } else {
+            if (!error) {
+              write_log(1, "FAILED:\n<b>%s</b> is not installed!\n",
+                        patch_id_list);
+            } else {
+              write_log(1, "<b>%s</b> is not installed either!\n",
+                        patch_id_list);
+            }
+          }
+          error_count++;
+          error = 1;
+        }
       }
       if (error && !force)
       {
-	privs = Privs("RoxenPatch: Write to logfile: " + log_path);
-	write_file(log_path, string_to_utf8(log));
-	privs = 0;
-	write_err("Writing log to <u>%s</u>\n", log_path);
-	return 0;
+        privs = Privs("RoxenPatch: Write to logfile: " + log_path);
+        write_file(log_path, string_to_utf8(log));
+        privs = 0;
+        write_err("Writing log to <u>%s</u>\n", log_path);
+        return 0;
       }
     }
     else
@@ -893,102 +893,102 @@ class Patcher
     {
       foreach (ptchdata->new, mapping file)
       {
-	if ((file->platform || server_platform) != server_platform) {
-	  continue;
-	}
-	string source = append_path(source_path, file->source);
-	string dest = append_path(server_path, file->destination);
-	write_log(0, "Writing new file <u>%s</u> ... ", dest);
+        if ((file->platform || server_platform) != server_platform) {
+          continue;
+        }
+        string source = append_path(source_path, file->source);
+        string dest = append_path(server_path, file->destination);
+        write_log(0, "Writing new file <u>%s</u> ... ", dest);
 
-	// Check if it already exists
-	if(!file_stat(dest))
-	{
-	  // Check if the path exists or if we need to create it.
-	  // Ignore if we are doing a dry run.
-	  string path = dirname(dest);
-	  if (!dry_run && !is_dir(path)) {
-	    privs = Privs("RoxenPatch: Create target directory: " + path);
-	    if(!mkdirhier(path))
-	    {
-	      privs = 0;
-	      write_log(1, "FAILED: Could not create target directory.\n");
-	      error_count++;
-	      if (!force)
-	      {
-		undo_changes_and_dump_log_to_file();
-		return 0;
-	      }
-	    }
-	    privs = 0;
-	  }
-	}
-	else
-	{
-	  if (file->force) {
-	    write_log(0, "FORCE: File <b>%s</b> already exists.\n", dest);
-	  } else {
-	    write_log(1, "FAILED: File exists\n");
-	    error_count++;
-	  }
-	  if (file->force || force)
-	  // Since the file exists we better make a backup!
-	  {
-	    write_log(0, "Backing up <b>%s</b> to <u>%s</u> ... ", dest,
-		                                     basename(backup_file));
+        // Check if it already exists
+        if(!file_stat(dest))
+        {
+          // Check if the path exists or if we need to create it.
+          // Ignore if we are doing a dry run.
+          string path = dirname(dest);
+          if (!dry_run && !is_dir(path)) {
+            privs = Privs("RoxenPatch: Create target directory: " + path);
+            if(!mkdirhier(path))
+            {
+              privs = 0;
+              write_log(1, "FAILED: Could not create target directory.\n");
+              error_count++;
+              if (!force)
+              {
+                undo_changes_and_dump_log_to_file();
+                return 0;
+              }
+            }
+            privs = 0;
+          }
+        }
+        else
+        {
+          if (file->force) {
+            write_log(0, "FORCE: File <b>%s</b> already exists.\n", dest);
+          } else {
+            write_log(1, "FAILED: File exists\n");
+            error_count++;
+          }
+          if (file->force || force)
+          // Since the file exists we better make a backup!
+          {
+            write_log(0, "Backing up <b>%s</b> to <u>%s</u> ... ", dest,
+                                                     basename(backup_file));
 
-	    if (add_file_to_tar_archive(file->destination,
-					server_path,
-					backup_file))
-	      write_log(0, "<green>ok.</green>\n");
-	    else
-	      // Since we will only come here if the force flag is set
-	      // it's no use trying to bail out now.
-	      write_log(1, "FAILED: No backup could be made. "
-			   "File will be overwritten anyway.\n");
-	  }
-	  else
-	  {
-	    undo_changes_and_dump_log_to_file();
-	    return 0;
-	  }
-	}
+            if (add_file_to_tar_archive(file->destination,
+                                        server_path,
+                                        backup_file))
+              write_log(0, "<green>ok.</green>\n");
+            else
+              // Since we will only come here if the force flag is set
+              // it's no use trying to bail out now.
+              write_log(1, "FAILED: No backup could be made. "
+                           "File will be overwritten anyway.\n");
+          }
+          else
+          {
+            undo_changes_and_dump_log_to_file();
+            return 0;
+          }
+        }
 
-	// Copy the file from the archive to it's destination in the system.
-	privs = Privs(sprintf("RoxenPatch: Copy file %O -> %O", source, dest));
-	if (!dry_run && cp(source, dest))
-	{
-	  // Set correct mtime - if possible.
-	  Stat fstat = file_stat(source);
+        // Copy the file from the archive to it's destination in the system.
+        privs = Privs(sprintf("RoxenPatch: Copy file %O -> %O", source, dest));
+        if (!dry_run && cp(source, dest))
+        {
+          // Set correct mtime - if possible.
+          Stat fstat = file_stat(source);
 
-	  if(fstat) {
-	    if (file["file-mode"]) {
-	      chmod(dest, array_sscanf(file["file-mode"], "%O")[0] & 0777);
-	    } else {
-	      chmod(dest, fstat->mode & 0777);
-	    }
-	    System.utime(dest, fstat->atime, fstat->mtime);
-	  }
-	  privs = 0;
-	  write_log(0, "<green>ok.</green>\n");
-	  new_files += ({ dest });
+          if(fstat) {
+            if (file["file-mode"]) {
+              chmod(dest, array_sscanf(file["file-mode"], "%O")[0] & 0777);
+            } else {
+              chmod(dest, fstat->mode & 0777);
+            }
+            System.utime(dest, fstat->atime, fstat->mtime);
+          }
+          privs = 0;
+          write_log(0, "<green>ok.</green>\n");
+          new_files += ({ dest });
 
-	  if (!post_process_path(dest, file)) {
-	    undo_changes_and_dump_log_to_file();
-	    return 0;
-	  }
-	}
-	else if (!dry_run)
-	{
-	  privs = 0;
-	  write_log(1, "FAILED: Could not write file.\n");
-	  error_count++;
-	  if (!force)
-	  {
-	    undo_changes_and_dump_log_to_file();
-	    return 0;
-	  }
-	}
-	privs = 0;
+          if (!post_process_path(dest, file)) {
+            undo_changes_and_dump_log_to_file();
+            return 0;
+          }
+        }
+        else if (!dry_run)
+        {
+          privs = 0;
+          write_log(1, "FAILED: Could not write file.\n");
+          error_count++;
+          if (!force)
+          {
+            undo_changes_and_dump_log_to_file();
+            return 0;
+          }
+        }
+        privs = 0;
       }
     }
 
@@ -997,85 +997,85 @@ class Patcher
     {
       foreach (ptchdata->replace, mapping file)
       {
-	if ((file->platform || server_platform) != server_platform) {
-	  continue;
-	}
-	string source = append_path(source_path, file->source);
-	string dest = append_path(server_path, file->destination);
+        if ((file->platform || server_platform) != server_platform) {
+          continue;
+        }
+        string source = append_path(source_path, file->source);
+        string dest = append_path(server_path, file->destination);
 
-	// Make sure that the destination already exists
-	if(is_file(dest))
-	{
-	  // Backup the original file to a tar_archive
-	  write_log(0, "Backing up <b>%s</b> to <u>%s</u> ... ",
-		    dest,
-		    basename(backup_file));
+        // Make sure that the destination already exists
+        if(is_file(dest))
+        {
+          // Backup the original file to a tar_archive
+          write_log(0, "Backing up <b>%s</b> to <u>%s</u> ... ",
+                    dest,
+                    basename(backup_file));
 
-	  if (add_file_to_tar_archive(file->destination,
-				      server_path,
-				      backup_file))
-	    write_log(0, "<green>ok.</green>\n");
-	  else
-	  {
-	    write_err("FAILED: Could not append tar file!\n");
+          if (add_file_to_tar_archive(file->destination,
+                                      server_path,
+                                      backup_file))
+            write_log(0, "<green>ok.</green>\n");
+          else
+          {
+            write_err("FAILED: Could not append tar file!\n");
 
-	    if (!force)
-	    {
-	      undo_changes_and_dump_log_to_file();
-	      return 0;
-	    }
-	  }
+            if (!force)
+            {
+              undo_changes_and_dump_log_to_file();
+              return 0;
+            }
+          }
 
-	  // copy the file from the archive to it's destination in the system.
-	  write_log(0, "Replacing file <u>%s</u> ... ", dest);
-	  privs = Privs("RoxenPatch: Replace file \"" + source + "\" -> \"" + dest + "\"");
-	  if (!dry_run && cp(source, dest))
-	  {
-	    // Set correct mtime - if possible.
-	    Stat fstat = file_stat(source);
+          // copy the file from the archive to it's destination in the system.
+          write_log(0, "Replacing file <u>%s</u> ... ", dest);
+          privs = Privs("RoxenPatch: Replace file \"" + source + "\" -> \"" + dest + "\"");
+          if (!dry_run && cp(source, dest))
+          {
+            // Set correct mtime - if possible.
+            Stat fstat = file_stat(source);
 
-	    if(fstat) {
-	      if (file["file-mode"]) {
-		chmod(dest, array_sscanf(file["file-mode"], "%O")[0] & 0777);
-	      } else {
-		chmod(dest, fstat->mode & 0777);
-	      }
-	      System.utime(dest, fstat->atime, fstat->mtime);
-	    }
-	    privs = 0;
-	    write_log(0, "<green>ok.</green>\n");
+            if(fstat) {
+              if (file["file-mode"]) {
+                chmod(dest, array_sscanf(file["file-mode"], "%O")[0] & 0777);
+              } else {
+                chmod(dest, fstat->mode & 0777);
+              }
+              System.utime(dest, fstat->atime, fstat->mtime);
+            }
+            privs = 0;
+            write_log(0, "<green>ok.</green>\n");
 
-	    if (!post_process_path(dest, file)) {
-	      undo_changes_and_dump_log_to_file();
-	      return 0;
-	    }
-	  }
-	  else if (!dry_run)
-	  {
-	    privs = 0;
-	    write_log(1, "FAILED: Could not write file.\n");
-	    error_count++;
-	    if (!force)
-	    {
-	      undo_changes_and_dump_log_to_file();
-	      return 0;
-	    }
-	  }
-	  else {
-	    privs = 0;
-	    write_log(0, "<green>ok.</green>\n");
-	  }
-	}
-	else
-	{
-	  write_log(1, "FAILED: File to be overwritten doesn't exist.\n");
-	  error_count++;
-	  if (!force)
-	  {
-	    undo_changes_and_dump_log_to_file();
-	    return 0;
-	  }
-	}
+            if (!post_process_path(dest, file)) {
+              undo_changes_and_dump_log_to_file();
+              return 0;
+            }
+          }
+          else if (!dry_run)
+          {
+            privs = 0;
+            write_log(1, "FAILED: Could not write file.\n");
+            error_count++;
+            if (!force)
+            {
+              undo_changes_and_dump_log_to_file();
+              return 0;
+            }
+          }
+          else {
+            privs = 0;
+            write_log(0, "<green>ok.</green>\n");
+          }
+        }
+        else
+        {
+          write_log(1, "FAILED: File to be overwritten doesn't exist.\n");
+          error_count++;
+          if (!force)
+          {
+            undo_changes_and_dump_log_to_file();
+            return 0;
+          }
+        }
       }
     }
 
@@ -1084,65 +1084,65 @@ class Patcher
     {
       foreach (ptchdata->delete, mapping(string:string) del_info)
       {
-	if ((del_info->platform || server_platform) != server_platform) {
-	  continue;
-	}
-	string dest = append_path(server_path, del_info->destination);
-	write_log(0, "Removing file <u>%s</u> ... ", dest);
+        if ((del_info->platform || server_platform) != server_platform) {
+          continue;
+        }
+        string dest = append_path(server_path, del_info->destination);
+        write_log(0, "Removing file <u>%s</u> ... ", dest);
 
-	// Make sure that the destination already exists
-	if(is_file(dest))
-	{
-	  // Backup the original file to a tar_archive
-	  write_log(0, "Backing up <u>%s</u> to <u>%s</u> ... ",
-		    dest,
-		    basename(backup_file));
+        // Make sure that the destination already exists
+        if(is_file(dest))
+        {
+          // Backup the original file to a tar_archive
+          write_log(0, "Backing up <u>%s</u> to <u>%s</u> ... ",
+                    dest,
+                    basename(backup_file));
 
-	  if (add_file_to_tar_archive(del_info->destination,
-				      server_path,
-				      backup_file))
-	    write_log(0, "<green>ok.</green>\n");
-	  else
-	  {
-	    write_err("FAILED: Could not append tar file!\n");
+          if (add_file_to_tar_archive(del_info->destination,
+                                      server_path,
+                                      backup_file))
+            write_log(0, "<green>ok.</green>\n");
+          else
+          {
+            write_err("FAILED: Could not append tar file!\n");
 
-	    if (!force)
-	    {
-	      undo_changes_and_dump_log_to_file();
-	      return 0;
-	    }
-	  }
+            if (!force)
+            {
+              undo_changes_and_dump_log_to_file();
+              return 0;
+            }
+          }
 
-	  // Remove the file
-	  privs = Privs("RoxenPatch: Remove file: " + dest);
-	  if (!dry_run && rm(dest))
-	  {
-	    write_log(0, "<green>ok.</green>\n");
+          // Remove the file
+          privs = Privs("RoxenPatch: Remove file: " + dest);
+          if (!dry_run && rm(dest))
+          {
+            write_log(0, "<green>ok.</green>\n");
 
-	    if (!post_process_path(dest, del_info)) {
-	      undo_changes_and_dump_log_to_file();
-	      return 0;
-	    }
-	  }
-	  else if (!dry_run)
-	  {
-	    write_log(1, "FAILED: Could not remove file.\n");
-	    error_count++;
-	    if (!force)
-	    {
-	      privs = 0;
-	      undo_changes_and_dump_log_to_file();
-	      return 0;
-	    }
-	  }
-	  privs = 0;
-	}
-	else
-	{
-	  write_log(1, "FAILED: File to be removed doesn't exist.\n");
-	  error_count++;
-	  // This is not a fatal error so we'll just continue.
-	}
+            if (!post_process_path(dest, del_info)) {
+              undo_changes_and_dump_log_to_file();
+              return 0;
+            }
+          }
+          else if (!dry_run)
+          {
+            write_log(1, "FAILED: Could not remove file.\n");
+            error_count++;
+            if (!force)
+            {
+              privs = 0;
+              undo_changes_and_dump_log_to_file();
+              return 0;
+            }
+          }
+          privs = 0;
+        }
+        else
+        {
+          write_log(1, "FAILED: File to be removed doesn't exist.\n");
+          error_count++;
+          // This is not a fatal error so we'll just continue.
+        }
       }
     }
 
@@ -1153,174 +1153,174 @@ class Patcher
 
       foreach (ptchdata->patch, mapping(string:string) patch_info)
       {
-	if ((patch_info->platform || server_platform) != server_platform) {
-	  continue;
-	}
-	string file = patch_info->source;
-	File udiff_data = File(append_path(source_path, file));
-	string udiff = udiff_data->read();
+        if ((patch_info->platform || server_platform) != server_platform) {
+          continue;
+        }
+        string file = patch_info->source;
+        File udiff_data = File(append_path(source_path, file));
+        string udiff = udiff_data->read();
 
-	// Backup files
-	foreach(lsdiff(udiff), string affected_file)
-	{
-	  // Check that the affected file exists
-	  write_log(0, "Checking %s ... ", affected_file);
-	  if (is_file(append_path(server_path, affected_file)))
-	  {
-	    write_log(0, "<green>ok.</green>\nBacking up %s to %s ... ",
-		      affected_file,
-		      basename(backup_file));
-	    if (add_file_to_tar_archive(affected_file,
-					server_path,
-					backup_file))
-	      write_log(0, "<green>ok.</green>\n");
-	    else
-	    {
-	      write_log(1, "FAILED: Could not append tar file!\n");
-	      error_count++;
+        // Backup files
+        foreach(lsdiff(udiff), string affected_file)
+        {
+          // Check that the affected file exists
+          write_log(0, "Checking %s ... ", affected_file);
+          if (is_file(append_path(server_path, affected_file)))
+          {
+            write_log(0, "<green>ok.</green>\nBacking up %s to %s ... ",
+                      affected_file,
+                      basename(backup_file));
+            if (add_file_to_tar_archive(affected_file,
+                                        server_path,
+                                        backup_file))
+              write_log(0, "<green>ok.</green>\n");
+            else
+            {
+              write_log(1, "FAILED: Could not append tar file!\n");
+              error_count++;
 
-	      if (!force)
-	      {
-		undo_changes_and_dump_log_to_file();
-		return 0;
-	      }
-	    }
-	  }
-	  else
-	  {
-	    write_log(1, "FAILED: File does not exist.\n");
-	    error_count++;
-	    if (!force)
-	    {
-	      undo_changes_and_dump_log_to_file();
-	      return 0;
-	    }
-	  }
+              if (!force)
+              {
+                undo_changes_and_dump_log_to_file();
+                return 0;
+              }
+            }
+          }
+          else
+          {
+            write_log(1, "FAILED: File does not exist.\n");
+            error_count++;
+            if (!force)
+            {
+              undo_changes_and_dump_log_to_file();
+              return 0;
+            }
+          }
 
-	  // Backup the .orig file too (if any).
-	  string orig_file = affected_file + ".orig";
-	  if (is_file(append_path(server_path, orig_file)))
-	  {
-	    write_log(0, "<green>ok.</green>\nBacking up %s to %s ... ",
-		      orig_file,
-		      basename(backup_file));
-	    if (add_file_to_tar_archive(orig_file, server_path, backup_file))
-	      write_log(0, "<green>ok.</green>\n");
-	    else
-	    {
-	      write_log(1, "FAILED: Could not append tar file!\n");
-	      error_count++;
+          // Backup the .orig file too (if any).
+          string orig_file = affected_file + ".orig";
+          if (is_file(append_path(server_path, orig_file)))
+          {
+            write_log(0, "<green>ok.</green>\nBacking up %s to %s ... ",
+                      orig_file,
+                      basename(backup_file));
+            if (add_file_to_tar_archive(orig_file, server_path, backup_file))
+              write_log(0, "<green>ok.</green>\n");
+            else
+            {
+              write_log(1, "FAILED: Could not append tar file!\n");
+              error_count++;
 
-	      if (!force)
-	      {
-		undo_changes_and_dump_log_to_file();
-		return 0;
-	      }
-	    }
+              if (!force)
+              {
+                undo_changes_and_dump_log_to_file();
+                return 0;
+              }
+            }
 
-	    // Currently we only undo Distmaker's alterations of CVS/Root.
-	    if (!has_suffix(orig_file, "/CVS/Root.orig")) {
-	      continue;
-	    }
+            // Currently we only undo Distmaker's alterations of CVS/Root.
+            if (!has_suffix(orig_file, "/CVS/Root.orig")) {
+              continue;
+            }
 
-	    // Restore the original contents so that we can apply the patch.
-	    if (!dry_run) {
-	      if (!mv(append_path(server_path, orig_file),
-		      append_path(server_path, affected_file))) {
-		write_log(1, "FAILED to restore orig file (%d: %s)\n"
-			  "%O ==> %O\n",
-			  errno(), strerror(errno()),
-			  append_path(server_path, orig_file),
-			  append_path(server_path, affected_file));
-		error_count++;
+            // Restore the original contents so that we can apply the patch.
+            if (!dry_run) {
+              if (!mv(append_path(server_path, orig_file),
+                      append_path(server_path, affected_file))) {
+                write_log(1, "FAILED to restore orig file (%d: %s)\n"
+                          "%O ==> %O\n",
+                          errno(), strerror(errno()),
+                          append_path(server_path, orig_file),
+                          append_path(server_path, affected_file));
+                error_count++;
 
-		if (!force) {
-		  undo_changes_and_dump_log_to_file();
-		  return 0;
-		}
-	      }
-	    }
-	  }
-	}
-	privs = 0;
+                if (!force) {
+                  undo_changes_and_dump_log_to_file();
+                  return 0;
+                }
+              }
+            }
+          }
+        }
+        privs = 0;
 
-	// Patch file.
-	write_log(0, "Applying patch ... ");
-	udiff_data->seek(0); // Start from the beginning of the file again.
+        // Patch file.
+        write_log(0, "Applying patch ... ");
+        udiff_data->seek(0); // Start from the beginning of the file again.
 
-	array args = ({ patch_bin,
-			"-p0",
+        array args = ({ patch_bin,
+                        "-p0",
 #ifdef __NT__
-			// Make sure that patch doesn't mess around
-			// with EOL (cf [bug 7244]).
-			"--binary",
+                        // Make sure that patch doesn't mess around
+                        // with EOL (cf [bug 7244]).
+                        "--binary",
 #endif
-			// Reject file
+                        // Reject file
 // 			"--global-reject-file=" +
 // 			   append_path(source_path, "rejects"),
-			"-d", combine_path(getcwd(), server_path) });
+                        "-d", combine_path(getcwd(), server_path) });
 
-	if (dry_run)
-	  args += ({ "--dry-run" });
+        if (dry_run)
+          args += ({ "--dry-run" });
 
-	mapping opts = ([
-	  "cwd"   : server_path,
-	  "stdin" : udiff_data,
-	]);
+        mapping opts = ([
+          "cwd"   : server_path,
+          "stdin" : udiff_data,
+        ]);
 
 #if constant(System.getrlimit)
-	if (System.getrlimit("nofile")[0] == -1) {
-	  // Workaround for bugs in gnu patch 2.7.4 - 2.7.6.
-	  opts->rlimit = ([ "nofile": ({ 1024, 1024 }) ]);
-	}
+        if (System.getrlimit("nofile")[0] == -1) {
+          // Workaround for bugs in gnu patch 2.7.4 - 2.7.6.
+          opts->rlimit = ([ "nofile": ({ 1024, 1024 }) ]);
+        }
 #endif
 
-	Privs privs = Privs(sprintf("RoxenPatch: Spawning %O.", patch_bin));
-	Process.Process p = Process.Process(args, opts);
-	privs = 0;
+        Privs privs = Privs(sprintf("RoxenPatch: Spawning %O.", patch_bin));
+        Process.Process p = Process.Process(args, opts);
+        privs = 0;
 
-	if (!p || p->wait())
-	{
-	  error_count++;
-	  error = 1;
-	  switch (p->wait())
-	  {
-	    case 1:
-	      if (!force)
-		write_log(1, "FAILED: Some hunks could not be patched.\n"
-			     "If you want to patch anyway run rxnpatch from "
-			     "the prompt with --force\n");
-	      break;
-	    case 2:
-	      write_log(1, "FAILED: Permission denied.\n");
-	      break;
-	    default:
-	      write_log(1, "FAILED!\n");
-	  }
-	  if (!force)
-	  {
-	    udiff_data->close();
-	    undo_changes_and_dump_log_to_file();
-	    return 0;
-	  }
-	}
+        if (!p || p->wait())
+        {
+          error_count++;
+          error = 1;
+          switch (p->wait())
+          {
+            case 1:
+              if (!force)
+                write_log(1, "FAILED: Some hunks could not be patched.\n"
+                             "If you want to patch anyway run rxnpatch from "
+                             "the prompt with --force\n");
+              break;
+            case 2:
+              write_log(1, "FAILED: Permission denied.\n");
+              break;
+            default:
+              write_log(1, "FAILED!\n");
+          }
+          if (!force)
+          {
+            udiff_data->close();
+            undo_changes_and_dump_log_to_file();
+            return 0;
+          }
+        }
 
-	// Close file object again
-	udiff_data->close();
+        // Close file object again
+        udiff_data->close();
 
-	if (!error) {
-	  write_log(0, "<green>ok.</green>\n");
+        if (!error) {
+          write_log(0, "<green>ok.</green>\n");
 
-	  if (!dry_run) {
-	    foreach(lsdiff(udiff), string affected_file) {
-	      if (!post_process_path(append_path(server_path, affected_file),
-				     patch_info)) {
-		undo_changes_and_dump_log_to_file();
-		return 0;
-	      }
-	    }
-	  }
-	}
+          if (!dry_run) {
+            foreach(lsdiff(udiff), string affected_file) {
+              if (!post_process_path(append_path(server_path, affected_file),
+                                     patch_info)) {
+                undo_changes_and_dump_log_to_file();
+                return 0;
+              }
+            }
+          }
+        }
       }
     }
 
@@ -1329,7 +1329,7 @@ class Patcher
     {
       write_log(0, "Moving patch files ...");
       string dest_path = combine_path(installed_path,
-				      basename(source_path));
+                                      basename(source_path));
       privs = Privs("RoxenPatch: Move patch files");
       // This is because the file locks in Windows are evil and don't let go as
       // soon as one would wish. That's why a time out before reporting
@@ -1338,28 +1338,28 @@ class Patcher
       int mv_status = Stdio.recursive_mv(source_path, dest_path);
       while (!mv_status && errno() == 13 && i > 0)
       {
-	sleep(0.25);
-	Stdio.recursive_rm (dest_path); // To clean up a half-finished copy.
-	mv_status = Stdio.recursive_mv(source_path, dest_path);
-	i--;
+        sleep(0.25);
+        Stdio.recursive_rm (dest_path); // To clean up a half-finished copy.
+        mv_status = Stdio.recursive_mv(source_path, dest_path);
+        i--;
       }
       privs = 0;
 
       if (mv_status)
       {
-	write_log(0, "<green>ok.</green>\n");
-	// Set a new destination for the log file
-	log_path = combine_path(dest_path, "installation.log");
+        write_log(0, "<green>ok.</green>\n");
+        // Set a new destination for the log file
+        log_path = combine_path(dest_path, "installation.log");
       }
       else
       {
-	write_log(1, "Failed to move patch files: %O\n", strerror(errno()));
-	error_count++;
-	if (!force)
-	{
-	  undo_changes_and_dump_log_to_file();
-	  return 0;
-	}
+        write_log(1, "Failed to move patch files: %O\n", strerror(errno()));
+        error_count++;
+        if (!force)
+        {
+          undo_changes_and_dump_log_to_file();
+          return 0;
+        }
       }
     }
 
@@ -1414,8 +1414,8 @@ class Patcher
 
     write_mess("Reading installation log ... ");
     string log = read_file(combine_path(installed_path,
-					id,
-					"installation.log"));
+                                        id,
+                                        "installation.log"));
     if (!(log && sizeof(log)))
     {
       write_err("FAILED!\n");
@@ -1425,8 +1425,8 @@ class Patcher
 
     write_mess("Checking metadata ... ");
     string mdxml = read_file(combine_path(installed_path,
-					  id,
-					  "metadata"));
+                                          id,
+                                          "metadata"));
     if (!(mdxml && sizeof(mdxml)))
     {
       write_err("FAILED: No metadata!\n");
@@ -1446,18 +1446,18 @@ class Patcher
     write_mess("Checking for backups ... ");
     string backup_file;
     if (sscanf(log, "%*sBacking up %*s to %s ... ok.\n",
-	       backup_file) == 3)
+               backup_file) == 3)
     {
       if ( !(backup_file && sizeof(backup_file)) )
       {
-	write_err("FAILED: No known backups!\n");
-	return 0;
+        write_err("FAILED: No known backups!\n");
+        return 0;
       }
       backup_file = combine_path(installed_path, id, basename(backup_file));
       if (!is_file(backup_file))
       {
-	write_err("FAILED: Backup file %s not found!\n", backup_file);
-	return 0;
+        write_err("FAILED: Backup file %s not found!\n", backup_file);
+        return 0;
       }
     }
     write_mess("<green>Done!</green>\n");
@@ -1467,20 +1467,20 @@ class Patcher
     {
       foreach(metadata->new, mapping(string:string) file)
       {
-	if ((file->platform || server_platform) != server_platform) {
-	  continue;
-	}
-	string filename = file->destination;
-	write_mess("Removing %s ... ", append_path(server_path, filename));
-	privs = Privs("RoxenPatch: Removing created files.");
-	if(rm(append_path(server_path, filename)))
-	  write_mess("<green>Done!</green>\n");
-	else
-	{
-	  write_err("FAILED!\n");
-	  errors++;
-	}
-	privs = 0;
+        if ((file->platform || server_platform) != server_platform) {
+          continue;
+        }
+        string filename = file->destination;
+        write_mess("Removing %s ... ", append_path(server_path, filename));
+        privs = Privs("RoxenPatch: Removing created files.");
+        if(rm(append_path(server_path, filename)))
+          write_mess("<green>Done!</green>\n");
+        else
+        {
+          write_err("FAILED!\n");
+          errors++;
+        }
+        privs = 0;
       }
     }
 
@@ -1489,11 +1489,11 @@ class Patcher
     {
       write_mess("Restoring backed up files from %O... ", backup_file);
       if (extract_tar_archive(backup_file, server_path))
-	write_mess("<green>Done!</green>\n");
+        write_mess("<green>Done!</green>\n");
       else
       {
-	write_err("FAILED!\n");
-	errors++;
+        write_err("FAILED!\n");
+        errors++;
       }
     }
 
@@ -1507,9 +1507,9 @@ class Patcher
     } else {
       privs = 0;
       write_err("FAILED to move patch files (%d: %s)\n"
-		"%O ==> %O\n",
-		errno(), strerror(errno()),
-		append_path(installed_path, id), dest_path);
+                "%O ==> %O\n",
+                errno(), strerror(errno()),
+                append_path(installed_path, id), dest_path);
       errors++;
     }
 
@@ -1523,8 +1523,8 @@ class Patcher
 
     // Write to the installation log when the patch was uninstalled:
     log += sprintf("\nUninstalled:\t%s\nUser:\t\t%s\n",
-		   Calendar.ISO->now()->format_mtime(),
-		   user);
+                   Calendar.ISO->now()->format_mtime(),
+                   user);
     privs = Privs("RoxenPatch: Creating installation.log file.");
     write_file(append_path(dest_path, "installation.log"), string_to_utf8(log));
     privs = 0;
@@ -1545,7 +1545,7 @@ class Patcher
     if (!Stdio.recursive_rm(path)) {
       privs = 0;
       write_err(sprintf("Failed to remove patch %s from disk. "
-			"Not enough privileges?\n", patch_id));
+                        "Not enough privileges?\n", patch_id));
       return 0;
     }
     privs = 0;
@@ -1581,8 +1581,8 @@ class Patcher
 
     if (!(file_path && sizeof(file_path)))
       return ([
-	"metadata" : PatchObject(id),
-	"status" : "unknown",
+        "metadata" : PatchObject(id),
+        "status" : "unknown",
       ]);
 
     // Get metadata
@@ -1593,8 +1593,8 @@ class Patcher
     }
     else
       return ([
-	"metadata" : PatchObject(id),
-	"status" : "unknown"
+        "metadata" : PatchObject(id),
+        "status" : "unknown"
       ]);
 
     string inst_user, uninst_user;
@@ -1602,43 +1602,43 @@ class Patcher
     if (is_file(append_path(file_path, "installation.log")))
     {
       string install_log = read_file(append_path(file_path,
-						 "installation.log"));
+                                                 "installation.log"));
       sscanf(install_log,
-	     "%*sInstalled:\t%4d-%2d-%2d %2d:%2d\nUser:\t\t%s\n",
-	     int year,
-	     int month,
-	     int day,
-	     int hour,
-	     int minute,
-	     inst_user);
+             "%*sInstalled:\t%4d-%2d-%2d %2d:%2d\nUser:\t\t%s\n",
+             int year,
+             int month,
+             int day,
+             int hour,
+             int minute,
+             inst_user);
 
       inst_date = ([ "year" : (year > 1900) ? year - 1900 : year,
-		     "mon"  : month,
-		     "mday" : day,
-		     "hour" : hour,
-		     "min"  : minute ]);
+                     "mon"  : month,
+                     "mday" : day,
+                     "hour" : hour,
+                     "min"  : minute ]);
 
       res->installed	= inst_date;
       res->user	= inst_user || "Unknown";
 
       if (sscanf(install_log,
-		 "%*sUninstalled:\t%4d-%2d-%2d %2d:%2d\nUser:\t\t%s\n",
-		 year,
-		 month,
-		 day,
-		 hour,
-		 minute,
-		 uninst_user) == 7)
+                 "%*sUninstalled:\t%4d-%2d-%2d %2d:%2d\nUser:\t\t%s\n",
+                 year,
+                 month,
+                 day,
+                 hour,
+                 minute,
+                 uninst_user) == 7)
       {
-	uninst_date = ([ "year" : (year > 1900) ? year - 1900 : year,
-			 "mon"  : month,
-			 "mday" : day,
-			 "hour" : hour,
-			 "min"  : minute ]);
-	res->status		= "uninstalled";
-	res->uninstalled	= uninst_date;
-	res->uninstall_user	= uninst_user;
-	return res;
+        uninst_date = ([ "year" : (year > 1900) ? year - 1900 : year,
+                         "mon"  : month,
+                         "mday" : day,
+                         "hour" : hour,
+                         "min"  : minute ]);
+        res->status		= "uninstalled";
+        res->uninstalled	= uninst_date;
+        res->uninstall_user	= uninst_user;
+        return res;
       }
 
       // Assume the patch is installed.
@@ -1663,7 +1663,7 @@ class Patcher
   {
     PatchObject p = PatchObject(patchid);
     SimpleNode md = simple_parse_input(metadata_block, 0,
-				       PARSE_CHECK_ALL_ERRORS);
+                                       PARSE_CHECK_ALL_ERRORS);
     //				       PARSE_FORCE_LOWERCASE |
     //				       PARSE_WANT_ERROR_CONTEXT);
 
@@ -1679,56 +1679,56 @@ class Patcher
       switch(name)
       {
       case "flag":
-	// Check if we have a flag and if that flag is on or off.
-	if (attrs->name && (tag_content != "false") && (tag_content != "0")) {
-	  p->flags += (< attrs->name >);
-	}
-	break;
+        // Check if we have a flag and if that flag is on or off.
+        if (attrs->name && (tag_content != "false") && (tag_content != "0")) {
+          p->flags += (< attrs->name >);
+        }
+        break;
       case "patch":
-	if (attrs->source) {
-	  p->patch += ({ attrs });
-	}
-	break;
+        if (attrs->source) {
+          p->patch += ({ attrs });
+        }
+        break;
       case "name":
-	p->name = tag_content;
-	break;
+        p->name = tag_content;
+        break;
       case "description":
-	switch (attrs->type) {
-	default:
-	case "text/plain":
-	  // Trim initial and trailing white space.
-	  p->description = String.trim_all_whites(tag_content);
-	  break;
-	  case 0:
-	  // Old-style.
-	  // All formatting (if any) was destroyed when the patch was created.
-	  p->description = trim_ALL_redundant_whites(tag_content);
-	  break;
-	}
-	break;
+        switch (attrs->type) {
+        default:
+        case "text/plain":
+          // Trim initial and trailing white space.
+          p->description = String.trim_all_whites(tag_content);
+          break;
+          case 0:
+          // Old-style.
+          // All formatting (if any) was destroyed when the patch was created.
+          p->description = trim_ALL_redundant_whites(tag_content);
+          break;
+        }
+        break;
       case "originator":
-	p->originator = tag_content;
-	break;
+        p->originator = tag_content;
+        break;
       case "delete":
       case "new":
       case "replace":
-	if (sizeof(attrs)) {
-	  if (!p[name]) p[name] = ({});
-	  attrs->destination = attrs->destination || tag_content;
-	  p[name] += ({ attrs });
-	}
-	break;
+        if (sizeof(attrs)) {
+          if (!p[name]) p[name] = ({});
+          attrs->destination = attrs->destination || tag_content;
+          p[name] += ({ attrs });
+        }
+        break;
       default:
-	if (sizeof(attrs)) {
-	  if (!p[name]) p[name] = ({});
-	  foreach(attrs; string i; string v) {
-	    // FIXME: Why?
-	    p[name] += ({ ([i:v]) });
-	  }
-	  break;
-	}
-	p[name] += ({ tag_content });
-	break;
+        if (sizeof(attrs)) {
+          if (!p[name]) p[name] = ({});
+          foreach(attrs; string i; string v) {
+            // FIXME: Why?
+            p[name] += ({ ([i:v]) });
+          }
+          break;
+        }
+        p[name] += ({ tag_content });
+        break;
       }
     }
 
@@ -1766,8 +1766,8 @@ class Patcher
 
     // Get installation log
     string install_log = append_path(installed_path,
-				     id,
-				     "installation.log");
+                                     id,
+                                     "installation.log");
     string user;
     mapping(string:int) inst_date;
     PatchObject po;
@@ -1776,34 +1776,34 @@ class Patcher
     {
       string log_data = read_file(install_log);
       sscanf(log_data,
-	     "%*sInstalled:\t%4d-%2d-%2d %2d:%2d\nUser:\t\t%s\n",
-	     int year,
-	     int month,
-	     int day,
-	     int hour,
-	     int minute,
-	     user);
+             "%*sInstalled:\t%4d-%2d-%2d %2d:%2d\nUser:\t\t%s\n",
+             int year,
+             int month,
+             int day,
+             int hour,
+             int minute,
+             user);
 
       inst_date = ([ "year" : (year > 1900) ? year - 1900 : year,
-		     "mon"  : month,
-		     "mday" : day,
-		     "hour" : hour,
-		     "min"  : minute ]);
+                     "mon"  : month,
+                     "mday" : day,
+                     "hour" : hour,
+                     "min"  : minute ]);
     }
 
     // Get metadata
     string mdfile = append_path(installed_path,
-				id,
-				"metadata");
+                                id,
+                                "metadata");
     if (is_file(mdfile))
     {
       string mdblock = read_file(mdfile);
       po = parse_metadata(mdblock,
-			  extract_id_from_filename(mdfile));
+                          extract_id_from_filename(mdfile));
 
       return ([ "installed" : inst_date,
-		"user"      : user,
-		"metadata"  : po ]);
+                "user"      : user,
+                "metadata"  : po ]);
     }
 
     return 0;
@@ -1838,8 +1838,8 @@ class Patcher
 
     // Get installation log
     string install_log = append_path(import_path,
-				     id,
-				     "installation.log");
+                                     id,
+                                     "installation.log");
     string inst_user, uninst_user;
     mapping(string:int) inst_date, uninst_date;
     PatchObject po;
@@ -1848,50 +1848,50 @@ class Patcher
     {
       string log_data = read_file(install_log);
       sscanf(log_data,
-	     "%*sInstalled:\t%4d-%2d-%2d %2d:%2d\nUser:\t\t%s\n",
-	     int year,
-	     int month,
-	     int day,
-	     int hour,
-	     int minute,
-	     inst_user);
+             "%*sInstalled:\t%4d-%2d-%2d %2d:%2d\nUser:\t\t%s\n",
+             int year,
+             int month,
+             int day,
+             int hour,
+             int minute,
+             inst_user);
 
       inst_date = ([ "year" : (year > 1900) ? year - 1900 : year,
-		     "mon"  : month,
-		     "mday" : day,
-		     "hour" : hour,
-		     "min"  : minute ]);
+                     "mon"  : month,
+                     "mday" : day,
+                     "hour" : hour,
+                     "min"  : minute ]);
       sscanf(log_data,
-	     "%*sUninstalled:\t%4d-%2d-%2d %2d:%2d\nUser:\t\t%s\n",
-	     year,
-	     month,
-	     day,
-	     hour,
-	     minute,
-	     uninst_user);
+             "%*sUninstalled:\t%4d-%2d-%2d %2d:%2d\nUser:\t\t%s\n",
+             year,
+             month,
+             day,
+             hour,
+             minute,
+             uninst_user);
 
       uninst_date = ([ "year" : (year > 1900) ? year - 1900 : year,
-		       "mon"  : month,
-		       "mday" : day,
-		       "hour" : hour,
-		       "min"  : minute ]);
+                       "mon"  : month,
+                       "mday" : day,
+                       "hour" : hour,
+                       "min"  : minute ]);
     }
 
     // Get metadata
     string mdfile = append_path(import_path,
-				id,
-				"metadata");
+                                id,
+                                "metadata");
     if (is_file(mdfile))
     {
       string mdblock = read_file(mdfile);
       po = parse_metadata(mdblock,
-			  extract_id_from_filename(mdfile));
+                          extract_id_from_filename(mdfile));
 
       return ([ "installed"		: inst_date,
-		"user"		: inst_user,
-		"uninstalled"	: uninst_date,
-		"uninstall_user"	: uninst_user,
-		"metadata"		: po ]);
+                "user"		: inst_user,
+                "uninstalled"	: uninst_date,
+                "uninstall_user"	: uninst_user,
+                "metadata"		: po ]);
     }
 
     return 0;
@@ -1923,14 +1923,14 @@ class Patcher
     }
     res =
       filter(map(get_dir(installed_path) || ({ }), describe_installed_patch),
-	     mappingp);
+             mappingp);
 
     //  Return in reverse chronological order, i.e. newest first
     res = Array.sort_array(res, lambda (mapping a, mapping b)
-				 {
-				   return a->metadata->id < b->metadata->id;
-				 }
-			    );
+                                 {
+                                   return a->metadata->id < b->metadata->id;
+                                 }
+                            );
     installed_patches = res;
     return res;
   }
@@ -1964,14 +1964,14 @@ class Patcher
   {
     array(mapping(string:string|mapping(string:mixed))) res =
       filter(map(get_dir(import_path) || ({ }),  describe_imported_patch),
-	     mappingp);
+             mappingp);
 
     //  Return in chronological order, i.e. oldest first
     return Array.sort_array(res, lambda (mapping a, mapping b)
-				 {
-				   return a->metadata->id > b->metadata->id;
-				 }
-			    );
+                                 {
+                                   return a->metadata->id > b->metadata->id;
+                                 }
+                            );
   }
 
   string current_version()
@@ -2055,71 +2055,71 @@ class Patcher
     xml += sprintf("<rxp version=\"%s\">\n", rxp_version);
 
     xml += sprintf("  <name>%s</name>\n",
-		   html_encode(metadata->name));
+                   html_encode(metadata->name));
 
     string desc = String.trim_all_whites(metadata->description);
     xml += sprintf("  <description type='text/plain'>\n%s\n  </description>\n",
-		   html_encode(desc));
+                   html_encode(desc));
 
     xml += sprintf("  <originator>%s</originator>\n",
-		   html_encode(metadata->originator));
+                   html_encode(metadata->originator));
 
     // Add feature dependency on file-modes-2 if used.
     foreach((metadata->new || ({})) +
-	    (metadata->replace || ({})), mapping(string:string) f) {
+            (metadata->replace || ({})), mapping(string:string) f) {
       if (f["file-mode"]) {
-	if (!has_value(metadata->depends, "roxenpatch/file-modes-2")) {
-	  metadata->depends += ({ "roxenpatch/file-modes-2" });
-	}
-	break;
+        if (!has_value(metadata->depends, "roxenpatch/file-modes-2")) {
+          metadata->depends += ({ "roxenpatch/file-modes-2" });
+        }
+        break;
       }
     }
 
     array valid_tags = ({ "version", "platform", "depends", "flags", "reload",
-			  "patch", "new", "replace", "delete" });
+                          "patch", "new", "replace", "delete" });
 
     foreach(valid_tags, string tag_name)
     {
       if(metadata[tag_name] && sizeof(metadata[tag_name]))
       {
-	if (tag_name == "flags")
-	{
-	  foreach(indices(known_flags), string s)
-	    xml += sprintf("  <flag name=\"%s\">%s</flag>\n",
-			   s, (metadata->flags[s]) ? "true" : "false");
-	}
-	else if (tag_name == "patch")
-	{
-	  foreach(metadata->patch, mapping(string:string) patch_info)
-	    xml += sprintf("  <patch source=\"%s\" />\n", patch_info->source);
-	}
-	else if (mappingp(metadata[tag_name][0]))
-	{
-	  // array(mapping) -- eg new, replace & delete.
-	  foreach(metadata[tag_name], mapping m) {
-	    if (m->source) {
-	      xml += sprintf("  <%s source=\"%s\"%s>%s</%s>\n",
-			     tag_name,
-			     m->source,
-			     m["file-mode"]?
-			     (" file-mode=\"" + m["file-mode"] + "\""):"",
-			     m->destination,
-			     tag_name);
-	    } else {
-	      xml += sprintf("  <%s%s>%s</%s>\n",
-			     tag_name,
-			     m["file-mode"]?
-			     (" file-mode=\"" + m["file-mode"] + "\""):"",
-			     m->destination,
-			     tag_name);
-	    }
-	  }
-	}
-	else
-	{
-	  foreach(metadata[tag_name], string s)
-	    xml += sprintf("  <%s>%s</%s>\n", tag_name, s, tag_name);
-	}
+        if (tag_name == "flags")
+        {
+          foreach(indices(known_flags), string s)
+            xml += sprintf("  <flag name=\"%s\">%s</flag>\n",
+                           s, (metadata->flags[s]) ? "true" : "false");
+        }
+        else if (tag_name == "patch")
+        {
+          foreach(metadata->patch, mapping(string:string) patch_info)
+            xml += sprintf("  <patch source=\"%s\" />\n", patch_info->source);
+        }
+        else if (mappingp(metadata[tag_name][0]))
+        {
+          // array(mapping) -- eg new, replace & delete.
+          foreach(metadata[tag_name], mapping m) {
+            if (m->source) {
+              xml += sprintf("  <%s source=\"%s\"%s>%s</%s>\n",
+                             tag_name,
+                             m->source,
+                             m["file-mode"]?
+                             (" file-mode=\"" + m["file-mode"] + "\""):"",
+                             m->destination,
+                             tag_name);
+            } else {
+              xml += sprintf("  <%s%s>%s</%s>\n",
+                             tag_name,
+                             m["file-mode"]?
+                             (" file-mode=\"" + m["file-mode"] + "\""):"",
+                             m->destination,
+                             tag_name);
+            }
+          }
+        }
+        else
+        {
+          foreach(metadata[tag_name], string s)
+            xml += sprintf("  <%s>%s</%s>\n", tag_name, s, tag_name);
+        }
       }
     }
 
@@ -2144,11 +2144,11 @@ class Patcher
       array file_list = file_list_installed();
 
       array filtered_list = filter(file_list,
-				   lambda (mapping m)
-				   {
-				     return m->metadata->id > id &&
-				       !pretend_installed[m->metadata->id];
-				   } );
+                                   lambda (mapping m)
+                                   {
+                                     return m->metadata->id > id &&
+                                       !pretend_installed[m->metadata->id];
+                                   } );
       return !!sizeof(filtered_list);
     }
 
@@ -2157,31 +2157,31 @@ class Patcher
       PatchObject po = get_metadata(id);
 
       if (!po)
-	return -1;
+        return -1;
 
       if (!po->depends)
-	return 0;
+        return 0;
 
       array filtered_list = filter(po->depends,
-				   lambda (string id, string rxp_version)
-				   {
-				     array(string) ids;
-				     if (rxp_version > "1.0") {
-				       ids = id/"|";
-				     } else {
-				       ids = ({ id });
-				     }
-				     foreach(ids, id) {
-				       if (is_installed(id,
-							rxp_version > "1.0") ||
-					   pretend_installed[id]) {
-					 return 0;
-				       }
-				     }
-				     return 1;
-				   },
-				   po->rxp_version
-				   );
+                                   lambda (string id, string rxp_version)
+                                   {
+                                     array(string) ids;
+                                     if (rxp_version > "1.0") {
+                                       ids = id/"|";
+                                     } else {
+                                       ids = ({ id });
+                                     }
+                                     foreach(ids, id) {
+                                       if (is_installed(id,
+                                                        rxp_version > "1.0") ||
+                                           pretend_installed[id]) {
+                                         return 0;
+                                       }
+                                     }
+                                     return 1;
+                                   },
+                                   po->rxp_version
+                                   );
       return !!sizeof(filtered_list);
     }
 
@@ -2205,7 +2205,7 @@ class Patcher
     Stdio.File rxpfile = Stdio.File();
     if (!rxpfile->open(dest, "wbct")) {
       write_err("FAILED: Could not create %s: %s\n",
-		dest, strerror(rxpfile->errno()));
+                dest, strerror(rxpfile->errno()));
       return 0;
     }
     write_mess("<green>Done!</green>\n");
@@ -2222,36 +2222,36 @@ class Patcher
     if (metadata->patch)
       foreach(metadata->patch, mapping m)
       {
-	if ((m->platform || server_platform) != server_platform) {
-	  continue;
-	}
-	// Package the string nicely:
-	if (!add_file_to_rxp(gzfile, m, id, tared_files))
-	{
-	  return 0;
-	}
+        if ((m->platform || server_platform) != server_platform) {
+          continue;
+        }
+        // Package the string nicely:
+        if (!add_file_to_rxp(gzfile, m, id, tared_files))
+        {
+          return 0;
+        }
       }
 
     if (metadata->replace)
       foreach(metadata->replace, mapping m) {
-	if ((m->platform || server_platform) != server_platform) {
-	  continue;
-	}
-	if (!add_file_to_rxp(gzfile, m, id, tared_files))
-	{
-	  return 0;
-	}
+        if ((m->platform || server_platform) != server_platform) {
+          continue;
+        }
+        if (!add_file_to_rxp(gzfile, m, id, tared_files))
+        {
+          return 0;
+        }
       }
 
     if (metadata->new)
       foreach(metadata->new, mapping m) {
-	if ((m->platform || server_platform) != server_platform) {
-	  continue;
-	}
-	if (!add_file_to_rxp(gzfile, m, id, tared_files))
-	{
-	  return 0;
-	}
+        if ((m->platform || server_platform) != server_platform) {
+          continue;
+        }
+        if (!add_file_to_rxp(gzfile, m, id, tared_files))
+        {
+          return 0;
+        }
       }
 
     // If we for some reason have any unified diffs then we need to write them
@@ -2259,19 +2259,19 @@ class Patcher
     if (metadata->udiff)
     {
       foreach(metadata->udiff; int i; mapping(string:string) udiff) {
-	string out_filename = sprintf("patchdata-%04d.patch", i);
+        string out_filename = sprintf("patchdata-%04d.patch", i);
 
-	if (!add_blob_to_rxp(gzfile, udiff->patch, id + "/" + out_filename,
-			     mtime)) {
-	  return 0;
-	}
+        if (!add_blob_to_rxp(gzfile, udiff->patch, id + "/" + out_filename,
+                             mtime)) {
+          return 0;
+        }
 
-	// Update the patch object with a pointer to the file and discard the
-	// udiff block; it's not needed anymore.
-	metadata->patch += ({ ([ "source": out_filename ]) });
-	if (udiff->platform) {
-	  metadata->patch[-1]->platform = udiff->platform;
-	}
+        // Update the patch object with a pointer to the file and discard the
+        // udiff block; it's not needed anymore.
+        metadata->patch += ({ ([ "source": out_filename ]) });
+        if (udiff->platform) {
+          metadata->patch[-1]->platform = udiff->platform;
+        }
       }
       metadata->udiff = 0;
     }
@@ -2292,8 +2292,8 @@ class Patcher
   }
 
   PatchObject extract_patch(string file,
-			    string target_dir,
-			    void|int(0..1) dry_run)
+                            string target_dir,
+                            void|int(0..1) dry_run)
   //! Creates a directory in target_dir named after the patch's id and
   //! extracts the patch there. Then returns the parsed metadata.
   {
@@ -2328,9 +2328,9 @@ class Patcher
       // We need to populate the list of affected files here,
       // since we're about to delete the relevant information.
       foreach(res->patch, mapping(string:string|array(string)) item) {
-	item->file_list = lsdiff(Stdio.read_file(combine_path(target_dir,
-							      patchid,
-							      item->source)));
+        item->file_list = lsdiff(Stdio.read_file(combine_path(target_dir,
+                                                              patchid,
+                                                              item->source)));
       }
     }
     if (!res || dry_run)
@@ -2353,16 +2353,16 @@ class Patcher
 
     // Make an array of the paths where we want to check for the dir
     array inst_ptchs = filter(get_dir(import_path) || ({ }),
-			      lambda(string s)
-			      {
-				return is_dir(combine_path(import_path, s));
-			      }
-			     );
+                              lambda(string s)
+                              {
+                                return is_dir(combine_path(import_path, s));
+                              }
+                             );
 
     foreach(inst_ptchs, string dir_name)
     {
       if(sscanf(dir_name, "%*s"+id+"%*s"))
-	return 1;
+        return 1;
     }
 
     // Not found.
@@ -2378,47 +2378,47 @@ class Patcher
     {
       array(string) path = id/"/";
       if ((sizeof(path) == 2) && allow_versioned) {
-	// Package/VERSION
-	string installed;
-	if (path[0] == "roxen") {
-	  installed = Stdio.read_bytes(combine_path(server_path, "VERSION"));
-	} else if (path[0] == "pike") {
-	  string headerfile =
-	    Stdio.read_bytes(combine_path(server_path,
-					  "pike/include/version.h")) ||
-	    Stdio.read_bytes(combine_path(server_path,
-					  "pike/include/pike/version.h"));
-	  if (headerfile) {
-	    /* Filter everything but cpp-directives. */
-	    headerfile = filter(headerfile/"\n", has_prefix, "#")*"\n" + "\n";
-	    catch {
-	      installed =
-		compile_string(headerfile +
-			       "constant ver = PIKE_MAJOR_VERSION + \".\" +\n"
-			       "               PIKE_MINOR_VERSION + \".\" +\n"
-			       "               PIKE_BUILD_VERSION;\n")->ver;
-	    };
-	  }
-	} else if (path[0] == "roxenpatch") {
-	  /* RoxenPatch feature dependency.
-	   *
-	   * These are used to force a too old RoxenPatch to fail,
-	   * but still allow the patch to be imported. This is to
-	   * ensure that implicit side effects (like eg patching
-	   * master.pike) will be performed when the patch is applied.
-	   */
-	  return features[path[1]];
-	} else {
-	  installed =
-	    Stdio.read_bytes(combine_path(server_path, "packages",
-					  path[0], "VERSION")) ||
-	    Stdio.read_bytes(combine_path(server_path, "modules",
-					  path[0], "VERSION"));
-	}
-	if (!installed) return 0;
-	installed -= "\n";
-	installed -= "\r";
-	return installed == path[1];
+        // Package/VERSION
+        string installed;
+        if (path[0] == "roxen") {
+          installed = Stdio.read_bytes(combine_path(server_path, "VERSION"));
+        } else if (path[0] == "pike") {
+          string headerfile =
+            Stdio.read_bytes(combine_path(server_path,
+                                          "pike/include/version.h")) ||
+            Stdio.read_bytes(combine_path(server_path,
+                                          "pike/include/pike/version.h"));
+          if (headerfile) {
+            /* Filter everything but cpp-directives. */
+            headerfile = filter(headerfile/"\n", has_prefix, "#")*"\n" + "\n";
+            catch {
+              installed =
+                compile_string(headerfile +
+                               "constant ver = PIKE_MAJOR_VERSION + \".\" +\n"
+                               "               PIKE_MINOR_VERSION + \".\" +\n"
+                               "               PIKE_BUILD_VERSION;\n")->ver;
+            };
+          }
+        } else if (path[0] == "roxenpatch") {
+          /* RoxenPatch feature dependency.
+           *
+           * These are used to force a too old RoxenPatch to fail,
+           * but still allow the patch to be imported. This is to
+           * ensure that implicit side effects (like eg patching
+           * master.pike) will be performed when the patch is applied.
+           */
+          return features[path[1]];
+        } else {
+          installed =
+            Stdio.read_bytes(combine_path(server_path, "packages",
+                                          path[0], "VERSION")) ||
+            Stdio.read_bytes(combine_path(server_path, "modules",
+                                          path[0], "VERSION"));
+        }
+        if (!installed) return 0;
+        installed -= "\n";
+        installed -= "\r";
+        return installed == path[1];
       }
       write_err("Not a proper id\n");
       return 0;
@@ -2426,16 +2426,16 @@ class Patcher
 
     // Make an array of the paths where we want to check for the dir
     array inst_ptchs = filter(get_dir(installed_path) || ({ }),
-			      lambda(string s)
-			      {
-				return is_dir(combine_path(installed_path, s));
-			      }
-			     );
+                              lambda(string s)
+                              {
+                                return is_dir(combine_path(installed_path, s));
+                              }
+                             );
 
     foreach(inst_ptchs, string dir_name)
     {
       if(sscanf(dir_name, "%*s"+id+"%*s"))
-	  return 1;
+          return 1;
     }
 
     // Not found.
@@ -2451,7 +2451,7 @@ class Patcher
     if(!patchid_regexp->match(id))
     {
       if (!silent)
-	write_err("Not a proper id.\n");
+        write_err("Not a proper id.\n");
       return 0;
     }
 
@@ -2461,16 +2461,16 @@ class Patcher
     foreach(all_paths, string path)
     {
       array inst_ptchs = filter(get_dir(path) || ({ }),
-				lambda(string s)
-				{
-				  return is_dir(combine_path(path, s));
-				}
-			       );
+                                lambda(string s)
+                                {
+                                  return is_dir(combine_path(path, s));
+                                }
+                               );
 
       foreach(inst_ptchs, string dir_name)
       {
-	if(sscanf(dir_name, "%*s"+id+"%*s"))
-	  return combine_path(path, dir_name);
+        if(sscanf(dir_name, "%*s"+id+"%*s"))
+          return combine_path(path, dir_name);
       }
     }
 
@@ -2534,8 +2534,8 @@ class Patcher
     array(string) a = raw_path/":";
     if ((sizeof(a) > 1) && Stdio.exist(a[0])) {
       return ({ ([ "source" : a[0],
-		   "destination" : a[1..] * ":",
-		]) });
+                   "destination" : a[1..] * ":",
+                ]) });
     }
 
     array(mapping(string:string)) res;
@@ -2547,17 +2547,17 @@ class Patcher
     {
       array(string) all_files = find_files_with_globs(raw_path, 1);
       res = map(all_files, lambda (string path)
-			   {
-			     return ([ "source" : path,
-				       "destination" : path ]);
-			   }
-		);
+                           {
+                             return ([ "source" : path,
+                                       "destination" : path ]);
+                           }
+                );
     }
     else
     {
       string parsed_src = find_file(raw_path), parsed_dest = raw_path;
       if (parsed_src)
-	res = ({ (["source":parsed_src, "destination":parsed_dest ]) });
+        res = ({ (["source":parsed_src, "destination":parsed_dest ]) });
     }
     return res;
   }
@@ -2578,65 +2578,65 @@ class Patcher
     if (ptc_obj->rxp_version > rxp_version)
     {
       if (!silent)
-	write_err("FAILED: This rxp version is not supported!\n");
+        write_err("FAILED: This rxp version is not supported!\n");
       return 0;
     }
 
     if(!ptc_obj->id)
     {
       if (!silent)
-	write_err("FAILED: No ID in metadata!\n");
+        write_err("FAILED: No ID in metadata!\n");
       return 0;
     }
 
     if(!verify_patch_id(ptc_obj->id))
     {
       if (!silent)
-	write_err("FAILED: ID is not valid!\n");
+        write_err("FAILED: ID is not valid!\n");
       return 0;
     }
 
     if (!(ptc_obj->name && sizeof(ptc_obj->name)))
     {
       if (!silent)
-	write_err("FAILED: No patch name given in metadata!\n");
+        write_err("FAILED: No patch name given in metadata!\n");
       return 0;
     }
 
     if (!(ptc_obj->description && sizeof(ptc_obj->description)))
     {
       if (!silent)
-	write_err("FAILED: No description given in metadata!\n");
+        write_err("FAILED: No description given in metadata!\n");
       return 0;
     }
 
     if (!sizeof(ptc_obj->originator))
     {
       if (!silent)
-	write_err("FAILED: No originator given in metadata!\n");
+        write_err("FAILED: No originator given in metadata!\n");
       return 0;
     }
 
     if (ptc_obj->depends)
       foreach(ptc_obj->depends, string patch_id_list) {
-	if (ptc_obj->rxp_version > "1.0") {
-	  foreach(patch_id_list/"|", string patch_id)
-	    if (!verify_patch_id(patch_id, 1))
-	    {
-	      if (!silent)
-		write_err("FAILED: Dependency %s is not a valid patch id\n",
-			patch_id);
-	      return 0;
-	    }
-	} else {
-	  if (!verify_patch_id(patch_id_list))
-	  {
-	    if (!silent)
-	      write_err("FAILED: Dependency %s is not a valid patch id\n",
-			patch_id_list);
-	    return 0;
-	  }
-	}
+        if (ptc_obj->rxp_version > "1.0") {
+          foreach(patch_id_list/"|", string patch_id)
+            if (!verify_patch_id(patch_id, 1))
+            {
+              if (!silent)
+                write_err("FAILED: Dependency %s is not a valid patch id\n",
+                        patch_id);
+              return 0;
+            }
+        } else {
+          if (!verify_patch_id(patch_id_list))
+          {
+            if (!silent)
+              write_err("FAILED: Dependency %s is not a valid patch id\n",
+                        patch_id_list);
+            return 0;
+          }
+        }
       }
 
     if (ptc_obj->replace)
@@ -2719,11 +2719,11 @@ class Patcher
 
       if(is_file(s))
       {
-	write_mess("<green>Done!</green>\n");
-	return s;
+        write_mess("<green>Done!</green>\n");
+        return s;
       }
       else
-	write_mess("Not Found!\n");
+        write_mess("Not Found!\n");
     }
 
     // Create a full path and reverse it for easier traversion
@@ -2741,16 +2741,16 @@ class Patcher
 
       if(is_file(test_path))
       {
-	write_mess("<green>Done!</green>\n");
-	return test_path;
+        write_mess("<green>Done!</green>\n");
+        return test_path;
       }
       else
-	write_mess("Not Found!\n");
+        write_mess("Not Found!\n");
       //      write_mess("\n%d: %s\n\n", i, path_rev);
       // If we can't find any '/' then we only have one directory left
       // and that needs to be removed too.
       if(sscanf(path_rev, "%*s/%s", path_rev) < 2)
-	path_rev = "";
+        path_rev = "";
     }
 
     write_err("FAILED!\n");
@@ -2770,9 +2770,9 @@ class Patcher
     {
       string current_file = (path) ? append_path(path, file_name) : file_name;
       if (is_dir(current_file))
-	res += recursive_find_all_files(current_file);
+        res += recursive_find_all_files(current_file);
       else if (is_file(current_file))
-	res += ({ current_file });
+        res += ({ current_file });
     }
 
     return res;
@@ -2793,15 +2793,15 @@ class Patcher
     if (sscanf(glob_pattern, "%s%*[*?]", string base) == 2)
     {
       if (recursive)
-	all_files = recursive_find_all_files(dirname(base));
+        all_files = recursive_find_all_files(dirname(base));
       else
       {
-	all_files = get_dir(dirname(base)) || get_dir(getcwd());
-	all_files = filter(all_files, lambda (string filename)
-				      {
-					return is_file(filename);
-				      }
-			   );
+        all_files = get_dir(dirname(base)) || get_dir(getcwd());
+        all_files = filter(all_files, lambda (string filename)
+                                      {
+                                        return is_file(filename);
+                                      }
+                           );
       }
     }
     else
@@ -2905,33 +2905,33 @@ class Patcher
     while(i < sizeof(s))
     {
       if (s[i] == ' '  ||
-	  s[i] == '\n' ||
-	  s[i] == '\r' ||
-	  s[i] == '\t')
+          s[i] == '\n' ||
+          s[i] == '\r' ||
+          s[i] == '\t')
       {
 
-	// This is safe since we know that the last char is not a blank:
-	int j = i + 1;
-	if (s[j] != ' '  &&
-	    s[j] != '\n' &&
-	    s[j] != '\r' &&
-	    s[j] != '\t')
-	  res += " ";
+        // This is safe since we know that the last char is not a blank:
+        int j = i + 1;
+        if (s[j] != ' '  &&
+            s[j] != '\n' &&
+            s[j] != '\r' &&
+            s[j] != '\t')
+          res += " ";
       }
       else
-	res += s[i..i];
+        res += s[i..i];
       i++;
     }
     return res;
   }
 
   protected int(0..1) add_header_to_rxp(Gz.File rxp, string path,
-					int mode, int uid, int gid, int sz,
-					int mtime, int|void header_type)
+                                        int mode, int uid, int gid, int sz,
+                                        int mtime, int|void header_type)
   {
     string path_pad = "\0" * (100 - sizeof(path));
     string header = sprintf("%100s%06o \0%06o \0%06o \0%011o %011o ",
-			    path + path_pad, mode, uid, gid, sz, mtime);
+                            path + path_pad, mode, uid, gid, sz, mtime);
     int csum = `+(@((array(int))header), ' '*8);
     string check = sprintf("%06o\0 %c", csum + header_type, header_type);
     string pad = "\0" * (512 - (sizeof(header) + sizeof(check)));
@@ -2956,7 +2956,7 @@ class Patcher
   }
 
   protected int(0..1) add_blob_to_rxp(Gz.File rxp, string blob,
-				      string path, int mtime, int|void mode)
+                                      string path, int mtime, int|void mode)
   {
     write_mess("Archiving %s ... ", path);
     if (mode & 0111) {
@@ -2972,7 +2972,7 @@ class Patcher
     int bytes = rxp->write(blob) - sizeof(blob);
     if (sizeof(blob) & 511) {
       bytes += rxp->write("\0" * (512 - (sizeof(blob) & 511))) -
-	(512 - (sizeof(blob) & 511));
+        (512 - (sizeof(blob) & 511));
     }
     if (bytes) {
       write_err("FAILED: Failed to write %d bytes.\n", -bytes);
@@ -2983,7 +2983,7 @@ class Patcher
   }
 
   protected int(0..1) add_file_to_rxp(Gz.File rxp, mapping m, string id,
-				      mapping(string:string) tared_files)
+                                      mapping(string:string) tared_files)
   {
     string filename = basename(m->source);
     string full_path = combine_path(getcwd(), m->source);
@@ -2993,7 +2993,7 @@ class Patcher
       // We need to search for a suitable destination filename.
       int n;
       for (n = 0; tared_files[dest + n]; n++)
-	;
+        ;
       dest += n;
       filename += n;
     }
@@ -3004,7 +3004,7 @@ class Patcher
     string data = Stdio.read_bytes(full_path);
     if (!data) {
       write_err("FAILED: Could not read file %s: %s\n",
-		full_path, strerror(errno()));
+                full_path, strerror(errno()));
       return 0;
     }
     write_mess("<green>Done!</green>\n");
@@ -3063,15 +3063,15 @@ class Patcher
 
 
   int(0..1) add_file_to_tar_archive(string file_name,
-				    string base_path,
-				    string tar_archive)
+                                    string base_path,
+                                    string tar_archive)
   //! Add a file to @[tar_archive]. If the archive doesn't exist it will be
   //! created automagically by tar. @[file_name] cannot be a relative path
   //! higher than base_path.
   {
     array args = ({ tar_bin, "rf",
-		    unixify_path(tar_archive),
-		    simplify_path(unixify_path(file_name)) });
+                    unixify_path(tar_archive),
+                    simplify_path(unixify_path(file_name)) });
 
     string tar_path = combine_path(base_path, tar_archive);
     Privs privs;
@@ -3107,12 +3107,12 @@ class Patcher
     Filesystem.Tar tarfs = Filesystem.Tar(file_name, UNDEFINED, file);
 
     if (mixed err = catch {
-	Privs privs =
-	  Privs(sprintf("RoxenPatch: Extracting tar archive %O.", file_name));
-	tarfs->tar->extract("", path, UNDEFINED,
-			    Filesystem.Tar.EXTRACT_SKIP_EXT_MODE|
-			    Filesystem.Tar.EXTRACT_SKIP_MTIME);
-	privs = 0;
+        Privs privs =
+          Privs(sprintf("RoxenPatch: Extracting tar archive %O.", file_name));
+        tarfs->tar->extract("", path, UNDEFINED,
+                            Filesystem.Tar.EXTRACT_SKIP_EXT_MODE|
+                            Filesystem.Tar.EXTRACT_SKIP_MTIME);
+        privs = 0;
       }) {
       write_err("Extraction failed: %s\n", describe_backtrace(err));
       file->close();
@@ -3133,7 +3133,7 @@ class Patcher
     if (recursive_rm(temp_path))
     {
       if (!silent)
-	write_mess("<green>Done!</green>\n");
+        write_mess("<green>Done!</green>\n");
       return 1;
     }
     if (!silent)
@@ -3171,14 +3171,14 @@ class Patcher
       // after the second "@@" on the "@@"-line.
       foreach(patch_data / "\n@@", string chunk)
       {
-	array(string) lines = chunk / "\n";
-	// Look at the last line before the "@@"-line to find the filename.
-	// Note that CVS-diff appends a tab and a timestamp after the filename.
-	if (sizeof(lines) > 1 &&
-	    sscanf(lines[-1], "+++ %[^\t]", string fname))
-	{
-	  res += ({ fname });
-	}
+        array(string) lines = chunk / "\n";
+        // Look at the last line before the "@@"-line to find the filename.
+        // Note that CVS-diff appends a tab and a timestamp after the filename.
+        if (sizeof(lines) > 1 &&
+            sscanf(lines[-1], "+++ %[^\t]", string fname))
+        {
+          res += ({ fname });
+        }
       }
     }
     return res;
@@ -3192,37 +3192,37 @@ class Patcher
       string expected_sha1;
 
       if (use_etag) {
-	// We use the query part of the URL to receive metadata information
-	// about the patch from the server.
-	mapping(string:string) variables = uri->get_query_variables();
-	expected_sha1 = variables->sha1;
+        // We use the query part of the URL to receive metadata information
+        // about the patch from the server.
+        mapping(string:string) variables = uri->get_query_variables();
+        expected_sha1 = variables->sha1;
 
-	// There's no need to send back the variables to the server.
-	uri->set_query_variables(([]));
+        // There's no need to send back the variables to the server.
+        uri->set_query_variables(([]));
       }
 
       Protocols.HTTP.Query query = try_get_url(uri, 20, etag, last_modified);
       if ((query->status == 304) || (query->status == 412)) {
-	return 0;
+        return 0;
       }
       if (query->status != 200) {
-	error("HTTPS request for URL %s failed with status %d: %s.\n",
-	      (string)uri || "", query->status, query->status_desc || "");
+        error("HTTPS request for URL %s failed with status %d: %s.\n",
+              (string)uri || "", query->status, query->status_desc || "");
       }
       if (use_etag) {
-	http_cluster_etag = query->headers->etag;
-	if ((http_cluster_last_modified = query->headers["last-modified"]) &&
-	    query->headers["content-length"]) {
-	  http_cluster_last_modified +=
-	    "; length=" + query->headers["content-length"];
-	}
+        http_cluster_etag = query->headers->etag;
+        if ((http_cluster_last_modified = query->headers["last-modified"]) &&
+            query->headers["content-length"]) {
+          http_cluster_last_modified +=
+            "; length=" + query->headers["content-length"];
+        }
       }
       string data = query->data();
       if (expected_sha1 &&
-	  (Crypto.SHA1.hash(data) != String.hex2string(expected_sha1))) {
-	error("SHA1 checksum mismatch for URL %s. Got: %s, expected: %s\n",
-	      (string)uri,
-	      String.string2hex(Crypto.SHA1.hash(data)), expected_sha1);
+          (Crypto.SHA1.hash(data) != String.hex2string(expected_sha1))) {
+        error("SHA1 checksum mismatch for URL %s. Got: %s, expected: %s\n",
+              (string)uri,
+              String.string2hex(Crypto.SHA1.hash(data)), expected_sha1);
       }
       return data;
     };
@@ -3234,10 +3234,10 @@ class Patcher
     // Get rxp action url
     Standards.URI uri = Standards.URI(RXP_ACTION_URL);
     uri->add_query_variables(([ "product"  : product_code,
-				"version"  : dist_version,
-				"platform" : server_platform,
-				"checksum" : "sha1",
-				"action"   : "get-latest-rxp-cluster-url" ]));
+                                "version"  : dist_version,
+                                "platform" : server_platform,
+                                "checksum" : "sha1",
+                                "action"   : "get-latest-rxp-cluster-url" ]));
     string res = get_url(uri);
 
     // Get rxp cluster url
@@ -3255,11 +3255,11 @@ class Patcher
     }
 
     return ([ "data" : res2,
-	      "name" : basename(uri2->path) ]);
+              "name" : basename(uri2->path) ]);
   }
 
   Protocols.HTTP.Query try_get_url(Standards.URI uri, int timeout,
-				   string|void etag, string|void last_modified)
+                                   string|void etag, string|void last_modified)
   {
     write_mess("Preparing to fetch %s.\n", (string)uri);
 
@@ -3288,36 +3288,36 @@ class Patcher
       con->set_callbacks(lambda() { con->async_fetch(cb, cb); }, cb);
 
       if (uri->scheme == "https") {
-	// Enable verification of the certificate chain.
-	SSL.Context ctx = con->context = SSL.Context();
-	ctx->trusted_issuers_cache = Standards.X509.load_authorities();
-	if (sizeof(ctx->trusted_issuers_cache)) {
-	  ctx->verify_certificates = 1;
-	  ctx->require_trust = 1;
-	  ctx->auth_level = SSL.Constants.AUTHLEVEL_require;
-	} else {
-	  write_err("Failed to find set of root certificate authorities.\n"
-		    "Proceeding with certificate validation turned off.\n");
-	  ctx->verify_certificates = 0;
-	  ctx->require_trust = 0;
-	  ctx->auth_level = SSL.Constants.AUTHLEVEL_none;
-	}
+        // Enable verification of the certificate chain.
+        SSL.Context ctx = con->context = SSL.Context();
+        ctx->trusted_issuers_cache = Standards.X509.load_authorities();
+        if (sizeof(ctx->trusted_issuers_cache)) {
+          ctx->verify_certificates = 1;
+          ctx->require_trust = 1;
+          ctx->auth_level = SSL.Constants.AUTHLEVEL_require;
+        } else {
+          write_err("Failed to find set of root certificate authorities.\n"
+                    "Proceeding with certificate validation turned off.\n");
+          ctx->verify_certificates = 0;
+          ctx->require_trust = 0;
+          ctx->auth_level = SSL.Constants.AUTHLEVEL_none;
+        }
       }
 
 #ifdef ENABLE_OUTGOING_PROXY
       if (roxen.query("use_proxy")) {
-	string proxy_user = roxen.query("proxy_username");
-	string proxy_pass = roxen.query("proxy_password");
-	// Do not send any Proxy-Authorization header when
-	// empty username and password. [WS-550]
-	if (!sizeof(proxy_user)) proxy_user = UNDEFINED;
-	if (!sizeof(proxy_pass)) proxy_pass = UNDEFINED;
-	Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
-					       proxy_user, proxy_pass,
-					       "GET", uri, 0,
-					       request_headers, con);
+        string proxy_user = roxen.query("proxy_username");
+        string proxy_pass = roxen.query("proxy_password");
+        // Do not send any Proxy-Authorization header when
+        // empty username and password. [WS-550]
+        if (!sizeof(proxy_user)) proxy_user = UNDEFINED;
+        if (!sizeof(proxy_pass)) proxy_pass = UNDEFINED;
+        Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
+                                               proxy_user, proxy_pass,
+                                               "GET", uri, 0,
+                                               request_headers, con);
       } else {
-	Protocols.HTTP.do_async_method("GET", uri, 0, request_headers, con);
+        Protocols.HTTP.do_async_method("GET", uri, 0, request_headers, con);
       }
 #else
       Protocols.HTTP.do_async_method("GET", uri, 0, request_headers, con);

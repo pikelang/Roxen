@@ -76,26 +76,26 @@ void create()
 {
   defvar("exts", ({ "pike" }), "Extensions",
          TYPE_STRING_LIST|VAR_NOT_CFIF,
-	 "The extensions to parse.");
+         "The extensions to parse.");
 
   defvar("rawauth", 0, "Raw user info", 
          TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
-	 "If set, the raw, unparsed, user info will be sent to the script. "
-	 "Please note that this will give the scripts access to the password "
-	 "used. This is not recommended!");
+         "If set, the raw, unparsed, user info will be sent to the script. "
+         "Please note that this will give the scripts access to the password "
+         "used. This is not recommended!");
 
   defvar("clearpass", 0, "Send decoded password", 
          TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
-	 "If set, the decoded password value will be sent to the script. "
-	 "This is not recommended!");
+         "If set, the decoded password value will be sent to the script. "
+         "This is not recommended!");
 
   defvar("exec-mask", "0777", "Exec mask: Needed",
-	 TYPE_STRING|VAR_MORE|VAR_NOT_CFIF,
-	 "Only run scripts matching this permission mask.");
+         TYPE_STRING|VAR_MORE|VAR_NOT_CFIF,
+         "Only run scripts matching this permission mask.");
 
   defvar("noexec-mask", "0000", "Exec mask: Forbidden",
-	 TYPE_STRING|VAR_MORE|VAR_NOT_CFIF,
-	 "Never run scripts matching this permission mask.");
+         TYPE_STRING|VAR_MORE|VAR_NOT_CFIF,
+         "Never run scripts matching this permission mask.");
 
   defvar( "autoreload", 1, "Reload scripts automatically",
           TYPE_FLAG,
@@ -115,10 +115,10 @@ void create()
           "reloaded from disk." );
 #if constant(__builtin.security)
   defvar( "trusted", 1,
-	  "Pike scripts are trusted",
-	  TYPE_FLAG|VAR_NOT_CFIF,
-	  "If this option is true, scripts will be able to do everything "
-	  "the Roxen server can do.");
+          "Pike scripts are trusted",
+          TYPE_FLAG|VAR_NOT_CFIF,
+          "If this option is true, scripts will be able to do everything "
+          "the Roxen server can do.");
 #endif /* constant(__builtin.security) */
 }
 
@@ -231,10 +231,10 @@ mapping handle_file_extension(Stdio.File f, string e, RequestID id)
       if(!(o->no_reload && o->no_reload(id)))
       {
         master()->refresh( p, 1 );
-	// Destruct the script instance as soon as no other thread is
-	// executing it.
-	m_delete (destruct_wrappers, id->not_query);
-	avoid_destruct = 0;
+        // Destruct the script instance as soon as no other thread is
+        // executing it.
+        m_delete (destruct_wrappers, id->not_query);
+        avoid_destruct = 0;
         p = 0;
         m_delete( scripts, id->not_query);
       }
@@ -300,7 +300,7 @@ mapping handle_file_extension(Stdio.File f, string e, RequestID id)
     return Roxen.http_string_answer(err || "");
   }
   report_error("PIKESCRIPT: Unexpected return value %O from script %O\n",
-	       err, id->not_query);
+               err, id->not_query);
   return Roxen.http_string_answer("");
 }
 

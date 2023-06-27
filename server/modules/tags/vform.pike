@@ -15,22 +15,22 @@ constant module_doc  = "Creates a self-verifying form.";
 // since not all widgets have a value attribute, and those who do add
 // it themselves.
 constant ARGS=(< "type", "min", "max", "scope", "trim",
-		 "regexp", "glob", "minlength", "case", "date",
-		 "mode", "fail-if-failed", "ignore-if-false", "ignore-if-gone",
-		 "ignore-if-failed", "ignore-if-verified", "optional", "value",
-		 "disable-domain-check", >);
+                 "regexp", "glob", "minlength", "case", "date",
+                 "mode", "fail-if-failed", "ignore-if-false", "ignore-if-gone",
+                 "ignore-if-failed", "ignore-if-verified", "optional", "value",
+                 "disable-domain-check", >);
 
 // pass along some HTML5-specific attributes (<type>:<attribute>)
 constant HTML5_ARGS = (< "number:min", "number:max", "range:min", "range:max" >);
 
 constant HTML5_TYPES = (< "number", "email", "url", "tel", "date", "datetime",
-			  "datetime-local", "search", "month", "week", "time",
-			  "color", "range", >);
+                          "datetime-local", "search", "month", "week", "time",
+                          "color", "range", >);
 
 constant forbidden = ({"\\", ".", "[", "]", "^",
-		       "$", "(", ")", "*", "+", "|"});
+                       "$", "(", ")", "*", "+", "|"});
 constant allowed = ({"\\\\", "\\.", "\\[", "\\]", "\\^",
-		     "\\$", "\\(", "\\)", "\\*", "\\+", "\\|"});
+                     "\\$", "\\(", "\\)", "\\*", "\\+", "\\|"});
 
 Parser.HTML verified;
 Parser.HTML failed;
@@ -38,13 +38,13 @@ Parser.HTML failed;
 void create() {
   verified = Parser.HTML()->
     add_containers( ([ "verified" : lambda(Parser.HTML p, mapping m, string c) {
-				      return c; },
-		       "failed" : "" ]) );
+                                      return c; },
+                       "failed" : "" ]) );
 
   failed = Parser.HTML()->
     add_containers( ([ "failed" : lambda(Parser.HTML p, mapping m, string c) {
-				      return c; },
-		       "verified" : "" ]) );
+                                      return c; },
+                       "verified" : "" ]) );
 }
 
 class VInputFrame {
@@ -61,29 +61,29 @@ class VInputFrame {
     if(args->is) {
       switch(args->is) {
       case "int":
-	args->type="int";
-	break;
+        args->type="int";
+        break;
       case "float":
-	args->type="float";
-	break;
+        args->type="float";
+        break;
       case "mail":
-	args->type="email";
-	break;
+        args->type="email";
+        break;
       case "date":
-	args->type="date";
-	break;
+        args->type="date";
+        break;
       case "upper-alpha":
-	args->regexp="^[A-Z]*$";
-	break;
+        args->regexp="^[A-Z]*$";
+        break;
       case "lower-aplha":
-	args->regexp="^[a-z]*$";
-	break;
+        args->regexp="^[a-z]*$";
+        break;
       case "upper-alpha-num":
-	args->regexp="^[A-Z0-9]*$";
-	break;
+        args->regexp="^[A-Z0-9]*$";
+        break;
       case "lower-alpha-num":
-	args->regexp="^[a-z0-9]*$";
-	break;
+        args->regexp="^[a-z0-9]*$";
+        break;
       }
       m_delete(args, "is");
     }
@@ -103,13 +103,13 @@ class VInputFrame {
       if(!var) var=Variable.Int(args->value||"");
       // FIXME: Should check invalid integer formats in min and max.
       var->set_range(args->min ? (int)args->min : Variable.no_limit,
-		     args->max ? (int)args->max : Variable.no_limit);
+                     args->max ? (int)args->max : Variable.no_limit);
       break;
     case "float":
       if(!var) var=Variable.Float(args->value||"");
       // FIXME: Should check invalid float formats in min and max.
       var->set_range(args->min ? (float)args->min : Variable.no_limit,
-		     args->max ? (float)args->max : Variable.no_limit);
+                     args->max ? (float)args->max : Variable.no_limit);
       break;
     case "email":
       if(!var) var=Variable.Email(args->value||"");
@@ -122,10 +122,10 @@ class VInputFrame {
     case "date":
       if(!var) var=Variable.Date(args->value||"");
       if(args["date"]) {
-	// Disable HTML5 if date format is incompatible
-	if (args["date"] != "%Y-%M-%D" && args["date"] != "%Y-%M-%DT%h:%m") no_html5 = 1;
+        // Disable HTML5 if date format is incompatible
+        if (args["date"] != "%Y-%M-%D" && args["date"] != "%Y-%M-%DT%h:%m") no_html5 = 1;
 
-	var->set_date_type( args->date );
+        var->set_date_type( args->date );
       }
       break;
     case "image":
@@ -155,13 +155,13 @@ class VInputFrame {
       if(args->maxlength) var->add_maxlength((int)args->maxlength);
 
       if(args->case=="upper")
-	var->add_upper();
+        var->add_upper();
       else if(args->case=="lower")
-	var->add_lower();
+        var->add_lower();
 
       // Shortcuts
       if(args->equal)
-	var->add_regexp( "^" + replace(args->equal, forbidden, allowed) + "$" );
+        var->add_regexp( "^" + replace(args->equal, forbidden, allowed) + "$" );
       if(args->is=="empty") var->add_glob("");
       break;
     case 0:
@@ -292,22 +292,22 @@ class TagWizzVInput {
       inherit VInputFrame;
 
       array do_enter(RequestID id) {
-	id->misc->vform_ok = id->misc->wizard->verify?id->misc->wizard->verify_ok:1;
-	if(!id->misc->vform_verified) {
-	  id->misc->vform_verified=(<>);
-	  id->misc->vform_failed=(<>);
+        id->misc->vform_ok = id->misc->wizard->verify?id->misc->wizard->verify_ok:1;
+        if(!id->misc->vform_verified) {
+          id->misc->vform_verified=(<>);
+          id->misc->vform_failed=(<>);
           id->misc->vform_objects=([]);
-	  id->misc->vform_xml = !args->noxml;
-	}
+          id->misc->vform_xml = !args->noxml;
+        }
 
-	::do_enter(id);
-	return 0;
+        ::do_enter(id);
+        return 0;
       }
 
       array do_return(RequestID id) {
-	::do_return(id);
-	id->misc->wizard->verify_ok = id->misc->vform_ok;
-	return 0;
+        ::do_return(id);
+        id->misc->wizard->verify_ok = id->misc->vform_ok;
+        return 0;
       }
     }
   }
@@ -337,55 +337,55 @@ class TagVForm {
       inherit RXML.Frame;
 
       array do_return(RequestID id) {
-	int ok=1;
-	if(args->not && id->real_variables[args->name] &&
-	   id->real_variables[args->name][0] == args->not)
-	  ok = 0;
-	
-	m_delete(args, "not");
-	if(ok) {
-	  id->misc->vform_verified[args->name]=1;
-	  result = RXML.t_xml->format_tag("select", args, content);
-	}
-	else {
-	  id->misc->vform_failed[args->name]=1;
-	  id->misc->vform_ok = 0;
+        int ok=1;
+        if(args->not && id->real_variables[args->name] &&
+           id->real_variables[args->name][0] == args->not)
+          ok = 0;
+        
+        m_delete(args, "not");
+        if(ok) {
+          id->misc->vform_verified[args->name]=1;
+          result = RXML.t_xml->format_tag("select", args, content);
+        }
+        else {
+          id->misc->vform_failed[args->name]=1;
+          id->misc->vform_ok = 0;
 
-	  //Create error message
-	  string mode = args->mode || "after";
-	  m_delete(args, "mode");
-	  switch(mode) {
-	  case "complex": // not working...
-	    result =
-	      parse_html(content, ([ ]),
-			 ([ "failed"   : lambda(string t, mapping m,
-						string c) {
-					   return c;
-					 },
-			    "verified" : "" ]) );
-	    break;
-	  case "before":
-	    string error =
-	      parse_html(content, ([ ]),
-			 ([ "error-message" : lambda(string t, mapping m,
-						     string c) {
-						return c;
-					      },
-			    "option"        : "" ]) );
-	    result = error + RXML.t_xml->format_tag("select", args, content);
-	  case "after":
-	  default:
-	    error =
-	      parse_html(content, ([]),
-			 ([ "error-message" : lambda(string t, mapping m,
-						     string c) {
-						return c;
-					      },
-			    "option"        : "" ]) );
-	    result = RXML.t_xml->format_tag("select", args, content) + error;
-	  }
-	}
-	return 0;
+          //Create error message
+          string mode = args->mode || "after";
+          m_delete(args, "mode");
+          switch(mode) {
+          case "complex": // not working...
+            result =
+              parse_html(content, ([ ]),
+                         ([ "failed"   : lambda(string t, mapping m,
+                                                string c) {
+                                           return c;
+                                         },
+                            "verified" : "" ]) );
+            break;
+          case "before":
+            string error =
+              parse_html(content, ([ ]),
+                         ([ "error-message" : lambda(string t, mapping m,
+                                                     string c) {
+                                                return c;
+                                              },
+                            "option"        : "" ]) );
+            result = error + RXML.t_xml->format_tag("select", args, content);
+          case "after":
+          default:
+            error =
+              parse_html(content, ([]),
+                         ([ "error-message" : lambda(string t, mapping m,
+                                                     string c) {
+                                                return c;
+                                              },
+                            "option"        : "" ]) );
+            result = RXML.t_xml->format_tag("select", args, content) + error;
+          }
+        }
+        return 0;
       }
     }
   }
@@ -399,11 +399,11 @@ class TagVForm {
       inherit RXML.Frame;
 
       array do_return(RequestID id) {
-	if(!args->type) args->type = "submit";
-	args->name="__reload";
-	
-	result = Roxen.make_tag("input", args, id->misc->vform_xml);
-	return 0;
+        if(!args->type) args->type = "submit";
+        args->name="__reload";
+        
+        result = Roxen.make_tag("input", args, id->misc->vform_xml);
+        return 0;
       }
     }
   }
@@ -417,12 +417,12 @@ class TagVForm {
       inherit RXML.Frame;
       
       array do_return(RequestID id) {
-	id->misc->vform_ok = 0;
-	if(args->name) {
-	  id->misc->vform_failed[args->name]=1;
-	  id->misc->vform_verified[args->name]=0;
-	}
-	return 0;
+        id->misc->vform_ok = 0;
+        if(args->name) {
+          id->misc->vform_failed[args->name]=1;
+          id->misc->vform_verified[args->name]=0;
+        }
+        return 0;
       }
     }
   }
@@ -436,17 +436,17 @@ class TagVForm {
       inherit RXML.Frame;
       
       array do_return(RequestID id) {
-	
-	if(args->name) {
-	  id->misc->vform_failed[args->name] = 0;
-	  id->misc->vform_verified[args->name] = 1;
-	  if( !sizeof(id->misc->vform_failed) )
-	    id->misc->vform_ok = 1;
-	}
-	else
-	  id->misc->vform_ok = 1;
-	
-	return 0;
+        
+        if(args->name) {
+          id->misc->vform_failed[args->name] = 0;
+          id->misc->vform_verified[args->name] = 1;
+          if( !sizeof(id->misc->vform_failed) )
+            id->misc->vform_ok = 1;
+        }
+        else
+          id->misc->vform_ok = 1;
+        
+        return 0;
       }
     }
   }
@@ -460,11 +460,11 @@ class TagVForm {
       inherit RXML.Frame;
 
       array do_return(RequestID id) {
-	if(!args->type) args->type = "submit";
-	args->name="__clear";
+        if(!args->type) args->type = "submit";
+        args->name="__clear";
 
-	result = Roxen.make_tag("input", args, id->misc->vform_xml);
-	return 0;
+        result = Roxen.make_tag("input", args, id->misc->vform_xml);
+        return 0;
       }
     }
   }
@@ -494,15 +494,15 @@ class TagVForm {
 
   // This tag set can probably be shared, but I don't know for sure. /mast
   RXML.TagSet internal = RXML.TagSet (this_module(), "internal",
-				      ({ TagVInput(),
-					 TagReload(),
-					 TagClear(),
-					 TagVSelect(),
-					 TagIfVFailed(),
-					 TagIfVVerified(),
-					 TagVerifyFail(),
-					 TagVerifyOk(),
-				      }) );
+                                      ({ TagVInput(),
+                                         TagReload(),
+                                         TagClear(),
+                                         TagVSelect(),
+                                         TagIfVFailed(),
+                                         TagIfVVerified(),
+                                         TagVerifyFail(),
+                                         TagVerifyOk(),
+                                      }) );
 
   class Frame {
     inherit RXML.Frame;
@@ -520,19 +520,19 @@ class TagVForm {
         wizard_id = Roxen.set_wizard_id_cookie(id);
       }
       if (wizard_id != id->variables["_roxen_wizard_id"]) {
-	m_delete(id->real_variables, "__state");
-	id->misc->vform_ok = 0;
-	id->variables["_roxen_wizard_id"] = wizard_id;
+        m_delete(id->real_variables, "__state");
+        id->misc->vform_ok = 0;
+        id->variables["_roxen_wizard_id"] = wizard_id;
       }
 
       state = StateHandler.Page_state(id);
       state->register_consumer("vform");
       if(id->real_variables->__state) {
-	state->use_session( StateHandler.decode_session_id(id->real_variables->__state[0]) );
-	state->decode(id->real_variables->__state[0]);
+        state->use_session( StateHandler.decode_session_id(id->real_variables->__state[0]) );
+        state->decode(id->real_variables->__state[0]);
       }
       else
-	state->use_session();
+        state->use_session();
       id->misc->vform_objects = state->get() || ([]);
 
       return 0;
@@ -543,21 +543,21 @@ class TagVForm {
       m_delete(id->misc, "vform_ok");
 
       if(args["hide-if-verified"] &&
-	 !sizeof(id->misc->vform_failed) &&
-	 sizeof(id->misc->vform_verified) &&
-	 id->misc->defines[" _ok"] ) {
-	m_delete(id->misc, "vform_verified");
-	m_delete(id->misc, "vform_failed");
+         !sizeof(id->misc->vform_failed) &&
+         sizeof(id->misc->vform_verified) &&
+         id->misc->defines[" _ok"] ) {
+        m_delete(id->misc, "vform_verified");
+        m_delete(id->misc, "vform_failed");
         m_delete(id->misc, "vform_xml");
-	return 0;
+        return 0;
       }
 
       state->alter(id->misc->vform_objects);
       content = "<input name=\"__state\" type=\"hidden\" value=\"" + 
-	state->encode() + "\" />\n"
-	"<input name=\"_roxen_wizard_id\" type=\"hidden\" value=\"" +
-	Roxen.html_encode_string(id->variables["_roxen_wizard_id"]) +
-	"\" />\n" + content;
+        state->encode() + "\" />\n"
+        "<input name=\"_roxen_wizard_id\" type=\"hidden\" value=\"" +
+        Roxen.html_encode_string(id->variables["_roxen_wizard_id"]) +
+        "\" />\n" + content;
 
       m_delete(id->misc, "vform_objects");
       m_delete(id->misc, "vform_verified");
@@ -599,7 +599,7 @@ and <tag>roxen-automatic-charset-variable</tag>.</p>
  <p>Hides the form if it is verified</p>
 </attr>",
 
-	     ([
+             ([
 "reload":#"<desc tag='tag'><p><short>
  Reload the page without variable checking.</short>
 </p></desc>
@@ -727,7 +727,7 @@ and <tag>roxen-automatic-charset-variable</tag>.</p>
  </xtable>
 
 </attr>
-	    
+            
 <attr name='minlength' value='number'><p>
  Verify that the variable has at least this many characters. Only
  available when using the type password, string or text.</p>
@@ -799,7 +799,7 @@ and <tag>roxen-automatic-charset-variable</tag>.</p>
  Indicates that the variable should only be tested if it does contain
  something.</p>
 </attr>",
-	    ([
+            ([
 "&_.input;":#"<desc type='entity'><p>
  The input tag, in complex mode.
 </p></desc>",
@@ -822,7 +822,7 @@ and <tag>roxen-automatic-charset-variable</tag>.</p>
 //	"vselect":"<desc type='cont'>Mail stewa@roxen.com for a description</desc>",
 
 
-	    ])
-	 })
+            ])
+         })
 ]) }) ]);
 #endif

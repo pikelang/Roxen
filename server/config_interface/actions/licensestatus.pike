@@ -10,7 +10,7 @@ constant action = "status";
 
 string name= LOCALE(165, "License status");
 string doc = LOCALE(166, "Show information about the installed licenses and "
-		    "their usage.");
+                    "their usage.");
 
 int enabled()
 {

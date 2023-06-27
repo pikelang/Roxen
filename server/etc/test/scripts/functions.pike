@@ -41,7 +41,7 @@ void extract_tarfile(Filesystem.Tar tarfile, string dest_dir)
 array(string) long_get_dir(string dir)
 {
   return map(get_dir(dir)||({}),
-	     lambda(string f, string dir) {
-	       return dir + "/" + f;
-	     }, dir);
+             lambda(string f, string dir) {
+               return dir + "/" + f;
+             }, dir);
 }

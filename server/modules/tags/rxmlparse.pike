@@ -37,31 +37,31 @@ string status()
 void create()
 {
   defvar("toparse", ({ "html", "htm", "rxml" }), "Extensions to parse",
-	 TYPE_STRING_LIST|VAR_NOT_CFIF, 
+         TYPE_STRING_LIST|VAR_NOT_CFIF, 
          "Files with these extensions will be parsed. "
-	 "Note: This module must be reloaded before a change to this "
-	 "setting take effect.");
+         "Note: This module must be reloaded before a change to this "
+         "setting take effect.");
 
   defvar("require_exec", 0, "Require exec bit to parse",
-	 TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
-	 "If enabled, files has to have a execute bit (any of them) set "
-	 "to be parsed. The exec bit is the one set by "
-	 "<tt>chmod +x filename</tt>");
+         TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
+         "If enabled, files has to have a execute bit (any of them) set "
+         "to be parsed. The exec bit is the one set by "
+         "<tt>chmod +x filename</tt>");
 
   defvar("parse_exec", 1, "Parse files with exec bit",
-	 TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
-	 "If enabled, files with the exec bit set will be parsed. If disabled "
-	 "and the <i>Require exec bit to parse</i> option is enabled, no "
-	 "parsing will occur.");
+         TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
+         "If enabled, files with the exec bit set will be parsed. If disabled "
+         "and the <i>Require exec bit to parse</i> option is enabled, no "
+         "parsing will occur.");
 
   defvar ("ram_cache_pages", 1, "RAM cache RXML pages",
-	  TYPE_FLAG, #"\
+          TYPE_FLAG, #"\
 The RXML parser will cache the parse trees (known as \"p-code\") for
 the RXML pages in RAM when this is enabled, which speeds up the
 evaluation of them.");
 
   defvar ("censor_request", 0, "Security:Censor sensitive data",
-	  TYPE_FLAG, #"\
+          TYPE_FLAG, #"\
 <p>If this is set, some sensitive data is removed from the incoming
 requests before RXML evaluation begins. Specifically, any
 authorization data derived from the Authorization or
@@ -76,20 +76,20 @@ cookies or form variables, where potentially sensitive data gets
 stored.</p>");
 
   defvar("logerrorsp", 0, "RXML Errors:Log RXML parse errors", TYPE_FLAG,
-	 "If enabled, all RXML parse errors will be logged in the debug log.");
+         "If enabled, all RXML parse errors will be logged in the debug log.");
 
   defvar("logerrorsr", 1, "RXML Errors:Log RXML run errors", TYPE_FLAG,
-	 "If enabled, all RXML run errors will be logged in the debug log.");
+         "If enabled, all RXML run errors will be logged in the debug log.");
 
   defvar("quietp", 0, "RXML Errors:Quiet RXML parse errors", TYPE_FLAG,
-	 "If enabled, RXML parse errors will not be shown in a page unless "
-	 "debug has been turned on with <tt>&lt;debug on&gt;</tt> or with "
-	 "the <i>debug</i> prestate.");
+         "If enabled, RXML parse errors will not be shown in a page unless "
+         "debug has been turned on with <tt>&lt;debug on&gt;</tt> or with "
+         "the <i>debug</i> prestate.");
 
   defvar("quietr", 1, "RXML Errors:Quiet RXML run errors", TYPE_FLAG,
-	 "If enabled, RXML run errors will not be shown in a page unless "
-	 "debug has been turned on with <tt>&lt;debug on&gt;</tt> or with "
-	 "the <i>debug</i> prestate.");
+         "If enabled, RXML run errors will not be shown in a page unless "
+         "debug has been turned on with <tt>&lt;debug on&gt;</tt> or with "
+         "the <i>debug</i> prestate.");
 }
 
 
@@ -142,8 +142,8 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
      break;
    default:
      data = (Charset.decoder( [string]id->misc->input_charset )
-	     ->feed( data )
-	     ->drain());
+             ->feed( data )
+             ->drain());
      break;
   }
 
@@ -159,22 +159,22 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
     if (ram_cache_name) {
       array cache_ent;
       if ((cache_ent = cache_lookup (ram_cache_name, id->not_query)) &&
-	  cache_ent[0] == stat[ST_MTIME]) {
-	TRACE_ENTER (sprintf ("Evaluating RXML page %O from RAM cache",
-			      id->not_query), this_object());
-	if (cache_ent[1]->is_stale()) {
-	  cache_remove (ram_cache_name, id->not_query);
-	  TRACE_LEAVE ("RAM cache entry was stale");
-	}
-	else {
-	  context = cache_ent[1]->new_context (id);
-	  rxml = cache_ent[1]->eval (context);
-	  id->cache_status["pcoderam"] = 1;
-	  break eval_rxml;
-	}
+          cache_ent[0] == stat[ST_MTIME]) {
+        TRACE_ENTER (sprintf ("Evaluating RXML page %O from RAM cache",
+                              id->not_query), this_object());
+        if (cache_ent[1]->is_stale()) {
+          cache_remove (ram_cache_name, id->not_query);
+          TRACE_LEAVE ("RAM cache entry was stale");
+        }
+        else {
+          context = cache_ent[1]->new_context (id);
+          rxml = cache_ent[1]->eval (context);
+          id->cache_status["pcoderam"] = 1;
+          break eval_rxml;
+        }
       }
       TRACE_ENTER (sprintf ("Evaluating and compiling RXML page %O",
-			    id->not_query), this_object());
+                            id->not_query), this_object());
       RXML.Parser parser = Roxen.get_rxml_parser (id, 0, 1);
       context = parser->context;
       parser->write_end (data);
@@ -185,7 +185,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
     }
     else {
       TRACE_ENTER (sprintf ("Evaluating RXML page %O",
-			    id->not_query), this_object());
+                            id->not_query), this_object());
       RXML.Parser parser = Roxen.get_rxml_parser (id);
       context = parser->context;
       parser->write_end (data);
@@ -195,15 +195,15 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
   TRACE_LEAVE ("");
 
   return (["data":rxml,
-	   "type": file2type((id->realfile
-			      || id->no_query
-			      || "index.html"),
-			     0, e) || "text/html",
-	   "stat":context->misc[" _stat"],
-	   "error":context->misc[" _error"],
-	   "rettext":context->misc[" _rettext"],
-	   "extra_heads":context->misc[" _extra_heads"],
-	   ]);
+           "type": file2type((id->realfile
+                              || id->no_query
+                              || "index.html"),
+                             0, e) || "text/html",
+           "stat":context->misc[" _stat"],
+           "error":context->misc[" _error"],
+           "rettext":context->misc[" _rettext"],
+           "extra_heads":context->misc[" _extra_heads"],
+           ]);
 }
 
 
@@ -228,13 +228,13 @@ string rxml_run_error(RXML.Backtrace err, RXML.Type type)
 
 #ifdef VERBOSE_RXML_ERRORS
   report_notice ("Error in %s (%O).\n%s",
-		 id->raw_url || id->not_query || "UNKNOWN", type,
-		 describe_backtrace (err));
+                 id->raw_url || id->not_query || "UNKNOWN", type,
+                 describe_backtrace (err));
 #else
   if(query("logerrorsr"))
     report_notice ("Error in %s.\n%s",
-		   id->raw_url || id->not_query || "UNKNOWN",
-		   describe_error (err));
+                   id->raw_url || id->not_query || "UNKNOWN",
+                   describe_error (err));
 #endif
 
   NOCACHE();
@@ -262,13 +262,13 @@ string rxml_parse_error(RXML.Backtrace err, RXML.Type type)
 
 #ifdef VERBOSE_RXML_ERRORS
   report_notice ("Error in %s (%O).\n%s",
-		 id->raw_url || id->not_query || "UNKNOWN", type,
-		 describe_backtrace (err));
+                 id->raw_url || id->not_query || "UNKNOWN", type,
+                 describe_backtrace (err));
 #else
   if(query("logerrorsp"))
     report_notice ("Error in %s.\n%s",
-		   id->raw_url || id->not_query || "UNKNOWN",
-		   describe_error (err));
+                   id->raw_url || id->not_query || "UNKNOWN",
+                   describe_error (err));
 #endif
 
   NOCACHE();

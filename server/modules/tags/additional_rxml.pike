@@ -20,12 +20,12 @@ float compat_level = (float) my_configuration()->query("compat_level");
 void create() {
   defvar("insert_href",
 #ifdef THREADS
-	 1
+         1
 #else
-	 0
+         0
 #endif
-	 , "Allow tags that might hang",
-	 TYPE_FLAG, #"\
+         , "Allow tags that might hang",
+         TYPE_FLAG, #"\
 <p>If set, it will be possible to use <tt>&lt;insert href&gt;</tt> and
 <tt>&lt;xml-rpc-call&gt;</tt> to retrieve responses from other
 servers.</p>
@@ -35,7 +35,7 @@ remote server, so if enough requests are made to an unresponding
 external web server, this server might also cease to respond.</p>");
 
   defvar ("default_timeout", 300, "Default timeout for <insert href>",
-	  TYPE_INT, #"\
+          TYPE_INT, #"\
 Maximum waiting time in seconds for a response from the other web
 server when <tt>&lt;insert href&gt;</tt> is used. This can be
 overridden with the <tt>timeout</tt> attribute. Set it to zero to wait
@@ -43,14 +43,14 @@ indefinitely by default.
 
 <p>Timeout is not available if your run the server without threads."
 #ifndef THREADS
-	  " <strong>You are currently running without threads.</strong>"
+          " <strong>You are currently running without threads.</strong>"
 #endif
-	 );
+         );
 
   defvar("recursion_limit", 2, "Maximum recursion depth for <insert href>",
-	 TYPE_INT|VAR_MORE,
-	 "Maxumum number of nested <tt>&lt;insert href&gt;</tt>'s allowed. "
-	 "May be set to zero to disable the limit.");
+         TYPE_INT|VAR_MORE,
+         "Maxumum number of nested <tt>&lt;insert href&gt;</tt>'s allowed. "
+         "May be set to zero to disable the limit.");
 }
 
 #ifdef THREADS
@@ -65,10 +65,10 @@ class AsyncHTTPClient {
   Thread.Queue queue = Thread.Queue();
 
   void do_method(string _method,
-		 string|Standards.URI _url,
+                 string|Standards.URI _url,
                  void|mapping post_put_variables,
-		 void|mapping _request_headers,
-		 void|Protocols.HTTP.Query _con, void|string _data)
+                 void|mapping _request_headers,
+                 void|Protocols.HTTP.Query _con, void|string _data)
   {
     if(!_con) {
       con = Protocols.HTTP.Query();
@@ -85,8 +85,8 @@ class AsyncHTTPClient {
 
     if(post_put_variables) {
       request_headers += 
-		   (["content-type":
-		     "application/x-www-form-urlencoded"]);
+                   (["content-type":
+                     "application/x-www-form-urlencoded"]);
       _data = Protocols.HTTP.http_encode_query(post_put_variables);
     }
 
@@ -94,7 +94,7 @@ class AsyncHTTPClient {
 
     if(stringp(_url)) {
       if (mixed err = catch (url=Standards.URI(_url)))
-	RXML.parse_error ("Invalid URL: %s\n", describe_error (err));
+        RXML.parse_error ("Invalid URL: %s\n", describe_error (err));
     }
     else
       url = _url;
@@ -102,13 +102,13 @@ class AsyncHTTPClient {
 #if constant(SSL.File)
     if(url->scheme!="http" && url->scheme!="https")
       error("Protocols.HTTP can't handle %O or any other protocols than HTTP or HTTPS\n",
-	    url->scheme);
+            url->scheme);
     
     con->https= (url->scheme=="https")? 1 : 0;
 #else
     if(url->scheme!="http")
       error("Protocols.HTTP can't handle %O or any other protocol than HTTP\n",
-	    url->scheme);
+            url->scheme);
     
 #endif
     
@@ -123,18 +123,18 @@ class AsyncHTTPClient {
     
     if(url->user)
       default_headers->authorization = "Basic "
-	+ MIME.encode_base64(url->user + ":" +
-			     (url->password || ""), 1);
+        + MIME.encode_base64(url->user + ":" +
+                             (url->password || ""), 1);
     request_headers = default_headers | request_headers;
     
     query=url->query;
     /*
     if(query_variables && sizeof(query_variables))
       {
-	if(query)
-	  query+="&"+Protocols.HTTP.http_encode_query(query_variables);
-	else
-	  query=Protocols.HTTP.http_encode_query(query_variables);
+        if(query)
+          query+="&"+Protocols.HTTP.http_encode_query(query_variables);
+        else
+          query=Protocols.HTTP.http_encode_query(query_variables);
       }
     */
 
@@ -175,8 +175,8 @@ class AsyncHTTPClient {
   void run() {
     /*
     con->sync_request(url->host,url->port,
-		      method+" "+path+(query?("?"+query):"")+" HTTP/1.0",
-		      request_headers, req_data);
+                      method+" "+path+(query?("?"+query):"")+" HTTP/1.0",
+                      request_headers, req_data);
     
     */
 
@@ -186,7 +186,7 @@ class AsyncHTTPClient {
     if (roxen.query("use_proxy") && sizeof(roxen.query("proxy_url"))) {
 #ifdef OUTGOING_PROXY_DEBUG
       werror("Insert href: Using proxy: %O to fetch %O...\n",
-	     roxen.query("proxy_url"), url);
+             roxen.query("proxy_url"), url);
 #endif
       string proxy_user = roxen.query("proxy_username");
       string proxy_pass = roxen.query("proxy_password");
@@ -195,19 +195,19 @@ class AsyncHTTPClient {
       if (!sizeof(proxy_user)) proxy_user = UNDEFINED;
       if (!sizeof(proxy_pass)) proxy_pass = UNDEFINED;
       Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
-					     proxy_user, proxy_pass,
-					     method, url, 0,
-					     request_headers, con,
-					     req_data);
+                                             proxy_user, proxy_pass,
+                                             method, url, 0,
+                                             request_headers, con,
+                                             req_data);
     } else {
       con->async_request(url->host,url->port,
-			 method+" "+path+(query?("?"+query):"")+" HTTP/1.0",
-			 request_headers, req_data);
+                         method+" "+path+(query?("?"+query):"")+" HTTP/1.0",
+                         request_headers, req_data);
     }
 #else
     con->async_request(url->host,url->port,
-		       method+" "+path+(query?("?"+query):"")+" HTTP/1.0",
-		       request_headers, req_data);
+                       method+" "+path+(query?("?"+query):"")+" HTTP/1.0",
+                       request_headers, req_data);
 #endif
 
     status = con->status;
@@ -221,7 +221,7 @@ class AsyncHTTPClient {
   }
 
   void create(string method, mapping args,
-	      mapping|void headers, string|mapping|void data)
+              mapping|void headers, string|mapping|void data)
   {
     if(method == "POST" || method == "PUT") {
       if (mappingp(data)) {
@@ -276,7 +276,7 @@ class TagInsertHref {
     int recursion_depth = (int)id->request_headers["x-roxen-recursion-depth"];
 
     if (query("recursion_limit") &&
-	(recursion_depth >= query("recursion_limit")))
+        (recursion_depth >= query("recursion_limit")))
       RXML.run_error("Too deep insert href recursion.");
 
     recursion_depth++;
@@ -289,12 +289,12 @@ class TagInsertHref {
     object /*Protocols.HTTP|AsyncHTTPClient*/ q;
 
     mapping(string:string) headers = ([ "X-Roxen-Recursion-Depth":
-					(string)recursion_depth ]);
+                                        (string)recursion_depth ]);
     if (args["request-headers"]) {
       string delim = args["header-delimiter"] || ",";
       foreach (args["request-headers"] / delim, string header)
-	if (sscanf (header, "%[^=]=%s", string name, string val) == 2)
-	  headers[name] = val;
+        if (sscanf (header, "%[^=]=%s", string name, string val) == 2)
+          headers[name] = val;
     }
 
     string method = "GET";
@@ -338,13 +338,13 @@ class TagInsertHref {
     q->run();
 #else
     mixed err = catch {
-	q = Protocols.HTTP.post_url(args->href, data, headers);
+        q = Protocols.HTTP.post_url(args->href, data, headers);
       };
 
     if (err) {
       string msg = describe_error (err);
       if (has_prefix (msg, "Standards.URI:"))
-	RXML.parse_error ("Invalid URL: %s\n", msg);
+        RXML.parse_error ("Invalid URL: %s\n", msg);
     }
 #endif
     ns += gethrtime(1);
@@ -361,33 +361,33 @@ class TagInsertHref {
     if (args["accept-status"]) {
       accept_statuses = ({});
       foreach(args["accept-status"]/",", string range) {
-	range =
-	  replace(range, ({ "...", "..", " ", "\t" }), ({ "-", "-", "", "" }));
-	array(int) pair = (array(int))(range/"-");
-	if (sizeof(pair) == 1) {
-	  pair += pair;
-	} else if ((sizeof(pair) != 2) || (pair[0] > pair[1])) {
-	  RXML.parse_error("Invalid status range: %s\n", args["accept-status"]);
-	}
-	accept_statuses += ({ pair });
+        range =
+          replace(range, ({ "...", "..", " ", "\t" }), ({ "-", "-", "", "" }));
+        array(int) pair = (array(int))(range/"-");
+        if (sizeof(pair) == 1) {
+          pair += pair;
+        } else if ((sizeof(pair) != 2) || (pair[0] > pair[1])) {
+          RXML.parse_error("Invalid status range: %s\n", args["accept-status"]);
+        }
+        accept_statuses += ({ pair });
       }
     }
 
     string errmsg;
     if(q) {
       foreach(accept_statuses, array(int) pair) {
-	if ((q->status >= pair[0]) && (q->status <= pair[1])) {
-	  mapping headers = q->con->headers;
-	  string data = q->data();
-	  if (data) {
+        if ((q->status >= pair[0]) && (q->status <= pair[1])) {
+          mapping headers = q->con->headers;
+          string data = q->data();
+          if (data) {
             // Explicitly destruct the connection object to avoid garbage
             // and CLOSE_WAIT sockets. Reported in [RT 18335].
             destruct(q);
-	    return Roxen.low_parse_http_response(headers, data, 0, 1,
-						 (int)args["ignore-unknown-ce"]);
-	  }
-	  break;
-	}
+            return Roxen.low_parse_http_response(headers, data, 0, 1,
+                                                 (int)args["ignore-unknown-ce"]);
+          }
+          break;
+        }
       }
       errmsg = q->status_desc;
       // Explicitly destruct the connection object to avoid garbage
@@ -399,7 +399,7 @@ class TagInsertHref {
 
     if(!args->silent) {
       RXML.run_error(errmsg ||
-		     sprintf("No server response for %g seconds.", seconds));
+                     sprintf("No server response for %g seconds.", seconds));
     }
     return "";
   }
@@ -427,15 +427,15 @@ class TagXmlRpcCall
       inherit RXML.Frame;
       array do_return (RequestID id)
       {
-	if (content == RXML.nil) {
-	  if (!allow_empty)
-	    RXML.parse_error ("Missing value.\n");
-	  up->params += ({content_type->empty_value});
-	}
-	else
-	  up->params += ({content});
-	result = RXML.nil;
-	return 0;
+        if (content == RXML.nil) {
+          if (!allow_empty)
+            RXML.parse_error ("Missing value.\n");
+          up->params += ({content_type->empty_value});
+        }
+        else
+          up->params += ({content});
+        result = RXML.nil;
+        return 0;
       }
     }
   }
@@ -473,23 +473,23 @@ class TagXmlRpcCall
       inherit RXML.Frame;
       array do_return (RequestID id)
       {
-	int t;
-	int year, month, day, hour, minute, second;
-	if (sscanf (content || "", "%d-%d-%d%*c%d:%d:%d",
-		    year, month, day, hour, minute, second) < 3)
-	  RXML.parse_error ("Need at least yyyy-mm-dd specified.\n");
-	if (mixed err = catch (t = mktime (([
-					     "year": year - 1900,
-					     "mon": month - 1,
-					     "mday": day,
-					     "hour": hour,
-					     "min": minute,
-					     "sec": second,
-					   ]))))
-	  RXML.run_error (describe_error (err));
-	up->params += ({Calendar.ISO.Second (t)});
-	result = RXML.nil;
-	return 0;
+        int t;
+        int year, month, day, hour, minute, second;
+        if (sscanf (content || "", "%d-%d-%d%*c%d:%d:%d",
+                    year, month, day, hour, minute, second) < 3)
+          RXML.parse_error ("Need at least yyyy-mm-dd specified.\n");
+        if (mixed err = catch (t = mktime (([
+                                             "year": year - 1900,
+                                             "mon": month - 1,
+                                             "mday": day,
+                                             "hour": hour,
+                                             "min": minute,
+                                             "sec": second,
+                                           ]))))
+          RXML.run_error (describe_error (err));
+        up->params += ({Calendar.ISO.Second (t)});
+        result = RXML.nil;
+        return 0;
       }
     }
   }
@@ -506,9 +506,9 @@ class TagXmlRpcCall
       array params = ({});
       array do_return (RequestID id)
       {
-	up->params += ({params});
-	result = RXML.nil;
-	return 0;
+        up->params += ({params});
+        result = RXML.nil;
+        return 0;
       }
     }
   }
@@ -528,22 +528,22 @@ class TagXmlRpcCall
       array params = ({});
       array do_return (RequestID id)
       {
-	if (sizeof (params) > 1)
-	  RXML.parse_error ("Cannot take more than one value.\n");
-	if (sizeof (params) < 1)
-	  RXML.parse_error ("Missing value.\n");
-	if (!zero_type (up->members[args->name]))
-	  RXML.parse_error ("Cannot handle several members "
-			    "with the same name.\n");
-	up->members[args->name] = params[0];
-	result = RXML.nil;
-	return 0;
+        if (sizeof (params) > 1)
+          RXML.parse_error ("Cannot take more than one value.\n");
+        if (sizeof (params) < 1)
+          RXML.parse_error ("Missing value.\n");
+        if (!zero_type (up->members[args->name]))
+          RXML.parse_error ("Cannot handle several members "
+                            "with the same name.\n");
+        up->members[args->name] = params[0];
+        result = RXML.nil;
+        return 0;
       }
     }
   }
 
   RXML.TagSet struct_tags = RXML.TagSet (this_module(), "xml-rpc-call/struct",
-					 ({TagMember()}));
+                                         ({TagMember()}));
 
   class TagStruct
   {
@@ -557,21 +557,21 @@ class TagXmlRpcCall
       mapping(string:mixed) members = ([]);
       array do_return (RequestID id)
       {
-	up->params += ({members});
-	result = RXML.nil;
-	return 0;
+        up->params += ({members});
+        result = RXML.nil;
+        return 0;
       }
     }
   }
 
   RXML.TagSet param_tags = RXML.TagSet (this_module(), "xml-rpc-call",
-					({TagString(),
-					  TagInt(),
-					  TagFloat(),
-					  TagIsoDateTime(),
-					  TagArray(),
-					  TagStruct(),
-					}));
+                                        ({TagString(),
+                                          TagInt(),
+                                          TagFloat(),
+                                          TagIsoDateTime(),
+                                          TagArray(),
+                                          TagStruct(),
+                                        }));
 
   class Frame
   {
@@ -582,60 +582,60 @@ class TagXmlRpcCall
     void format_response (array res, String.Buffer buf)
     {
       foreach (res, mixed val) {
-	if (stringp (val))
-	  buf->add ("<string>", Roxen.html_encode_string (val), "</string>\n");
-	else if (intp (val))
-	  buf->add ("<int>", (string) val, "</int>\n");
-	else if (floatp (val))
-	  buf->add ("<float>", val, "</float>\n");
-	else if (arrayp (val)) {
-	  buf->add ("<array>\n");
-	  format_response (val, buf);
-	  buf->add ("</array>\n");
-	}
-	else if (mappingp (val)) {
-	  buf->add ("<struct>\n");
-	  foreach (val; string name; mixed val) {
-	    buf->add ("<member name='",
-		      Roxen.html_encode_string (name), "'>\n");
-	    format_response (({val}), buf);
-	    buf->add ("</member>\n");
-	  }
-	  buf->add ("</struct>\n");
-	}
-	else {			// Gotta be a Calendar object.
-	  // Format this to be compatible with the iso-time attribute
-	  // to the <date> tag.
-	  buf->add ("<iso-date-time>", val->format_time(),
-		    "</iso-date-time>\n");
-	}
+        if (stringp (val))
+          buf->add ("<string>", Roxen.html_encode_string (val), "</string>\n");
+        else if (intp (val))
+          buf->add ("<int>", (string) val, "</int>\n");
+        else if (floatp (val))
+          buf->add ("<float>", val, "</float>\n");
+        else if (arrayp (val)) {
+          buf->add ("<array>\n");
+          format_response (val, buf);
+          buf->add ("</array>\n");
+        }
+        else if (mappingp (val)) {
+          buf->add ("<struct>\n");
+          foreach (val; string name; mixed val) {
+            buf->add ("<member name='",
+                      Roxen.html_encode_string (name), "'>\n");
+            format_response (({val}), buf);
+            buf->add ("</member>\n");
+          }
+          buf->add ("</struct>\n");
+        }
+        else {			// Gotta be a Calendar object.
+          // Format this to be compatible with the iso-time attribute
+          // to the <date> tag.
+          buf->add ("<iso-date-time>", val->format_time(),
+                    "</iso-date-time>\n");
+        }
       }
     }
 
     array do_return (RequestID id)
     {
       if (!query ("insert_href"))
-	RXML.run_error ("This tag is disabled.\n");
+        RXML.run_error ("This tag is disabled.\n");
 
       // FIXME: Should provide a way to avoid having the href in the
       // rxml pages since it might contain user and password.
 
       Protocols.XMLRPC.Client client =
-	Protocols.XMLRPC.Client (args->href);
+        Protocols.XMLRPC.Client (args->href);
       array|Protocols.XMLRPC.Fault res;
 
       if (mixed err = catch (res = client[args->method] (@params)))
-	RXML.run_error ("Failed to make XML-RPC call %O: %s",
-			args->method, describe_error (err));
+        RXML.run_error ("Failed to make XML-RPC call %O: %s",
+                        args->method, describe_error (err));
 
       if (objectp (res)) {
-	if (string var = args["fault-code"])
-	  RXML_CONTEXT->user_set_var (var, res->fault_code);
-	if (string var = args["fault-string"])
-	  RXML_CONTEXT->user_set_var (var, res->fault_string);
-	result = RXML.nil;
-	RXML_CONTEXT->misc[" _ok"] = 0;
-	return 0;
+        if (string var = args["fault-code"])
+          RXML_CONTEXT->user_set_var (var, res->fault_code);
+        if (string var = args["fault-string"])
+          RXML_CONTEXT->user_set_var (var, res->fault_string);
+        result = RXML.nil;
+        RXML_CONTEXT->misc[" _ok"] = 0;
+        return 0;
       }
 
       String.Buffer buf = String.Buffer();
@@ -648,7 +648,7 @@ class TagXmlRpcCall
 }
 
 string container_recursive_output (string tagname, mapping args,
-				  string contents, RequestID id)
+                                  string contents, RequestID id)
 // This tag only exists for historical amusement.
 {
   int limit;
@@ -665,7 +665,7 @@ string container_recursive_output (string tagname, mapping args,
     outside = args->outside ? args->outside / (args->separator || ",") : ({});
     if (sizeof (inside) != sizeof (outside))
       RXML.parse_error("'inside' and 'outside' replacement sequences "
-		       "aren't of same length.\n");
+                       "aren't of same length.\n");
   }
 
   if (limit <= 0) return contents;
@@ -703,47 +703,47 @@ class TagSprintf {
     array do_return(RequestID id) {
       array(mixed) in;
       if(args->split)
-	in=(content || "")/args->split;
+        in=(content || "")/args->split;
       else
-	in=({content || ""});
+        in=({content || ""});
 
       array f=((args->format-"%%")/"%")[1..];
       if(sizeof(in)!=sizeof(f))
-	RXML.run_error("Indata hasn't the same size as format data (%d, %d).\n", sizeof(in), sizeof(f));
+        RXML.run_error("Indata hasn't the same size as format data (%d, %d).\n", sizeof(in), sizeof(f));
 
       // Do some casting
       for(int i; i<sizeof(in); i++) {
-	int quit;
-	foreach(f[i]/1, string char) {
-	  if(quit) break;
-	  switch(char) {
-	  case "d":
-	  case "u":
-	  case "o":
-	  case "x":
-	  case "X":
-	  case "c":
-	  case "b":
-	    in[i]=(int)in[i];
-	    quit=1;
-	    break;
-	  case "f":
-	  case "g":
-	  case "e":
-	  case "G":
-	  case "E":
-	  case "F":
-	    in[i]=(float)in[i];
-	    quit=1;
-	    break;
-	  case "s":
-	  case "O":
-	  case "n":
-	  case "t":
-	    quit=1;
-	    break;
-	  }
-	}
+        int quit;
+        foreach(f[i]/1, string char) {
+          if(quit) break;
+          switch(char) {
+          case "d":
+          case "u":
+          case "o":
+          case "x":
+          case "X":
+          case "c":
+          case "b":
+            in[i]=(int)in[i];
+            quit=1;
+            break;
+          case "f":
+          case "g":
+          case "e":
+          case "G":
+          case "E":
+          case "F":
+            in[i]=(float)in[i];
+            quit=1;
+            break;
+          case "s":
+          case "O":
+          case "n":
+          case "t":
+            quit=1;
+            break;
+          }
+        }
       }
 
       result=sprintf(args->format, @in);
@@ -762,27 +762,27 @@ class TagSscanf {
 
   mapping(string:RXML.Type)
     req_arg_types = ([ "variables" : RXML.t_text(RXML.PEnt),
-		       "format"    : RXML.t_text(RXML.PEnt) ]);
+                       "format"    : RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type)
     opt_arg_types = ([ "variable"  : RXML.t_text(RXML.PEnt),
-		       "return"    : RXML.t_text(RXML.PEnt),
-		       "scope"     : RXML.t_text(RXML.PEnt) ]);
+                       "return"    : RXML.t_text(RXML.PEnt),
+                       "scope"     : RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
     inherit RXML.Frame;
 
     string do_return(RequestID id) {
       if (string content_var = args->variable) {
-	if (zero_type (content = RXML.user_get_var (content_var)))
-	  parse_error ("Variable %q does not exist.\n", content_var);
+        if (zero_type (content = RXML.user_get_var (content_var)))
+          parse_error ("Variable %q does not exist.\n", content_var);
       }
       
       array(string) vars=args->variables/",";
       vars=map(vars, String.trim_all_whites);
       array(string) vals;
       mixed err = catch {
-	  vals = array_sscanf(content || "", args->format);
-	};
+          vals = array_sscanf(content || "", args->format);
+        };
       if(err) {
         string msg = "Unknown error.\n";
         if(arrayp(err) && sizeof(err) && stringp(err[0]))
@@ -790,14 +790,14 @@ class TagSscanf {
         RXML.run_error(msg);
       }
       if(sizeof(vars)<sizeof(vals))
-	RXML.run_error("Too few variables.\n");
+        RXML.run_error("Too few variables.\n");
 
       int var=0;
       foreach(vals, string val)
-	RXML.user_set_var(vars[var++], val, args->scope);
+        RXML.user_set_var(vars[var++], val, args->scope);
 
       if(args->return)
-	RXML.user_set_var(args->return, sizeof(vals), args->scope);
+        RXML.user_set_var(args->return, sizeof(vals), args->scope);
       return 0;
     }
   }
@@ -814,7 +814,7 @@ class TagBaseName {
     string do_return(RequestID id) 
     {
       mixed err = catch {
-	result = basename(replace(content || "", "\\", "/"));
+        result = basename(replace(content || "", "\\", "/"));
       };
       if(err) 
       {
@@ -840,7 +840,7 @@ class TagDirName {
     string do_return(RequestID id) 
     {
       mixed err = catch {
-	result = dirname(replace(content || "", "\\", "/"));
+        result = dirname(replace(content || "", "\\", "/"));
       };
       if(err) 
       {
@@ -870,24 +870,24 @@ class TagDice {
       int value;
       args->type=replace(args->type, "-", "+-");
       foreach(args->type/"+", string dice) {
-	if(has_value(dice, "D")) {
-	  if(dice[0]=='D')
-	    value+=random((int)dice[1..])+1;
-	  else {
-	    array(int) x=(array(int))(dice/"D");
-	    if(sizeof(x)!=2)
-	      RXML.parse_error("Malformed dice type.\n");
-	    value+=x[0]*(random(x[1])+1);
-	  }
-	}
-	else
-	  value+=(int)dice;
+        if(has_value(dice, "D")) {
+          if(dice[0]=='D')
+            value+=random((int)dice[1..])+1;
+          else {
+            array(int) x=(array(int))(dice/"D");
+            if(sizeof(x)!=2)
+              RXML.parse_error("Malformed dice type.\n");
+            value+=x[0]*(random(x[1])+1);
+          }
+        }
+        else
+          value+=(int)dice;
       }
 
       if(args->variable)
-	RXML.user_set_var(args->variable, value, args->scope);
+        RXML.user_set_var(args->variable, value, args->scope);
       else
-	result=(string)value;
+        result=(string)value;
 
       return 0;
     }
@@ -901,16 +901,16 @@ class TagEmitKnownLangs
   array get_dataset(mapping m, RequestID id)
   {
     return map(roxenp()->list_languages(),
-	       lambda(string id)
-	       {
-		 object language = roxenp()->language_low(id);
-		 string eng_name = language->id()[1];
-		 if(eng_name == "standard")
-		   eng_name = "english";
-		 return ([ "id" : id,
-			 "name" : language->id()[2],
-		  "englishname" : eng_name ]);
-	       });
+               lambda(string id)
+               {
+                 object language = roxenp()->language_low(id);
+                 string eng_name = language->id()[1];
+                 if(eng_name == "standard")
+                   eng_name = "english";
+                 return ([ "id" : id,
+                         "name" : language->id()[2],
+                  "englishname" : eng_name ]);
+               });
   }
 }
 
@@ -937,50 +937,50 @@ class TagFormatNumber
       string dec_sep     = "."; 
       if (args["group-separator"])
       {
-	grp_sep = args["group-separator"];
+        grp_sep = args["group-separator"];
       }
       if (args["decimal-separator"])
       {
-	dec_sep = args["decimal-separator"];
+        dec_sep = args["decimal-separator"];
       }
 
       // Get rid of white-space.
       content = replace(content,
-			({ " ", "\t", "\r", "\n" }),
-			({ "", "", "", "" }));
+                        ({ " ", "\t", "\r", "\n" }),
+                        ({ "", "", "", "" }));
 
       // Parse the number.
       string sgn = "", int_part = "", frac_part = "", rest = "";
       if (sscanf(content, "%[-+]%[0-9]%s", sgn, int_part, rest) <= 1) {
-	RXML.parse_error("No number to be formatted was given.");
+        RXML.parse_error("No number to be formatted was given.");
       }
       sscanf(rest, ".%[0-9]%s", frac_part, rest);
 
       if (has_prefix(rest, "e") || has_prefix(rest, "E")) {
-	// Exponent notation.
-	int exponent = 0;
-	sscanf(rest[1..], "%d%s", exponent, rest);
-	if (exponent > 0) {
-	  if (exponent < sizeof(frac_part)) {
-	    int_part += frac_part[..exponent-1];
-	    frac_part = frac_part[exponent..];
-	  } else {
-	    exponent -= sizeof(frac_part);
-	    int_part += frac_part + "0" * exponent;
-	    frac_part = "";
-	  }
-	} else if (exponent < 0) {
-	  exponent = -exponent;
-	  if (exponent < sizeof(int_part)) {
-	    int off = sizeof(int_part) - exponent;
-	    frac_part = int_part[off..] + frac_part;
-	    int_part = int_part[..off-1];
-	  } else {
-	    exponent -= sizeof(int_part);
-	    frac_part = "0" * exponent + int_part + frac_part;
-	    int_part = "";
-	  }
-	}
+        // Exponent notation.
+        int exponent = 0;
+        sscanf(rest[1..], "%d%s", exponent, rest);
+        if (exponent > 0) {
+          if (exponent < sizeof(frac_part)) {
+            int_part += frac_part[..exponent-1];
+            frac_part = frac_part[exponent..];
+          } else {
+            exponent -= sizeof(frac_part);
+            int_part += frac_part + "0" * exponent;
+            frac_part = "";
+          }
+        } else if (exponent < 0) {
+          exponent = -exponent;
+          if (exponent < sizeof(int_part)) {
+            int off = sizeof(int_part) - exponent;
+            frac_part = int_part[off..] + frac_part;
+            int_part = int_part[..off-1];
+          } else {
+            exponent -= sizeof(int_part);
+            frac_part = "0" * exponent + int_part + frac_part;
+            int_part = "";
+          }
+        }
       }
 
       if (!(sizeof(sgn/"-") & 1)) sgn = "-";
@@ -994,38 +994,38 @@ class TagFormatNumber
       string pattern = "";
       int neg_pattern;
       foreach(args->pattern/";"; int i; string seg) {
-	if (i) {
-	  if (!has_suffix(pattern, "'")) {
-	    if (sgn == "") break;
-	    // Start of negative pattern.
-	    pattern = "";
-	    neg_pattern = 1;
-	  } else {
-	    // Escaped.
-	    pattern = pattern[..sizeof(pattern)-2] + ";";
-	  }
-	}
-	pattern += seg;
+        if (i) {
+          if (!has_suffix(pattern, "'")) {
+            if (sgn == "") break;
+            // Start of negative pattern.
+            pattern = "";
+            neg_pattern = 1;
+          } else {
+            // Escaped.
+            pattern = pattern[..sizeof(pattern)-2] + ";";
+          }
+        }
+        pattern += seg;
       }
 
       // Now do the same thing as above to find the fraction delimiter.
       string int_pattern = "";
       string frac_pattern;
       foreach(pattern/"."; int i; string seg) {
-	if (i) {
-	  if (frac_pattern) {
-	    if (has_suffix(frac_pattern, "'")) {
-	      frac_pattern = frac_pattern[..sizeof(frac_pattern)-2];
-	    }
-	    frac_pattern += "." + seg;
-	  } else if (has_suffix(int_pattern, "'")) {
-	    int_pattern = int_pattern[..sizeof(int_pattern)-2] + "." + seg;
-	  } else {
-	    frac_pattern = seg;
-	  }
-	} else {
-	  int_pattern = seg;
-	}
+        if (i) {
+          if (frac_pattern) {
+            if (has_suffix(frac_pattern, "'")) {
+              frac_pattern = frac_pattern[..sizeof(frac_pattern)-2];
+            }
+            frac_pattern += "." + seg;
+          } else if (has_suffix(int_pattern, "'")) {
+            int_pattern = int_pattern[..sizeof(int_pattern)-2] + "." + seg;
+          } else {
+            frac_pattern = seg;
+          }
+        } else {
+          int_pattern = seg;
+        }
       }
       if (!frac_pattern) frac_pattern = "";
 
@@ -1033,24 +1033,24 @@ class TagFormatNumber
       int log_ten = 0;
       if (has_value(pattern, "%"))
       {
-	log_ten = 2;
+        log_ten = 2;
       }
       else if (has_value(pattern, "\x2030"))
       {
-	log_ten = 3;
+        log_ten = 3;
       }
 
       for (int i = log_ten; i > 0; i--)
       {
-	if (frac_part != "")
-	{
-	  int_part += frac_part[0..0];
-	  frac_part = frac_part[1..];
-	}
+        if (frac_part != "")
+        {
+          int_part += frac_part[0..0];
+          frac_part = frac_part[1..];
+        }
         else 
-	{
-	  int_part += "0";
-	}
+        {
+          int_part += "0";
+        }
       }
 
       // Trim away leading zeros
@@ -1067,56 +1067,56 @@ class TagFormatNumber
       string frac_result = "";
       foreach(frac_pattern/1, string s)
       {
-	switch(s)
-	{
-	  case "'":
-	    break;
-	  case "#":
-	    if (vi < val_length)
-	    {
-	      digit_bits |= frac_part[vi];
-	      frac_result += frac_part[vi..vi];
-	      vi++;
-	    }
-	    break;
-	  case "0":
-	    if (vi < val_length)
-	    {
-	      digit_bits |= frac_part[vi];
-	      frac_result += frac_part[vi..vi];
-	      vi++;
-	    } 
-	    else
-	    {
-	      frac_result += "0";
-	    }
-	    break;
-	  default:
-	    frac_result += s;
-	}
+        switch(s)
+        {
+          case "'":
+            break;
+          case "#":
+            if (vi < val_length)
+            {
+              digit_bits |= frac_part[vi];
+              frac_result += frac_part[vi..vi];
+              vi++;
+            }
+            break;
+          case "0":
+            if (vi < val_length)
+            {
+              digit_bits |= frac_part[vi];
+              frac_result += frac_part[vi..vi];
+              vi++;
+            } 
+            else
+            {
+              frac_result += "0";
+            }
+            break;
+          default:
+            frac_result += s;
+        }
       }
 
       // Round the last digit.    
       if (vi < val_length && (frac_part[vi] > '5' ||
-			      (frac_part[vi] == '5' && (sgn == ""))))
+                              (frac_part[vi] == '5' && (sgn == ""))))
       {
-	digit_bits = 0;
-	vi = sizeof(frac_result);
-	while(vi > 0) {
-	  if (frac_result[vi-1] == '9') {
-	    // Carry.
-	    vi--;
-	    frac_result[vi] = '0';
-	    continue;
-	  }
-	  frac_result[vi-1] += 1;
-	  digit_bits |= frac_part[vi-1];
-	  break;
-	}
-	if (!vi)
-	{
-	  int_part = (string)(((int)int_part) + 1);
-	}
+        digit_bits = 0;
+        vi = sizeof(frac_result);
+        while(vi > 0) {
+          if (frac_result[vi-1] == '9') {
+            // Carry.
+            vi--;
+            frac_result[vi] = '0';
+            continue;
+          }
+          frac_result[vi-1] += 1;
+          digit_bits |= frac_part[vi-1];
+          break;
+        }
+        if (!vi)
+        {
+          int_part = (string)(((int)int_part) + 1);
+        }
       }
       
       // Now for the integral part. We traverse it in reverse.
@@ -1128,103 +1128,103 @@ class TagFormatNumber
       string int_result = "";
       foreach(reverse(int_pattern)/1, string s)
       {
-	switch(s)
-	{
-	  case "'":
-	    break;
-	  case "#":
-	    if (vi < val_length)
-	    {
-	      digit_bits |= rev_val[vi];
-	      int_result += rev_val[vi..vi];
-	      vi++;
-	    }
-	    if (num_wid <= 0)
-	    {
-	      num_wid--;
-	    }
-	    break;
-	  case "0":
-	    if (vi < val_length)
-	    {
-	      digit_bits |= rev_val[vi];
-	      int_result += rev_val[vi..vi];
-	      vi++;
-	    } 
-	    else
-	    {
-	      int_result += "0";
-	    }
-	    if (num_wid <= 0)
-	    {
-	      num_wid--;
-	    }
-	    break;
-	  case ",":
-	    if (num_wid <= 0)
-	    {
-	      num_wid *= -1;
-	    }
-	    if (vi < val_length)
-	    {
-	      int_result += grp_sep;
-	    }
-	    break;
-	  case "%":
-	  case "\x2030":
-	    frac_result = s;
-	    break;
-	  default:
-	    int_result += s;
-	}
+        switch(s)
+        {
+          case "'":
+            break;
+          case "#":
+            if (vi < val_length)
+            {
+              digit_bits |= rev_val[vi];
+              int_result += rev_val[vi..vi];
+              vi++;
+            }
+            if (num_wid <= 0)
+            {
+              num_wid--;
+            }
+            break;
+          case "0":
+            if (vi < val_length)
+            {
+              digit_bits |= rev_val[vi];
+              int_result += rev_val[vi..vi];
+              vi++;
+            } 
+            else
+            {
+              int_result += "0";
+            }
+            if (num_wid <= 0)
+            {
+              num_wid--;
+            }
+            break;
+          case ",":
+            if (num_wid <= 0)
+            {
+              num_wid *= -1;
+            }
+            if (vi < val_length)
+            {
+              int_result += grp_sep;
+            }
+            break;
+          case "%":
+          case "\x2030":
+            frac_result = s;
+            break;
+          default:
+            int_result += s;
+        }
       }
       for (;vi < val_length;vi++)
       {
-	  if (num_wid > 0 && vi%num_wid == 0)
-	  {
-	    int_result += grp_sep;
-	  }
-	  int_result += rev_val[vi..vi];
+          if (num_wid > 0 && vi%num_wid == 0)
+          {
+            int_result += grp_sep;
+          }
+          int_result += rev_val[vi..vi];
       }
 
       // Insert the sign.
       if ((sgn == "-") && !(digit_bits & 0x0f)) {
-	// Negative zero.
-	sgn = "";
+        // Negative zero.
+        sgn = "";
       }
       foreach(int_result/1; int i; string s) {
-	if (s == "-") {
-	  int_result = int_result[..i-1] + sgn + int_result[i+1..];
-	} else if (s == "+") {
-	  if (sgn == "") {
-	    sgn = "+";
-	  }
-	  int_result = int_result[..i-1] + sgn + int_result[i+1..];
-	} else
-	  continue;
-	sgn = "";
-	break;
+        if (s == "-") {
+          int_result = int_result[..i-1] + sgn + int_result[i+1..];
+        } else if (s == "+") {
+          if (sgn == "") {
+            sgn = "+";
+          }
+          int_result = int_result[..i-1] + sgn + int_result[i+1..];
+        } else
+          continue;
+        sgn = "";
+        break;
       }
       if ((sgn != "") && !neg_pattern) {
-	// No sign in generic pattern.
-	if (has_suffix(int_result, "0")) {
-	  int_result = int_result[..sizeof(int_result)-2];
-	}
-	int_result += sgn;
+        // No sign in generic pattern.
+        if (has_suffix(int_result, "0")) {
+          int_result = int_result[..sizeof(int_result)-2];
+        }
+        int_result += sgn;
       }
 
       if (strlen(frac_result) == 0)
       {
-	result += reverse(int_result);
+        result += reverse(int_result);
       }
       else if (frac_result[0..0] == "%" ||
-	       frac_result[0..0] == "\x2030")
+               frac_result[0..0] == "\x2030")
       {
-	result += reverse(int_result) + frac_result[0..0];
+        result += reverse(int_result) + frac_result[0..0];
       }
       else 
       {
-	result += reverse(int_result) + dec_sep + frac_result;
+        result += reverse(int_result) + dec_sep + frac_result;
       }
     }
   } 
@@ -1372,9 +1372,9 @@ http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.11)</p>
 
  <ex-box><set variable='var.xml-rpc-result'>
   <xml-rpc-call href='http://xmlrpchost.foo.com/xmlrpc/'
-		method='service.doSomething'
-		fault-code='var.fault-code'
-		fault-string='var.fault-string'>
+                method='service.doSomething'
+                fault-code='var.fault-code'
+                fault-string='var.fault-string'>
     <string>abc</string>
     <if variable='var.rpc-use-float'>
       <float>3.14159</float>
@@ -1506,8 +1506,8 @@ of fraction digit characters.
 
 <p>
   <format-number pattern='#,###' 
-		 group-separator=' '
-		 decimal-separator=','>
+                 group-separator=' '
+                 decimal-separator=','>
     &var.foo;
   </format-number>
 </p></ex>
@@ -1671,7 +1671,7 @@ of fraction digit characters.
 <p>Even this attribute can be abused:</p>
 <p>
   <format-number pattern='###.##' 
-	         decimal-separator=' &lt;--integral part, fractional part--&gt; '>
+                 decimal-separator=' &lt;--integral part, fractional part--&gt; '>
     5023.643
   </format-number>
 </p></ex>
@@ -1710,19 +1710,19 @@ of fraction digit characters.
  <ex><emit source='known-langs' sort='englishname'>
   4711 in &_.englishname;: <number lang='&_.id;' num='4711'/><br />
 </emit></ex>",
-			([
-			  "&_.id;":#"<desc type='entity'>
+                        ([
+                          "&_.id;":#"<desc type='entity'>
  <p>Prints the three-character ISO 639-2 id of the language, for
  example \"eng\" for english and \"deu\" for german.</p>
 </desc>",
-			  "&_.name;":#"<desc type='entity'>
+                          "&_.name;":#"<desc type='entity'>
  <p>The name of the language in the language itself, for example
  \"français\" for french.</p>
 </desc>",
-			  "&_.englishname;":#"<desc type='entity'>
+                          "&_.englishname;":#"<desc type='entity'>
  <p>The name of the language in English.</p>
 </desc>",
-			]) }),
+                        ]) }),
 
 #if 0
   // This applies to the old rxml 1.x parser. The doc for this tag is

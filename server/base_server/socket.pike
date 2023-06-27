@@ -44,7 +44,7 @@ private void failed(array args)
 }
 
 private void got_host_name(string host, string oh, int port,
-			   function callback, mixed ... args)
+                           function callback, mixed ... args)
 {
   if(!host)
   {
@@ -72,10 +72,10 @@ private void got_host_name(string host, string oh, int port,
   if((err=catch(res=f->connect(host, port)))||!res) // Illegal format...
   {
     report_debug("SOCKETS: Illegal internet address (" + host + ":" +port + ")"
-		 " in connect in async comm.\n");
+                 " in connect in async comm.\n");
     if(err&&arrayp(err)&&err[1])
       report_debug("SOCKETS: " + err[0] - "\n" + " (" + host + ":" + port + ")"
-		   " in connect in async comm.\n");
+                   " in connect in async comm.\n");
     f->set_nonblocking(0,0,0);
     callback(0, @args);
     destruct(f);
@@ -85,7 +85,7 @@ private void got_host_name(string host, string oh, int port,
 }
 
 void async_connect(string host, int port, function|void callback,
-		   mixed ... args)
+                   mixed ... args)
 {
   SOCKET_WERR("async_connect requested to "+host+":"+port);
   roxen->host_to_ip(host, got_host_name, host, port, callback, @args);
@@ -105,7 +105,7 @@ void my_pipe_done(Pipe.pipe which)
 
 void async_pipe(Stdio.File to, Stdio.File from,
                 function|void callback,
-		mixed|void id, mixed|void cl, mixed|void file)
+                mixed|void id, mixed|void cl, mixed|void file)
 {
   object pipe=Pipe.pipe();
   object cache;
@@ -141,8 +141,8 @@ void async_pipe(Stdio.File to, Stdio.File from,
 }
 
 void async_cache_connect(string host, int port, string cl,
-			 string entry, function|void callback,
-			 mixed ... args)
+                         string entry, function|void callback,
+                         mixed ... args)
 {
   object cache;
   SOCKET_WERR("async_cache_connect requested to "+host+":"+port);

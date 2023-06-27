@@ -19,18 +19,18 @@ constant module_type = MODULE_DIRECTORIES;
 LocaleString module_name = LOCALE(1,"Index files only");
 LocaleString module_doc  =
   LOCALE(2,"Index files only module, a directory module that will not try "
-	 "to generate any directory listings, instead only using the  "
-	 "specified index files."
-	 "<p>You can use this directory module if you do not want "
-	 "any automatic directory listings at all, but still want \n"
-	 "to use index.html with friends</p>");
+         "to generate any directory listings, instead only using the  "
+         "specified index files."
+         "<p>You can use this directory module if you do not want "
+         "any automatic directory listings at all, but still want \n"
+         "to use index.html with friends</p>");
 
 void create()
 {
   defvar("indexfiles", ({ "index.xml", "index.html" }),
-	 LOCALE(3,"Index files"), TYPE_STRING_LIST|VAR_NOT_CFIF,
-	 LOCALE(4,"If one of these files is present in a directory, it will "
-		"be returned instead of 'no such file'."));
+         LOCALE(3,"Index files"), TYPE_STRING_LIST|VAR_NOT_CFIF,
+         LOCALE(4,"If one of these files is present in a directory, it will "
+                "be returned instead of 'no such file'."));
 }
 
 array(string) indexfiles;
@@ -70,7 +70,7 @@ mapping parse_directory(RequestID id)
       id->not_query = f+file;
       mixed result = id->conf->handle_request(id);
       if (result && mappingp(result))
-	return result; // File found, return it.
+        return result; // File found, return it.
     }
   }
   id->not_query = f;

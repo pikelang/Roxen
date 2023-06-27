@@ -43,9 +43,9 @@
                 <property_group name='roxen' type='application'>
                         <stability value='Evolving' />
                         <propval name='dir' type='astring'
-				value='/usr/local/roxen' />
+                                value='/usr/local/roxen' />
                         <propval name='confdirs' type='astring'
-				value='/etc/roxen' />
+                                value='/etc/roxen' />
                 </property_group>
 
                 <property_group name='startd' type='framework'>

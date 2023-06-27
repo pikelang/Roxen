@@ -666,7 +666,7 @@ string query_name()
   string name = query("warname");
   if (sizeof(name) > 20) {
     return sprintf(LOCALE(33,"Java: WAR loaded from %s...%s"),
-		   name[..7], name[sizeof(name)-8..]);
+                   name[..7], name[sizeof(name)-8..]);
   }
   return sprintf(LOCALE(11, "Java: WAR loaded from %s"), name);
 }
@@ -1114,13 +1114,13 @@ mapping(string:string|mapping|Servlet.servlet) match_ext_servlet(string f, Reque
       if (e[1..] == f[sizeof(f)-sizeof(e)+1..])
         {
           WEBAPP_WERR("match on 'ext' "+e+"!");
-	  mixed s = servlets[servletmaps["ext"][e]];
-	  // Kludge to be able to mount jsp pages on a mountpoint
-	  // other than / with gnujsp.
-	  if(s["servlet-class"] == "org.gjt.jsp.JspServlet") {
-	    WEBAPP_WERR("applying pathinfo kludge");
-	    id->misc->path_info = id->misc->servlet_path;
-	  }
+          mixed s = servlets[servletmaps["ext"][e]];
+          // Kludge to be able to mount jsp pages on a mountpoint
+          // other than / with gnujsp.
+          if(s["servlet-class"] == "org.gjt.jsp.JspServlet") {
+            WEBAPP_WERR("applying pathinfo kludge");
+            id->misc->path_info = id->misc->servlet_path;
+          }
           return s;
         }
     }
@@ -1212,7 +1212,7 @@ mixed find_file( string f, RequestID id )
 {
   string oldf = f;
   WEBAPP_WERR("Request for \""+f+"\"" +
-		  (id->misc->internal_get ? " (internal)" : ""));
+                  (id->misc->internal_get ? " (internal)" : ""));
 
   string norm_f;
 
@@ -1222,22 +1222,22 @@ mixed find_file( string f, RequestID id )
 #if constant(system.normalize_path)
     if (!has_prefix(norm_f, normalized_path) &&
 #ifdef __NT__
-	(norm_f+"\\" != normalized_path)
+        (norm_f+"\\" != normalized_path)
 #else /* !__NT__ */
-	(norm_f+"/" != normalized_path)
+        (norm_f+"/" != normalized_path)
 #endif /* __NT__ */
-	) {
+        ) {
       errors++;
       report_error(LOCALE(36, "Path verification of %O failed:\n"
-			  "%O is not a prefix of %O\n"
-			  ), oldf, normalized_path, norm_f);
+                          "%O is not a prefix of %O\n"
+                          ), oldf, normalized_path, norm_f);
       return http_low_answer(403, "<h2>File exists, but access forbidden "
-			     "by user</h2>");
+                             "by user</h2>");
     }
     
     /* Adjust not_query */
     id->not_query = mountpoint + replace(norm_f[sizeof(normalized_path)..],
-					 "\\", "/");
+                                         "\\", "/");
     if (sizeof(oldf) && (oldf[-1] == '/')) {
       id->not_query += "/";
     }
@@ -1286,7 +1286,7 @@ mixed find_file( string f, RequestID id )
 
           if (mixed e = catch {
             rxml_wrapper = RXMLParseWrapper(org_fd, id);
-	    id = id->clone_me();
+            id = id->clone_me();
             id->my_fd = rxml_wrapper;
 
 #ifdef WEBAPP_CHAINING
@@ -1374,7 +1374,7 @@ mixed call_servlet( RXML.Frame frame, RequestID id, string f, string name )
 {
   string oldf = f;
   WEBAPP_WERR("Request for \""+f+"\"" +
-		  (id->misc->internal_get ? " (internal)" : ""));
+                  (id->misc->internal_get ? " (internal)" : ""));
 
   string norm_f;
 
@@ -1384,22 +1384,22 @@ mixed call_servlet( RXML.Frame frame, RequestID id, string f, string name )
 #if constant(system.normalize_path)
     if (!has_prefix(norm_f, normalized_path) &&
 #ifdef __NT__
-	(norm_f+"\\" != normalized_path)
+        (norm_f+"\\" != normalized_path)
 #else /* !__NT__ */
-	(norm_f+"/" != normalized_path)
+        (norm_f+"/" != normalized_path)
 #endif /* __NT__ */
-	) {
+        ) {
       errors++;
       report_error(LOCALE(36, "Path verification of %O failed:\n"
-			  "%O is not a prefix of %O\n"
-			  ), oldf, normalized_path, norm_f);
+                          "%O is not a prefix of %O\n"
+                          ), oldf, normalized_path, norm_f);
       frame->parse_error("File " + f + " exists, but access forbidden "
-			     "by user");
+                             "by user");
     }
     
     /* Adjust not_query */
     id->not_query = mountpoint + replace(norm_f[sizeof(normalized_path)..],
-					 "\\", "/");
+                                         "\\", "/");
     if (sizeof(oldf) && (oldf[-1] == '/')) {
       id->not_query += "/";
     }
@@ -1442,11 +1442,11 @@ mixed call_servlet( RXML.Frame frame, RequestID id, string f, string name )
           object rxml_wrapper;
 
           if (mixed e = catch {
-	    mapping request_headers = copy_value(id->request_headers);
+            mapping request_headers = copy_value(id->request_headers);
             rxml_wrapper = RXMLParseWrapper(0, id);
-	    id = id->clone_me();
+            id = id->clone_me();
             id->my_fd = rxml_wrapper;
-	    id->request_headers = request_headers;
+            id->request_headers = request_headers;
 
 #ifdef WEBAPP_CHAINING
             object chain_wrapper;
@@ -1553,7 +1553,7 @@ class TagServlet
     array do_return(RequestID id) {
       WEBAPP_WERR(sprintf("args=%O\n%s\n", args, query_name()));
       if(!args->uri && !args->name)
-	parse_error("Neither uri nor name specified.\n");
+        parse_error("Neither uri nor name specified.\n");
       foreach (id->conf->get_providers("webapp"), RoxenModule m)
       {
         WEBAPP_WERR(sprintf("module:%O\n", m->query_name()));
@@ -1573,28 +1573,28 @@ class TagServlet
 
           fake_id->misc->common = id->misc->common;
           fake_id->misc->internal_get = 1;
-	  // Restore headers.
-	  fake_id->request_headers = copy_value(id->request_headers);
-	  // Remove fake_id->raw to prevent the java bridge to use the
-	  // raw and incorrect url.
-	  fake_id->raw = 0;
+          // Restore headers.
+          fake_id->request_headers = copy_value(id->request_headers);
+          // Remove fake_id->raw to prevent the java bridge to use the
+          // raw and incorrect url.
+          fake_id->raw = 0;
 
           string uri;
           if (args->uri) {
-	    // Use variables from provided uri, not id->real_variables.
-	    fake_id->real_variables = ([]);
-	    // Scan the provided uri for query variables.
+            // Use variables from provided uri, not id->real_variables.
+            fake_id->real_variables = ([]);
+            // Scan the provided uri for query variables.
             uri = fake_id->scan_for_query (args->uri);
-	  } else
-	    uri = id->not_query;
+          } else
+            uri = id->not_query;
 
           uri = Roxen.fix_relative (uri, id);
 
           fake_id->raw_url=uri+(fake_id->query? "?"+fake_id->query: "");
           fake_id->not_query=uri;
 
-	  // Remove mountpoint from the faked uri.
-	  string f = has_prefix(uri, mountpoint)? uri[sizeof(mountpoint)..]: uri;
+          // Remove mountpoint from the faked uri.
+          string f = has_prefix(uri, mountpoint)? uri[sizeof(mountpoint)..]: uri;
 
           mapping hdrs = m->call_servlet(this_object(), fake_id,
                                          f, args->name || "");
@@ -1607,15 +1607,15 @@ class TagServlet
                          id, uri, hdrs);
           }
 
-	  if (!args["no-headers"]) {
-	    if (hdrs->error && hdrs->error != 200) {
-	      RXML_CONTEXT->set_misc (" _error", hdrs->error);
-	      if (hdrs->rettext)
-		RXML_CONTEXT->set_misc (" _rettext", hdrs->rettext);
-	    }
-	    if (hdrs->extra_heads)
-	      RXML_CONTEXT->extend_scope ("header", hdrs->extra_heads);
-	  }
+          if (!args["no-headers"]) {
+            if (hdrs->error && hdrs->error != 200) {
+              RXML_CONTEXT->set_misc (" _error", hdrs->error);
+              if (hdrs->rettext)
+                RXML_CONTEXT->set_misc (" _rettext", hdrs->rettext);
+            }
+            if (hdrs->extra_heads)
+              RXML_CONTEXT->extend_scope ("header", hdrs->extra_heads);
+          }
 //               foreach(rxml_wrapper->headermap, string h)
 //               {
 //                 if (stringp(rxml_wrapper->headermap[h]))
@@ -1922,13 +1922,13 @@ void create()
 
   defvar("rxml", 0,
          LOCALE(18, "Parse RXML in servlet output"), TYPE_FLAG|VAR_MORE,
-	 LOCALE(19, "If this is set, the output from the servlets handled by "
+         LOCALE(19, "If this is set, the output from the servlets handled by "
                 "this module will be RXML parsed. "
                 "NOTE: No data will be returned to the "
                 "client until the output is fully parsed.") );
 
   defvar("rxmltypes", "text/xml text/html", LOCALE(37, "RXMLTypes"), TYPE_TEXT,
-	 LOCALE(9, "Content types that should be passed on to the "
+         LOCALE(9, "Content types that should be passed on to the "
                 "RXML Parser."), 0,
          lambda() { return !query("rxml"); } );
 
@@ -1940,7 +1940,7 @@ void create()
                                "support classes.") ) );
 
   defvar("parameters", "", LOCALE(22, "Parameters"), TYPE_TEXT,
-	 LOCALE(23, "Parameters for all servlets on the form "
+         LOCALE(23, "Parameters for all servlets on the form "
                 "<tt><i>name</i>=<i>value</i></tt>, one per line.") );
 
 #ifdef ENABLE_JSP
@@ -1952,28 +1952,28 @@ void create()
          );
 
   defvar("jspdebug", 0, LOCALE(40, "JSP Debug"), TYPE_FLAG|VAR_MORE,
-	 LOCALE(41, "Enable debug output from the JSP engine."), 0,
+         LOCALE(41, "Enable debug output from the JSP engine."), 0,
          lambda() { return query("jspengine") == "None"; } );
 
   defvar("jspsenderrtoclient", 0, LOCALE(42, "Send Errors To Client"),
          TYPE_FLAG|VAR_MORE,
-	 LOCALE(43, "Return jsp compilation errors to the client."), 0,
+         LOCALE(43, "Return jsp compilation errors to the client."), 0,
          lambda() { return query("jspengine") != "Jasper"; } );
 
 #endif // ENABLE_JSP
 
   defvar("tagtarget", "", LOCALE(44, "Target name"), TYPE_STRING|VAR_MORE,
-	 LOCALE(28, "Target name to use in the servlet tag to reference "
+         LOCALE(28, "Target name to use in the servlet tag to reference "
                 "this Web Application. Leave empty to exclude "
                 "from the servlet tag.") );
 
   defvar("anyservlet", 0, LOCALE(24, "Access any servlet"), TYPE_FLAG|VAR_MORE,
-	 LOCALE(25, "Use a servlet mapping that mounts any servlet onto "
+         LOCALE(25, "Use a servlet mapping that mounts any servlet onto "
                 "&lt;Mount Point&gt;/servlet/") );
 
   defvar("preloadall", 0, LOCALE(34, "Preload all servlets"),
          TYPE_FLAG|VAR_MORE,
-	 LOCALE(35, "Load all servlets at module initialization time "
+         LOCALE(35, "Load all servlets at module initialization time "
                 "even if load-on-startup is not specified in web.xml") );
 }
 

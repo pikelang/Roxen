@@ -33,7 +33,7 @@
       <box-frame width="100%" iwidth="100%" bodybg="&usr.content-bg;" ::="&usr.content-frame;">
         <table cellpadding="30" width="100%"><tr><td>
           <contents scope="st-page"/>
-	</td></tr></table>
+        </td></tr></table>
       </box-frame>
     </define>
   </colorscope>
@@ -51,10 +51,10 @@
      <td ::="&usr.left-tableargs:none;">
        <set variable="var.left-content">&var.leftside:none;</set>
        <if variable="var.left-content is ?*">
-	 <set variable="var.leftside-padwidth" value="&usr.leftside-padwidth;"/>
+         <set variable="var.leftside-padwidth" value="&usr.leftside-padwidth;"/>
        </if>
        <else>
-	 <set variable="var.leftside-padwidth" value="0"/>
+         <set variable="var.leftside-padwidth" value="0"/>
        </else>
        <img src="/internal-roxen-unit" width="&var.leftside-padwidth;" height="&usr.leftside-padheight;" alt="" align="center" /><br />
        &var.left-content:none;&var.leftimage:none;
@@ -89,14 +89,14 @@
   <table width="100%" border="0" cellpadding="0" cellspacing="0">
     <tr>
       <if sizeof="var.__tabs > 0">
-  	<td ::="&usr.subtabs-tableargs:none;"><tablist ::="&usr.subtabs-args:none;">
-  	  <eval>&var.__tabs:none;</eval>
-  	</tablist></td>
+        <td ::="&usr.subtabs-tableargs:none;"><tablist ::="&usr.subtabs-args:none;">
+          <eval>&var.__tabs:none;</eval>
+        </tablist></td>
       </if>
       <else>
         <td ::="&usr.subtabs-tableargs:none;">
         <img src="/internal-roxen-unit" width="1" height="&usr.leftside-padheight;" />
-	</td>
+        </td>
       </else>
     </tr>
     <tr>
@@ -203,9 +203,9 @@
       <td width='50%' align="center"><h2><cf-headline/></h2></td>
       <td width='50%' align="right">
               <gbutton href="/change_user.pike?uid=&usr.user-uid;&amp;&usr.set-wiz-id;"
-		       align="right"
-		       icon-src="/themes/&usr.theme;/user.gif"
-		       vspace="2"
+                       align="right"
+                       icon-src="/themes/&usr.theme;/user.gif"
+                       vspace="2"
                   ><translate id="206">User</translate></gbutton><br />
               <font color="&usr.top-fgcolor;">&usr.user-name;</font>
      </td>
@@ -237,11 +237,11 @@
 </gauge>
     <div align="right" class="bottom-div">
       <font size="-1" color="#999999">
-	<b>&roxen.product-name;</b>
-	<font color="#ffbe00">|</font>
-	version &roxen.dist-version;
-	<font color="#ffbe00">|</font>
-	&roxen.dist-os;<br />
+        <b>&roxen.product-name;</b>
+        <font color="#ffbe00">|</font>
+        version &roxen.dist-version;
+        <font color="#ffbe00">|</font>
+        &roxen.dist-os;<br />
         <if debug="yes">
           <set variable="var.time-ms" expr="(int)(var.time_spent * 1000)"/>
           Total render time: &var.time-ms; ms<br />

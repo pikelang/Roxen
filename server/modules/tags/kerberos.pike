@@ -9,7 +9,7 @@ constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Support for Kerberos authentication";
 constant module_doc  = ("Adds a couple of tags to enable simple Kerberos "
-			"authentication.");
+                        "authentication.");
 constant module_unique = 1;
 
 #if constant(Kerberos.Context)
@@ -46,7 +46,7 @@ void start()
     instantiate_msg = "An error occurred when enabling the Kerberos module.\n";
 #ifdef DEBUG
     werror("Kerberos.Context() instantiation error: %s\n",
-	   describe_backtrace(err));
+           describe_backtrace(err));
 #endif
   }
 }
@@ -54,8 +54,8 @@ void start()
 string status()
 {
   return (instantiate_msg ?
-	  ("<font color='&usr.warncolor;'>" + instantiate_msg + "</font>") :
-	  "");
+          ("<font color='&usr.warncolor;'>" + instantiate_msg + "</font>") :
+          "");
 }
 
 

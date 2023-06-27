@@ -20,8 +20,8 @@ array(Standards.URI) get_test_urls(Configuration conf,
     mapping(string:string|Configuration|array(Protocol)) port_info =
       roxen.urls[full_url];
     DAV_WERROR("full url: %O\n"
-	       "port_info: %O\n",
-	       full_url, port_info);
+               "port_info: %O\n",
+               full_url, port_info);
     if (!test_true(mappingp, port_info)) continue;
     array(Protocol) ports = port_info->ports;
     if (!test_true(arrayp, ports)) continue;
@@ -34,7 +34,7 @@ array(Standards.URI) get_test_urls(Configuration conf,
       if (!test_true(mappingp, prot->urls)) continue;
 
       DAV_WERROR("prot: %O\n"
-		 "prot->urls: %O\n", prot, prot->urls);
+                 "prot->urls: %O\n", prot, prot->urls);
 
       // Strip the fragment from the full_url.
       string url = (full_url/"#")[0];

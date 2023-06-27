@@ -28,11 +28,11 @@ mixed parse( RequestID id )
   if (string form_pid = id->variables->pid)
     if (form_pid != pid) {
       ignore_msg =
-	"<br />"
-	"<p><font color='&usr.warncolor;'>" +
-	LOCALE(406, "Repeated action request ignored &ndash; "
-	       "server process ID is different.") +
-	"</font></p>";
+        "<br />"
+        "<p><font color='&usr.warncolor;'>" +
+        LOCALE(406, "Repeated action request ignored &ndash; "
+               "server process ID is different.") +
+        "</font></p>";
       what = 0;
     }
 

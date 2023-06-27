@@ -118,9 +118,9 @@ class Page_state {
   int uri_decode(string from)
   {
     return decode(replace(from, ([ " ":"+",
-				   "%2B":"+",
-				   "%2F":"/",
-				   "%3D":"=" ])));
+                                   "%2B":"+",
+                                   "%2F":"/",
+                                   "%3D":"=" ])));
   }
 
   int decode(string from)
@@ -138,8 +138,8 @@ class Page_state {
       for(int i=1; i<sizeof(from); i++)
         chksum+=from[i];
       if(from[0] != CHKSPACE[chksum%64]) {
-	report_fatal("Error in state checksum. (%O, %O)\n",
-		     id->not_query, from);
+        report_fatal("Error in state checksum. (%O, %O)\n",
+                     id->not_query, from);
         return 0;
       }
       from=from[1..];
@@ -148,7 +148,7 @@ class Page_state {
     if(session_id) {
       id->misc->state->session = id->misc->state->session || session_id;
       id->misc->state->values = (cache.get_session_data(session_id)||([])) |
-	id->misc->state->values;
+        id->misc->state->values;
     }
 
     mixed error=catch {
@@ -227,20 +227,20 @@ class Page_state {
   string encode(void|mixed value, void|string|array key) {
     if(value) {
       if(arrayp(key)) {
-	if(!arrayp(value))
-	  error("Bad argument 1 to encode. "
-		"If key is an array then value also has to be an array.");
+        if(!arrayp(value))
+          error("Bad argument 1 to encode. "
+                "If key is an array then value also has to be an array.");
 
-	if(sizeof(value) != sizeof(key))
-	  error("encode called on arrays of different sizes (%d != %d).",
-		sizeof(value), sizeof(key));
-	
-	return low_encode_state(id->misc->state->values,
-				 mkmapping(key, value));
+        if(sizeof(value) != sizeof(key))
+          error("encode called on arrays of different sizes (%d != %d).",
+                sizeof(value), sizeof(key));
+        
+        return low_encode_state(id->misc->state->values,
+                                 mkmapping(key, value));
       }
       else
-	return low_encode_state(id->misc->state->values,
-				 ([key||stateid:value]));
+        return low_encode_state(id->misc->state->values,
+                                 ([key||stateid:value]));
     }
     return low_encode_state(id->misc->state->values);
   }
@@ -252,7 +252,7 @@ class Page_state {
   }
 
   string encode_revisit_url (RequestID id, mixed value,
-			     void|string|array key, void|string var)
+                             void|string|array key, void|string var)
   //! Encode present state into an URL to revisit the current page,
   //! according to @[id]. The encoded state is passed in the variable
   //! @[var], which defaults to "__state" if not given. All other
@@ -272,8 +272,8 @@ class Page_state {
       other_vars = "&" + id->query;
       int i = search (other_vars, "&__state=");
       if (i >= 0) {
-	int j = search (other_vars, "&", i + 1);
-	other_vars = other_vars[..i - 1] + (j > 0 ? other_vars[j..] : "");
+        int j = search (other_vars, "&", i + 1);
+        other_vars = other_vars[..i - 1] + (j > 0 ? other_vars[j..] : "");
       }
     }
     else other_vars = "";

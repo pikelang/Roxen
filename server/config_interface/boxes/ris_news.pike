@@ -37,10 +37,10 @@ string extract_nonfluff( string from )
     last_a = "http://www.roxen.com"+last_a;
     if (list_style)
       res += "<li style='margin-left: -0.9em; margin-right: 0.9em;'>"
-	"<a href='"+last_a+"'><font size=-1>"+c+"</font></a></li>\n";
+        "<a href='"+last_a+"'><font size=-1>"+c+"</font></a></li>\n";
     else
       res += "<tr><td valign=top><a href='"+last_a+"'><font size=-1>"+c+
-	"</font></a></td></tr>\n";
+        "</font></a></td></tr>\n";
 
   };
   Parser.HTML( )->add_containers((["a":parse_a,"div":parse_div]))
@@ -56,7 +56,7 @@ string parse( RequestID id )
 {
   string contents;
   if( !(contents = .Box.get_http_data( "www.roxen.com", 80,
-			      "GET /press-ir/news/index.xml?__xsl=printerfriendly.xsl HTTP/1.0") ) )
+                              "GET /press-ir/news/index.xml?__xsl=printerfriendly.xsl HTTP/1.0") ) )
     contents = "Fetching data from www.roxen.com...";
   else
     contents = extract_nonfluff( contents );

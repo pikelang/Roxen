@@ -5,7 +5,7 @@ string doc="Load an image. NOTE: If the current layer is the 'image' layer this 
 
 
 void render( mapping args, mapping this,
-	     string channel, object id, object m )
+             string channel, object id, object m )
 {
   mapping t = ([]);
   int xp = (int)args->xpos;

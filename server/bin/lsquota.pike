@@ -19,11 +19,11 @@ int main(int argc, array(string) argv)
     switch(arg[0]) {
     case "help":
       write(sprintf("Usage:\n"
-		    "\t%s [options] quotafile\n"
-		    "Options:\n"
-		    "\t-h, --help     Show usage information.\n"
-		    "\t-v, --version  Show version information.\n",
-		    argv[0]));
+                    "\t%s [options] quotafile\n"
+                    "Options:\n"
+                    "\t-h, --help     Show usage information.\n"
+                    "\t-v, --version  Show version information.\n",
+                    argv[0]));
       exit(0);
       break;
     case "version":
@@ -57,9 +57,9 @@ int main(int argc, array(string) argv)
     if (data == "") {
       // EOF
       if (buf != "") {
-	werror(sprintf("File truncated. Expected %d bytes more data.\n",
-		       len - sizeof(buf)));
-	exit(1);
+        werror(sprintf("File truncated. Expected %d bytes more data.\n",
+                       len - sizeof(buf)));
+        exit(1);
       }
       exit(0);
     }
@@ -69,12 +69,12 @@ int main(int argc, array(string) argv)
       sscanf(buf[..3], "%4c", len);
 
       if (len < 8) {
-	werror(sprintf("Bad entry length:%d\n", len));
-	exit(1);
+        werror(sprintf("Bad entry length:%d\n", len));
+        exit(1);
       }
       if (len > sizeof(buf)) {
-	// Need more data.
-	break;
+        // Need more data.
+        break;
       }
       // %4c len, %4c offset, %s key
       data = buf[8..len-1];

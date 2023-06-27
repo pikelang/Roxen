@@ -27,39 +27,39 @@ int disabled;
 void create()
 {
   defvar("location", "/", _(15,"Mount point"),
-	 TYPE_LOCATION|VAR_INITIAL|VAR_NO_DEFAULT,
-	 _(16,"Where the module will be mounted in the site's virtual "
-	   "file system."));
+         TYPE_LOCATION|VAR_INITIAL|VAR_NO_DEFAULT,
+         _(16,"Where the module will be mounted in the site's virtual "
+           "file system."));
 
   defvar("db", Variable.DatabaseChoice( "docs", 0,
-				      _(59,"Filesystem database"),
-				      _(60,"The database to use")) )
+                                      _(59,"Filesystem database"),
+                                      _(60,"The database to use")) )
     ->set_configuration_pointer( my_configuration );
   
   defvar("table", Variable.TableChoice( "docs", 0,
-				 _(61,"Filesystem table"),
-				 _(62,"The table that contains the files."
-				  " The table should contain at least the "
-				  "columns 'name' and 'contents'. Optionally "
-				  "you can also have the fields 'mtime', "
-				   "'uid' and 'gid'."),
-					 getvar("db") ) );
+                                 _(61,"Filesystem table"),
+                                 _(62,"The table that contains the files."
+                                  " The table should contain at least the "
+                                  "columns 'name' and 'contents'. Optionally "
+                                  "you can also have the fields 'mtime', "
+                                   "'uid' and 'gid'."),
+                                         getvar("db") ) );
 
   defvar("charset", "iso-8859-1", _(39,"File contents charset"),
-	 TYPE_STRING,
-	 _(40,"The charset of the contents of the files on this file "
-	   "system. This variable makes it possible for Roxen to use "
-	   "any text file, no matter what charset it is written in. If"
-	   " necessary, Roxen will convert the file to Unicode before "
-	   "processing the file."));
+         TYPE_STRING,
+         _(40,"The charset of the contents of the files on this file "
+           "system. This variable makes it possible for Roxen to use "
+           "any text file, no matter what charset it is written in. If"
+           " necessary, Roxen will convert the file to Unicode before "
+           "processing the file."));
 
   defvar("path_encoding", "iso-8859-1", _(41,"Filename charset"),
-	 TYPE_STRING,
-	 _(42,"The charset of the file names of the files on this file "
-	   "system. Unlike the <i>File contents charset</i> variable, "
-	   "this might not work for all charsets simply because not "
-	   "all browsers support anything except ISO-8859-1 "
-	   "in URLs."));
+         TYPE_STRING,
+         _(42,"The charset of the file names of the files on this file "
+           "system. Unlike the <i>File contents charset</i> variable, "
+           "this might not work for all charsets simply because not "
+           "all browsers support anything except ISO-8859-1 "
+           "in URLs."));
 }
 
 void start( )
@@ -75,8 +75,8 @@ void start( )
   }
   else if (catch (sql_query ("SELECT name FROM " + table + " LIMIT 1"))) {
     report_error ("The table %O in database %O does not exist "
-		  "or got no \"name\" column "
-		  "- module disabled.\n", table, query ("db"));
+                  "or got no \"name\" column "
+                  "- module disabled.\n", table, query ("db"));
     disabled = 1;
   }
   else
@@ -123,8 +123,8 @@ protected array low_stat_file( string f, RequestID id )
       last_file = r[0];
       if( charset != "iso-8859-1" )
       {
-	if( id->set_output_charset )
-	  id->set_output_charset( charset, 2 );
+        if( id->set_output_charset )
+          id->set_output_charset( charset, 2 );
         id->misc->input_charset = charset;
       }
     }
@@ -132,22 +132,22 @@ protected array low_stat_file( string f, RequestID id )
   if( last_file && last_file->name == f )
     return
       ({
-	({
-	  0777,
-	  strlen(last_file->contents||""),
-	  time(),
-	  ((int)last_file->mtime)+1,
-	  ((int)last_file->mtime)+1,
-	  (int)last_file->uid,
-	  (int)last_file->gid,
-	}),
-	last_file
+        ({
+          0777,
+          strlen(last_file->contents||""),
+          time(),
+          ((int)last_file->mtime)+1,
+          ((int)last_file->mtime)+1,
+          (int)last_file->uid,
+          (int)last_file->gid,
+        }),
+        last_file
       });
 
   if( f[-1] != '/' ) f+= "/";
   if( sizeof( sql_query( "SELECT name FROM  "+
-			 table+" WHERE name LIKE %s  LIMIT 1",
-			 f+"%" ) ) )
+                         table+" WHERE name LIKE %s  LIMIT 1",
+                         f+"%" ) ) )
     return ({ dir_stat, 0 });
   return ({ 0, 0 });
 }
@@ -190,7 +190,7 @@ array(string) find_dir( string f, RequestID id )
   multiset dir = (<>);
 
   foreach( sql_query( "SELECT name FROM "+table+" WHERE name LIKE %s",f+"%")
-	   ->name, string p )
+           ->name, string p )
     dir[ (p[ strlen(f) .. ] / "/")[0] ] = 1;
 
   return (array)dir;

@@ -21,11 +21,11 @@ string parse( RequestID id )
   int dt = (time() - roxen->start_time+1);
   string contents = "";
   contents += add_row( _(0, "Server time"),
-		       Roxen.strftime( "%Y-%m-%d %H:%M:%S", time()) );
+                       Roxen.strftime( "%Y-%m-%d %H:%M:%S", time()) );
   contents += add_row( _(369, "Server started"),
-		       Roxen.strftime( "%Y-%m-%d %H:%M:%S", roxen->start_time) );
+                       Roxen.strftime( "%Y-%m-%d %H:%M:%S", roxen->start_time) );
   contents += add_row( _(370, "Server uptime"),
-		      Roxen.msectos( dt*1000 ));
+                      Roxen.msectos( dt*1000 ));
   
   mapping(string:int) ru;
  if(!catch(ru = System.getrusage())) {
@@ -33,8 +33,8 @@ string parse( RequestID id )
     if (ru->utime)
       tmp = ru->utime / (time() - roxen->start_time + 1);
     contents += add_row( _(371, "CPU-time used"),
-			 Roxen.msectos(ru->utime + ru->stime) +
-			 (tmp?(" ("+tmp/10+"."+tmp%10+"%)"):""));
+                         Roxen.msectos(ru->utime + ru->stime) +
+                         (tmp?(" ("+tmp/10+"."+tmp%10+"%)"):""));
   }
 
   mapping total = ([]);
@@ -47,21 +47,21 @@ string parse( RequestID id )
     total->requests += conf->requests;
   }
   contents += add_row( _(2,"Sent data"), Roxen.sizetostring(total->sent) +
-		      sprintf(" (%.2f kbit/%s)",
-			      ((((float)total->sent)/(1024.0*1024.0)/dt) * 8192.0),
-			      _(3,"sec")) );
+                      sprintf(" (%.2f kbit/%s)",
+                              ((((float)total->sent)/(1024.0*1024.0)/dt) * 8192.0),
+                              _(3,"sec")) );
   contents += add_row( _(4,"Sent headers"), Roxen.sizetostring(total->hsent));
   contents += add_row( _(234,"Requests"), total->requests +
-		       sprintf(" (%.2f/%s)",
-			       (((float)total->requests*60.0)/dt),
-			       _(6,"min")) );
+                       sprintf(" (%.2f/%s)",
+                               (((float)total->requests*60.0)/dt),
+                               _(6,"min")) );
   contents += add_row( _(7,"Received data"), Roxen.sizetostring(total->received));
 
 #if constant(System.getloadavg)
   contents += add_row( _(1060, "System load"),
-		       sprintf ("%{%.2f %}", System.getloadavg()));
+                       sprintf ("%{%.2f %}", System.getloadavg()));
 #endif
 
   return ("<box type='"+box+"' title='"+box_name+"'><table cellpadding='0'>"+
-	  contents+"</table></box>");
+          contents+"</table></box>");
 }

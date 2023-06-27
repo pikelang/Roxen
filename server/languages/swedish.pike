@@ -78,12 +78,12 @@ string date(int timestamp, mapping|void m)
   }
   if(m["full"])
     return sprintf("%s, den %s %s %d",
-		   ctime(timestamp)[11..15],
-		   (string) t1["mday"],
-		   month(t1["mon"]+1), t1["year"]+1900);
+                   ctime(timestamp)[11..15],
+                   (string) t1["mday"],
+                   month(t1["mon"]+1), t1["year"]+1900);
   if(m["date"])
     return sprintf("den %s %s %d", (string)t1["mday"],
-		   month(t1["mon"]+1), t1["year"]+1900);
+                   month(t1["mon"]+1), t1["year"]+1900);
 
   if(m["time"])
     return ctime(timestamp)[11..15];

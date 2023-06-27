@@ -13,8 +13,8 @@ constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 LocaleString module_name = LOCALE(1, "Tags: Insert cached href");
 LocaleString module_doc  = LOCALE(2, "This module contains the RXML tag \"insert "
-				     "cached-href\". Useful when implementing e.g."
-				     " RSS syndication.");
+                                     "cached-href\". Useful when implementing e.g."
+                                     " RSS syndication.");
 
 //#define OUTGOING_PROXY_DEBUG
 
@@ -37,36 +37,36 @@ private HrefDatabase href_database;
 
 void create() {
   defvar("fetch-interval", "5 minutes", LOCALE(3, "Fetch interval"),
-	 TYPE_STRING|VAR_MORE,
-	 LOCALE(4, "States how often the data of an URL should be updated. "
-		   "In seconds, minutes, hours or days."));
+         TYPE_STRING|VAR_MORE,
+         LOCALE(4, "States how often the data of an URL should be updated. "
+                   "In seconds, minutes, hours or days."));
   
   defvar("fresh-time", "0", LOCALE(5, "Fresh time"),
-	 TYPE_STRING|VAR_MORE,
-	 LOCALE(6, "States how long data in the database can be considered fresh enough"
-		   " to display. In seconds, minutes, hours or days. As default this"
-		   " is 0, which means that this attribute is not used and that there"
-		   " are no restrictions on data freshness."));
+         TYPE_STRING|VAR_MORE,
+         LOCALE(6, "States how long data in the database can be considered fresh enough"
+                   " to display. In seconds, minutes, hours or days. As default this"
+                   " is 0, which means that this attribute is not used and that there"
+                   " are no restrictions on data freshness."));
   
   defvar("ttl", "7 days", LOCALE(7, "Time to live"),
-	 TYPE_STRING|VAR_MORE,
-	 LOCALE(8, "States how long unrequested data can exist in the database"
-		   " before being removed. In seconds, minutes, hours or days."));
+         TYPE_STRING|VAR_MORE,
+         LOCALE(8, "States how long unrequested data can exist in the database"
+                   " before being removed. In seconds, minutes, hours or days."));
  
   defvar("timeout", "10 seconds", LOCALE(9, "Timeout"),
-	 TYPE_STRING|VAR_MORE,
-	 LOCALE(10, "The timeout when fetching data from a server. In seconds, minutes, "
-		   "hours or days."));
+         TYPE_STRING|VAR_MORE,
+         LOCALE(10, "The timeout when fetching data from a server. In seconds, minutes, "
+                   "hours or days."));
   
   defvar("update-interval", "1 minute", LOCALE(11, "Update interval"),
-	 TYPE_STRING|VAR_MORE,
-	 LOCALE(12, "States how often the module will check if the database needs to "
-		   "be updated. In seconds, minutes, hours or days."));
+         TYPE_STRING|VAR_MORE,
+         LOCALE(12, "States how often the module will check if the database needs to "
+                   "be updated. In seconds, minutes, hours or days."));
   
   defvar("recursion_limit", 2, LOCALE(13, "Maximum recursion depth"),
-	 TYPE_INT|VAR_MORE,
-	 LOCALE(14,"Maximum number of nested <tt>&lt;insert cached-href&gt;</tt>'s "
-		  "allowed. May be set to zero to disable the limit."));
+         TYPE_INT|VAR_MORE,
+         LOCALE(14,"Maximum number of nested <tt>&lt;insert cached-href&gt;</tt>'s "
+                  "allowed. May be set to zero to disable the limit."));
 }
 
 
@@ -87,11 +87,11 @@ void start(int occasion, Configuration conf) {
   if (href_database) {
     if (href_database->ready_to_run()) {
       bg_process =
-	roxen.BackgroundProcess(get_time_in_seconds(query("update-interval")), 
-				href_database->update_db, 0); 
+        roxen.BackgroundProcess(get_time_in_seconds(query("update-interval")), 
+                                href_database->update_db, 0); 
     } else {
       report_error("Insert cached href: Failed to initialize SQL tables. "
-		   "Permission error?\n");
+                   "Permission error?\n");
     }
   }
 #endif
@@ -197,7 +197,7 @@ public string get_result_sync(HTTPClient client, mapping args, mapping header) {
     return decode_data(client->data(), client->con->headers, client->url);
 
   DWRITE("Following redirect from " + (string)client->url + 
-	 " to " + location);
+         " to " + location);
 
   // Normalize; Some sites (dn.se) use relative locations.
   location = (string)Standards.URI(location, client->url);
@@ -214,10 +214,10 @@ public string get_result_sync(HTTPClient client, mapping args, mapping header) {
     
     if (!location || !sizeof(location))
       return decode_data(new_client->data(), new_client->con->headers,
-			 new_client->url);
+                         new_client->url);
     
     DWRITE("Following redirect from " + (string)new_client->url + 
-	   " to " + location);
+           " to " + location);
     
     location = (string)Standards.URI(location, new_client->url);
   
@@ -229,7 +229,7 @@ public string get_result_sync(HTTPClient client, mapping args, mapping header) {
   }
   
   return decode_data(new_client->data(), new_client->con->headers,
-		     new_client->url);
+                     new_client->url);
 }
 
 /*
@@ -249,7 +249,7 @@ public void get_result_async(HTTPClient client, mapping args, mapping header) {
     return;
     
   DWRITE("Following redirect from " + (string)client->url + 
-	 " to " + location);
+         " to " + location);
   
   // Normalize; Some sites (dn.se) use relative locations.
   location = (string)Standards.URI(location, client->url);
@@ -267,8 +267,8 @@ public void|string fetch_url(mapping(string:mixed) to_fetch, void|mapping header
                  to_fetch["url"], to_fetch["timeout"], header));
   
   mapping(string:mixed) args = (["timeout":to_fetch["timeout"], 
-				 "cached-href":to_fetch["url"],
-				 "sync":to_fetch["sync"]]);
+                                 "cached-href":to_fetch["url"],
+                                 "sync":to_fetch["sync"]]);
 
   object client;
   
@@ -306,23 +306,23 @@ public void|string fetch_url(mapping(string:mixed) to_fetch, void|mapping header
 /* This class represents the database in which the data of the URL:s are stored */
 class HrefDatabase {
   private constant request_table_def = "url VARCHAR(768) NOT NULL,"
-				       "fetch_interval INT UNSIGNED NOT NULL,"
-				       "fresh_time INT UNSIGNED NOT NULL,"
-				       "ttl INT UNSIGNED NOT NULL,"                                       
-				       "timeout INT UNSIGNED NOT NULL,"
-				       "time_of_day INT UNSIGNED NOT NULL,"
-				       "next_fetch INT UNSIGNED,"
-				       "latest_request INT UNSIGNED,"
+                                       "fetch_interval INT UNSIGNED NOT NULL,"
+                                       "fresh_time INT UNSIGNED NOT NULL,"
+                                       "ttl INT UNSIGNED NOT NULL,"                                       
+                                       "timeout INT UNSIGNED NOT NULL,"
+                                       "time_of_day INT UNSIGNED NOT NULL,"
+                                       "next_fetch INT UNSIGNED,"
+                                       "latest_request INT UNSIGNED,"
                                        "out_of_date INT UNSIGNED,"
                                        "request_headers BLOB,"
                                        "header_delimiter VARCHAR(255),"
-				       "PRIMARY KEY (url, fetch_interval, "
-				       "fresh_time, ttl, timeout, time_of_day)";
+                                       "PRIMARY KEY (url, fetch_interval, "
+                                       "fresh_time, ttl, timeout, time_of_day)";
   
   private constant data_table_def = "url VARCHAR(768) NOT NULL,"
-				    "data LONGBLOB,"
-				    "latest_write INT UNSIGNED,"
-				    "PRIMARY KEY (url)";
+                                    "data LONGBLOB,"
+                                    "latest_write INT UNSIGNED,"
+                                    "PRIMARY KEY (url)";
 
   private string request_table;
   private string data_table;
@@ -352,14 +352,14 @@ class HrefDatabase {
     if (request_table) {
       array(mapping) tbl_def = sql_query("DESCRIBE " + request_table + " url");
       if (sizeof(tbl_def) && lower_case(tbl_def[0]->Type) != "varchar(768)")
-	sql_query("ALTER TABLE " + request_table +
-		  "     MODIFY url VARCHAR(768) NOT NULL");
+        sql_query("ALTER TABLE " + request_table +
+                  "     MODIFY url VARCHAR(768) NOT NULL");
     }
     if (data_table) {
       array(mapping) tbl_def = sql_query("DESCRIBE " + data_table + " url");
       if (sizeof(tbl_def) && lower_case(tbl_def[0]->Type) != "varchar(768)")
-	sql_query("ALTER TABLE " + data_table +
-		  "     MODIFY url VARCHAR(768) NOT NULL");
+        sql_query("ALTER TABLE " + data_table +
+                  "     MODIFY url VARCHAR(768) NOT NULL");
     }
 
     // Add header fields if upgrading from earlier versions
@@ -395,7 +395,7 @@ class HrefDatabase {
 
   public void update_db() {
     DWRITE(sprintf("###########  update_db(): Called every %d seconds  ##########"
-		   , get_time_in_seconds(query("update-interval"))));
+                   , get_time_in_seconds(query("update-interval"))));
    
 #ifdef THREADS
     foreach(initiated, HTTPClient client) {
@@ -469,7 +469,7 @@ class HrefDatabase {
       next_fetch = mktime(now_lt) + args["time-of-day"];
       
       if (next_fetch < now)
-	next_fetch += 24 * 3600;
+        next_fetch += 24 * 3600;
     }
     
 #ifndef THREADS
@@ -479,37 +479,37 @@ class HrefDatabase {
     
     string url = get_db_url(args);
     sql_query("UPDATE " + request_table +
-	      "   SET latest_request = " + now + ", "
-	      "       out_of_date = NULL "
-	      " WHERE url = %s "
-	      "   AND fetch_interval = %d "
-	      "   AND fresh_time = %d "
-	      "   AND ttl = %d "
-	      "   AND timeout = %d "
-	      "   AND time_of_day = %d",
-	      url, args["fetch-interval"], args["fresh-time"], args["ttl"],
-	      args["timeout"], args["time-of-day"],
+              "   SET latest_request = " + now + ", "
+              "       out_of_date = NULL "
+              " WHERE url = %s "
+              "   AND fetch_interval = %d "
+              "   AND fresh_time = %d "
+              "   AND ttl = %d "
+              "   AND timeout = %d "
+              "   AND time_of_day = %d",
+              url, args["fetch-interval"], args["fresh-time"], args["ttl"],
+              args["timeout"], args["time-of-day"],
               args["request-headers"], args["header-delimiter"]);
 
     
     sql_query("INSERT IGNORE INTO " + request_table +
-	      " VALUES (%s, %d, %d, %d, %d, %d, %d, %d, %d, %s, %s)",
-	      url,
-	      args["fetch-interval"], args["fresh-time"], args["ttl"],
-	      args["timeout"], args["time-of-day"], next_fetch, now, 
-	      (args["ttl"] + now),
+              " VALUES (%s, %d, %d, %d, %d, %d, %d, %d, %d, %s, %s)",
+              url,
+              args["fetch-interval"], args["fresh-time"], args["ttl"],
+              args["timeout"], args["time-of-day"], next_fetch, now, 
+              (args["ttl"] + now),
               args["request-headers"], args["header-delimiter"]);
     
     sql_query("INSERT IGNORE INTO " + data_table +
-	      " VALUES (%s, '', 0)", 
-	      url);
+              " VALUES (%s, '', 0)", 
+              url);
     
     result = sql_query("SELECT data "
-		       "  FROM " + data_table +
-		       " WHERE url = %s " 
-		       "   AND (" + now + " - latest_write < %d "
-		       "    OR %d = 0)",
-		       url, args["fresh-time"], args["fresh-time"]);
+                       "  FROM " + data_table +
+                       " WHERE url = %s " 
+                       "   AND (" + now + " - latest_write < %d "
+                       "    OR %d = 0)",
+                       url, args["fresh-time"], args["fresh-time"]);
     
     if (result && sizeof(result) && result[0]["data"] != "") {
       DWRITE("get_data(): Returning cached data for " + url);
@@ -517,31 +517,31 @@ class HrefDatabase {
       return utf8_to_string(result[0]["data"]);
     } else if (!args["pure-db"]) {
       DWRITE("get_data(): No cached data existed for " + url +
-	     " so performing a synchronous fetch");
+             " so performing a synchronous fetch");
 
       add_headers(header, args);
       
       string data = fetch_url( ([ "url"     : url,
-				  "timeout" : args["timeout"], 
-				  "sync"    : 1]),
-			       header);
+                                  "timeout" : args["timeout"], 
+                                  "sync"    : 1]),
+                               header);
       
       return data;
     } else {
       DWRITE("get_data(): No cached data existed for " + url +
-	     " and pure-db data was desired, so simply returning the "
-	     "empty string");
+             " and pure-db data was desired, so simply returning the "
+             "empty string");
       
       return "";
     }
   }
   
   private array(mapping(string:mixed)) no_duplicate_add(array(mapping(string:mixed))
-							to_fetch, mapping row) {
+                                                        to_fetch, mapping row) {
     string url = row->url;
     foreach(to_fetch, mapping one) {
       if (search(one, url))
-	return to_fetch;
+        return to_fetch;
     }
     
     to_fetch += ({ ([ "url": url,
@@ -560,17 +560,17 @@ class HrefDatabase {
   private void remove_old_entrys() {
     
     sql_query("UPDATE " + request_table + 
-	      " SET out_of_date = (latest_request + ttl)" + 
-	      " WHERE out_of_date IS NULL" + 
-	      " AND latest_request IS NOT NULL;");
+              " SET out_of_date = (latest_request + ttl)" + 
+              " WHERE out_of_date IS NULL" + 
+              " AND latest_request IS NOT NULL;");
     
     sql_query("DELETE FROM " + request_table +
-	      "      WHERE " + time() + " > out_of_date");
+              "      WHERE " + time() + " > out_of_date");
     
     sql_query("    DELETE " + data_table +
-	      "      FROM " + data_table +
-	      " LEFT JOIN " + request_table +
-	      "        ON " + data_table + ".url=" + request_table + ".url "
+              "      FROM " + data_table +
+              " LEFT JOIN " + request_table +
+              "        ON " + data_table + ".url=" + request_table + ".url "
               "     WHERE " + request_table + ".url IS NULL");
   }
   
@@ -584,8 +584,8 @@ class HrefDatabase {
                                  request_table + ".header_delimiter, " +
                                  request_table + ".timeout "
                 "      FROM " + data_table +
-		" LEFT JOIN " + request_table +
-		"        ON " + data_table + ".url=" + request_table + ".url "
+                " LEFT JOIN " + request_table +
+                "        ON " + data_table + ".url=" + request_table + ".url "
                 "     WHERE " + data_table + ".data='' "
                 "  ORDER BY url, timeout DESC");
     
@@ -599,12 +599,12 @@ class HrefDatabase {
                                        request_table + ".header_delimiter, " +
                                        request_table + ".timeout, " +
                                        request_table + ".fetch_interval "
-		       "      FROM " + data_table +
-		       " LEFT JOIN " + request_table +
-		       "        ON " + data_table + ".url=" + request_table + ".url "
+                       "      FROM " + data_table +
+                       " LEFT JOIN " + request_table +
+                       "        ON " + data_table + ".url=" + request_table + ".url "
                        "     WHERE " + data_table + ".data!='' "
                        "       AND " + request_table + ".fetch_interval > 0 "
-		       "       AND ((" + now + " - " + data_table + ".latest_write) > " + request_table + ".fetch_interval) "
+                       "       AND ((" + now + " - " + data_table + ".latest_write) > " + request_table + ".fetch_interval) "
                        "  ORDER BY url, timeout DESC");
     
     foreach(result, mapping row) {
@@ -617,9 +617,9 @@ class HrefDatabase {
                                        request_table + ".timeout, " +
                                        request_table + ".time_of_day, " +
                                        request_table + ".next_fetch "
-		       "      FROM " + data_table +
-		       " LEFT JOIN " + request_table +
-		       "        ON " + data_table + ".url=" + request_table + ".url "
+                       "      FROM " + data_table +
+                       " LEFT JOIN " + request_table +
+                       "        ON " + data_table + ".url=" + request_table + ".url "
                        "     WHERE " + data_table + ".data!='' "
                        "       AND " + request_table + ".time_of_day > 0 "
                        "       AND " + now + " > " + request_table + ".next_fetch "
@@ -630,15 +630,15 @@ class HrefDatabase {
     }
     
     result = sql_query("  SELECT url, max(timeout) "
-		       "    FROM " + request_table + " AS url "
-		       "GROUP BY url");
+                       "    FROM " + request_table + " AS url "
+                       "GROUP BY url");
     
     foreach(to_fetch, mapping one) {
       foreach(result, mapping row) {
-	if (one["url"] == row["url"]) {
-	  one["timeout"] = (int)row["max(timeout)"];
-	  break;
-	}
+        if (one["url"] == row["url"]) {
+          one["timeout"] = (int)row["max(timeout)"];
+          break;
+        }
       }
     }
     
@@ -647,18 +647,18 @@ class HrefDatabase {
   
   public void update_data(string url, string data) {
     DWRITE(sprintf("update_data(): Saving the fetched data to the db for url %s"
-		   ,  url));
+                   ,  url));
     
     sql_query("UPDATE " + data_table + " "
-	      "   SET data=%s, latest_write=%d "
-	      " WHERE url=%s", 
-	      string_to_utf8(data), time(), url);
+              "   SET data=%s, latest_write=%d "
+              " WHERE url=%s", 
+              string_to_utf8(data), time(), url);
     
     sql_query("UPDATE " + request_table + " "
-	      "   SET next_fetch=next_fetch + " + (24 * 3600) +
-	      " WHERE time_of_day > 0 "
-	      "   AND " + time(1) + " > next_fetch "
-	      "   AND url=%s" , url);
+              "   SET next_fetch=next_fetch + " + (24 * 3600) +
+              " WHERE time_of_day > 0 "
+              "   AND " + time(1) + " > next_fetch "
+              "   AND url=%s" , url);
   }
 }
 
@@ -671,12 +671,12 @@ class Attributes {
   void create(mapping args) {
     orig_args = args;
     db_args = (["cached-href" : 0,
-		"fetch-interval" : 0,
-		"fresh-time" : 0,
-		"ttl" : 0,
-		"timeout" : 0,
-		"time-of-day" : 0,
-		"pure-db" : 0,
+                "fetch-interval" : 0,
+                "fresh-time" : 0,
+                "ttl" : 0,
+                "timeout" : 0,
+                "time-of-day" : 0,
+                "pure-db" : 0,
                 "request-headers" : 0,
                 "header-delimiter" : 0]);
     check_args();
@@ -693,7 +693,7 @@ class Attributes {
   
   private void check_args() {
     if (orig_args["cached-href"][0..6] != "http://" && orig_args["cached-href"][0..7] 
-	!= "https://")
+        != "https://")
       RXML.run_error("An invalid URL has been provided");
     else 
       db_args["cached-href"] = orig_args["cached-href"];
@@ -703,16 +703,16 @@ class Attributes {
     
     if (orig_args["time-of-day"]) {
       if (sizeof(orig_args["time-of-day"]) != 5)
-	RXML.run_error("Wrong timeformat. The correct format is hh:mm");
+        RXML.run_error("Wrong timeformat. The correct format is hh:mm");
       
       if (orig_args["time-of-day"][2] != ':')
-	RXML.run_error("Wrong timeformat. The correct format is hh:mm");
+        RXML.run_error("Wrong timeformat. The correct format is hh:mm");
       
       int hour = (int)orig_args["time-of-day"][0..1];
       int minute = (int)orig_args["time-of-day"][3..4];
       
       if (hour < 0 || hour > 23 || minute < 0 || minute > 59)
-	RXML.run_error("Hour must be between 0 and 23, minutes between 0 and 59");
+        RXML.run_error("Hour must be between 0 and 23, minutes between 0 and 59");
       
       db_args["time-of-day"] = hour * 3600 + minute * 60;
       
@@ -723,7 +723,7 @@ class Attributes {
     }
 
     if (orig_args["fresh-time"] && 
-	(valid_arg(orig_args["fresh-time"]) || orig_args["fresh-time"] == "0"))
+        (valid_arg(orig_args["fresh-time"]) || orig_args["fresh-time"] == "0"))
       db_args["fresh-time"] = orig_args["fresh-time"];
     else
       db_args["fresh-time"] = query("fresh-time");
@@ -768,13 +768,13 @@ class TagInsertCachedHref {
     int recursion_depth = (int)id->request_headers["x-roxen-recursion-depth"];
     
     if (query("recursion_limit") &&
-	(recursion_depth >= query("recursion_limit")))
+        (recursion_depth >= query("recursion_limit")))
       RXML.run_error("Too deep insert cached-href recursion.");
 
     //  Verify that database connection is working
     if (!href_database || !href_database->ready_to_run())
       RXML.run_error("Insert cached href: Database connection not working. "
-		     "Permission problems?\n");
+                     "Permission problems?\n");
     
     recursion_depth++;
 
@@ -784,7 +784,7 @@ class TagInsertCachedHref {
       CACHE(60);
 
     string res = href_database->get_data(Attributes(args)->get_db_args(), 
-					 (["x-roxen-recursion-depth":recursion_depth]));
+                                         (["x-roxen-recursion-depth":recursion_depth]));
     
     // DEPRECATED attribute 'decode-xml'. Keep it during transition period for upgrades, 
     // since there will be undecoded data in the database until the first fetch for each 
@@ -831,13 +831,13 @@ class HTTPClient {
 #if constant(SSL.File)
     if(url->scheme!="http" && url->scheme!="https")
       error("Protocols.HTTP can't handle %O or any other protocols than HTTP or HTTPS\n",
-	    url->scheme);
+            url->scheme);
     
     con->https= (url->scheme=="https")? 1 : 0;
 #else
     if(url->scheme!="http")
       error("Protocols.HTTP can't handle %O or any other protocol than HTTP\n",
-	    url->scheme);
+            url->scheme);
     
 #endif
     
@@ -846,7 +846,7 @@ class HTTPClient {
 
     string host_header;
     if ((url->scheme == "http" && url->port == 80) ||
-	(url->scheme == "https" && url->port == 443))
+        (url->scheme == "https" && url->port == 443))
       host_header = sprintf("%s", url->host); // Omit ports when standard
     else
       host_header = sprintf("%s:%d", url->host, url->port);
@@ -857,8 +857,8 @@ class HTTPClient {
     
     if(url->user)
       default_headers->authorization = "Basic "
-	+ MIME.encode_base64(url->user + ":" +
-			     (url->password || ""), 1);
+        + MIME.encode_base64(url->user + ":" +
+                             (url->password || ""), 1);
 
     request_headers = default_headers | request_headers;
     query=url->query;
@@ -889,7 +889,7 @@ class HTTPClient {
       finish_up();
       
       if (sync)
-	queue->write("@");
+        queue->write("@");
       
       return;
     }
@@ -901,13 +901,13 @@ class HTTPClient {
       finish_up();
       
       if (sync) {
-	queue->write("@");
-	return;
+        queue->write("@");
+        return;
       }
       
       mapping args = (["cached-href" : (string)url,
-		       "timeout"     : timeout,
-		       "sync"        : 0]);
+                       "timeout"     : timeout,
+                       "sync"        : 0]);
       get_result_async(this_object(), args, ([ "x-roxen-recursion-depth" : request_headers["x-roxen-recursion-depth"]]));
       
       return;
@@ -938,12 +938,12 @@ class HTTPClient {
 
     if (href_database)
       if (orig_url)
-	href_database->update_data(orig_url,
-				   decode_data(con->data(), con->headers,
-					       orig_url));
+        href_database->update_data(orig_url,
+                                   decode_data(con->data(), con->headers,
+                                               orig_url));
       else
-	href_database->update_data((string)url,
-				   decode_data(con->data(), con->headers, url));
+        href_database->update_data((string)url,
+                                   decode_data(con->data(), con->headers, url));
     
     if (sync)
       queue->write("@");
@@ -974,7 +974,7 @@ class HTTPClient {
     if (roxen.query("use_proxy") && sizeof(roxen.query("proxy_url"))) {
 #ifdef OUTGOING_PROXY_DEBUG
       werror("Insert cached href: Using proxy: %O to fetch %O...\n",
-	     roxen.query("proxy_url"), url);
+             roxen.query("proxy_url"), url);
 #endif
       string proxy_user = roxen.query("proxy_username");
       string proxy_pass = roxen.query("proxy_password");
@@ -983,18 +983,18 @@ class HTTPClient {
       if (!sizeof(proxy_user)) proxy_user = UNDEFINED;
       if (!sizeof(proxy_pass)) proxy_pass = UNDEFINED;
       Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
-					     proxy_user, proxy_pass,
-					     "GET", url, 0,
-					     request_headers, con);
+                                             proxy_user, proxy_pass,
+                                             "GET", url, 0,
+                                             request_headers, con);
     } else {
       con->async_request(url->host,url->port,
-			 "GET "+path+(query?("?"+query):"")+" HTTP/1.0",
-			 request_headers);
+                         "GET "+path+(query?("?"+query):"")+" HTTP/1.0",
+                         request_headers);
     }
 #else
       con->async_request(url->host,url->port,
-			 "GET "+path+(query?("?"+query):"")+" HTTP/1.0",
-			 request_headers);
+                         "GET "+path+(query?("?"+query):"")+" HTTP/1.0",
+                         request_headers);
 #endif
 
     status = con->status;

@@ -195,18 +195,18 @@ public class RoxenLib extends HTTP {
     while (tok.hasMoreTokens()) {
       String t = tok.nextToken();
       if(t.length()==1)
-	switch(t.charAt(0)) {
-	 case '&': sb.append("&amp;"); break;
-	 case '<': sb.append("&lt;"); break;
-	 case '>': sb.append("&gt;"); break;
-	 case '"': sb.append("&#34;"); break;
-	 case '\'': sb.append("&#39;"); break;
-	 case '\0': sb.append("&#0;"); break;
-	 default:
-	   sb.append(t);
-	}
+        switch(t.charAt(0)) {
+         case '&': sb.append("&amp;"); break;
+         case '<': sb.append("&lt;"); break;
+         case '>': sb.append("&gt;"); break;
+         case '"': sb.append("&#34;"); break;
+         case '\'': sb.append("&#39;"); break;
+         case '\0': sb.append("&#0;"); break;
+         default:
+           sb.append(t);
+        }
       else
-	sb.append(t);
+        sb.append(t);
     }
     return sb.toString();
   }
@@ -230,51 +230,51 @@ public class RoxenLib extends HTTP {
       String t = tok.nextToken();
       switch(mode) {
        case 0:
-	 if("&".equals(t))
-	   mode = 1;
-	 else
-	   sb.append(t);
-	 break;
+         if("&".equals(t))
+           mode = 1;
+         else
+           sb.append(t);
+         break;
        case 1:
-	 if("&".equals(t))
-	   sb.append('&');
-	 else if(";".equals(t)) {
-	   sb.append('&');
-	   sb.append(';');
-	   mode = 0;
-	 } else {
-	   ent = t;
-	   mode = 2;
-	 }
-	 break;
+         if("&".equals(t))
+           sb.append('&');
+         else if(";".equals(t)) {
+           sb.append('&');
+           sb.append(';');
+           mode = 0;
+         } else {
+           ent = t;
+           mode = 2;
+         }
+         break;
        case 2:
-	 if(";".equals(t)) {
-	   if(ent.startsWith("#") && ent.length()>1 && ent.charAt(1) != '-')
-	     try {
-	       sb.append((char)Integer.parseInt(ent.substring(1)));
-	     } catch(NumberFormatException e) {
-	       sb.append('&');
-	       sb.append(ent);
-	       sb.append(';');
-	     }
-	   else if((entcode = entities.get(ent.toLowerCase())) != null)
-	     sb.append(((Character)entcode).charValue());
-	   else {
-	     sb.append('&');
-	     sb.append(ent);
-	     sb.append(';');
-	   }
-	   mode = 0;
-	 } else {
-	   sb.append('&');
-	   sb.append(ent);
-	   if("&".equals(t))
-	     mode = 1;
-	   else {
-	     sb.append(t);
-	     mode = 0;
-	   }
-	 }
+         if(";".equals(t)) {
+           if(ent.startsWith("#") && ent.length()>1 && ent.charAt(1) != '-')
+             try {
+               sb.append((char)Integer.parseInt(ent.substring(1)));
+             } catch(NumberFormatException e) {
+               sb.append('&');
+               sb.append(ent);
+               sb.append(';');
+             }
+           else if((entcode = entities.get(ent.toLowerCase())) != null)
+             sb.append(((Character)entcode).charValue());
+           else {
+             sb.append('&');
+             sb.append(ent);
+             sb.append(';');
+           }
+           mode = 0;
+         } else {
+           sb.append('&');
+           sb.append(ent);
+           if("&".equals(t))
+             mode = 1;
+           else {
+             sb.append(t);
+             mode = 0;
+           }
+         }
       }
     }
     switch(mode) {
@@ -305,7 +305,7 @@ public class RoxenLib extends HTTP {
    * @return         the resulting string
    */
   public native static String doOutputTag(Map args, Map[] varArr,
-					  String contents, RoxenRequest id);
+                                          String contents, RoxenRequest id);
 
   /**
    * Perform RXML parsing on a string
@@ -336,12 +336,12 @@ public class RoxenLib extends HTTP {
       String key = e.getKey().toString();
       String value = e.getValue().toString();
       if(key.equals("/") && value.equals("/"))
-	sl = true;
+        sl = true;
       else {
-	sb.append(key);
-	sb.append("=\"");
-	sb.append(htmlEncodeString(value));
-	sb.append("\" ");
+        sb.append(key);
+        sb.append("=\"");
+        sb.append(htmlEncodeString(value));
+        sb.append("\" ");
       }
     }
     if(sl)

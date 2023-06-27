@@ -7,12 +7,12 @@ constant action = "maintenance";
 
 LocaleString name = _(46,"Change Roxen version")+"...";
 LocaleString doc =  _(42,"If you have more than one Roxen version installed\n"
-		     "in the same location, you can use this action to\n"
-		     "change the currently running version.");
+                     "in the same location, you can use this action to\n"
+                     "change the currently running version.");
 
 class Server(string dir,
-	     string version,
-	     string version_h )
+             string version,
+             string version_h )
 {
   Calendar.Day reldate()
   {
@@ -34,12 +34,12 @@ array available_versions()
     if( file_stat( "../"+f+"/etc/include/version.h" ) )
     {
       catch {
-	string s = Stdio.read_file( "../"+f+"/etc/include/version.h" );
-	string a, b;
-	sscanf( s, "%*sroxen_ver%*s\"%s\"", a );
-	sscanf( s, "%*sroxen_build%*s\"%s\"", b );
-	if( a && b )
-	  res += ({ Server( f, a+"."+b,s ) });
+        string s = Stdio.read_file( "../"+f+"/etc/include/version.h" );
+        string a, b;
+        sscanf( s, "%*sroxen_ver%*s\"%s\"", a );
+        sscanf( s, "%*sroxen_build%*s\"%s\"", b );
+        if( a && b )
+          res += ({ Server( f, a+"."+b,s ) });
       };
     }
   }
@@ -55,12 +55,12 @@ string nice_relative_date( object t )
       return sprintf( (string)_(43,"1 month") );
     else
       return sprintf( (string)_(44,"%d months"),
-		      t->how_many( Calendar.Month() ) );
+                      t->how_many( Calendar.Month() ) );
   if( t->how_many( Calendar.Day() ) == 1 )    return (string)_(139,"one day");
 
   if( t->how_many( Calendar.Day() ) == 0 )    return "-";
   return sprintf( (string)_(45,"%d days"),
-		  t->how_many( Calendar.Day() ) );
+                  t->how_many( Calendar.Day() ) );
 }
 
 string parse( RequestID id )
@@ -75,8 +75,8 @@ string parse( RequestID id )
     werror("Change to "+id->variables->server+"\n" );
     mv("../local/environment", "../local/environment~");
     Stdio.write_file( combine_path(roxen.configuration_dir,
-				   "server_version"),
-		      id->variables->server );
+                                   "server_version"),
+                      id->variables->server );
        roxen->shutdown(0.5);
     return (string)_(47,"Shutting down and changing Roxen version");
   }
@@ -113,7 +113,7 @@ string parse( RequestID id )
       "<td>"+f->version+"</td>"
       "<td></td>"
       "<td>"+(d ? d->set_language( roxen.get_locale()+"_UNICODE" )
-	      ->format_ext_ymd() : "n/a")+
+              ->format_ext_ymd() : "n/a")+
       "</td>"
       "<td></td>"
       "<td>"+nice_relative_date( diff )+"</td>"
@@ -139,6 +139,6 @@ string parse( RequestID id )
   
   res += "<submit-gbutton align='middle'>"+_(138,"Change version")+"</submit-gbutton> "
     "<cf-cancel href='./?class="+action+"&amp;&usr.set-wiz-id;'/>";
-	      
+              
   return res;
 }

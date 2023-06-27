@@ -152,12 +152,12 @@ protected WebDAVResponse webdav_request(string method,
       while(1) {
         string lock_token = current_locks[dir];
         if (lock_token && !locks[lock_token]) {
-      	  string path = map((dir/"/"), Protocols.HTTP.percent_encode) * "/";
-      	  if (has_prefix(path, "/")) {
-      	    path = path[1..];
-      	  }
-      	  path = Standards.URI(path, base_uri)->path;
-      	  if_header += sprintf("<%s>(<%s>)", path, lock_token);
+          string path = map((dir/"/"), Protocols.HTTP.percent_encode) * "/";
+          if (has_prefix(path, "/")) {
+            path = path[1..];
+          }
+          path = Standards.URI(path, base_uri)->path;
+          if_header += sprintf("<%s>(<%s>)", path, lock_token);
           locks[lock_token] = 1;
         }
         if (dir == "/") {
@@ -170,18 +170,18 @@ protected WebDAVResponse webdav_request(string method,
         (lower_case(method) == "copy") ||
         (lower_case(method) == "delete")) {
       foreach(indices(current_locks), string path) {
-      	foreach(lock_paths, string dir) {
-      	  string lock_token = current_locks[path];
-      	  if (has_prefix(path, dir + "/") && !locks[lock_token]) {
-      	    if (has_prefix(path, "/")) {
-      	      path = path[1..];
-      	    }
-      	    path = map((path/"/"), Protocols.HTTP.percent_encode) * "/";
-      	    path = Standards.URI(path, base_uri)->path;
-      	    if_header += sprintf("<%s>(<%s>)", path, lock_token);
-      	    locks[lock_token] = 1;
-      	  }
-      	}
+        foreach(lock_paths, string dir) {
+          string lock_token = current_locks[path];
+          if (has_prefix(path, dir + "/") && !locks[lock_token]) {
+            if (has_prefix(path, "/")) {
+              path = path[1..];
+            }
+            path = map((path/"/"), Protocols.HTTP.percent_encode) * "/";
+            path = Standards.URI(path, base_uri)->path;
+            if_header += sprintf("<%s>(<%s>)", path, lock_token);
+            locks[lock_token] = 1;
+          }
+        }
       }
     }
     if (sizeof(if_header)) {
@@ -204,7 +204,7 @@ protected WebDAVResponse webdav_request(string method,
   }
 
   ASSERT_TRUE((headers->connection == "close") ||
-	      (con->headers->connection != "close"));
+              (con->headers->connection != "close"));
 
   return WebDAVResponse(con->status, con->headers, con->data());
 }
@@ -610,7 +610,7 @@ protected mapping(string:string) make_filenames(string dir,
 protected void verify_lock_token(WebDAVResponse res)
 {
   ASSERT_TRUE((res->status == STATUS_LOCKED) ||
-	      (res->status == STATUS_MULTI_STATUS));
+              (res->status == STATUS_MULTI_STATUS));
   // TODO: Parse data and verify response contains the
   // 'lock-token-submitted' precondition element and that is looks as expected.
   ASSERT_CALL_TRUE(has_value, res->data, "lock-token-submitted");
@@ -1607,7 +1607,7 @@ private void do_test_copy_col_fails_due_to_locked_file(string method)
            src_file1,
            src_file2,
            dst_dir,
-	   dst_file1,
+           dst_file1,
            dst_file2 }));
   ASSERT_CALL_TRUE(filesystem_check_content, dst_file2, "file2 in dir2");
 }
@@ -1649,7 +1649,7 @@ private void do_test_copy_col_fails_due_to_locked_non_existing_file(string metho
       webdav_ls(this::testcase_dir,
                 ({ this::testcase_dir,
                    src_dir,
-		   src_file1,
+                   src_file1,
                    src_file2 }));
   }
   ASSERT_CALL_FALSE(filesystem_check_exists, dst_file2);
@@ -2014,8 +2014,8 @@ public void test_move_src_locked()
     mapping(string:string) locks = ([]);
     webdav_lock(resource_to_lock, locks, STATUS_OK);
     WebDAVResponse res = webdav_move(src, dst, ([]),
-				     (resource_to_lock == child) ?
-				     STATUS_MULTI_STATUS: STATUS_LOCKED);
+                                     (resource_to_lock == child) ?
+                                     STATUS_MULTI_STATUS: STATUS_LOCKED);
     verify_lock_token(res);
     webdav_unlock(resource_to_lock, locks, STATUS_NO_CONTENT);
   }
@@ -2048,8 +2048,8 @@ public void test_move_destination_locked()
     mapping(string:string) locks = ([]);
     webdav_lock(resource_to_lock, locks, STATUS_OK);
     WebDAVResponse res = webdav_move(src, dst, ([]),
-				     (resource_to_lock == dst_child) ?
-				     STATUS_MULTI_STATUS:STATUS_LOCKED);
+                                     (resource_to_lock == dst_child) ?
+                                     STATUS_MULTI_STATUS:STATUS_LOCKED);
     verify_lock_token(res);
     webdav_unlock(resource_to_lock, locks, STATUS_NO_CONTENT);
   }
@@ -2169,58 +2169,58 @@ public void test_x_ls()
             ASSERT_EQUAL(filesystem_mkdir_recursive(new_dir), 1);
             string exp_path = exp_dir[case_ls] + "/" + exp_file[case_ls];
 
-	    // NB: In normalizing (which implies !casesensitive) mode
-	    //     the paths should always match.
-	    int exp_match = 1;
-	    if (!normalizing) {
-	      // NB: In casesensitive mode the paths only match if they
-	      //     are coded identically.
-	      exp_match = (string_to_utf8(exp_path) ==
-			   Stdio.append_path(new_dir, new_file));
-	      if (!exp_match && !casesensitive) {
-		// NB: To handle cases where the NFC and NFD normalizations
-		//     are equal (eg ascii or kanji) it is not sufficient
-		//     to just look at whether unicode_method_create is
-		//     "NFC" or "NFD".
-		exp_match = (new_dir ==
-			     make_filenames(this::testcase_dir, filename,
-					    "NFC", true)[case_create]);
-	      }
-	    }
+            // NB: In normalizing (which implies !casesensitive) mode
+            //     the paths should always match.
+            int exp_match = 1;
+            if (!normalizing) {
+              // NB: In casesensitive mode the paths only match if they
+              //     are coded identically.
+              exp_match = (string_to_utf8(exp_path) ==
+                           Stdio.append_path(new_dir, new_file));
+              if (!exp_match && !casesensitive) {
+                // NB: To handle cases where the NFC and NFD normalizations
+                //     are equal (eg ascii or kanji) it is not sufficient
+                //     to just look at whether unicode_method_create is
+                //     "NFC" or "NFD".
+                exp_match = (new_dir ==
+                             make_filenames(this::testcase_dir, filename,
+                                            "NFC", true)[case_create]);
+              }
+            }
 #if 0
-	    werror("normalizing: %d\n"
-		   "casesensitive: %d\n"
-		   "str: %O\n"
-		   "umc: %O\n"
-		   "cc: %O\n"
-		   "uml: %O\n"
-		   "cls: %O\n"
-		   "fn: %O\n"
-		   "nd: %O\n"
-		   "nf: %O\n"
-		   "dls: %O\n"
-		   "fls: %O\n"
-		   "ed: %O\n"
-		   "ef: %O\n"
-		   "ep: %O\n"
-		   "em: %O\n"
-		   "--------\n"
-		   "utf8(ep):   %O\n"
-		   "ap(nd, nf): %O\n",
-		   normalizing, casesensitive,
-		   str, unicode_method_create, case_create,
-		   unicode_method_ls, case_ls,
-		   filename,
-		   new_dir, new_file,
-		   dir_ls, file_ls,
-		   exp_dir, exp_file, exp_path, exp_match,
-		   string_to_utf8(exp_path),
-		   Stdio.append_path(new_dir, new_file));
+            werror("normalizing: %d\n"
+                   "casesensitive: %d\n"
+                   "str: %O\n"
+                   "umc: %O\n"
+                   "cc: %O\n"
+                   "uml: %O\n"
+                   "cls: %O\n"
+                   "fn: %O\n"
+                   "nd: %O\n"
+                   "nf: %O\n"
+                   "dls: %O\n"
+                   "fls: %O\n"
+                   "ed: %O\n"
+                   "ef: %O\n"
+                   "ep: %O\n"
+                   "em: %O\n"
+                   "--------\n"
+                   "utf8(ep):   %O\n"
+                   "ap(nd, nf): %O\n",
+                   normalizing, casesensitive,
+                   str, unicode_method_create, case_create,
+                   unicode_method_ls, case_ls,
+                   filename,
+                   new_dir, new_file,
+                   dir_ls, file_ls,
+                   exp_dir, exp_file, exp_path, exp_match,
+                   string_to_utf8(exp_path),
+                   Stdio.append_path(new_dir, new_file));
 #endif
 
             if (exp_match) {
               webdav_ls(dir_ls, ({ exp_dir[case_ls] }) );
-	    } else {
+            } else {
               webdav_ls(dir_ls, ({}), STATUS_NOT_FOUND);
             }
             string testdata = "FILE " + count;
@@ -2238,8 +2238,8 @@ public void test_x_ls()
               webdav_ls(dir_ls + "/" + file_ls,
                         ({ exp_dir[case_ls] + "/" + exp_file[case_ls] }) );
             } else {
-	      webdav_ls(dir_ls, ({}), STATUS_NOT_FOUND);
-	      webdav_ls(dir_ls + "/" + file_ls, ({ }), STATUS_NOT_FOUND);
+              webdav_ls(dir_ls, ({}), STATUS_NOT_FOUND);
+              webdav_ls(dir_ls + "/" + file_ls, ({ }), STATUS_NOT_FOUND);
             }
           }
         }
@@ -2444,10 +2444,10 @@ public void test_x_move_file()
               webdav_move(src_file, target_file, locks,
                           caseSensitive ? STATUS_CREATED : STATUS_NO_CONTENT);
             }
-	    // Delete the target file, so that we are guaranteed that the
-	    // source file actually gets created with the expected file
-	    // name by the put in the next loop.
-	    webdav_delete(target_file, locks, STATUS_NO_CONTENT);
+            // Delete the target file, so that we are guaranteed that the
+            // source file actually gets created with the expected file
+            // name by the put in the next loop.
+            webdav_delete(target_file, locks, STATUS_NO_CONTENT);
           }
         }
       }

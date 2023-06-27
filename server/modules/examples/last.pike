@@ -7,9 +7,9 @@ constant cvs_version = "$Id$";
 constant module_type = MODULE_LAST|MODULE_EXPERIMENTAL;
 constant module_name = "RefDoc for MODULE_LAST";
 constant module_doc = "This module does nothing, but its inlined "
-		      "documentation gets imported into the roxen "
-		      "programmer manual. You hardly want to add "
-		      "this module to your virtual servers.";
+                      "documentation gets imported into the roxen "
+                      "programmer manual. You hardly want to add "
+                      "this module to your virtual servers.";
 
 int seen_requests;
 
@@ -31,5 +31,5 @@ mapping|int(0..1) last_resort(RequestID id)
 string status()
 {
   return sprintf("<b>%d</b> requests have fallen through to this "
-		 "module.", seen_requests);
+                 "module.", seen_requests);
 }

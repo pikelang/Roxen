@@ -28,9 +28,9 @@ Configuration conf;
 protected void create()
 {
   defvar("location", "/prometheus/", _(0, "Mount point"),
-	 TYPE_LOCATION|VAR_INITIAL|VAR_NO_DEFAULT,
-	 _(0, "Where the module will be mounted in the site's virtual "
-	   "file system."));
+         TYPE_LOCATION|VAR_INITIAL|VAR_NO_DEFAULT,
+         _(0, "Where the module will be mounted in the site's virtual "
+           "file system."));
 }
 
 void start(int when, Configuration conf)
@@ -69,11 +69,11 @@ class PrometheusValue(string name)
       buf->add(a, "=\"");
       mixed v = aspects[a];
       if (floatp(v)) {
-	buf->sprintf("%.15g", v);
+        buf->sprintf("%.15g", v);
       } else if (intp(v)) {
-	buf->sprintf("%d", v);
+        buf->sprintf("%d", v);
       } else {
-	buf->add(v);
+        buf->add(v);
       }
       buf->add("\"");
     }
@@ -81,7 +81,7 @@ class PrometheusValue(string name)
   }
 
   void add_value(mixed val, string|void suffix, mapping|void aspects,
-		 string|void oid)
+                 string|void oid)
   {
     mapping suffix_values = values[suffix];
     if (!suffix_values) {
@@ -91,7 +91,7 @@ class PrometheusValue(string name)
   }
 
   void fmt_one_value(Stdio.Buffer buf, mixed val, string|void suffix,
-		     string|mapping|void aspects, string|void oid)
+                     string|mapping|void aspects, string|void oid)
   {
 #if 0
     if (oid) {
@@ -107,7 +107,7 @@ class PrometheusValue(string name)
 
     if (aspects) {
       if (mappingp(aspects)) {
-	aspects = render_aspects(aspects);
+        aspects = render_aspects(aspects);
       }
 
       buf->add("{", aspects, "}");
@@ -127,8 +127,8 @@ class PrometheusValue(string name)
     foreach(sort(indices(values)), string suffix) {
       mapping suffix_values = values[suffix];
       foreach(sort(indices(suffix_values)), string aspects) {
-	fmt_one_value(buf, suffix_values[aspects][0], suffix, aspects,
-		      suffix_values[aspects][2]);
+        fmt_one_value(buf, suffix_values[aspects][0], suffix, aspects,
+                      suffix_values[aspects][2]);
       }
     }
   }
@@ -169,8 +169,8 @@ class Histogram
     // Prometheus happy.
     foreach(values->bucket; string aspects; array val) {
       if (val[1]->ge) {
-	add_value(count - val[0], "bucket", ([ "le": val[1]->ge ]), val[2]);
-	m_delete(values->bucket, aspects);
+        add_value(count - val[0], "bucket", ([ "le": val[1]->ge ]), val[2]);
+        m_delete(values->bucket, aspects);
       }
     }
 
@@ -211,14 +211,14 @@ array(PrometheusValue) get_snmp_rows()
   // NB: Order below is relevant. Only add new modules to the end.
   //     Replace obsolete/removed modules with 0 or UNDEFINED.
   foreach(({ "print-clients", "print-backup", "feed-import",
-	     "image", "print-indesign-server", "print-db",
-	     "memory_logger" }); int i; string modname) {
+             "image", "print-indesign-server", "print-db",
+             "memory_logger" }); int i; string modname) {
     if (!modname) continue;
     RoxenModule mod = conf->find_module(modname + "#0");
     if(mod) {
       if ((modname == "memory_logger") && !sizeof(mod->pmem)) {
-	// Not initialized yet.
-	continue;
+        // Not initialized yet.
+        continue;
       }
       snmp_res += get_module_snmp(mod, i);
     }
@@ -229,14 +229,14 @@ array(PrometheusValue) get_snmp_rows()
   void add_entry(mapping entry)
   {
     string name = sprintf("%s_%s_%s",
-			  entry->plugin,
-			  replace(entry->plugin_instance, "-", "_"),
-			  replace(entry->type_instance, "-", "_"));
+                          entry->plugin,
+                          replace(entry->plugin_instance, "-", "_"),
+                          replace(entry->type_instance, "-", "_"));
 
     PrometheusValue val = vals[name];
     if (!val) {
       program(PrometheusValue) prog = ([
-	"histogram": Histogram,
+        "histogram": Histogram,
       ])[entry->type] || PrometheusValue;
       val = vals[name] = prog(name);
       val->type = entry->type;
@@ -251,302 +251,302 @@ array(PrometheusValue) get_snmp_rows()
     }
 
     val->add_value(entry->value, entry->suffix, aspects,
-		   entry->oid + " [" + entry->snmp_type + "]");
+                   entry->oid + " [" + entry->snmp_type + "]");
   };
 
   foreach(snmp_res; int i; mapping entry) {
     foreach(({ ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.5",
-		  "type_instance": "cpuTime",
-		  "aspects": ({ "mode" }),
-		  "mode":
-		  lambda(mapping entry) {
-		    return entry->type_instance == "userTime" ? "user" :
-		      "system";
-		  },
-		  "doc": "Total cpu time expressed in seconds."
-	       ]),
-	       ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.1.2",
-		  "type_instance": "handlerTime",
-		  "aspects": ({ "mode" }),
-		  "mode":
-		  lambda(mapping entry) {
-		    if (entry->type_instance == "handlerTime") {
-		      add_entry(entry + ([
-				  "aspects": ({ "suffix" }),
-				  "suffix":"sum",
-				  "type":"histogram",
-				  "type_instance": "handlerNumRuns",
-				  "doc":0,
-				]));
-		      return "user";
-		    }
-		    return "system";
-		  },
-	       ]),
-	       ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.1.3",
-		  "type_instance": "handlerNumRuns",
-		  "aspects": ({ "ge", "suffix" }),
-		  "type": "histogram",
-		  "suffix": histogram_suffix,
-		  "ge":
-		  lambda(mapping entry) {
-		    return histogram_label(entry, "handlerNumRuns");
-		  },
-	       ]),
-	       ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.2.2",
-		  "type_instance": "bgTime",
-		  "aspects": ({ "mode" }),
-		  "mode":
-		  lambda(mapping entry) {
-		    if (entry->type_instance == "bgTime") {
-		      add_entry(entry + ([
-				  "aspects": ({ "suffix" }),
-				  "suffix":"sum",
-				  "type":"histogram",
-				  "type_instance": "bgNumRuns",
-				  "doc":0,
-				]));
-		      return "user";
-		    }
-		    return "system";
-		  },
-	       ]),
-	       ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.2.3",
-		  "type_instance": "bgNumRuns",
-		  "aspects": ({ "ge", "suffix" }),
-		  "type": "histogram",
-		  "suffix": histogram_suffix,
-		  "ge":
-		  lambda(mapping entry) {
-		    return histogram_label(entry, "bgNumRuns");
-		  },
-	       ]),
-	       ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.3.2",
-		  "type_instance": "coTime",
-		  "aspects": ({ "mode" }),
-		  "mode":
-		  lambda(mapping entry) {
-		    if (entry->type_instance == "coTime") {
-		      add_entry(entry + ([
-				  "aspects": ({ "suffix" }),
-				  "suffix":"sum",
-				  "type":"histogram",
-				  "type_instance": "coNumRuns",
-				  "doc":0,
-				]));
-		      return "user";
-		    }
-		    return "system";
-		  },
-	       ]),
-	       ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.3.3",
-		  "type_instance": "coNumRuns",
-		  "aspects": ({ "ge", "suffix" }),
-		  "type": "histogram",
-		  "suffix": histogram_suffix,
-		  "ge":
-		  lambda(mapping entry) {
-		    return histogram_label(entry, "coNumRuns");
-		  },
-	       ]),
-	       ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.1.1",
-		  "type_instance": "requestTime",
-		  "aspects": ({ "mode" }),
-		  "mode":
-		  lambda(mapping entry) {
-		    if (entry->type_instance == "requestTime") {
-		      add_entry(entry + ([
-				  "aspects": ({ "suffix" }),
-				  "suffix":"sum",
-				  "type":"histogram",
-				  "type_instance": "requestNumRuns",
-				  "doc":0,
-				]));
-		      return "user";
-		    }
-		    return "system";
-		  },
-	       ]),
-	       ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.1.2",
-		  "type_instance": "requestNumRuns",
-		  "aspects": ({ "ge", "suffix" }),
-		  "type": "histogram",
-		  "suffix": histogram_suffix,
-		  "ge":
-		  lambda(mapping entry) {
-		    return histogram_label(entry, "requestNumRuns");
-		  },
-	       ]),
-	       ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.2.1",
-		  "type_instance": "handleTime",
-		  "aspects": ({ "mode" }),
-		  "mode":
-		  lambda(mapping entry) {
-		    if (entry->type_instance == "handleTime") {
-		      add_entry(entry + ([
-				  "aspects": ({ "suffix" }),
-				  "suffix":"sum",
-				  "type":"histogram",
-				  "type_instance": "handleNumRuns",
-				  "doc":0,
-				]));
-		      return "user";
-		    }
-		    return "system";
-		  },
-	       ]),
-	       ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.2.2",
-		  "type_instance": "handleNumRuns",
-		  "aspects": ({ "ge", "suffix" }),
-		  "type": "histogram",
-		  "suffix": histogram_suffix,
-		  "ge":
-		  lambda(mapping entry) {
-		    return histogram_label(entry, "handleNumRuns");
-		  },
-	       ]),
-	       ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.3.1",
-		  "type_instance": "queueTime",
-		  "aspects": ({ "mode" }),
-		  "mode":
-		  lambda(mapping entry) {
-		    if (entry->type_instance == "queueTime") {
-		      add_entry(entry + ([
-				  "aspects": ({ "suffix" }),
-				  "suffix":"sum",
-				  "type":"histogram",
-				  "type_instance": "queueNumRuns",
-				  "doc":0,
-				]));
-		      return "user";
-		    }
-		    return "system";
-		  },
-	       ]),
-	       ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.3.2",
-		  "type_instance": "queueNumRuns",
-		  "aspects": ({ "ge", "suffix" }),
-		  "type": "histogram",
-		  "suffix": histogram_suffix,
-		  "ge":
-		  lambda(mapping entry) {
-		    return histogram_label(entry, "queueNumRuns");
-		  },
-	       ]),
-	       /* Start (fake) module oids. */
-	       ([ "oid_prefix": "-1.0.2",
-		  "aspects": ({ "interval" }),
-		  "interval":
-		  lambda(mapping entry) {
-		    string suffix =
-		      entry->type_instance[sizeof("activeBrowserUsers")..];
-		    if (sizeof(suffix)) return suffix;
-		    return "since start";
-		  },
-		  "type_instance": "activeBrowserUsers",
-	       ]),
-	       ([ "oid_prefix": "-1.0.3",
-		  "aspects": ({ "interval" }),
-		  "interval":
-		  lambda(mapping entry) {
-		    string suffix =
-		      entry->type_instance[sizeof("activeAppLauncherUsers")..];
-		    if (sizeof(suffix)) return suffix;
-		    return "since start";
-		  },
-		  "type_instance": "activeAppLauncherUsers",
-	       ]),
-	       ([ "oid_prefix": "-1.0.4",
-		  "aspects": ({ "interval" }),
-		  "interval":
-		  lambda(mapping entry) {
-		    string suffix =
-		      entry->type_instance[sizeof("activePlannerUsers")..];
-		    if (sizeof(suffix)) return suffix;
-		    return "since start";
-		  },
-		  "type_instance": "activePlannerUsers",
-	       ]),
-	       ([ "oid_prefix": "-1.0.5",
-		  "aspects": ({ "interval" }),
-		  "interval":
-		  lambda(mapping entry) {
-		    string suffix =
-		      entry->type_instance[sizeof("activeBadBrowserUsers")..];
-		    if (sizeof(suffix)) return suffix;
-		    return "since start";
-		  },
-		  "type_instance": "activeBadBrowserUsers",
-	       ]),
-	       ([ "oid_prefix": "-1.0.6",
-		  "aspects": ({ "interval" }),
-		  "interval":
-		  lambda(mapping entry) {
-		    string suffix =
-		      entry->type_instance[sizeof("activeBadAppLauncherUsers")..];
-		    if (sizeof(suffix)) return suffix;
-		    return "since start";
-		  },
-		  "type_instance": "activeBadAppLauncherUsers",
-	       ]),
-	       ([ "oid_prefix": "-1.0.7",
-		  "aspects": ({ "interval" }),
-		  "interval":
-		  lambda(mapping entry) {
-		    string suffix =
-		      entry->type_instance[sizeof("activeBadPlannerUsers")..];
-		    if (sizeof(suffix)) return suffix;
-		    return "since start";
-		  },
-		  "type_instance": "activeBadPlannerUsers",
-	       ]),
-	       ([ "oid_prefix": "-1.5.15",
-		  "type": "histogram",
-		  "aspects": ({ "suffix" }),
-		  "suffix": "count",
-	       ]),
-	       ([ "oid_prefix": "-1.5.18",
-		  "type_instance": "actionTime",
-		  "aspects": ({ "mode" }),
-		  "mode":
-		  lambda(mapping entry) {
-		    if (entry->type_instance == "actionUserTime") {
-		      add_entry(entry + ([
-				  "aspects": ({ "suffix" }),
-				  "suffix":"sum",
-				  "type":"histogram",
-				  "type_instance": "numActions",
-				  "doc":0,
-				]));
-		      return "user";
-		    }
-		    return "system";
-		  },
-	       ]),
-	       ([ "oid_prefix": "-1.5.19",
-		  "type_instance": "numActions",
-		  "aspects": ({ "ge", "suffix" }),
-		  "type": "histogram",
-		  "suffix": "bucket",
-		  "ge":
-		  lambda(mapping entry) {
-		    return histogram_label(entry, "numActions");
-		  },
-	       ]),
-	    }), mapping consolidator) {
+                  "type_instance": "cpuTime",
+                  "aspects": ({ "mode" }),
+                  "mode":
+                  lambda(mapping entry) {
+                    return entry->type_instance == "userTime" ? "user" :
+                      "system";
+                  },
+                  "doc": "Total cpu time expressed in seconds."
+               ]),
+               ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.1.2",
+                  "type_instance": "handlerTime",
+                  "aspects": ({ "mode" }),
+                  "mode":
+                  lambda(mapping entry) {
+                    if (entry->type_instance == "handlerTime") {
+                      add_entry(entry + ([
+                                  "aspects": ({ "suffix" }),
+                                  "suffix":"sum",
+                                  "type":"histogram",
+                                  "type_instance": "handlerNumRuns",
+                                  "doc":0,
+                                ]));
+                      return "user";
+                    }
+                    return "system";
+                  },
+               ]),
+               ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.1.3",
+                  "type_instance": "handlerNumRuns",
+                  "aspects": ({ "ge", "suffix" }),
+                  "type": "histogram",
+                  "suffix": histogram_suffix,
+                  "ge":
+                  lambda(mapping entry) {
+                    return histogram_label(entry, "handlerNumRuns");
+                  },
+               ]),
+               ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.2.2",
+                  "type_instance": "bgTime",
+                  "aspects": ({ "mode" }),
+                  "mode":
+                  lambda(mapping entry) {
+                    if (entry->type_instance == "bgTime") {
+                      add_entry(entry + ([
+                                  "aspects": ({ "suffix" }),
+                                  "suffix":"sum",
+                                  "type":"histogram",
+                                  "type_instance": "bgNumRuns",
+                                  "doc":0,
+                                ]));
+                      return "user";
+                    }
+                    return "system";
+                  },
+               ]),
+               ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.2.3",
+                  "type_instance": "bgNumRuns",
+                  "aspects": ({ "ge", "suffix" }),
+                  "type": "histogram",
+                  "suffix": histogram_suffix,
+                  "ge":
+                  lambda(mapping entry) {
+                    return histogram_label(entry, "bgNumRuns");
+                  },
+               ]),
+               ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.3.2",
+                  "type_instance": "coTime",
+                  "aspects": ({ "mode" }),
+                  "mode":
+                  lambda(mapping entry) {
+                    if (entry->type_instance == "coTime") {
+                      add_entry(entry + ([
+                                  "aspects": ({ "suffix" }),
+                                  "suffix":"sum",
+                                  "type":"histogram",
+                                  "type_instance": "coNumRuns",
+                                  "doc":0,
+                                ]));
+                      return "user";
+                    }
+                    return "system";
+                  },
+               ]),
+               ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.3.3",
+                  "type_instance": "coNumRuns",
+                  "aspects": ({ "ge", "suffix" }),
+                  "type": "histogram",
+                  "suffix": histogram_suffix,
+                  "ge":
+                  lambda(mapping entry) {
+                    return histogram_label(entry, "coNumRuns");
+                  },
+               ]),
+               ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.1.1",
+                  "type_instance": "requestTime",
+                  "aspects": ({ "mode" }),
+                  "mode":
+                  lambda(mapping entry) {
+                    if (entry->type_instance == "requestTime") {
+                      add_entry(entry + ([
+                                  "aspects": ({ "suffix" }),
+                                  "suffix":"sum",
+                                  "type":"histogram",
+                                  "type_instance": "requestNumRuns",
+                                  "doc":0,
+                                ]));
+                      return "user";
+                    }
+                    return "system";
+                  },
+               ]),
+               ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.1.2",
+                  "type_instance": "requestNumRuns",
+                  "aspects": ({ "ge", "suffix" }),
+                  "type": "histogram",
+                  "suffix": histogram_suffix,
+                  "ge":
+                  lambda(mapping entry) {
+                    return histogram_label(entry, "requestNumRuns");
+                  },
+               ]),
+               ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.2.1",
+                  "type_instance": "handleTime",
+                  "aspects": ({ "mode" }),
+                  "mode":
+                  lambda(mapping entry) {
+                    if (entry->type_instance == "handleTime") {
+                      add_entry(entry + ([
+                                  "aspects": ({ "suffix" }),
+                                  "suffix":"sum",
+                                  "type":"histogram",
+                                  "type_instance": "handleNumRuns",
+                                  "doc":0,
+                                ]));
+                      return "user";
+                    }
+                    return "system";
+                  },
+               ]),
+               ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.2.2",
+                  "type_instance": "handleNumRuns",
+                  "aspects": ({ "ge", "suffix" }),
+                  "type": "histogram",
+                  "suffix": histogram_suffix,
+                  "ge":
+                  lambda(mapping entry) {
+                    return histogram_label(entry, "handleNumRuns");
+                  },
+               ]),
+               ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.3.1",
+                  "type_instance": "queueTime",
+                  "aspects": ({ "mode" }),
+                  "mode":
+                  lambda(mapping entry) {
+                    if (entry->type_instance == "queueTime") {
+                      add_entry(entry + ([
+                                  "aspects": ({ "suffix" }),
+                                  "suffix":"sum",
+                                  "type":"histogram",
+                                  "type_instance": "queueNumRuns",
+                                  "doc":0,
+                                ]));
+                      return "user";
+                    }
+                    return "system";
+                  },
+               ]),
+               ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.3.2",
+                  "type_instance": "queueNumRuns",
+                  "aspects": ({ "ge", "suffix" }),
+                  "type": "histogram",
+                  "suffix": histogram_suffix,
+                  "ge":
+                  lambda(mapping entry) {
+                    return histogram_label(entry, "queueNumRuns");
+                  },
+               ]),
+               /* Start (fake) module oids. */
+               ([ "oid_prefix": "-1.0.2",
+                  "aspects": ({ "interval" }),
+                  "interval":
+                  lambda(mapping entry) {
+                    string suffix =
+                      entry->type_instance[sizeof("activeBrowserUsers")..];
+                    if (sizeof(suffix)) return suffix;
+                    return "since start";
+                  },
+                  "type_instance": "activeBrowserUsers",
+               ]),
+               ([ "oid_prefix": "-1.0.3",
+                  "aspects": ({ "interval" }),
+                  "interval":
+                  lambda(mapping entry) {
+                    string suffix =
+                      entry->type_instance[sizeof("activeAppLauncherUsers")..];
+                    if (sizeof(suffix)) return suffix;
+                    return "since start";
+                  },
+                  "type_instance": "activeAppLauncherUsers",
+               ]),
+               ([ "oid_prefix": "-1.0.4",
+                  "aspects": ({ "interval" }),
+                  "interval":
+                  lambda(mapping entry) {
+                    string suffix =
+                      entry->type_instance[sizeof("activePlannerUsers")..];
+                    if (sizeof(suffix)) return suffix;
+                    return "since start";
+                  },
+                  "type_instance": "activePlannerUsers",
+               ]),
+               ([ "oid_prefix": "-1.0.5",
+                  "aspects": ({ "interval" }),
+                  "interval":
+                  lambda(mapping entry) {
+                    string suffix =
+                      entry->type_instance[sizeof("activeBadBrowserUsers")..];
+                    if (sizeof(suffix)) return suffix;
+                    return "since start";
+                  },
+                  "type_instance": "activeBadBrowserUsers",
+               ]),
+               ([ "oid_prefix": "-1.0.6",
+                  "aspects": ({ "interval" }),
+                  "interval":
+                  lambda(mapping entry) {
+                    string suffix =
+                      entry->type_instance[sizeof("activeBadAppLauncherUsers")..];
+                    if (sizeof(suffix)) return suffix;
+                    return "since start";
+                  },
+                  "type_instance": "activeBadAppLauncherUsers",
+               ]),
+               ([ "oid_prefix": "-1.0.7",
+                  "aspects": ({ "interval" }),
+                  "interval":
+                  lambda(mapping entry) {
+                    string suffix =
+                      entry->type_instance[sizeof("activeBadPlannerUsers")..];
+                    if (sizeof(suffix)) return suffix;
+                    return "since start";
+                  },
+                  "type_instance": "activeBadPlannerUsers",
+               ]),
+               ([ "oid_prefix": "-1.5.15",
+                  "type": "histogram",
+                  "aspects": ({ "suffix" }),
+                  "suffix": "count",
+               ]),
+               ([ "oid_prefix": "-1.5.18",
+                  "type_instance": "actionTime",
+                  "aspects": ({ "mode" }),
+                  "mode":
+                  lambda(mapping entry) {
+                    if (entry->type_instance == "actionUserTime") {
+                      add_entry(entry + ([
+                                  "aspects": ({ "suffix" }),
+                                  "suffix":"sum",
+                                  "type":"histogram",
+                                  "type_instance": "numActions",
+                                  "doc":0,
+                                ]));
+                      return "user";
+                    }
+                    return "system";
+                  },
+               ]),
+               ([ "oid_prefix": "-1.5.19",
+                  "type_instance": "numActions",
+                  "aspects": ({ "ge", "suffix" }),
+                  "type": "histogram",
+                  "suffix": "bucket",
+                  "ge":
+                  lambda(mapping entry) {
+                    return histogram_label(entry, "numActions");
+                  },
+               ]),
+            }), mapping consolidator) {
       if (!has_prefix(entry->oid, consolidator->oid_prefix + ".")) {
-	continue;
+        continue;
       }
 
       foreach(consolidator->aspects || ({}), string aspect) {
-	string aspect_val = callablep(consolidator[aspect])?
-	  consolidator[aspect](entry):consolidator[aspect];
-	if (undefinedp(aspect_val)) continue;
-	entry[aspect] = aspect_val;
+        string aspect_val = callablep(consolidator[aspect])?
+          consolidator[aspect](entry):consolidator[aspect];
+        if (undefinedp(aspect_val)) continue;
+        entry[aspect] = aspect_val;
       }
       foreach(({ "aspects", "doc", "plugin", "plugin_instance",
-		 "type", "type_instance" }), string field) {
-	entry[field] = consolidator[field] || entry[field];
+                 "type", "type_instance" }), string field) {
+        entry[field] = consolidator[field] || entry[field];
       }
       break;
     }
@@ -568,7 +568,7 @@ Protocol get_snmp_prot()
 
     foreach((port_info && port_info->ports) || ({}), Protocol prot) {
       if ((prot->prot_name == "snmp") && (prot->mib))
-	return prot;
+        return prot;
     }
   }
 }
@@ -580,15 +580,15 @@ array(mapping) get_global_snmp()
     return ({});
 
   return get_snmp_values(prot->mib, SNMP.RIS_OID_WEBSERVER + ({ 1 }), "global",
-			 ({
-			   SNMP.RIS_OID_WEBSERVER + ({ 1, 3 }),     // DBManager
-   			   SNMP.RIS_OID_WEBSERVER + ({ 1, 8 }),     // Pike memory
-			 }),
-			 ({
-			   "activeFDCount",
-			   "virtualMemory",
-			   "residentMemory",
-			 }) );
+                         ({
+                           SNMP.RIS_OID_WEBSERVER + ({ 1, 3 }),     // DBManager
+                           SNMP.RIS_OID_WEBSERVER + ({ 1, 8 }),     // Pike memory
+                         }),
+                         ({
+                           "activeFDCount",
+                           "virtualMemory",
+                           "residentMemory",
+                         }) );
 }
 
 array(mapping) get_cache_snmp()
@@ -598,19 +598,19 @@ array(mapping) get_cache_snmp()
     return ({});
 
   return get_snmp_values(prot->mib, SNMP.RIS_OID_WEBSERVER + ({ 3 }), "cache",
-			 ({
-			 }),
-			 ({
-			   "cache-*-name",
-			   "cache-*-numEntries",
-			   "cache-*-numBytes",
-			   "cache-*-numHits",
-			   "cache-*-costHits",
-			   "cache-*-byteHits",
-			   "cache-*-numMisses",
-			   "cache-*-costMisses",
-			   "cache-*-byteMisses",
-			 }) );
+                         ({
+                         }),
+                         ({
+                           "cache-*-name",
+                           "cache-*-numEntries",
+                           "cache-*-numBytes",
+                           "cache-*-numHits",
+                           "cache-*-costHits",
+                           "cache-*-byteHits",
+                           "cache-*-numMisses",
+                           "cache-*-costMisses",
+                           "cache-*-byteMisses",
+                         }) );
 }
 
 array(mapping) get_site_snmp()
@@ -620,9 +620,9 @@ array(mapping) get_site_snmp()
     return ({});
 
   return get_snmp_values(prot->mib, conf->query_oid(), "site",
-			 ({ conf->query_oid() + ({ 8 }),
-			    SNMP.RIS_OID_WEBSERVER + ({ 3 })        // Cache
-			 }) );
+                         ({ conf->query_oid() + ({ 8 }),
+                            SNMP.RIS_OID_WEBSERVER + ({ 3 })        // Cache
+                         }) );
 }
 
 array(mapping) get_module_snmp(RoxenModule o, int mod_no)
@@ -632,49 +632,49 @@ array(mapping) get_module_snmp(RoxenModule o, int mod_no)
   // Use fake oid:s below, since we are only interested in the values not the actual address.
   ADT.Trie mib = o->query_snmp_mib(({ -1, mod_no }), ({}));
   return get_snmp_values(mib, ({}), (o->sname()/"#")[0], 0,
-			 ({ "backupDiskCapacity",
-			    "backupDiskUsed",
-			    "backupDiskFree",
+                         ({ "backupDiskCapacity",
+                            "backupDiskUsed",
+                            "backupDiskFree",
 
-			    "minFeedDiskCapacity",
-			    "minFeedDiskUsed",
-			    "minFeedDiskFree",
+                            "minFeedDiskCapacity",
+                            "minFeedDiskUsed",
+                            "minFeedDiskFree",
 
-			    "databaseDiskCapacity",
-			    "databaseDiskUsed",
-			    "databaseDiskFree",
-			    "numPublications",
-			    "numEditions",
-			    "numPages",
-			    "numPageVersions",
-			    "numStories",
-			    "numStoryItems",
-			    "numStoryItemVersions",
-			    "numFeedItems",
-			    "numPageSlots",
-			    "numPageGroups"
-			 }) );
+                            "databaseDiskCapacity",
+                            "databaseDiskUsed",
+                            "databaseDiskFree",
+                            "numPublications",
+                            "numEditions",
+                            "numPages",
+                            "numPageVersions",
+                            "numStories",
+                            "numStoryItems",
+                            "numStoryItemVersions",
+                            "numFeedItems",
+                            "numPageSlots",
+                            "numPageGroups"
+                         }) );
 }
 
 mapping type_mapping = ([ "STRING": 0,
-			  "GAUGE": "gauge",
-			  "COUNTER": "counter",
-			  "COUNTER64": "counter",
-			  "TICK": "counter",
-			  "INTEGER": "gauge" ]);
+                          "GAUGE": "gauge",
+                          "COUNTER": "counter",
+                          "COUNTER64": "counter",
+                          "TICK": "counter",
+                          "INTEGER": "gauge" ]);
 
 string mangle_snmp_label(string label)
 {
   return replace(label,
-		 ({ "GDS(1)", "GDS(cpu time)", "GDS(real time)", "(", ")", "<", ">"," " }),
-		 ({ "0", "1", "2", "_", "_", "_", "_", "_" }));
+                 ({ "GDS(1)", "GDS(cpu time)", "GDS(real time)", "(", ")", "<", ">"," " }),
+                 ({ "0", "1", "2", "_", "_", "_", "_", "_" }));
 }
 
 array(mapping) get_snmp_values(ADT.Trie mib,
-			      array(int) oid_start,
-			      string plugin_instance,
-			      void|array(array(int)) oid_ignores,
-			      void|array(string) name_ignores)
+                              array(int) oid_start,
+                              string plugin_instance,
+                              void|array(array(int)) oid_ignores,
+                              void|array(string) name_ignores)
 {
   //  werror("get_snmp_values(mib, %O, %O, %O)\n",
   //	 (array(string))oid_start*".", plugin_instance_suffix,
@@ -689,29 +689,29 @@ array(mapping) get_snmp_values(ADT.Trie mib,
     }
     if(oid_ignores)
       foreach(oid_ignores, array(int) oid_ignore)
-	if (oid_ignore && has_prefix((string)oid, (string)oid_ignore)) continue outer;
+        if (oid_ignore && has_prefix((string)oid, (string)oid_ignore)) continue outer;
     string name = "";
     mixed val = "";
     string snmp_type = "";
     string doc = "";
     float update;
     mixed err = catch {
-	val = mib->lookup(oid);
-	if (zero_type(val)) continue;
-	if (objectp(val)) {
-	  name = val->name || "";
-	  snmp_type = val->type_name;
-	  doc = val->doc || "";
-	  if(name_ignores && glob(name_ignores, name))
-	    continue;
-	  if (val->update_value) {
-	    update = gauge {
-		val->update_value();
-	      };
-	  }
-	  val = val->value;
-	}
-	val = (string)val;
+        val = mib->lookup(oid);
+        if (zero_type(val)) continue;
+        if (objectp(val)) {
+          name = val->name || "";
+          snmp_type = val->type_name;
+          doc = val->doc || "";
+          if(name_ignores && glob(name_ignores, name))
+            continue;
+          if (val->update_value) {
+            update = gauge {
+                val->update_value();
+              };
+          }
+          val = val->value;
+        }
+        val = (string)val;
       };
     if (err) {
       name = "Error";
@@ -728,16 +728,16 @@ array(mapping) get_snmp_values(ADT.Trie mib,
     string type = type_mapping[snmp_type];
     if(type) {
       res += ({ ([ "plugin":          "roxen",
-		   "plugin_instance": plugin_instance,
-		   "type":            type,
-		   "snmp_type":       snmp_type,
-		   "type_instance":   mangle_snmp_label(name),
-		   "timestamp":       time(),
-		   "value":           val,
-		   "update_time":     update,
-		   "oid":             (array(string))oid*".",
-		   "doc":             doc
-		]) });
+                   "plugin_instance": plugin_instance,
+                   "type":            type,
+                   "snmp_type":       snmp_type,
+                   "type_instance":   mangle_snmp_label(name),
+                   "timestamp":       time(),
+                   "value":           val,
+                   "update_time":     update,
+                   "oid":             (array(string))oid*".",
+                   "doc":             doc
+                ]) });
     }
   }
   return res;

@@ -370,42 +370,42 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
 
     &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
     &lt;tr&gt;&lt;td&gt;protcache&lt;/td&gt;
-	&lt;td&gt;The page is served from the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;The page is served from the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;protstore&lt;/td&gt;
-	&lt;td&gt;The page is stored in the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;The page is stored in the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;stale&lt;/td&gt;
-	&lt;td&gt;There is a stale entry in the HTTP protocol cache. A
-	refresh is underway in the background and the stale entry is
-	sent in the meantime to avoid a long response time and server
-	congestion.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;There is a stale entry in the HTTP protocol cache. A
+        refresh is underway in the background and the stale entry is
+        sent in the meantime to avoid a long response time and server
+        congestion.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;refresh&lt;/td&gt;
-	&lt;td&gt;This is the finishing of the background refresh request
-	for the entry in the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;This is the finishing of the background refresh request
+        for the entry in the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;icachedraw&lt;/td&gt;
-	&lt;td&gt;A server-generated image had to be rendered from scratch.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;A server-generated image had to be rendered from scratch.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;icacheram&lt;/td&gt;
-	&lt;td&gt;A server-generated image was found in the RAM cache.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;A server-generated image was found in the RAM cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;icachedisk&lt;/td&gt;
-	&lt;td&gt;A server-generated image was found in the disk cache (i.e. in
+        &lt;td&gt;A server-generated image was found in the disk cache (i.e. in
             the server's MySQL database).&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;pcoderam&lt;/td&gt;
-	&lt;td&gt;A hit in the RXML p-code RAM cache.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;A hit in the RXML p-code RAM cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;pcodedisk&lt;/td&gt;
-	&lt;td&gt;A hit in the RXML p-code persistent cache.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;A hit in the RXML p-code persistent cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;pcodestore&lt;/td&gt;
-	&lt;td&gt;P-code is added to or updated in the persistent cache.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;P-code is added to or updated in the persistent cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;pcodestorefailed&lt;/td&gt;
-	&lt;td&gt;An attempt to add or update p-code in the persistent cache
+        &lt;td&gt;An attempt to add or update p-code in the persistent cache
         failed (e.g. due to a race with another request).&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;cachetag&lt;/td&gt;
-	&lt;td&gt;RXML was evaluated without any cache miss in any RXML
-	&amp;lt;cache&amp;gt; tag. The &amp;lt;nocache&amp;gt; tag does not count as a
-	miss.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;RXML was evaluated without any cache miss in any RXML
+        &amp;lt;cache&amp;gt; tag. The &amp;lt;nocache&amp;gt; tag does not count as a
+        miss.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;xsltcache&lt;/td&gt;
-	&lt;td&gt;There is a hit XSLT cache.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;There is a hit XSLT cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;nocache&lt;/td&gt;
-	&lt;td&gt;No hit in any known cache, and not added to the HTTP
-	protocol cache.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;No hit in any known cache, and not added to the HTTP
+        protocol cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;/tbody&gt;&lt;/table&gt;&lt;/td&gt;&lt;/tr&gt;
 
 &lt;tr&gt;&lt;td&gt;$eval-status&lt;/td&gt;
@@ -416,11 +416,11 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
     &lt;tr&gt;&lt;td&gt;bad-charset&lt;/td&gt;
         &lt;td&gt;Detected invalid charset in declared content-type.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;xslt&lt;/td&gt;
-	&lt;td&gt;XSL transform.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;XSL transform.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;rxmlsrc&lt;/td&gt;
-	&lt;td&gt;RXML evaluated from source.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;RXML evaluated from source.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;rxmlpcode&lt;/td&gt;
-	&lt;td&gt;RXML evaluated from compiled p-code.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;RXML evaluated from compiled p-code.&lt;/td&gt;&lt;/tr&gt;
     &lt;/tbody&gt;&lt;/table&gt;&lt;/td&gt;&lt;/tr&gt;
 
 &lt;tr&gt;&lt;td&gt;$protcache-cost&lt;/td&gt;
@@ -442,13 +442,13 @@ below.&lt;/p&gt;
 
     &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
     &lt;tr&gt;&lt;td&gt;ram-cache-gc&lt;/td&gt;
-	&lt;td&gt;Logged after the RAM cache GC has run. $handle-time and
-	$handle-cputime are set to the time the GC took (see
-	descriptions above for details).&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;Logged after the RAM cache GC has run. $handle-time and
+        $handle-cputime are set to the time the GC took (see
+        descriptions above for details).&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;ram-cache-rebase&lt;/td&gt;
-	&lt;td&gt;Logged when the RAM cache has performed a rebias of the
-	priority queue values. Is a problem only if it starts to
-	happen too often.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;Logged when the RAM cache has performed a rebias of the
+        priority queue values. Is a problem only if it starts to
+        happen too often.&lt;/td&gt;&lt;/tr&gt;
     &lt;/tbody&gt;&lt;/table&gt;&lt;/dd&gt;
 
 &lt;dt&gt;Facility: sbfs&lt;/dt&gt;
@@ -470,26 +470,26 @@ below.&lt;/p&gt;
 
     &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
     &lt;tr&gt;&lt;td&gt;$ac-userid&lt;/td&gt;
-	&lt;td&gt;The ID number of the AC identity whose edit area was used.
-	Zero for the common view area.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;The ID number of the AC identity whose edit area was used.
+        Zero for the common view area.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;$workarea&lt;/td&gt;
-	&lt;td&gt;The unique tag for the work area. Empty for the main work
-	area.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;The unique tag for the work area. Empty for the main work
+        area.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;$commit-type&lt;/td&gt;
-	&lt;td&gt;The type of file commit, one of &lt;code&gt;create&lt;/code&gt;,
-	&lt;code&gt;edit&lt;/code&gt;, &lt;code&gt;delete&lt;/code&gt;, and
-	&lt;code&gt;undelete&lt;/code&gt;.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;The type of file commit, one of &lt;code&gt;create&lt;/code&gt;,
+        &lt;code&gt;edit&lt;/code&gt;, &lt;code&gt;delete&lt;/code&gt;, and
+        &lt;code&gt;undelete&lt;/code&gt;.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;$revision&lt;/td&gt;
-	&lt;td&gt;The committed revision number, a dotted decimal.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;The committed revision number, a dotted decimal.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;$comment&lt;/td&gt;
-	&lt;td&gt;The commit message.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;The commit message.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;$request-time&lt;/td&gt;
-	&lt;td&gt;This is set for the action &lt;code&gt;crawl-file&lt;/code&gt;. It's
-	similar to &lt;code&gt;$request-time&lt;/code&gt; for normal requests,
-	except that it measures the whole time it took for the
-	persistent cache crawler to process the page. That includes
-	all crawled variants and the saving of the entry to the
-	database.&lt;/td&gt;&lt;/tr&gt;
+        &lt;td&gt;This is set for the action &lt;code&gt;crawl-file&lt;/code&gt;. It's
+        similar to &lt;code&gt;$request-time&lt;/code&gt; for normal requests,
+        except that it measures the whole time it took for the
+        persistent cache crawler to process the page. That includes
+        all crawled variants and the saving of the entry to the
+        database.&lt;/td&gt;&lt;/tr&gt;
     &lt;/tbody&gt;&lt;/table&gt;&lt;/dd&gt;
 &lt;/dl&gt;</o>
 <t></t>
@@ -3427,10 +3427,10 @@ be of real use.&lt;/p&gt;</o>
 
 <str id="1042">
 <o>
-	    &lt;b&gt;Warning!&lt;/b&gt;&lt;br /&gt;
-	    This might take a long time to complete.&lt;br/&gt;
-	    The amount of time this takes depends on how large the tables are.&lt;br/&gt;
-	  </o>
+            &lt;b&gt;Warning!&lt;/b&gt;&lt;br /&gt;
+            This might take a long time to complete.&lt;br/&gt;
+            The amount of time this takes depends on how large the tables are.&lt;br/&gt;
+          </o>
 <t></t>
 </str>
 

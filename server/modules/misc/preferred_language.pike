@@ -108,26 +108,26 @@ as language settings.";
       m_delete( id->variables, path()+".new.x" );
       switch(vl[".newtype"]) {
       case "accept-language":
-	 l += ({ ({ "accept-language" }) });
-	 break;
+         l += ({ ({ "accept-language" }) });
+         break;
       case "prestate":
-	 l += ({ ({ "prestate" }) });
-	 break;
+         l += ({ ({ "prestate" }) });
+         break;
       case "roxen-config":
-	l += ({ ({ "roxen-config" }) });
-	break;
+        l += ({ ({ "roxen-config" }) });
+        break;
       case "cookie":
-	l += ({ ({ "cookie","Language" }) });
-	break;
+        l += ({ ({ "cookie","Language" }) });
+        break;
       case "variable":
-	l += ({ ({ "variable","Language" }) });
-	break;
+        l += ({ ({ "variable","Language" }) });
+        break;
       case "hostmatch":
-	l += ({ ({ "hostmatch","*.se","sv" }) });
-	break;
+        l += ({ ({ "hostmatch","*.se","sv" }) });
+        break;
       case "pathmatch":
-	l += ({ ({ "pathmatch","/*","en" }) });
-	break;
+        l += ({ ({ "pathmatch","/*","en" }) });
+        break;
       }
     }
     
@@ -142,17 +142,17 @@ as language settings.";
     if( do_goto )
     {
       if( !id->misc->do_not_goto )
-	{
-	  id->misc->moreheads = ([
-	    "Location":
-	    id->raw_url+"?random="+
-	    random(4949494)+
-	    "&section="+
-	    Roxen.http_encode_url (id->variables->section) +
-	    "#" + Roxen.http_encode_url (path()),
-	  ]);
-	  if( id->misc->defines )
-	    id->misc->defines[ " _error" ] = 302;
+        {
+          id->misc->moreheads = ([
+            "Location":
+            id->raw_url+"?random="+
+            random(4949494)+
+            "&section="+
+            Roxen.http_encode_url (id->variables->section) +
+            "#" + Roxen.http_encode_url (path()),
+          ]);
+          if( id->misc->defines )
+            id->misc->defines[ " _error" ] = 302;
       }
     }
     set( encode_action_list(l) );
@@ -175,27 +175,27 @@ as language settings.";
 
        switch(action) {
        case "accept-language":
-	 res+= "<b>Use Accept-Language header</b>";
-	 break;
+         res+= "<b>Use Accept-Language header</b>";
+         break;
        case "prestate":
-	 res+= "<b>Use prestates</b>";
-	 break;
+         res+= "<b>Use prestates</b>";
+         break;
        case "roxen-config":
-	 res+= "<b>Use Roxen config cookie</b>";
-	 break;
+         res+= "<b>Use Roxen config cookie</b>";
+         break;
        case "cookie":
-	 res+= "<b>Use cookie:</b> " + make_input_tag(prefix+"set."+i+".arg1",_action[1] ,8);
-	 break;
+         res+= "<b>Use cookie:</b> " + make_input_tag(prefix+"set."+i+".arg1",_action[1] ,8);
+         break;
        case "variable":
-	 res+= "<b>Use variable:</b> " + make_input_tag(prefix+"set."+i+".arg1",_action[1],8);
-	 break;
+         res+= "<b>Use variable:</b> " + make_input_tag(prefix+"set."+i+".arg1",_action[1],8);
+         break;
        case "hostmatch":
-	 res+= "<b>Add languages:</b> " + make_input_tag(prefix+"set."+i+".arg2",_action[2],8) +
-	   " if host matches glob: " + make_input_tag(prefix+"set."+i+".arg1",_action[1],8);
-	 break;
+         res+= "<b>Add languages:</b> " + make_input_tag(prefix+"set."+i+".arg2",_action[2],8) +
+           " if host matches glob: " + make_input_tag(prefix+"set."+i+".arg1",_action[1],8);
+         break;
        case "pathmatch":
-	 res+= "<b>Add languages:</b> " + make_input_tag(prefix+"set."+i+".arg2",_action[2],8) +
-	   " if the path matches glob: " + make_input_tag(prefix+"set."+i+".arg1",_action[1],8);
+         res+= "<b>Add languages:</b> " + make_input_tag(prefix+"set."+i+".arg2",_action[2],8) +
+           " if the path matches glob: " + make_input_tag(prefix+"set."+i+".arg1",_action[1],8);
        }
        
        res += "</font></td>\n";
@@ -244,18 +244,18 @@ void create() {
   defvar("actionlist", LanguagePrefs() );
 
   defvar( "propagate", 0, "Propagate language", TYPE_FLAG,
-	  "Should the most preferred language be propagated into the page.theme_language variable, "
-	  "which in turn will control the default language of all multilingual RXML tags." );
+          "Should the most preferred language be propagated into the page.theme_language variable, "
+          "which in turn will control the default language of all multilingual RXML tags." );
 
   defvar( "defaults", ({}), "Present Languages", TYPE_STRING_LIST,
-	  "A list of all languages present on the server. An empty list means no restrictions." );
+          "A list of all languages present on the server. An empty list means no restrictions." );
 
   defvar("iso639", Variable.StringChoice("ISO 639", ({ "ISO 639", "Starting with $" }), 0,
-	 "Valid 'Prestate' and 'Config cookie' languages", 
-	 "When ISO 639 is selected, prestates and the Roxen config cookie entries mathing valid "
-	 "ISO 639 language codes are considered to be language settings. Otherwise entries "
-	 "starting with $ are used for selecting language. Note that this option affects which "
-	 "prestates and config cookie entries that are removed when using "
+         "Valid 'Prestate' and 'Config cookie' languages", 
+         "When ISO 639 is selected, prestates and the Roxen config cookie entries mathing valid "
+         "ISO 639 language codes are considered to be language settings. Otherwise entries "
+         "starting with $ are used for selecting language. Note that this option affects which "
+         "prestates and config cookie entries that are removed when using "
          "&lt;emit source=\"languages\"&gt; to switch language.\n"));
 }
 
@@ -350,7 +350,7 @@ array(string) get_config_langs(RequestID id) {
   if(iso639)
     return config & languages;
   return map(config & Array.filter(config, lambda(string s) { return s[0..0] == "$";}),
-	     lambda(string s) {return s[1..];});
+             lambda(string s) {return s[1..];});
 }
 
 array(string) get_prestate_langs(RequestID id) {
@@ -358,7 +358,7 @@ array(string) get_prestate_langs(RequestID id) {
   if(iso639)
     return prestate & languages;
   return map(prestate & Array.filter(prestate, lambda(string s) { return s[0..0] == "$";}),
-	     lambda(string s) {return s[1..];});
+             lambda(string s) {return s[1..];});
 }
 
 RequestID first_try(RequestID id) {
@@ -388,53 +388,53 @@ RequestID first_try(RequestID id) {
       
     case "cookie":
       if(sizeof(action) > 1) {
-	//  Use id->real_cookies to avoid registering dependency right now
-	string cookie_name = action[1];
-	if (!id->real_cookies)
-	  id->init_cookies();
-	string cookie_value;
-	if (cookie_value = id->real_cookies[cookie_name]) {
-	  lang += ({ cookie_value });
-	}
-	delayed_vary_actions += ({ ({ "cookie", cookie_name,
-				      cookie_value && ({ cookie_value }) }) });
+        //  Use id->real_cookies to avoid registering dependency right now
+        string cookie_name = action[1];
+        if (!id->real_cookies)
+          id->init_cookies();
+        string cookie_value;
+        if (cookie_value = id->real_cookies[cookie_name]) {
+          lang += ({ cookie_value });
+        }
+        delayed_vary_actions += ({ ({ "cookie", cookie_name,
+                                      cookie_value && ({ cookie_value }) }) });
       }
       break;
       
     case "variable":
       if(sizeof(action) > 1) {
-	string var_name = action[1];
-	if (array(string) var_value = id->real_variables[var_name]) {
-	  lang += ({ var_value[0] });
-	  delayed_vary_actions += ({ ({ "variable", var_name,
-					({ var_value[0] }) }) });
-	}
+        string var_name = action[1];
+        if (array(string) var_value = id->real_variables[var_name]) {
+          lang += ({ var_value[0] });
+          delayed_vary_actions += ({ ({ "variable", var_name,
+                                        ({ var_value[0] }) }) });
+        }
       }
       break;
       
     case "hostmatch":
       if(sizeof(action) > 2) {
-	//  Ignore port number if present. Will not handle IPv6 addresses
-	//  in numeric form but those are rather pointless for this filter
-	//  anyway.
-	string host = ((id->misc->host || "") / ":")[0];
-	if(glob(action[1], host)) {
-	  array(string) host_langs = map(action[2]/",",String.trim_all_whites);
-	  lang += host_langs;
-	  delayed_vary_actions += ({ ({ "host", host_langs }) });
-	} else {
-	  delayed_vary_actions += ({ ({ "host", 0 }) });
-	}
+        //  Ignore port number if present. Will not handle IPv6 addresses
+        //  in numeric form but those are rather pointless for this filter
+        //  anyway.
+        string host = ((id->misc->host || "") / ":")[0];
+        if(glob(action[1], host)) {
+          array(string) host_langs = map(action[2]/",",String.trim_all_whites);
+          lang += host_langs;
+          delayed_vary_actions += ({ ({ "host", host_langs }) });
+        } else {
+          delayed_vary_actions += ({ ({ "host", 0 }) });
+        }
       }
       break;
       
     case "pathmatch":
       if(sizeof(action) > 2)
-	if(glob(action[1], id->raw_url || "")) {
-	  array(string) path_langs = map(action[2]/",",String.trim_all_whites);
-	  lang += path_langs;
-	  delayed_vary_actions += ({ ({ "path", path_langs }) });
-	}
+        if(glob(action[1], id->raw_url || "")) {
+          array(string) path_langs = map(action[2]/",",String.trim_all_whites);
+          lang += path_langs;
+          delayed_vary_actions += ({ ({ "path", path_langs }) });
+        }
       break;
     }
   }
@@ -465,7 +465,7 @@ class TagEmitLanguages {
     if(m->langs) {
       langs=([string]m->langs/",");
       if(iso639) 
-	langs &= languages;
+        langs &= languages;
     }
     else if( ([mapping(string:mixed)]id->misc->defines)->present_languages )
       langs=indices( [multiset(string)]([mapping(string:mixed)]id->misc->defines)->present_languages );
@@ -474,7 +474,7 @@ class TagEmitLanguages {
 
     object locale_obj =
       language_low(( [object(PrefLanguages)] id->misc->pref_languages)
-		   ->get_language() || "eng");
+                   ->get_language() || "eng");
     function(string:string) localized =
       locale_obj && [function(string:string)] locale_obj->language;
 
@@ -483,25 +483,25 @@ class TagEmitLanguages {
 
     string url=Roxen.strip_prestate(Roxen.strip_config(id->raw_url));
     array(string) conf_langs=Array.map(get_config_langs(id),
-			       lambda(string lang) { return "-"+(iso639?"":"$")+lang; } );
+                               lambda(string lang) { return "-"+(iso639?"":"$")+lang; } );
 
     array res=({});
     foreach(langs, string lang) {
       object locale_obj = [object] roxen->language_low(lang);
       array(string) lid =
-	(locale_obj && [array(string)] locale_obj->id()) ||
-	({ lang, "Unknown", "Unknown" });
+        (locale_obj && [array(string)] locale_obj->id()) ||
+        ({ lang, "Unknown", "Unknown" });
       
       res+=({ (["code":lid[0],
-		"current":current_code,
-		"en": (lid[1] == "standard") ? "english" : lid[1],
-		"local":lid[2],
-		"preurl":Roxen.add_pre_state(url, id->prestate - 
-					     (iso639 ? aggregate_multiset(@languages) : 
-					      (multiset)map(get_prestate_langs(id), lambda(string s) {return "$"+s;})) + 
-					     (< (iso639?"":"$")+lang>)),
-		"confurl":Roxen.add_config(url, conf_langs+({ (iso639?"":"$")+lang}), id->prestate),
-		"localized": (localized && localized(lang)) || "Unknown" ]) });
+                "current":current_code,
+                "en": (lid[1] == "standard") ? "english" : lid[1],
+                "local":lid[2],
+                "preurl":Roxen.add_pre_state(url, id->prestate - 
+                                             (iso639 ? aggregate_multiset(@languages) : 
+                                              (multiset)map(get_prestate_langs(id), lambda(string s) {return "$"+s;})) + 
+                                             (< (iso639?"":"$")+lang>)),
+                "confurl":Roxen.add_config(url, conf_langs+({ (iso639?"":"$")+lang}), id->prestate),
+                "localized": (localized && localized(lang)) || "Unknown" ]) });
     }
     return res;
   }

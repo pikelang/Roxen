@@ -9,8 +9,8 @@
 
 
 RFC 1213	base MIB
-		 system.* (all done)
-		 snmp.* (all done, but most of them all still death)
+                 system.* (all done)
+                 snmp.* (all done, but most of them all still death)
 
 Future:
 
@@ -23,22 +23,22 @@ RFC 2594	Definitions of managed objects for WWW services
 Developer notes:
 
  Known issues:
-	- every reload spawne a new thread, I guess that old ones are never
-	  used then. [threads leak] // FIXME: solved by switching to the async i/o
-	- the OID must be minimally 5 elements long, otherwise GETNEXT return
-	  "no such name" error
-	- default value for snmpagent host/port variable in the config. int.
-	  hasn't set correctly hostname part // FIXME: how reach config.int.'s URL
-						       from define_global_variables ?
-	- vsStopTrap is generated even if the virtual server wasn't started
+        - every reload spawne a new thread, I guess that old ones are never
+          used then. [threads leak] // FIXME: solved by switching to the async i/o
+        - the OID must be minimally 5 elements long, otherwise GETNEXT return
+          "no such name" error
+        - default value for snmpagent host/port variable in the config. int.
+          hasn't set correctly hostname part // FIXME: how reach config.int.'s URL
+                                                       from define_global_variables ?
+        - vsStopTrap is generated even if the virtual server wasn't started
 
  Todos:
 
-	- module reloading
-	- Roxen.module API for registering MIB subtree
+        - module reloading
+        - Roxen.module API for registering MIB subtree
 
-	- SNMP v3 
-	- security (DES?)
+        - SNMP v3 
+        - security (DES?)
 
 
  */
@@ -271,44 +271,44 @@ class SNMPagent {
       attrname = indices(attrs)[0];
 
       if(!mib) {
-		SNMPAGENT_MSG(" MIB table isn't loaded!\n");
-		// what to do now ?
-	  }
-	  switch(op) {
+                SNMPAGENT_MSG(" MIB table isn't loaded!\n");
+                // what to do now ?
+          }
+          switch(op) {
 
-	  case SNMP_OP_GETREQUEST:
-		val = mib->get(attrname, pdata[msgid]);
-	    if (arrayp(val) && sizeof(val) && val[0])
-	      rdata[attrname] += val;
-	    break;
+          case SNMP_OP_GETREQUEST:
+                val = mib->get(attrname, pdata[msgid]);
+            if (arrayp(val) && sizeof(val) && val[0])
+              rdata[attrname] += val;
+            break;
 
-	  case SNMP_OP_GETNEXT:
-		val = mib->getnext(attrname, pdata[msgid]);
-	    if (arrayp(val) && sizeof(val) && val[0])
-	      //rdata[attrname] += val;
-	      rdata[val[0]] += val[1..2];
-	    break;
+          case SNMP_OP_GETNEXT:
+                val = mib->getnext(attrname, pdata[msgid]);
+            if (arrayp(val) && sizeof(val) && val[0])
+              //rdata[attrname] += val;
+              rdata[val[0]] += val[1..2];
+            break;
 
-	  case SNMP_OP_SETREQUEST:
-		val = mib->set(attrname, attrval, pdata[msgid]);
-		if(arrayp(val) && sizeof(val))
-		  setflg = val[0];
-		//rdata[attrname] += ({ "int", attrval });
-		rdata["1.3.6.1.2.1.1.3.0"] += OBJ_TICK(get_uptime());
-		if (arrayp(val) && stringp(val[1]))
-		  report_warning(val[1]);
-		break;
+          case SNMP_OP_SETREQUEST:
+                val = mib->set(attrname, attrval, pdata[msgid]);
+                if(arrayp(val) && sizeof(val))
+                  setflg = val[0];
+                //rdata[attrname] += ({ "int", attrval });
+                rdata["1.3.6.1.2.1.1.3.0"] += OBJ_TICK(get_uptime());
+                if (arrayp(val) && stringp(val[1]))
+                  report_warning(val[1]);
+                break;
 
 
-	    } //switch
+            } //switch
         //else
-	//  SNMPAGENT_MSG(sprintf(" unknown or unsupported OID: %O:%O", attrname, attrval));
+        //  SNMPAGENT_MSG(sprintf(" unknown or unsupported OID: %O:%O", attrname, attrval));
       
     } //foreach
 
     if(op == SNMP_OP_SETREQUEST && !setflg && !errnum) {
       LOG_EVENT("Set not allowed", pdata[msgid]);
-	  snmpbadcommuses++;
+          snmpbadcommuses++;
     }
 
     //SNMPAGENT_MSG(sprintf("Answer: %O", rdata));
@@ -344,7 +344,7 @@ class SNMPagent {
     // first we server dealyed traps
     if(arrayp(dtraps) && sizeof(dtraps))
       foreach(dtraps, array dtrap1)
-	fd->trap( @dtrap1 );
+        fd->trap( @dtrap1 );
     dtraps = ({});
 
     enabled = 1;
@@ -407,39 +407,39 @@ class SNMPagent {
 
     switch (oid) {
 
-	case "0"+RISMIB_BASE_WEBSERVER:		// flagged
-		oid = RISMIB_BASE_WEBSERVER;
-		rtype = 0;
-		break;
+        case "0"+RISMIB_BASE_WEBSERVER:		// flagged
+                oid = RISMIB_BASE_WEBSERVER;
+                rtype = 0;
+                break;
 
-	case "4"+RISMIB_BASE_WEBSERVER:		// flagged
-		oid = RISMIB_BASE_WEBSERVER;
-		rtype = 4;
-		break;
+        case "4"+RISMIB_BASE_WEBSERVER:		// flagged
+                oid = RISMIB_BASE_WEBSERVER;
+                rtype = 4;
+                break;
 
-	case RISMIB_BASE_WEBSERVER_TRAPG_DOWN:
-		break;
+        case RISMIB_BASE_WEBSERVER_TRAPG_DOWN:
+                break;
 
     }
     if(!arrayp(val))
       aval = ([]);
     foreach(query("snmp_global_traphosts"), string url) {
       if(catch(uri = Standards.URI(url))) {
-	SNMPAGENT_MSG(sprintf("Traphost is invalid: %s !", url));
-	continue; // FIXME: what about possibility to add some warnings?
+        SNMPAGENT_MSG(sprintf("Traphost is invalid: %s !", url));
+        continue; // FIXME: what about possibility to add some warnings?
       }
       if(objectp(fd)) {
-	SNMPAGENT_MSG(sprintf("Trap sent: %s", url));
-	fd->trap( aval,
-			oid, rtype, 0,
-			get_uptime(),
-			0, uri->host, uri->port );
+        SNMPAGENT_MSG(sprintf("Trap sent: %s", url));
+        fd->trap( aval,
+                        oid, rtype, 0,
+                        get_uptime(),
+                        0, uri->host, uri->port );
       } else {
-	SNMPAGENT_MSG(sprintf("Trap delayed: %s", url));
-	dtraps += ({ ({ aval,
-			oid, rtype, 0,
-			get_uptime(),
-			0, uri->host, uri->port }) });
+        SNMPAGENT_MSG(sprintf("Trap delayed: %s", url));
+        dtraps += ({ ({ aval,
+                        oid, rtype, 0,
+                        get_uptime(),
+                        0, uri->host, uri->port }) });
       }
     }
   }
@@ -481,26 +481,26 @@ class SNMPagent {
 
       if(vsdb[vsid] && vsdb[vsid]->variables["snmp_traphosts"] &&
              sizeof(vsdb[vsid]->variables["snmp_traphosts"]->query())) {
-	     SNMPAGENT_MSG(sprintf("server %O(#%d): traphosts:%O",
-			vsdb[vsid]->name, vsid,
-			vsdb[vsid]->variables["snmp_traphosts"]->query()));
-	    foreach(vsdb[vsid]->variables["snmp_traphosts"]->query(), mixed thost) {
-		  if(catch(uri = Standards.URI(thost))) {
-		    SNMPAGENT_MSG(sprintf("Traphost is invalid: %s !", thost));
-		    continue; // FIXME: what about possibility to add some warnings?
-		  }
-		  SNMPAGENT_MSG(sprintf("Enterprise trap sent: %s", thost));
-		  fd->trap(
-		    attrvals || ([RISMIB_BASE_WEBSERVER_TRAP_VSEXT+".0": OBJ_STR(vsdb[vsid]->name)]),
-		    RISMIB_BASE_WEBSERVER_TRAP_VSEXT, 6, 0,
-		    get_uptime(),
-		    0,
-		    uri->host, uri->port);
-		}
-	  } else
-	    if(vsdb[vsid])
-	      SNMPAGENT_MSG(sprintf("server %O(#%d) hasn't any traphosts.",
-			    vsdb[vsid] && vsdb[vsid]->name, vsid));
+             SNMPAGENT_MSG(sprintf("server %O(#%d): traphosts:%O",
+                        vsdb[vsid]->name, vsid,
+                        vsdb[vsid]->variables["snmp_traphosts"]->query()));
+            foreach(vsdb[vsid]->variables["snmp_traphosts"]->query(), mixed thost) {
+                  if(catch(uri = Standards.URI(thost))) {
+                    SNMPAGENT_MSG(sprintf("Traphost is invalid: %s !", thost));
+                    continue; // FIXME: what about possibility to add some warnings?
+                  }
+                  SNMPAGENT_MSG(sprintf("Enterprise trap sent: %s", thost));
+                  fd->trap(
+                    attrvals || ([RISMIB_BASE_WEBSERVER_TRAP_VSEXT+".0": OBJ_STR(vsdb[vsid]->name)]),
+                    RISMIB_BASE_WEBSERVER_TRAP_VSEXT, 6, 0,
+                    get_uptime(),
+                    0,
+                    uri->host, uri->port);
+                }
+          } else
+            if(vsdb[vsid])
+              SNMPAGENT_MSG(sprintf("server %O(#%d) hasn't any traphosts.",
+                            vsdb[vsid] && vsdb[vsid]->name, vsid));
   }
 
   //! Adds virtual server to the DB of managed objects
@@ -508,8 +508,8 @@ class SNMPagent {
 
     if(zero_type(vsdb[vsid])) {
       report_debug(sprintf("SNMPagent: added server %O(#%d)\n",
-		           roxen->configurations[vsid]->name, vsid));
-	  vsdb += ([vsid: roxen->configurations[vsid]]);
+                           roxen->configurations[vsid]->name, vsid));
+          vsdb += ([vsid: roxen->configurations[vsid]]);
      }
 
     // some tabulars handlers ...
@@ -566,9 +566,9 @@ class SNMPagent {
 
     if(!zero_type(vsdb[vsid])) {
       report_debug(sprintf("SNMPagent: deleted server %O(#%d)\n",
-		           roxen->configurations[vsid]->name, vsid));
-	  vsdb -= ([ vsid: 0 ]);
-	}
+                           roxen->configurations[vsid]->name, vsid));
+          vsdb -= ([ vsid: 0 ]);
+        }
 
     return(1);
   }
@@ -622,7 +622,7 @@ class SubMIBManager {
 
     if(oid_check(oid))
       return 0; // false => the OID is already registered.
-		// What about stackable organization ?
+                // What about stackable organization ?
     if(subtreeman[oid])
       return 0; // false => already registered
     subtreeman += ([oid: manager]); // FIXME: autohiding of subtree. Is it goood?
@@ -632,7 +632,7 @@ class SubMIBManager {
 
   void create() {
   
-	report_error("SubMIBManager object [" + (string)name + "] hasn't replaced contructor!\n");
+        report_error("SubMIBManager object [" + (string)name + "] hasn't replaced contructor!\n");
   } // create
 
   //! Returns array. First element is type of second element.
@@ -655,11 +655,11 @@ class SubMIBManager {
     for(int cnt = sizeof(s)-1; cnt>0; cnt--) {
       SNMPAGENT_MSG(sprintf("finding manager for tree %O", s[..cnt]*"."));
       if(subtreeman[s[..cnt]*"."]) {
-	// good, subtree manager exists
-	string manoid = s[..cnt]*".";
+        // good, subtree manager exists
+        string manoid = s[..cnt]*".";
         SNMPAGENT_MSG(sprintf("found subtree manager: %s(%O)",
-				subtreeman[manoid]->name, manoid));
-	return subtreeman[manoid]->get(oid, pkt);
+                                subtreeman[manoid]->name, manoid));
+        return subtreeman[manoid]->get(oid, pkt);
       }
     }
 
@@ -684,7 +684,7 @@ class SubMIBManager {
       // good, we found equality
       SNMPAGENT_MSG(sprintf("%s: eq match: %O", tree, idx));
       if(idx < sizeof(idxnums)-1)
-	return (({ MIBTREE_BASE+"."+(string)idxnums[idx+1],
+        return (({ MIBTREE_BASE+"."+(string)idxnums[idx+1],
                    @submibtab[idxnums[idx+1]]() }));
     } else {
       int tlen = sizeof(tree/".");
@@ -693,11 +693,11 @@ class SubMIBManager {
         SNMPAGENT_MSG(name+": owned subtree found.");
         // hmm, now we have to find nearest subtree
         for(idx = 0; idx < sizeof(idxnums); idx++)
-	  if (soid < idxnums[idx]) {
+          if (soid < idxnums[idx]) {
             SNMPAGENT_MSG(sprintf("subtree match: %O", idxnums[idx]));
-	    return (({ MIBTREE_BASE+"."+(string)idxnums[idx],
-		     @submibtab[idxnums[idx]]() }));
-	  }
+            return (({ MIBTREE_BASE+"."+(string)idxnums[idx],
+                     @submibtab[idxnums[idx]]() }));
+          }
       }
     }
 
@@ -707,11 +707,11 @@ class SubMIBManager {
     for(int cnt = sizeof(s)-1; cnt>0; cnt--) {
       SNMPAGENT_MSG(sprintf("finding manager for tree %O", s[..cnt]*"."));
       if(subtreeman[s[..cnt]*"."]) {
-	// good, subtree manager exists
-	manoid = s[..cnt]*".";
-	SNMPAGENT_MSG(sprintf("found subtree manager: %s(%O)",
-				subtreeman[manoid]->name, manoid));
-	return subtreeman[manoid]->getnext(oid, pkt);
+        // good, subtree manager exists
+        manoid = s[..cnt]*".";
+        SNMPAGENT_MSG(sprintf("found subtree manager: %s(%O)",
+                                subtreeman[manoid]->name, manoid));
+        return subtreeman[manoid]->getnext(oid, pkt);
       }
     }
 
@@ -723,7 +723,7 @@ class SubMIBManager {
     if(idx >= 0) {
       manoid = idxnums[idx];
       SNMPAGENT_MSG(sprintf("found nearest manager: %s(%O)",
-				subtreeman[manoid]->name, manoid));
+                                subtreeman[manoid]->name, manoid));
       return subtreeman[manoid]->getnext(MIBTREE_BASE+"."+manoid, pkt);
     }
 
@@ -738,7 +738,7 @@ class SubMIBManager {
 
     for (int idx = 0; idx < len; idx++)
       if(o1[idx] > o2[idx])
-	return 1;
+        return 1;
     return 0;
   }
 
@@ -755,11 +755,11 @@ class SubMIBManager {
     for(int cnt = sizeof(s)-1; cnt>0; cnt--) {
       SNMPAGENT_MSG(sprintf("finding manager for tree %O", s[..cnt]*"."));
       if(subtreeman[s[..cnt]*"."]) {
-	// good, subtree manager exists
-	string manoid = s[..cnt]*".";
+        // good, subtree manager exists
+        string manoid = s[..cnt]*".";
         SNMPAGENT_MSG(sprintf("found subtree manager: %s(%O)",
-				subtreeman[manoid]->name, manoid));
-	return subtreeman[manoid]->set(oid, val, pkt);
+                                subtreeman[manoid]->name, manoid));
+        return subtreeman[manoid]->set(oid, val, pkt);
       }
     }
 
@@ -823,22 +823,22 @@ class SubMIBSystem {
   void create() {
 
     submibtab = ([
-	  // system "2.1.1"
-	  // system.sysDescr
-	  "2.1.1.1.0": get_description,
-	  // system.sysObjectID
-	  "2.1.1.2.0": get_sysoid,
-	  // system.sysUpTime
-	  "2.1.1.3.0": get_sysuptime,
-	  // system.sysContact
-	  "2.1.1.4.0": get_syscontact,
-	  // system.sysName
-	  "2.1.1.5.0": get_sysname,
-	  // system.sysLocation
-	  "2.1.1.6.0": get_syslocation,
-	  // system.sysServices
-	  "2.1.1.7.0": get_sysservices,
-	]);
+          // system "2.1.1"
+          // system.sysDescr
+          "2.1.1.1.0": get_description,
+          // system.sysObjectID
+          "2.1.1.2.0": get_sysoid,
+          // system.sysUpTime
+          "2.1.1.3.0": get_sysuptime,
+          // system.sysContact
+          "2.1.1.4.0": get_syscontact,
+          // system.sysName
+          "2.1.1.5.0": get_sysname,
+          // system.sysLocation
+          "2.1.1.6.0": get_syslocation,
+          // system.sysServices
+          "2.1.1.7.0": get_sysservices,
+        ]);
   } // create
 
   array|int getnext(string oid, mapping|void pkt) {
@@ -870,68 +870,68 @@ class SubMIBSnmp {
   void create(object agent) {
 
     submibtab = ([
-	// snmp
-	//"2.1.11": ({ 0, get_null, "2.1.11.1.0" }),
-	// snmp.snmpInPkts
-	"2.1.11.1.0": agent->get_snmpinpkts,
-	// snmp.snmpOutPkts
-	"2.1.11.2.0": agent->get_snmpoutpkts,
-	// snmp.snmpBadVers
-	"2.1.11.3.0": agent->get_snmpbadver,
-	// snmp.snmpInBadCommunityNames
-	"2.1.11.4.0": agent->get_snmpbadcommnames,
-	// snmp.snmpInBadCommunityUses
-	"2.1.11.5.0": get_null,
-	// snmp.snmpInASNParseErrs
-	"2.1.11.6.0": get_null,
-	// 7 is not used
-	// snmp.snmpInTooBigs
-	"2.1.11.8.0": get_null,
-	// snmp.snmpInNoSuchNames
-	"2.1.11.9.0": get_null,
-	// snmp.snmpInBadValues
-	"2.1.11.10.0": get_null,
-	// snmp.snmpInReadOnlys
-	"2.1.11.11.0": get_null,
-	// snmp.snmpInGenErrs
-	"2.1.11.12.0": get_null,
-	// snmp.snmpInTotalReqVars
-	"2.1.11.13.0": get_null,
-	// snmp.snmpInTotalSetVars
-	"2.1.11.14.0": get_null,
-	// snmp.snmpInGetRequests
-	"2.1.11.15.0": get_null,
-	// snmp.snmpInGetNexts
-	"2.1.11.16.0": get_null,
-	// snmp.snmpInSetRequests
-	"2.1.11.17.0": get_null,
-	// snmp.snmpInGetResponses
-	"2.1.11.18.0": get_null,
-	// snmp.snmpInTraps
-	"2.1.11.19.0": get_null,
-	// snmp.snmpOutTooBigs
-	"2.1.11.20.0": get_null,
-	// snmp.snmpOutNoSuchNames
-	"2.1.11.21.0": get_null,
-	// snmp.snmpOutBadValues
-	"2.1.11.22.0": get_null,
-	// 23 is not used
-	// snmp.snmpOutGenErrs
-	"2.1.11.24.0": get_null,
-	// snmp.snmpOutGetRequests
-	"2.1.11.25.0": get_null,
-	// snmp.snmpOutGetNexts
-	"2.1.11.26.0": get_null,
-	// snmp.snmpOutSetRequests
-	"2.1.11.27.0": get_null,
-	// snmp.snmpOutGetResponses
-	"2.1.11.28.0": get_null,
-	// snmp.snmpOutTraps
-	"2.1.11.29.0": get_null,
-	// snmp.snmpEnableAuthenTraps
-	"2.1.11.30.0": agent->get_snmpenaauth,
-	
-	]);
+        // snmp
+        //"2.1.11": ({ 0, get_null, "2.1.11.1.0" }),
+        // snmp.snmpInPkts
+        "2.1.11.1.0": agent->get_snmpinpkts,
+        // snmp.snmpOutPkts
+        "2.1.11.2.0": agent->get_snmpoutpkts,
+        // snmp.snmpBadVers
+        "2.1.11.3.0": agent->get_snmpbadver,
+        // snmp.snmpInBadCommunityNames
+        "2.1.11.4.0": agent->get_snmpbadcommnames,
+        // snmp.snmpInBadCommunityUses
+        "2.1.11.5.0": get_null,
+        // snmp.snmpInASNParseErrs
+        "2.1.11.6.0": get_null,
+        // 7 is not used
+        // snmp.snmpInTooBigs
+        "2.1.11.8.0": get_null,
+        // snmp.snmpInNoSuchNames
+        "2.1.11.9.0": get_null,
+        // snmp.snmpInBadValues
+        "2.1.11.10.0": get_null,
+        // snmp.snmpInReadOnlys
+        "2.1.11.11.0": get_null,
+        // snmp.snmpInGenErrs
+        "2.1.11.12.0": get_null,
+        // snmp.snmpInTotalReqVars
+        "2.1.11.13.0": get_null,
+        // snmp.snmpInTotalSetVars
+        "2.1.11.14.0": get_null,
+        // snmp.snmpInGetRequests
+        "2.1.11.15.0": get_null,
+        // snmp.snmpInGetNexts
+        "2.1.11.16.0": get_null,
+        // snmp.snmpInSetRequests
+        "2.1.11.17.0": get_null,
+        // snmp.snmpInGetResponses
+        "2.1.11.18.0": get_null,
+        // snmp.snmpInTraps
+        "2.1.11.19.0": get_null,
+        // snmp.snmpOutTooBigs
+        "2.1.11.20.0": get_null,
+        // snmp.snmpOutNoSuchNames
+        "2.1.11.21.0": get_null,
+        // snmp.snmpOutBadValues
+        "2.1.11.22.0": get_null,
+        // 23 is not used
+        // snmp.snmpOutGenErrs
+        "2.1.11.24.0": get_null,
+        // snmp.snmpOutGetRequests
+        "2.1.11.25.0": get_null,
+        // snmp.snmpOutGetNexts
+        "2.1.11.26.0": get_null,
+        // snmp.snmpOutSetRequests
+        "2.1.11.27.0": get_null,
+        // snmp.snmpOutGetResponses
+        "2.1.11.28.0": get_null,
+        // snmp.snmpOutTraps
+        "2.1.11.29.0": get_null,
+        // snmp.snmpEnableAuthenTraps
+        "2.1.11.30.0": agent->get_snmpenaauth,
+        
+        ]);
 
   }
 }
@@ -948,43 +948,43 @@ class SubMIBRoxenVS {
   void create(object agent) {
 
     submibtab = ([
-	// enterprises
-	// hack2 :)
-	tree+".0": agent->get_virtserv,
+        // enterprises
+        // hack2 :)
+        tree+".0": agent->get_virtserv,
     ]);
   }
 }
 
 /*
-	    switch (attrname) {
-	      case RISMIB_BASE_WEBSERVER+".1.0":
-	        // HACK! For testing purpose only!
-	        // Server restart = 1; server shutdown = 2
-	        if(chk_access("rw", pdata[msgid])) {
-		  setflg = 1;
-		  rdata[attrname] += ({ "int", attrval });
-	          rdata["1.3.6.1.2.1.1.3.0"] += ({"tick", get_uptime() });
-		  if(attrval == 1 || attrval == 2) {
-		    report_warning("SNMPagent: Initiated " + ((attrval==1)?"restart":"shutdown") + " from snmp://" + pdata[msgid]->community + "@" + pdata[msgid]->ip + "/\n");
-	  	    if (attrval == 1) roxen->restart(0.5);
-	  	    if (attrval == 2) roxen->shutdown(0.5);
-		  }
-	        } else
-	          snmpbadcommuses++;
-	        break;
-	      case MIBTREE_BASE+".2.1.11.30.0":
-	        // The standard-based (RFC1213) method of disabling auth. traps
-	        if(chk_access("rw", pdata[msgid])) {
-		  setflg = 1;
-		  rdata[attrname] += ({ "int", attrval });
-	          rdata["1.3.6.1.2.1.1.3.0"] += ({"tick", get_uptime() });
-		  if(attrval == 0 || attrval == 1) {
-		    report_warning("SNMPagent: Requested " + attrval?"en":"dis" + "abling of auth. traps from snmp://" + pdata[msgid]->community + "@" + pdata[msgid]->ip + "/\n");
-	  	    // here will be ena/disabling of such traps
-		  }
-	        } else
-	          snmpbadcommuses++;
-	        break;
+            switch (attrname) {
+              case RISMIB_BASE_WEBSERVER+".1.0":
+                // HACK! For testing purpose only!
+                // Server restart = 1; server shutdown = 2
+                if(chk_access("rw", pdata[msgid])) {
+                  setflg = 1;
+                  rdata[attrname] += ({ "int", attrval });
+                  rdata["1.3.6.1.2.1.1.3.0"] += ({"tick", get_uptime() });
+                  if(attrval == 1 || attrval == 2) {
+                    report_warning("SNMPagent: Initiated " + ((attrval==1)?"restart":"shutdown") + " from snmp://" + pdata[msgid]->community + "@" + pdata[msgid]->ip + "/\n");
+                    if (attrval == 1) roxen->restart(0.5);
+                    if (attrval == 2) roxen->shutdown(0.5);
+                  }
+                } else
+                  snmpbadcommuses++;
+                break;
+              case MIBTREE_BASE+".2.1.11.30.0":
+                // The standard-based (RFC1213) method of disabling auth. traps
+                if(chk_access("rw", pdata[msgid])) {
+                  setflg = 1;
+                  rdata[attrname] += ({ "int", attrval });
+                  rdata["1.3.6.1.2.1.1.3.0"] += ({"tick", get_uptime() });
+                  if(attrval == 0 || attrval == 1) {
+                    report_warning("SNMPagent: Requested " + attrval?"en":"dis" + "abling of auth. traps from snmp://" + pdata[msgid]->community + "@" + pdata[msgid]->ip + "/\n");
+                    // here will be ena/disabling of such traps
+                  }
+                } else
+                  snmpbadcommuses++;
+                break;
 */
 
 //! roxenis enterprise subtree manager
@@ -1024,47 +1024,47 @@ class SubMIBRoxenVSTable {
     idx = ((int)(soid/".")[2]);
     switch ((soid/".")[1]) {
 
-	case "1": // VS_INDEX
-    	  vname = agent->get_virtservname(idx);
-    	  if(!stringp(vname))
-	    return ({}); // wrong index
-    	  return (OBJ_INT(idx));
+        case "1": // VS_INDEX
+          vname = agent->get_virtservname(idx);
+          if(!stringp(vname))
+            return ({}); // wrong index
+          return (OBJ_INT(idx));
 
-	case "2": // VS_NAME
-    	  vname = agent->get_virtservname(idx);
-    	  if(!stringp(vname))
-	    return ({}); // wrong index
-    	  return (OBJ_STR(vname));
+        case "2": // VS_NAME
+          vname = agent->get_virtservname(idx);
+          if(!stringp(vname))
+            return ({}); // wrong index
+          return (OBJ_STR(vname));
 
-	case "3": // VS_DESC
-    	  vname = agent->get_virtservdesc(idx);
-    	  if(!stringp(vname))
-	    return ({}); // wrong index
-    	  return (OBJ_STR(vname));
+        case "3": // VS_DESC
+          vname = agent->get_virtservdesc(idx);
+          if(!stringp(vname))
+            return ({}); // wrong index
+          return (OBJ_STR(vname));
 
-	case "4": // VS_SDATA
-    	  vdata = agent->get_virtservsdata(idx);
-    	  if(vdata < 0)
-	    return ({}); // wrong index
-    	  return (OBJ_COUNT(vdata));
+        case "4": // VS_SDATA
+          vdata = agent->get_virtservsdata(idx);
+          if(vdata < 0)
+            return ({}); // wrong index
+          return (OBJ_COUNT(vdata));
 
-	case "5": // VS_RDATA
-    	  vdata = agent->get_virtservrdata(idx);
-    	  if(vdata < 0)
-	    return ({}); // wrong index
-    	  return (OBJ_COUNT(vdata));
+        case "5": // VS_RDATA
+          vdata = agent->get_virtservrdata(idx);
+          if(vdata < 0)
+            return ({}); // wrong index
+          return (OBJ_COUNT(vdata));
 
-	case "6": // VS_SHDRS
-    	  vdata = agent->get_virtservshdrs(idx);
-    	  if(vdata < 0)
-	    return ({}); // wrong index
-    	  return (OBJ_COUNT(vdata));
+        case "6": // VS_SHDRS
+          vdata = agent->get_virtservshdrs(idx);
+          if(vdata < 0)
+            return ({}); // wrong index
+          return (OBJ_COUNT(vdata));
 
-	case "7": // VS_REQS
-    	  vdata = agent->get_virtservreqs(idx);
-    	  if(vdata < 0)
-	    return ({}); // wrong index
-    	  return (OBJ_COUNT(vdata));
+        case "7": // VS_REQS
+          vdata = agent->get_virtservreqs(idx);
+          if(vdata < 0)
+            return ({}); // wrong index
+          return (OBJ_COUNT(vdata));
 
     }
     return ({});
@@ -1084,25 +1084,25 @@ class SubMIBRoxenVSTable {
     arr = allocate(5);
     switch(idx = sscanf(soid-(tree+"."), "%d.%d.%d.%s", arr[0], arr[1], arr[2], arr[3])) {
 
-	case 3:
-	  break;
+        case 3:
+          break;
 
-	case 0:
-	  arr[0] = 1;
-	case 1:
-	  arr[1] = 1;
-	case 2:
-	  arr[2] = 0;
-	  break;
+        case 0:
+          arr[0] = 1;
+        case 1:
+          arr[1] = 1;
+        case 2:
+          arr[2] = 0;
+          break;
 
-	default:
-	  return ({});
+        default:
+          return ({});
     }
     if(!stringp(agent->get_virtservname(arr[2]+1))) {  // check on correct index
       SNMPAGENT_MSG(sprintf("DEB: idx:%O soid: %O arr: %O", idx, soid, arr));
       arr[1]++;
       if(arr[1] > 7)
-	    return ({}); // outside of current manager scope
+            return ({}); // outside of current manager scope
       arr[2] = 0;
     }
     arr[2]++;
@@ -1114,47 +1114,47 @@ class SubMIBRoxenVSTable {
     //switch ((soid/".")[1]) {
     switch (arr[1]) {
 
-	case 1: // VS_INDEX
-	  vname = agent->get_virtservname(idx);  // only checking
-	  if(!stringp(vname))
-	    return ({}); // wrong index
-	  return (({noid, @OBJ_INT(idx)}));
+        case 1: // VS_INDEX
+          vname = agent->get_virtservname(idx);  // only checking
+          if(!stringp(vname))
+            return ({}); // wrong index
+          return (({noid, @OBJ_INT(idx)}));
 
-	case 2: // VS_NAME
-	  vname = agent->get_virtservname(idx);
-	  if(!stringp(vname))
-	    return ({}); // wrong index
-	  return (({noid, @OBJ_STR(vname)}));
+        case 2: // VS_NAME
+          vname = agent->get_virtservname(idx);
+          if(!stringp(vname))
+            return ({}); // wrong index
+          return (({noid, @OBJ_STR(vname)}));
 
-	case 3: // VS_DESCR
-	  vname = agent->get_virtservname(idx);  // FIXME:  change to descr!
-	  if(!stringp(vname))
-	    return ({}); // wrong index
-	  return (({noid, @OBJ_STR(vname)}));
+        case 3: // VS_DESCR
+          vname = agent->get_virtservname(idx);  // FIXME:  change to descr!
+          if(!stringp(vname))
+            return ({}); // wrong index
+          return (({noid, @OBJ_STR(vname)}));
 
-	case 4: // VS_SDATA
-	  vdata = agent->get_virtservsdata(idx);
-	  if(vdata < 0)
-	    return ({}); // wrong index
-	  return (({noid, @OBJ_COUNT(vdata)}));
+        case 4: // VS_SDATA
+          vdata = agent->get_virtservsdata(idx);
+          if(vdata < 0)
+            return ({}); // wrong index
+          return (({noid, @OBJ_COUNT(vdata)}));
 
-	case 5: // VS_RDATA
-	  vdata = agent->get_virtservrdata(idx);
-	  if(vdata < 0)
-	    return ({}); // wrong index
-	  return (({noid, @OBJ_COUNT(vdata)}));
+        case 5: // VS_RDATA
+          vdata = agent->get_virtservrdata(idx);
+          if(vdata < 0)
+            return ({}); // wrong index
+          return (({noid, @OBJ_COUNT(vdata)}));
 
-	case 6: // VS_SHDRS
-	  vdata = agent->get_virtservshdrs(idx);
-	  if(vdata < 0)
-	    return ({}); // wrong index
-	  return (({noid, @OBJ_COUNT(vdata)}));
+        case 6: // VS_SHDRS
+          vdata = agent->get_virtservshdrs(idx);
+          if(vdata < 0)
+            return ({}); // wrong index
+          return (({noid, @OBJ_COUNT(vdata)}));
 
-	case 7: // VS_REQS
-	  vdata = agent->get_virtservreqs(idx);
-	  if(vdata < 0)
-	    return ({}); // wrong index
-	  return (({noid, @OBJ_COUNT(vdata)}));
+        case 7: // VS_REQS
+          vdata = agent->get_virtservreqs(idx);
+          if(vdata < 0)
+            return ({}); // wrong index
+          return (({noid, @OBJ_COUNT(vdata)}));
 
     }
     return ({});
@@ -1195,9 +1195,9 @@ class SubMIBRoxenBoot {
       SNMPAGENT_MSG(sprintf("%O=%O - access granted", name, val));
       setflg = 1;
       if(val == 1 || val == 2) {
-	report_warning("SNMPagent: Initiated " + ((val==1)?"restart":"shutdown") + " from snmp://" + pkt->community + "@" + pkt->ip + "/\n");
-	if (val == 1) roxen->restart(0.5);
-	if (val == 2) roxen->shutdown(0.5);
+        report_warning("SNMPagent: Initiated " + ((val==1)?"restart":"shutdown") + " from snmp://" + pkt->community + "@" + pkt->ip + "/\n");
+        if (val == 1) roxen->restart(0.5);
+        if (val == 2) roxen->shutdown(0.5);
       }
     }
     return ({ setflg, "" });

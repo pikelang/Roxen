@@ -17,7 +17,7 @@ user moves through each page in order and the module keeps track of all
 the user's choices.";
 
 string internal_verify(string t, mapping args, string contents, int l, int ol,
-		       mapping m)
+                       mapping m)
 {
   if(sizeof(args))
     contents = make_container("if", args, contents);
@@ -26,7 +26,7 @@ string internal_verify(string t, mapping args, string contents, int l, int ol,
 }
 
 string internal_page(string t, mapping args, string contents, int l, int ol,
-		     mapping f, RequestID id)
+                     mapping f, RequestID id)
 {
   mapping m = ([ "verify":({ }) ]);
 
@@ -36,7 +36,7 @@ string internal_page(string t, mapping args, string contents, int l, int ol,
 }
 
 string internal_done(string t, mapping args, string contents, int l, int ol,
-		     mapping f, RequestID id)
+                     mapping f, RequestID id)
 {
   f->done=contents;
 }
@@ -52,15 +52,15 @@ string old_pike = "";
 object old_wizard = 0;
 
 string tag_wizard(string t, mapping args, string contents, object id,
-		  object file, mapping defines)
+                  object file, mapping defines)
 {
   if(!id->misc->line)
     id->misc->line=-1;
   mapping f = ([ "pages":({}) ]);
   string pike = ("inherit \"wizard\";\n" +
-		 sprintf("# "+id->misc->line+" %O\n"
-			 "string name = %O;\n",
-			 id->not_query, (args->name||"unnamed")));
+                 sprintf("# "+id->misc->line+" %O\n"
+                         "string name = %O;\n",
+                         id->not_query, (args->name||"unnamed")));
 
   if (args->method || args->enctype) {
     string method = "";
@@ -75,10 +75,10 @@ string tag_wizard(string t, mapping args, string contents, object id,
   foreach(glob("*-label", indices(args)), string a)
   {
     pike += sprintf("# "+id->misc->line+" %O\n",
-		    id->not_query);
+                    id->not_query);
     pike += sprintf("  string "+replace(replace(a,"-","_"),({"(",")","+",">"}),
-					({"","","",""}))+
-		    " = %O;\n", args[a]);
+                                        ({"","","",""}))+
+                    " = %O;\n", args[a]);
   }
 
 
@@ -86,48 +86,48 @@ string tag_wizard(string t, mapping args, string contents, object id,
   {
     pike += sprintf("# "+id->misc->line+" %O\n", id->not_query);
     pike += sprintf("mixed wizard_done(object id)\n"
-		    "{\n"
-		    "  id->not_query = %O;\n\""+
-		    "  return id->conf->get_file( id );\n"
-		    "}\n\n",
-		    fix_relative(args->ok, id));
+                    "{\n"
+                    "  id->not_query = %O;\n\""+
+                    "  return id->conf->get_file( id );\n"
+                    "}\n\n",
+                    fix_relative(args->ok, id));
   }
 
   parse_html_lines(contents,
-		   ([]),
-		   ([ "page":internal_page,
-		      "done":internal_done ]),
-		   (int)id->misc->line, f, id);
+                   ([]),
+                   ([ "page":internal_page,
+                      "done":internal_done ]),
+                   (int)id->misc->line, f, id);
   if (f->done && !args->ok) {
     pike += sprintf("mixed wizard_done(object id)\n"
-		    "{\n"
-		    "  return parse_rxml(%O,id);\n"
-		    "}\n", f->done);
+                    "{\n"
+                    "  return parse_rxml(%O,id);\n"
+                    "}\n", f->done);
   }
   foreach(f->pages, array q)
   {
     pike += sprintf("# "+q[1]+" %O\n", id->not_query);
     pike += sprintf("string page_"+p+"(object id) {" +
-		    "  return parse_rxml(%O,id);\n"
-		    "}\n", q[0]);
+                    "  return parse_rxml(%O,id);\n"
+                    "}\n", q[0]);
 
     // Code to enable verification of wizard pages.
     if(q[2] && sizeof(q[2])) {
       // FIXME line numbers for verify sections.
       pike += "int verify_"+p+"(object id) {\n"
-	      "  int c;\n"
-	      "  string s = \"\";\n"
-	      "  id->misc->__wizard_error__ = ([ ]);\n";
+              "  int c;\n"
+              "  string s = \"\";\n"
+              "  id->misc->__wizard_error__ = ([ ]);\n";
       foreach(q[2], array v)
-	pike += sprintf("  s = parse_rxml(%O, id);\n"
-			"  if(id->misc->defines[\" _ok\"]) {\n"
-			"    id->misc->__wizard_error__->id_%d = s;\n"
-			"    c++;\n"
-			"  }\n", v[0], v[2]);
+        pike += sprintf("  s = parse_rxml(%O, id);\n"
+                        "  if(id->misc->defines[\" _ok\"]) {\n"
+                        "    id->misc->__wizard_error__->id_%d = s;\n"
+                        "    c++;\n"
+                        "  }\n", v[0], v[2]);
 
       pike += "  if(c)\n"
-	      "    return 1;\n"
-	      "}\n";
+              "    return 1;\n"
+              "}\n";
     }
 
     p++;
@@ -155,7 +155,7 @@ string tag_wizard(string t, mapping args, string contents, object id,
 }
 
 string tag_wizard_error(string t, mapping args, object id,
-			object file, mapping defines)
+                        object file, mapping defines)
 {
   if(id->misc->__wizard_error__ && args->id &&
      id->misc->__wizard_error__[args->id])

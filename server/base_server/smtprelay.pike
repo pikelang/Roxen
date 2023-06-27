@@ -44,19 +44,19 @@ void smtp_relay_start()
   Sql.Sql sql = DBManager.cached_get("local");
 
   sql->query("CREATE TABLE IF NOT EXISTS send_q ("+
-	     (({
-	       "id INT AUTO_INCREMENT PRIMARY KEY",
-	       "sender VARCHAR(255) NOT NULL",
-	       "user VARCHAR(255) NOT NULL",
-	       "domain VARCHAR(255) NOT NULL",
-	       "mailid VARCHAR(32) NOT NULL",
-	       "received_at INT NOT NULL",
-	       "send_at INT NOT NULL",
-	       "times INT NOT NULL",
-	       "remoteident VARCHAR(255) NOT NULL",
-	       "remoteip VARCHAR(32) NOT NULL",
-	       "remotename VARCHAR(255) NOT NULL",
-	     }) * ",") + ")");
+             (({
+               "id INT AUTO_INCREMENT PRIMARY KEY",
+               "sender VARCHAR(255) NOT NULL",
+               "user VARCHAR(255) NOT NULL",
+               "domain VARCHAR(255) NOT NULL",
+               "mailid VARCHAR(32) NOT NULL",
+               "received_at INT NOT NULL",
+               "send_at INT NOT NULL",
+               "times INT NOT NULL",
+               "remoteident VARCHAR(255) NOT NULL",
+               "remoteip VARCHAR(32) NOT NULL",
+               "remotename VARCHAR(255) NOT NULL",
+             }) * ",") + ")");
 
   DBManager.is_module_table(0, "local", "send_q", "Mail send queue");
 
@@ -94,9 +94,9 @@ protected string mktimestamp(int t)
   off /= 60;
   
   return(sprintf("%s, %02d %s %04d %02d:%02d:%02d %+03d%02d (%s)",
-		 weekdays[lt->wday], lt->mday, months[lt->mon],
-		 1900 + lt->year, lt->hour, lt->min, lt->sec,
-		 off/60, off%60, tz));
+                 weekdays[lt->wday], lt->mday, months[lt->mon],
+                 1900 + lt->year, lt->hour, lt->min, lt->sec,
+                 off/60, off%60, tz));
 }
 
 protected string get_addr(string addr)
@@ -119,9 +119,9 @@ protected string get_addr(string addr)
   for(i = 0; i < sizeof(a); i++) {
     if (intp(a[i])) {
       if (a[i] == '@') {
-	a[i] = "@";
+        a[i] = "@";
       } else {
-	a[i] = "";
+        a[i] = "";
       }
     }
   }
@@ -137,8 +137,8 @@ constant ACON_LOOP = -1;
 constant ACON_DNS_FAIL = -2;
 
 protected void async_connected(int status,
-			       function(int|object, mixed ...:void) cb,
-			       object f, mixed ... args)
+                               function(int|object, mixed ...:void) cb,
+                               object f, mixed ... args)
 {
   /* Done */
   cb(status && f, @args);
@@ -241,16 +241,16 @@ class SMTP_Reader
 
       int i;
       for(i=0; i < sizeof(arr)-1; i++) {
-	if ((sizeof(arr[i]) < 3) ||
-	    ((sizeof(arr[i]) > 3) && (arr[i][3] == '-'))) {
-	  // Broken code, or continuation line.
-	  if (sizeof(arr[i]) > 4) {
-	    partial += ({ arr[i][4..] });
-	  }
-	} else {
-	  codes += ({ ({ arr[i][..2], partial + ({ arr[i][4..] }) }) });
-	  partial = ({});
-	}
+        if ((sizeof(arr[i]) < 3) ||
+            ((sizeof(arr[i]) > 3) && (arr[i][3] == '-'))) {
+          // Broken code, or continuation line.
+          if (sizeof(arr[i]) > 4) {
+            partial += ({ arr[i][4..] });
+          }
+        } else {
+          codes += ({ ({ arr[i][..2], partial + ({ arr[i][4..] }) }) });
+          partial = ({});
+        }
       }
     }
   }
@@ -266,9 +266,9 @@ class SMTP_Reader
       // Some data left in the buffer.
       // Add a terminating "\r\n", and parse it.
       if (read_buffer[-1] == '\r') {
-	read_buffer += "\n";
+        read_buffer += "\n";
       } else {
-	read_buffer += "\r\n";
+        read_buffer += "\r\n";
       }
       parse_buffer();
     }
@@ -327,13 +327,13 @@ class SMTP_Reader
     send_buffer = send_buffer[n..];
     if (send_buffer == "") {
       if (sizeof(codes)) {
-	// Already received a reply?
-	// This shouldn't happen...
-	// But better safe than sorry...
-	con->set_nonblocking(0,0,0);
+        // Already received a reply?
+        // This shouldn't happen...
+        // But better safe than sorry...
+        con->set_nonblocking(0,0,0);
 
-	call_callback();
-	return;
+        call_callback();
+        return;
       }
       con->set_nonblocking(got_data, 0, con_closed);
       return;
@@ -344,7 +344,7 @@ class SMTP_Reader
   string last_command = "";
 
   protected void send_command(string command,
-			      function(string, array(string):void) cb)
+                              function(string, array(string):void) cb)
   {
     last_command = command;
 
@@ -455,9 +455,9 @@ class MailSender
       break;
     default:
       if (code && (code[0] == '5')) {
-	send_bounce_and_stop(code, text);
+        send_bounce_and_stop(code, text);
       } else {
-	send_bounce(code, text);
+        send_bounce(code, text);
       }
       break;
     }
@@ -514,16 +514,16 @@ class MailSender
     case "250":
       // MAIL FROM: OK.
       send_command(sprintf("RCPT TO:<%s@%s>",
-			   message->user, message->domain),
-		   got_rcpt_to_reply);
+                           message->user, message->domain),
+                   got_rcpt_to_reply);
       break;
     default:
       if (code && (code[0] == '5')) {
-	// The sender isn't allowed to send messages to this server.
-	send_bounce_and_stop(code, text);
+        // The sender isn't allowed to send messages to this server.
+        send_bounce_and_stop(code, text);
       } else {
-	// Try the next MX.
-	send_command("QUIT", got_quit_reply_fail);
+        // Try the next MX.
+        send_command("QUIT", got_quit_reply_fail);
       }
       break;
     }
@@ -535,7 +535,7 @@ class MailSender
     case "250":
       // HELO OK.
       send_command(sprintf("MAIL FROM:<%s>", message->sender),
-		   got_mail_from_reply);
+                   got_mail_from_reply);
       break;
     default:
       // Try the next MX.
@@ -550,24 +550,24 @@ class MailSender
     case "250":
       // EHLO OK.
       if (sizeof(text) > 1) {
-	// Parse EHLO reply
-	esmtp_features = [multiset(string)](<
-	  @Array.map(text[1..], lower_case)
-	>);
+        // Parse EHLO reply
+        esmtp_features = [multiset(string)](<
+          @Array.map(text[1..], lower_case)
+        >);
       }
       string extras = "";
       if (esmtp_features["8bitmime"]) {
-	extras += " BODY=8BITMIME";
+        extras += " BODY=8BITMIME";
       }
       if (esmtp_features["size"]) {
-	array|Stdio.Stat a = mail->stat();
-	if (a && (a[1] >= 0)) {
-	  // Add some margin for safety.
-	  extras += " SIZE="+(a[1]+128);
-	}
+        array|Stdio.Stat a = mail->stat();
+        if (a && (a[1] >= 0)) {
+          // Add some margin for safety.
+          extras += " SIZE="+(a[1]+128);
+        }
       }
       send_command(sprintf("MAIL FROM:<%s>%s", message->sender, extras),
-		   got_mail_from_reply);
+                   got_mail_from_reply);
       break;
     case "221":
       // Server too busy?
@@ -586,7 +586,7 @@ class MailSender
       // Try HELO.
       message->prot = "SMTP";
       send_command(sprintf("HELO %s", [string] query("mail_hostname")),
-		   got_helo_reply);
+                   got_helo_reply);
       break;
     }
   }
@@ -597,7 +597,7 @@ class MailSender
     case "220":
       message->prot = "ESMTP";
       send_command(sprintf("EHLO %s", [string] query("mail_hostname")),
-		   got_ehlo_reply);
+                   got_ehlo_reply);
       break;
     case 0:
       // Immediate disconnect.
@@ -618,43 +618,43 @@ class MailSender
     if (intp(c)) {
       switch(c) {
       case ACON_REFUSED:
-	// Try the next one.
-	connect_and_send();
-	break;
+        // Try the next one.
+        connect_and_send();
+        break;
       case ACON_LOOP:
-	if (servercount == 1) {
-	  // We're the primary MX!
-	  bounce(message, "554",
-		 sprintf("MX list for %s points back to %s(%s)\n"
-			 "<%s@%s>... Local configuration error",
-			 message->domain, message->remote_mta,
-			 [string] query("mail_hostname"),
-			 message->user, message->domain)/"\n",
-		 "");
-	  send_done(SEND_ADDR_FAIL, message);
-	  return;
-	}
-	// Try again later.
-	send_done(SEND_FAIL, message);
-	break;;
+        if (servercount == 1) {
+          // We're the primary MX!
+          bounce(message, "554",
+                 sprintf("MX list for %s points back to %s(%s)\n"
+                         "<%s@%s>... Local configuration error",
+                         message->domain, message->remote_mta,
+                         [string] query("mail_hostname"),
+                         message->user, message->domain)/"\n",
+                 "");
+          send_done(SEND_ADDR_FAIL, message);
+          return;
+        }
+        // Try again later.
+        send_done(SEND_FAIL, message);
+        break;;
       case ACON_DNS_FAIL:
-	if (sizeof(servers) == 1) {
-	  // Permanently bad address.
-	  message->status = "5.1.2";
-	  bounce(message, "550",
-		 sprintf("DNS lookup failed for SMTP server %s",
-			 message->remote_mta)/"\n",
-		 "");
-	  send_done(SEND_DNS_UNKNOWN, message);
-	  return;
-	}
-	bounce(message, "550",
-	       sprintf("DNS lookup failed for SMTP server %s",
-		       message->remote_mta)/"\n",
-	       "");
-	// Try the next server.
-	connect_and_send();
-	break;
+        if (sizeof(servers) == 1) {
+          // Permanently bad address.
+          message->status = "5.1.2";
+          bounce(message, "550",
+                 sprintf("DNS lookup failed for SMTP server %s",
+                         message->remote_mta)/"\n",
+                 "");
+          send_done(SEND_DNS_UNKNOWN, message);
+          return;
+        }
+        bounce(message, "550",
+               sprintf("DNS lookup failed for SMTP server %s",
+                       message->remote_mta)/"\n",
+               "");
+        // Try the next server.
+        connect_and_send();
+        break;
       }
       return;
     }
@@ -688,7 +688,7 @@ class MailSender
 
 #ifdef RELAY_DEBUG
     report_debug(sprintf("SMTP: Trying with the SMTP server at %s\n",
-			 servers[server]));
+                         servers[server]));
 #endif /* RELAY_DEBUG */
 
     esmtp_features = (<>);
@@ -712,14 +712,14 @@ class MailSender
   }
 
   void create(mapping(string:string) m,
-	      function(int, mapping(string:string):void) cb)
+              function(int, mapping(string:string):void) cb)
   {
     string fname = combine_path([string]query("mail_spooldir"), m->mailid);
 
     mail = Stdio.File();
     if (!(mail->open(fname, "r"))) {
       report_error(sprintf("Failed to open spoolfile %O: %s\n",
-			   fname, strerror(mail->errno())));
+                           fname, strerror(mail->errno())));
       call_out(cb, 0, SEND_OPEN_FAIL, m);
       return;
     }
@@ -730,8 +730,8 @@ class MailSender
 
 #ifdef RELAY_DEBUG
     report_debug(sprintf("Sending %O to %s@%s from %s...\n",
-			 message->mailid, message->user, message->domain,
-			 message->sender));
+                         message->mailid, message->user, message->domain,
+                         message->sender));
 #endif /* RELAY_DEBUG */
 
     smtp_dns->get_mx(message->domain, got_mx);    
@@ -749,32 +749,32 @@ protected void mail_sent(int res, mapping(string:string) message)
   id->time = time();
   id->cookies = ([]);
   id->not_query = sprintf("From:%s;To:%s@%s;%s",
-			  message->sender,
-			  message->user, message->domain,
-			  message->mailid);
+                          message->sender,
+                          message->user, message->domain,
+                          message->mailid);
   if (res) {
     // res != SEND_FAIL
     switch(res) {
     case SEND_OK:
       log(([ "error":200, "len":message->sent ]), id);
       report_notice(sprintf("SMTP: Mail %O sent successfully!\n",
-			    message->mailid));
+                            message->mailid));
       break;
     case SEND_OPEN_FAIL:
       log(([ "error":404 ]), id);
       report_error(sprintf("SMTP: Failed to open %O!\n",
-			   message->mailid));
+                           message->mailid));
       
       return;	// FIXME: Should we remove it from the queue or not?
     case SEND_ADDR_FAIL:
       log(([ "error":410 ]), id);
       report_error(sprintf("SMTP: Permanently bad address %s@%s\n",
-			   message->user, message->domain));
+                           message->user, message->domain));
       break;
     case SEND_DNS_UNKNOWN:
       log(([ "error":503 ]), id);
       report_error(sprintf("SMTP: Unknown SMTP server %s for domain %s\n",
-			   message->remote_mta, message->domain));
+                           message->remote_mta, message->domain));
       break;
     }
 
@@ -787,7 +787,7 @@ protected void mail_sent(int res, mapping(string:string) message)
     sql->query("DELETE FROM send_q WHERE id=%s", message->id);
 
     array a = sql->query("SELECT id FROM send_q WHERE mailid=%s",
-			 message->mailid);
+                         message->mailid);
 
     if (!a || !sizeof(a)) {
       rm(combine_path([string]query("mail_spooldir"), message->mailid));
@@ -800,7 +800,7 @@ protected void mail_sent(int res, mapping(string:string) message)
     // res == SEND_FAIL
     log(([ "error":408 ]), id);
     report_notice(sprintf("SMTP: Sending of %O failed!\n",
-			  message->mailid));
+                          message->mailid));
   }
 }
 
@@ -823,8 +823,8 @@ protected void send_mail()
   // Select some mail to send.
   array(mapping(string:string)) m =
     sql->query("SELECT * FROM send_q WHERE send_at < %d "
-	       "ORDER BY mailid, domain",
-	       time());
+               "ORDER BY mailid, domain",
+               time());
 
   // FIXME: Add some grouping code here.
 
@@ -832,11 +832,11 @@ protected void send_mail()
     // Needed to not send it twice at the same time.
     // Resend in 5 minutes, then 10, then 15, etc.
     sql->query("UPDATE send_q "
-	       "SET send_at = %d, times = %d "
-	       "WHERE id = %s",
-	       time() + (((int)mm->times) + 1)*5*60,
-	       ((int)mm->times) + 1,
-	       mm->id);
+               "SET send_at = %d, times = %d "
+               "WHERE id = %s",
+               time() + (((int)mm->times) + 1)*5*60,
+               ((int)mm->times) + 1,
+               mm->id);
     // Send the message.
     MailSender(mm, mail_sent);
   }
@@ -903,14 +903,14 @@ int send_message(string from, multiset(string) rcpt, string message)
     if (o->send_mail) {
       array a = o->send_mail(message, ([ "from":from, "recipients":rcpt ]));
       if (a[0]/100 == 2) {
-	sent = 1;
-	break;
+        sent = 1;
+        break;
       }
     }
   }
   if (!sent) {
     report_error(sprintf("send_message(%O, %O, %O) Failed!\n",
-			 from, rcpt, message));
+                         from, rcpt, message));
   }
   return(sent);
 #else /* Disabled. */
@@ -923,13 +923,13 @@ int send_message(string from, multiset(string) rcpt, string message)
  */
 
 void bounce(mapping(string:string) msg, string code, array(string) text,
-	    string last_command, string|void body)
+            string last_command, string|void body)
 {
   // FIXME: Generate a bounce.
 
 #ifdef RELAY_DEBUG
   report_debug(sprintf("SMTP: bounce(%O, %O, %O, %O)\n",
-		       msg, code, text, last_command));
+                       msg, code, text, last_command));
 #endif /* RELAY_DEBUG */
 
   if (sizeof(msg->sender)) {
@@ -948,147 +948,147 @@ void bounce(mapping(string:string) msg, string code, array(string) text,
     string oldheaders = "";
     int only_headers;
     if (f->open(combine_path([string]query("mail_spooldir"), msg->mailid),
-		"r")) {
+                "r")) {
       int i;
       string s;
       while((s = f->read(8192)) && (s != "")) {
-	oldmessage += s;
+        oldmessage += s;
 
-	if (limit && (sizeof(oldmessage) > limit)) {
-	  // Too large bounce.
-	  if ((i = search(oldmessage, "\r\n\r\n")) != -1) {
-	    // Just keep the headers.
-	    // FIXME: What about the content-length header?
-	    oldmessage = oldmessage[..i+1];
-	  } else {
-	    // Lots of headers.
-	    oldmessage =
-	      "Subject: Huge amount of headers -- Headers truncated\r\n";
-	  }
-	  only_headers = 1;
-	  break;
-	}
+        if (limit && (sizeof(oldmessage) > limit)) {
+          // Too large bounce.
+          if ((i = search(oldmessage, "\r\n\r\n")) != -1) {
+            // Just keep the headers.
+            // FIXME: What about the content-length header?
+            oldmessage = oldmessage[..i+1];
+          } else {
+            // Lots of headers.
+            oldmessage =
+              "Subject: Huge amount of headers -- Headers truncated\r\n";
+          }
+          only_headers = 1;
+          break;
+        }
       }
       f->close();
       oldheaders = oldmessage;
       if (i = search(oldheaders, "\r\n\r\n")) {
-	oldheaders = oldheaders[..i+1];
+        oldheaders = oldheaders[..i+1];
       } 
     }
 
     string statusmessage;
     if (sizeof(msg->remotename)) {
       statusmessage = sprintf("Reporting-MTA: DNS; %s\r\n"
-			      "Received-From-MTA: DNS; %s\r\n"
-			      "Arrival-Date: %s\r\n"
-			      "\r\n"
-			      "Final-Recipient: RFC822; %s@%s\r\n"
-			      "Action: failed\r\n"
-			      "Status: %s\r\n"
-			      "Remote-MTA: DNS; %s\r\n"
-			      "Diagnostic-Code: SMTP; %s %s\r\n"
-			      "Last-Attempt-Date: %s\r\n",
-			      gethostname(),
-			      msg->remotename,
-			      mktimestamp((int)msg->received_at),
-			      msg->user, msg->domain,
-			      msg->status || "5.1.1",
-			      msg->remote_mta,
-			      code, sizeof(text)?text[-1]:"",
-			      mktimestamp((int)msg->last_attempt_at));
+                              "Received-From-MTA: DNS; %s\r\n"
+                              "Arrival-Date: %s\r\n"
+                              "\r\n"
+                              "Final-Recipient: RFC822; %s@%s\r\n"
+                              "Action: failed\r\n"
+                              "Status: %s\r\n"
+                              "Remote-MTA: DNS; %s\r\n"
+                              "Diagnostic-Code: SMTP; %s %s\r\n"
+                              "Last-Attempt-Date: %s\r\n",
+                              gethostname(),
+                              msg->remotename,
+                              mktimestamp((int)msg->received_at),
+                              msg->user, msg->domain,
+                              msg->status || "5.1.1",
+                              msg->remote_mta,
+                              code, sizeof(text)?text[-1]:"",
+                              mktimestamp((int)msg->last_attempt_at));
     } else {
       statusmessage = sprintf("Reporting-MTA: DNS; %s\r\n"
-			      "Arrival-Date: %s\r\n"
-			      "\r\n"
-			      "Final-Recipient: RFC822; %s@%s\r\n"
-			      "Action: failed\r\n"
-			      "Status: %s\r\n"
-			      "Remote-MTA: DNS; %s\r\n"
-			      "Diagnostic-Code: SMTP; %s %s\r\n"
-			      "Last-Attempt-Date: %s\r\n",
-			      gethostname(),
-			      mktimestamp((int)msg->received_at),
-			      msg->user, msg->domain,
-			      msg->status || "5.1.1",
-			      msg->remote_mta,
-			      code, sizeof(text)?text[-1]:"",
-			      mktimestamp((int)msg->last_attempt_at));
+                              "Arrival-Date: %s\r\n"
+                              "\r\n"
+                              "Final-Recipient: RFC822; %s@%s\r\n"
+                              "Action: failed\r\n"
+                              "Status: %s\r\n"
+                              "Remote-MTA: DNS; %s\r\n"
+                              "Diagnostic-Code: SMTP; %s %s\r\n"
+                              "Last-Attempt-Date: %s\r\n",
+                              gethostname(),
+                              mktimestamp((int)msg->received_at),
+                              msg->user, msg->domain,
+                              msg->status || "5.1.1",
+                              msg->remote_mta,
+                              code, sizeof(text)?text[-1]:"",
+                              mktimestamp((int)msg->last_attempt_at));
     }
 
     if (!body) {
       body = sprintf("Message to %s@%s from %s bounced (code %s):\r\n"
-		     "Mailid:%s\r\n"
-		     "%s"
-		     "Description:\r\n"
-		     "%s\r\n",
-		     msg->user, msg->domain, msg->sender, code,
-		     msg->mailid,
-		     sizeof(last_command)?
-		     ("Last command: "+last_command+"\r\n"):"",
-		     text*"\r\n");
+                     "Mailid:%s\r\n"
+                     "%s"
+                     "Description:\r\n"
+                     "%s\r\n",
+                     msg->user, msg->domain, msg->sender, code,
+                     msg->mailid,
+                     sizeof(last_command)?
+                     ("Last command: "+last_command+"\r\n"):"",
+                     text*"\r\n");
     }
     // Send a bounce
     string message = (string)
       MIME.Message(body, ([
-	"Subject":"Delivery failure",
-	"Message-Id":sprintf("<\"%08x%sfull\"@%s>",
-			     time(), msg->mailid, gethostname()),
-	"X-Mailer":version(),
-	"MIME-Version":"1.0",
-	"From":[string]query("mail_mailerdaemon"),
-	"To":msg->sender,
-	"Date":mktimestamp(time(1)),
-	"Auto-Submitted":"auto-generated (failure)",
-	"Content-Type":"multipart/report; Report-Type=delivery-status",
-	"Content-Transfer-Encoding":"8bit",
+        "Subject":"Delivery failure",
+        "Message-Id":sprintf("<\"%08x%sfull\"@%s>",
+                             time(), msg->mailid, gethostname()),
+        "X-Mailer":version(),
+        "MIME-Version":"1.0",
+        "From":[string]query("mail_mailerdaemon"),
+        "To":msg->sender,
+        "Date":mktimestamp(time(1)),
+        "Auto-Submitted":"auto-generated (failure)",
+        "Content-Type":"multipart/report; Report-Type=delivery-status",
+        "Content-Transfer-Encoding":"8bit",
       ]), ({
-	MIME.Message(body, ([
-	  "MIME-Version":"1.0",
-	  "Content-Type":"text/plain; charset=iso-8859-1",
-	  "Content-Transfer-Encoding":"8bit",
-	])),
-	MIME.Message(statusmessage, ([
-	  "MIME-Version":"1.0",
-	  "Content-Type":"message/delivery-status; charset=iso-8859-1",
-	  "Content-Transfer-Encoding":"8bit",
-	])),
-	MIME.Message(oldmessage, ([
-	  "MIME-Version":"1.0",
-	  "Content-Type":
-	  (only_headers?"message/rfc822-headers":"message/rfc822"),
-	])),
+        MIME.Message(body, ([
+          "MIME-Version":"1.0",
+          "Content-Type":"text/plain; charset=iso-8859-1",
+          "Content-Transfer-Encoding":"8bit",
+        ])),
+        MIME.Message(statusmessage, ([
+          "MIME-Version":"1.0",
+          "Content-Type":"message/delivery-status; charset=iso-8859-1",
+          "Content-Transfer-Encoding":"8bit",
+        ])),
+        MIME.Message(oldmessage, ([
+          "MIME-Version":"1.0",
+          "Content-Type":
+          (only_headers?"message/rfc822-headers":"message/rfc822"),
+        ])),
       }));
     send_message("", (< msg->sender >), message);
 
     // Inform the postmaster too, but send only the headers.
     message = (string)
       MIME.Message(body, ([
-	"Subject":"Delivery failure",
-	"Message-Id":sprintf("<\"%08x%shead\"@%s>",
-			     time(1), msg->mailid, gethostname()),
-	"X-Mailer":version(),
-	"MIME-Version":"1.0",
-	"From":[string]query("mail_mailerdaemon"),
-	"To":[string]query("mail_postmaster"),
-	"Date":mktimestamp(time()),
-	"Auto-Submitted":"auto-generated (failure)",
-	"Content-Type":"multipart/report; Report-Type=delivery-status",
-	"Content-Transfer-Encoding":"8bit",
+        "Subject":"Delivery failure",
+        "Message-Id":sprintf("<\"%08x%shead\"@%s>",
+                             time(1), msg->mailid, gethostname()),
+        "X-Mailer":version(),
+        "MIME-Version":"1.0",
+        "From":[string]query("mail_mailerdaemon"),
+        "To":[string]query("mail_postmaster"),
+        "Date":mktimestamp(time()),
+        "Auto-Submitted":"auto-generated (failure)",
+        "Content-Type":"multipart/report; Report-Type=delivery-status",
+        "Content-Transfer-Encoding":"8bit",
       ]), ({
-	MIME.Message(body, ([
-	  "MIME-Version":"1.0",
-	  "Content-Type":"text/plain; charset=iso-8859-1",
-	  "Content-Transfer-Encoding":"8bit",
-	])),
-	MIME.Message(statusmessage, ([
-	  "MIME-Version":"1.0",
-	  "Content-Type":"message/delivery-status; charset=iso-8859-1",
-	  "Content-Transfer-Encoding":"8bit",
-	])),
-	MIME.Message(oldheaders, ([
-	  "MIME-Version":"1.0",
-	  "Content-Type":"text/rfc822-headers",
-	])),
+        MIME.Message(body, ([
+          "MIME-Version":"1.0",
+          "Content-Type":"text/plain; charset=iso-8859-1",
+          "Content-Transfer-Encoding":"8bit",
+        ])),
+        MIME.Message(statusmessage, ([
+          "MIME-Version":"1.0",
+          "Content-Type":"message/delivery-status; charset=iso-8859-1",
+          "Content-Transfer-Encoding":"8bit",
+        ])),
+        MIME.Message(oldheaders, ([
+          "MIME-Version":"1.0",
+          "Content-Type":"text/rfc822-headers",
+        ])),
       }));
     send_message("", (< [string]query("mail_postmaster") >), message);
   } else {
@@ -1101,11 +1101,11 @@ void bounce(mapping(string:string) msg, string code, array(string) text,
  */
 
 int relay(string from, string user, string domain,
-	  Stdio.BlockFile mail, string|void csum, object|void smtp)
+          Stdio.BlockFile mail, string|void csum, object|void smtp)
 {
 #ifdef RELAY_DEBUG
   report_debug(sprintf("SMTP: relay(%O, %O, %O, X, %O, X)\n",
-		       from, user, domain, csum));
+                       from, user, domain, csum));
 #endif /* RELAY_DEBUG */
 
   if (!domain) {
@@ -1143,7 +1143,7 @@ int relay(string from, string user, string domain,
     Stdio.File spoolfile = Stdio.File();
     if (!spoolfile->open(fname, "cwxa")) {
       report_error(sprintf("SMTPRelay: Failed to open spoolfile %O! %s\n",
-			   fname, strerror(spoolfile->errno())));
+                           fname, strerror(spoolfile->errno())));
 
       // FIXME: Should send a message to from here.
 
@@ -1158,83 +1158,83 @@ int relay(string from, string user, string domain,
     int last_was_lf = 1;
     while((s = mail->read(8192)) && (s != "")) {
       if (last_was_lf && (rest == "") && (s[0] == '.')) {
-	s = "." + s;
+        s = "." + s;
       } else {
-	s = rest + s;
+        s = rest + s;
       }
       if (s[-1] == '\r') {
-	rest = "\r";
-	s = s[..sizeof(s)-2];
+        rest = "\r";
+        s = s[..sizeof(s)-2];
       } else {
-	rest = "";
+        rest = "";
       }
       // Perform quoting...
       s = replace(s, ({ "\r.", "\n.", "\r\n.", 
-			"\r", "\n", "\r\n", }),
-		  ({ "\r\n..", "\r\n..", "\r\n..",
-		     "\r\n", "\r\n", "\r\n" }));
+                        "\r", "\n", "\r\n", }),
+                  ({ "\r\n..", "\r\n..", "\r\n..",
+                     "\r\n", "\r\n", "\r\n" }));
       last_was_lf = (s[-1] == '\n');
 
       if (query("mail_maxhops") && !headers_found) {
-	headers += s;
-	headers_found = (sscanf(headers, "%s\r\n\r\n", headers) ||
-			 sscanf(headers, "%s\n\n", headers));
-	if (headers_found) {
-	  array(string) a = lower_case(headers)/"received:";
-	  int hops = sizeof(a);
+        headers += s;
+        headers_found = (sscanf(headers, "%s\r\n\r\n", headers) ||
+                         sscanf(headers, "%s\n\n", headers));
+        if (headers_found) {
+          array(string) a = lower_case(headers)/"received:";
+          int hops = sizeof(a);
 
-	  headers = "";
-
-#ifdef RELAY_DEBUG
-	  report_debug(sprintf("SMTPRelay: raw hops:%d\n", hops));
-#endif /* RELAY_DEBUG */
-
-	  if (hops > query("mail_maxhops")) {
-	    int i;
-	    for(i=0; i < sizeof(a)-1; i++) {
-	      if (a[i]=="" || a[i][-1] != '\n') {
-		hops--;
-	      }
-	    }
+          headers = "";
 
 #ifdef RELAY_DEBUG
-	    report_debug(sprintf("SMTPRelay: vanilla hops:%d\n", hops));
+          report_debug(sprintf("SMTPRelay: raw hops:%d\n", hops));
 #endif /* RELAY_DEBUG */
 
-	    if (hops > query("mail_maxhops")) {
-	      report_error(sprintf("SMTPRelay: Too many hops!\n"));
-	      
-	      // FIXME: Should send a message to from here.
+          if (hops > query("mail_maxhops")) {
+            int i;
+            for(i=0; i < sizeof(a)-1; i++) {
+              if (a[i]=="" || a[i][-1] != '\n') {
+                hops--;
+              }
+            }
 
-	      rm(fname);
+#ifdef RELAY_DEBUG
+            report_debug(sprintf("SMTPRelay: vanilla hops:%d\n", hops));
+#endif /* RELAY_DEBUG */
 
-	      return(0);
-	    }
-	  }
-	}
+            if (hops > query("mail_maxhops")) {
+              report_error(sprintf("SMTPRelay: Too many hops!\n"));
+              
+              // FIXME: Should send a message to from here.
+
+              rm(fname);
+
+              return(0);
+            }
+          }
+        }
       }
       if (spoolfile->write(s) != sizeof(s)) {
-	report_error(sprintf("SMTPRelay: Failed to write spoolfile %O!\n",
-			     fname));
+        report_error(sprintf("SMTPRelay: Failed to write spoolfile %O!\n",
+                             fname));
 
-	// FIXME: Should send a message to from here.
+        // FIXME: Should send a message to from here.
 
-	rm(fname);
+        rm(fname);
 
-	return(0);
+        return(0);
       }
     }
     if ((rest != "") || (!last_was_lf)) {
       // The file must be terminated with a \r\n.
       if (spoolfile->write("\r\n") != 2) {
-	report_error(sprintf("SMTPRelay: Failed to write spoolfile %O!\n",
-			     fname));
+        report_error(sprintf("SMTPRelay: Failed to write spoolfile %O!\n",
+                             fname));
 
-	// FIXME: Should send a message to from here.
+        // FIXME: Should send a message to from here.
 
-	rm(fname);
+        rm(fname);
 
-	return(0);
+        return(0);
       }
     }
     spoolfile->close();
@@ -1244,19 +1244,19 @@ int relay(string from, string user, string domain,
 
   if (smtp) {
     sql->query("INSERT INTO send_q "
-	       "(sender, user, domain, mailid, received_at, send_at, "
-	       "remoteident, remoteip, remotename) "
-	       "VALUES(%s, %s, %s, %s, %d, 0, "
-	       "%s, %s, %s)",
-	       from, user, domain, csum, time(),
-	       smtp->remoteident || "UNKNOWN", smtp->remoteip,
-	       smtp->remotename);
+               "(sender, user, domain, mailid, received_at, send_at, "
+               "remoteident, remoteip, remotename) "
+               "VALUES(%s, %s, %s, %s, %d, 0, "
+               "%s, %s, %s)",
+               from, user, domain, csum, time(),
+               smtp->remoteident || "UNKNOWN", smtp->remoteip,
+               smtp->remotename);
   } else {
     sql->query("INSERT INTO send_q "
-	       "(sender, user, domain, mailid, received_at, send_at, "
-	       "remoteident, remoteip, remotename) "
-	       "VALUES(%s, %s, %s, %s, %d, 0, '', '', '')",
-	       from, user, domain, csum, time());
+               "(sender, user, domain, mailid, received_at, send_at, "
+               "remoteident, remoteip, remotename) "
+               "VALUES(%s, %s, %s, %s, %d, 0, '', '', '')",
+               from, user, domain, csum, time());
   }
 
 #ifdef THREADS

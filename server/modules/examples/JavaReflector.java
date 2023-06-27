@@ -82,7 +82,7 @@ public class JavaReflector extends AbstractLocationModule
     StringBuffer page = new StringBuffer();
     page.append("<h1>Package "+p.getName()+"</h1>\n");
     page.append("<table border=1>\n<tr><td></td><th>Title</th>"+
-		"<th>Vendor</th><th>Version</th></tr>\n");
+                "<th>Vendor</th><th>Version</th></tr>\n");
     page.append("<tr><th>Specification</th><td>");
     page.append(RoxenLib.htmlEncodeString(p.getSpecificationTitle()+""));
     page.append("</td><td>");
@@ -113,7 +113,7 @@ public class JavaReflector extends AbstractLocationModule
     if((modifiers&Modifier.INTERFACE)>0)
       modifiers &= ~(Modifier.ABSTRACT | Modifier.STATIC | Modifier.INTERFACE);
     return (modifiers==0? "" :
-	    modifierFont+Modifier.toString(modifiers)+"</font> ");
+            modifierFont+Modifier.toString(modifiers)+"</font> ");
   }
 
   protected String simpleClassName(String name)
@@ -146,67 +146,67 @@ public class JavaReflector extends AbstractLocationModule
     StringBuffer buf = new StringBuffer();
     for(int i=0; i<c.length; i++) {
       if(i>0)
-	buf.append(", ");
+        buf.append(", ");
       buf.append(classLink(c[i]));
     }
     return buf.toString();
   }
 
   protected void describe(StringBuffer page, Field f, RoxenRequest id,
-			  int indent)
+                          int indent)
   {
     /* Append description of a field to a StringBuffer */
     indentedLine(page, modifierNames(f.getModifiers())+
-		 classLink(f.getType())+" "+variableFont+
-		 f.getName()+"</font>;", indent);
+                 classLink(f.getType())+" "+variableFont+
+                 f.getName()+"</font>;", indent);
   }
 
   protected void describe(StringBuffer page, Method m, RoxenRequest id,
-			  int indent)
+                          int indent)
   {
     /* Append description of a method to a StringBuffer */
     Class[] th = m.getExceptionTypes();
     indentedLine(page, modifierNames(m.getModifiers())+
-		 classLink(m.getReturnType())+" "+methodFont+
-		 m.getName()+"</font>("+classLink(m.getParameterTypes())+
-		 ")"+(th.length>0? " "+keywordFont+"throws</font> "+
-		      classLink(th):"")+";", indent);
+                 classLink(m.getReturnType())+" "+methodFont+
+                 m.getName()+"</font>("+classLink(m.getParameterTypes())+
+                 ")"+(th.length>0? " "+keywordFont+"throws</font> "+
+                      classLink(th):"")+";", indent);
   }
 
   protected void describe(StringBuffer page, Constructor c, RoxenRequest id,
-			  int indent)
+                          int indent)
   {
     /* Append description of a constructor to a StringBuffer */
     Class[] th = c.getExceptionTypes();
     indentedLine(page, modifierNames(c.getModifiers())+
-		 methodFont+simpleClassName(c.getName())+
-		 "</font>("+classLink(c.getParameterTypes())+
-		 ")"+(th.length>0? " "+keywordFont+"throws</font> "+
-		      classLink(th):"")+";", indent);
+                 methodFont+simpleClassName(c.getName())+
+                 "</font>("+classLink(c.getParameterTypes())+
+                 ")"+(th.length>0? " "+keywordFont+"throws</font> "+
+                      classLink(th):"")+";", indent);
   }
 
   protected void describe(StringBuffer page, Class c, RoxenRequest id,
-			  int indent)
+                          int indent)
   {
     /* Append description of a class or interface to a StringBuffer */
     Class[] ifcs = c.getInterfaces();
     if(c.isInterface())
       indentedLine(page, modifierNames(c.getModifiers())+
-		   keywordFont+"interface</font> "+
-		   methodFont+simpleClassName(c.getName())+"</font> "+
-		   (ifcs.length>0? keywordFont+"extends</font> "+
-		    classLink(ifcs)+" ":"")+
-		   "{", indent);
+                   keywordFont+"interface</font> "+
+                   methodFont+simpleClassName(c.getName())+"</font> "+
+                   (ifcs.length>0? keywordFont+"extends</font> "+
+                    classLink(ifcs)+" ":"")+
+                   "{", indent);
     else {
       Class s = c.getSuperclass();
       indentedLine(page, modifierNames(c.getModifiers())+
-		   keywordFont+"class</font> "+
-		   methodFont+simpleClassName(c.getName())+"</font> "+
-		   (s!=null? keywordFont+"extends</font> "+
-		    classLink(s)+" ":"")+
-		   (ifcs.length>0? keywordFont+"implements</font> "+
-		    classLink(ifcs)+" ":"")+
-		   "{", indent);
+                   keywordFont+"class</font> "+
+                   methodFont+simpleClassName(c.getName())+"</font> "+
+                   (s!=null? keywordFont+"extends</font> "+
+                    classLink(s)+" ":"")+
+                   (ifcs.length>0? keywordFont+"implements</font> "+
+                    classLink(ifcs)+" ":"")+
+                   "{", indent);
     }
     indent += 2;
     Class[] dclasses = c.getDeclaredClasses();
@@ -249,7 +249,7 @@ public class JavaReflector extends AbstractLocationModule
       HashMap args = new HashMap();
       args.put("href", queryLocation()+p.getName());
       page.append(RoxenLib.makeContainer("a", args,
-					 modifierFont+p.getName()+"</font>"));
+                                         modifierFont+p.getName()+"</font>"));
       page.append(";<br><br>\n");
     }
     describe(page, c, id, 0);
@@ -270,8 +270,8 @@ public class JavaReflector extends AbstractLocationModule
       Class c = Class.forName(f);
 
       if(c != null && c.getDeclaringClass() == null &&
-	 !c.isArray() && !c.isPrimitive())
-	return describeClass(c, id);
+         !c.isArray() && !c.isPrimitive())
+        return describeClass(c, id);
 
     } catch (ClassNotFoundException e) { }
 
@@ -302,21 +302,21 @@ public class JavaReflector extends AbstractLocationModule
   public JavaReflector()
   {
     defvar("location", "/reflector/", "Mount point", TYPE_LOCATION,
-	   "This is where the module will be inserted in the "+
-	   "namespace of your server.");
+           "This is where the module will be inserted in the "+
+           "namespace of your server.");
 
     /* To get some interresting config variables, all the
        syntactic highlight colors are customizable.  :-)  */
     defvar("modifier_color", "red", "Modifier font color", TYPE_STRING,
-	   "Color to use for names of modifiers.");
+           "Color to use for names of modifiers.");
     defvar("type_color", "steelblue", "Type font color", TYPE_STRING,
-	   "Color to use for names of types.");
+           "Color to use for names of types.");
     defvar("variable_color", "purple", "Variable font color", TYPE_STRING,
-	   "Color to use for names of variables and fields.");
+           "Color to use for names of variables and fields.");
     defvar("method_color", "brown", "Method font color", TYPE_STRING,
-	   "Color to use for names of methods and constructors.");
+           "Color to use for names of methods and constructors.");
     defvar("keyword_color", "green", "Keyword font color", TYPE_STRING,
-	   "Color to use for names of keywords.");
+           "Color to use for names of keywords.");
   }
 
 }

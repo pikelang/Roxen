@@ -30,8 +30,8 @@ mixed doit()
     if(c->modules["directories"] && (c=c->modules["directories"]->enabled))
     {
       catch{
-	c->_root->dest();
-	c->_root = 0;
+        c->_root->dest();
+        c->_root = 0;
       };
     }
 

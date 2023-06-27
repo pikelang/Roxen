@@ -106,9 +106,9 @@ class Connection
       traffic += written;
       debug_perror((string)written);
       if(written == 0)
-	client_closed();
+        client_closed();
       else
-	buffer[f] = (buffer[f])[written..];
+        buffer[f] = (buffer[f])[written..];
     }
     debug_perror("\n");
   }
@@ -119,12 +119,12 @@ class Connection
     fdescs=({s,d});
     buffer=([s:"",d:""]);
     s->set_nonblocking(lambda( mixed a, string d ) { got_data( s, d ); },
-		       lambda(){ write_more(s); },   client_closed );
+                       lambda(){ write_more(s); },   client_closed );
     d->set_nonblocking(lambda( mixed a, string b ) { got_data( d, b ); },
-		       lambda(){ write_more(d); },   client_closed );
+                       lambda(){ write_more(d); },   client_closed );
     mastermodule=m;
     debug_perror("Got connection from "+s->query_address()+
-		 " to " + d->query_address()+"\n");
+                 " to " + d->query_address()+"\n");
   }
 
   void destroy()
@@ -151,10 +151,10 @@ string status() {
     retval += "<TABLE border=1 cellpadding=\"10\"><TR><TH align=center>From</TH><TH>To</TH><TH>Traffic</TH></TR>";
     foreach(indices(connections),req) {
       retval+=sprintf("<TR><TD>%s</TD><TD>%s</TD><TD>%d</TD></TR>",
-		      req->fdescs[0]->query_address(),
-		      req->fdescs[1]->query_address(),
-		      req->traffic
-		     );
+                      req->fdescs[0]->query_address(),
+                      req->fdescs[1]->query_address(),
+                      req->traffic
+                     );
     }
     retval += "</TABLE>";
   }

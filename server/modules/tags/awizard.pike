@@ -89,7 +89,7 @@ class Page
   string tag_wizard_button(string t, mapping m, RequestID id)
   {
     mapping args = m - (["id": 1, "page": 1, "href": 1, "next": 1, "prev": 1,
-			 "image": 1, "gbutton_title": 1, "title": 1]);
+                         "image": 1, "gbutton_title": 1, "title": 1]);
     if(m->page)
       args->name  = "goto_page_"+m->page+"/"+m->id;
     else if(m->href)
@@ -136,7 +136,7 @@ class Page
   string container_dbutton(string t, mapping m, string c, RequestID id)
   {
     mapping args = m - (["id": 1, "page": 1, "href": 1, "next": 1, "prev": 1,
-			 "image": 1, "gbutton_title": 1, "title": 1]);
+                         "image": 1, "gbutton_title": 1, "title": 1]);
     if(m->page)
       args->name  = "goto_page_"+m->page+"/"+m->id;
     else if(m->href)
@@ -236,7 +236,7 @@ class Page
   }
 
   string call_cvar(string tag, mapping args, string c, /*int line,
-		   mixed foo,*/ RequestID id)
+                   mixed foo,*/ RequestID id)
   {
     //id->misc->line = line;
     return wizard_tag_var( tag, args, c, id );
@@ -264,7 +264,7 @@ class Page
   string generate( RequestID id, string header, string footer )
   {
     string contents = eval((come_from[id->last_page]||"")
-			   + header
+                           + header
                            + page
                            + footer, id);
     id->variables->error_message=0;
@@ -310,7 +310,7 @@ class AWizard
     //  Replace conflicting tag name "button" in the content to make it local
     //  to this element.
     c = replace(c, ({ "<button", "<rxml:button" }),
-		   ({ "<wizard-button", "<rxml:wizard-button" }) );
+                   ({ "<wizard-button", "<rxml:wizard-button" }) );
     args->num = last_page;
     if(!args->name) args->name = (string)last_page;
     pages += ({ Page( args, c, button_id, button_code ) });
@@ -348,7 +348,7 @@ class AWizard
                        ]),id );
       int off = sizeof(header/"\n")-1;
       foreach(pages, object p)
-	p->line_offset -= off;
+        p->line_offset -= off;
     }
   }
 
@@ -396,7 +396,7 @@ class AWizard
       string extra_eval;
       if(sscanf(goto, "%*s/eval/%s", extra_eval) == 2)
       {
-	extra_eval = lookup( extra_eval )->code;
+        extra_eval = lookup( extra_eval )->code;
         if(!extra_eval)
           throw(({"Failed to find extra eval in cache\n", backtrace()}));
       }
@@ -404,30 +404,30 @@ class AWizard
 
       if(last_page) v->last_page = last_page->name;
       if(mappingp(er) && !er->page)
-	error = er;
+        error = er;
       else if(mappingp(er) && er->page)
-	new_page = (pages_by_name[ error->page ] &&
-		    pages_by_name[ error->page ]->num)+1;
+        new_page = (pages_by_name[ error->page ] &&
+                    pages_by_name[ error->page ]->num)+1;
       else if(sscanf(goto, "goto_next_page/%d",id->misc->button_id))
-	new_page = ((int)v->_page_num)+2;
+        new_page = ((int)v->_page_num)+2;
       else if(sscanf(goto, "goto_prev_page/%d", id->misc->button_id))
-	new_page = ((int)v->_page_num);
+        new_page = ((int)v->_page_num);
       else if(sscanf(goto, "goto_page_%s/%d", goto, id->misc->button_id))
-	new_page = pages_by_name[ goto ] && pages_by_name[ goto ]->num+1;
+        new_page = pages_by_name[ goto ] && pages_by_name[ goto ]->num+1;
       else if(sscanf(goto, "goto_href_[%s]/%d", goto, id->misc->button_id)) {
         if( last_page && extra_eval )
           last_page->can_leave( id,  extra_eval );
-	return http_redirect( fix_relative(goto,id), id );
+        return http_redirect( fix_relative(goto,id), id );
       }
 
       if( last_page && last_page->can_leave( id, extra_eval ))
       {
-	if(new_page)
-	{
-	  if(new_page < 1) new_page = 1;
-	  if(new_page > sizeof(pages)) new_page = sizeof(pages);
-	  v->_page_num = (string)(new_page-1);
-	}
+        if(new_page)
+        {
+          if(new_page < 1) new_page = 1;
+          if(new_page > sizeof(pages)) new_page = sizeof(pages);
+          v->_page_num = (string)(new_page-1);
+        }
       }
     }
 
@@ -447,24 +447,24 @@ class AWizard
     if(error)
     {
       if(error->page && error->page != page->name &&
-	 !(id->misc->awizard_in_error_page &&
-	   id->misc->awizard_in_error_page[cur_page_num]))
+         !(id->misc->awizard_in_error_page &&
+           id->misc->awizard_in_error_page[cur_page_num]))
       {
-	v["goto_page_"+error->page+"/0"]=1;
-	// The following is a safeguard to prevent infinite recursion
-	// if the awizard pages are improperly constructed. This code
-	// doesn't work perfectly if <awizard> tags are nested, but
-	// it's assumed elsewhere that that never happens.
-	if (!id->misc->awizard_in_error_page)
-	  id->misc->awizard_in_error_page = (<>);
-	id->misc->awizard_in_error_page[cur_page_num] = 1;
-	mapping|string res = handle( id );
-	id->misc->awizard_in_error_page[cur_page_num] = 0;
-	return res;
+        v["goto_page_"+error->page+"/0"]=1;
+        // The following is a safeguard to prevent infinite recursion
+        // if the awizard pages are improperly constructed. This code
+        // doesn't work perfectly if <awizard> tags are nested, but
+        // it's assumed elsewhere that that never happens.
+        if (!id->misc->awizard_in_error_page)
+          id->misc->awizard_in_error_page = (<>);
+        id->misc->awizard_in_error_page[cur_page_num] = 1;
+        mapping|string res = handle( id );
+        id->misc->awizard_in_error_page[cur_page_num] = 0;
+        return res;
       } else if(error->href) {
-	return http_redirect(fix_relative(error->href,id), id);
+        return http_redirect(fix_relative(error->href,id), id);
       } else if(!error->page)
-	return error;
+        return error;
     }
 
     foreach(glob("goto_*", indices(v)), string nope)  m_delete(v, nope);
@@ -482,10 +482,10 @@ class AWizard
 void create()
 {
   defvar("cache_timeout", 60, "Cache timeout", TYPE_INT|VAR_MORE,
-	 "Timeout in minutes for the internal state and data cache.");
+         "Timeout in minutes for the internal state and data cache.");
 
   defvar("debug", 0, "Debug mode", TYPE_FLAG|VAR_MORE,
-	 "Use GET instead of POST in the form, to make debugging easier.");
+         "Use GET instead of POST in the form, to make debugging easier.");
 }
 
 
@@ -644,8 +644,8 @@ constant tagdoc=([
 "error":#"<desc type='cont'>
 
 </desc>",])
-	 })])
-	})]);
+         })])
+        })]);
 #endif
 
 

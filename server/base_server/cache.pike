@@ -70,7 +70,7 @@ void set_total_size_limit (int size)
 
 //! The SNMP lookup root for the cache.
 SNMP.SimpleMIB mib = SNMP.SimpleMIB(SNMP.RIS_OID_WEBSERVER + ({ 3 }),
-				    ({}),({ UNDEFINED }));
+                                    ({}),({ UNDEFINED }));
 
 //! Base class for cache entries.
 class CacheEntry (mixed key, mixed data, string cache_name)
@@ -167,9 +167,9 @@ class CacheEntry (mixed key, mixed data, string cache_name)
   {
     if (stringp (key)) {
       if (sizeof (key) > 40)
-	return sprintf ("%q...", key[..39 - sizeof ("...")]);
+        return sprintf ("%q...", key[..39 - sizeof ("...")]);
       else
-	return sprintf ("%q", key);
+        return sprintf ("%q", key);
     }
     else if (intp (key) || floatp (key) || objectp (key))
       return sprintf ("%O", key);
@@ -320,7 +320,7 @@ class CacheManager
   }
 
   int add_entry (string cache_name, CacheEntry entry,
-		 int old_entry, mapping cache_context);
+                 int old_entry, mapping cache_context);
   //! Called to add an entry to the cache. Should also evict entries
   //! as necessary to keep @expr{@[size] <= @[size_limit]@}.
   //!
@@ -358,28 +358,28 @@ class CacheManager
       CacheEntry old_entry;
       // vvv Relying on the interpreter lock from here.
       while ((lm = lookup[cache_name]) && (old_entry = lm[entry->key])) {
-	if (remove_entry (cache_name, old_entry)) {
-	  // Paranoia: Only adjust the statistics if we actually
-	  //           succeeded to remove the old entry.
-	  recent_added_bytes -= old_entry->size;
-	}
-	// NB: Paranoia: We set lm every turn of the loop in
-	//               case something (like eg after_gc())
-	//               has messed with it during the call
-	//               of remove_entry().
+        if (remove_entry (cache_name, old_entry)) {
+          // Paranoia: Only adjust the statistics if we actually
+          //           succeeded to remove the old entry.
+          recent_added_bytes -= old_entry->size;
+        }
+        // NB: Paranoia: We set lm every turn of the loop in
+        //               case something (like eg after_gc())
+        //               has messed with it during the call
+        //               of remove_entry().
       }
       if (lm) {
-	lm[entry->key] = entry;
+        lm[entry->key] = entry;
         // ^^^ Relying on the interpreter lock to here.
 
-	cs->count++;
-	cs->size += entry->size;
-	size += entry->size;
-	recent_added_bytes += entry->size;
-	byte_add_count += entry->size;
+        cs->count++;
+        cs->size += entry->size;
+        size += entry->size;
+        recent_added_bytes += entry->size;
+        byte_add_count += entry->size;
 
-	if (!(++entry_add_count & 0x3fff)) // = 16383
-	  update_size_limit();
+        if (!(++entry_add_count & 0x3fff)) // = 16383
+          update_size_limit();
       }
 
       return 1;
@@ -401,10 +401,10 @@ class CacheManager
   {
     if (mapping(mixed:CacheEntry) lm = lookup[cache_name])
       if (lm[entry->key] == entry) {
-	// Relying on the interpreter here.
-	m_delete (lm, entry->key);
-	account_remove_entry (cache_name, entry);
-	return 1;
+        // Relying on the interpreter here.
+        m_delete (lm, entry->key);
+        account_remove_entry (cache_name, entry);
+        return 1;
       }
     return 0;
   }
@@ -431,11 +431,11 @@ class CacheManager
     }
 
     if ((entry_add_count - cached_overhead_add_count) <
-	(num_entries / 10))
+        (num_entries / 10))
       return cached_overhead;
 
     int res = (Pike.count_memory (-1, this, lookup) +
-	       Pike.count_memory (0, stats));
+               Pike.count_memory (0, stats));
     foreach (lookup;; mapping(mixed:CacheEntry) lm)
       res += Pike.count_memory (-1, lm);
 
@@ -494,7 +494,7 @@ class CacheManager
     }
 
     add_rate = (old_weight * add_rate +
-		our_weight * (recent_added_bytes / last_period));
+                our_weight * (recent_added_bytes / last_period));
 
     recent_added_bytes = 0;
     recent_hits = recent_misses = 0;
@@ -508,9 +508,9 @@ class CacheManager
     size_limit = max (0, total_size_limit - mgr_oh);
     if (size > size_limit) {
       CACHE_WERR ("%O: Evicting %db "
-		  "(entry size limit %db, manager overhead %db, total %db)\n",
-		  this, size - size_limit,
-		  size_limit, mgr_oh, total_size_limit);
+                  "(entry size limit %db, manager overhead %db, total %db)\n",
+                  this, size - size_limit,
+                  size_limit, mgr_oh, total_size_limit);
       evict (size_limit);
     }
   }
@@ -531,7 +531,7 @@ class CacheManager
   {
     return flag == 'O' &&
       sprintf ("CacheManager(%s: %dk/%dk)",
-	       name, size / 1024, size_limit / 1024);
+               name, size / 1024, size_limit / 1024);
   }
 
   protected void create()
@@ -566,7 +566,7 @@ overhead is minimal.";
   }
 
   int add_entry (string cache_name, CacheEntry entry,
-		 int old_entry, mapping cache_context)
+                 int old_entry, mapping cache_context)
   {
     entry->cache_name = cache_name;
     int res = low_add_entry (cache_name, entry);
@@ -589,19 +589,19 @@ overhead is minimal.";
 
       CacheManagerPrefs cm_prefs = prefs[cache_name];
       if (cm_prefs && cm_prefs->inhibit_eviction) {
-	if (noop_loop++ < 1000) continue;
-	break;
+        if (noop_loop++ < 1000) continue;
+        break;
       }
       if (mapping(mixed:CacheEntry) lm = lookup[cache_name]) {
-	if (sizeof (lm)) {
-	  // Relying on the interpreter lock here.
-	  CacheEntry entry = random (lm)[1];
-	  MORE_CACHE_WERR ("evict: Size %db > %db - evicting %O / %O.\n",
-			   size, max_size, cache_name, entry);
-	  low_remove_entry (cache_name, entry);
-	}
-	else
-	  m_delete (lookup, cache_name);
+        if (sizeof (lm)) {
+          // Relying on the interpreter lock here.
+          CacheEntry entry = random (lm)[1];
+          MORE_CACHE_WERR ("evict: Size %db > %db - evicting %O / %O.\n",
+                           size, max_size, cache_name, entry);
+          low_remove_entry (cache_name, entry);
+        }
+        else
+          m_delete (lookup, cache_name);
       }
     }
   }
@@ -690,10 +690,10 @@ class CM_GreedyDual
         return;
       HeapElement::value = val;
       if (HeapElement::pos != -1) {
-	//  NB: We may get called in a context where the mutex
-	//      already has been taken.
-	Thread.MutexKey key = priority_mux->lock(2);
-	priority_queue->adjust(HeapElement::this);
+        //  NB: We may get called in a context where the mutex
+        //      already has been taken.
+        Thread.MutexKey key = priority_mux->lock(2);
+        priority_queue->adjust(HeapElement::this);
       }
     }
 
@@ -707,8 +707,8 @@ class CM_GreedyDual
     protected string _sprintf (int flag)
     {
       return flag == 'O' &&
-	sprintf ("CM_GreedyDual.CacheEntry(%O: %s, %db, %O)",
-		 pval, format_key(), size, value);
+        sprintf ("CM_GreedyDual.CacheEntry(%O: %s, %db, %O)",
+                 pval, format_key(), size, value);
     }
   }
 
@@ -832,7 +832,7 @@ class CM_GreedyDual
   // Assumes no concurrent access - run inside _disable_threads.
   {
     werror ("Checking priority_queue with %d entries.\n",
-	    sizeof(priority_queue));
+            sizeof(priority_queue));
     if (priority_queue->verify_heap) {
       Thread.MutexKey key = priority_mux->lock();
       priority_queue->verify_heap();
@@ -841,7 +841,7 @@ class CM_GreedyDual
 #endif
 
   int|float calc_value (string cache_name, CacheEntry entry,
-			int old_entry, mapping cache_context);
+                        int old_entry, mapping cache_context);
   //! Called to calculate the value for @[entry], which gets assigned
   //! to the @expr{value@} variable. Arguments are the same as to
   //! @[add_entry].
@@ -865,19 +865,19 @@ class CM_GreedyDual
         pval = l + v;
 
       if (floatp (v)) {
-	if (v != 0.0 && v < l * (Float.EPSILON * 0x10)) {
+        if (v != 0.0 && v < l * (Float.EPSILON * 0x10)) {
 #ifdef DEBUG
-	  if (max_used_pval != Int.NATIVE_MAX)
-	    werror ("%O: Ran out of significant digits for cache entry %O - "
-		    "got min priority %O and entry value %O.\n",
-		    this, entry, l, v);
+          if (max_used_pval != Int.NATIVE_MAX)
+            werror ("%O: Ran out of significant digits for cache entry %O - "
+                    "got min priority %O and entry value %O.\n",
+                    this, entry, l, v);
 #endif
-	  // Force a reset of the pvals in the next gc.
-	  max_used_pval = Int.NATIVE_MAX;
-	}
+          // Force a reset of the pvals in the next gc.
+          max_used_pval = Int.NATIVE_MAX;
+        }
       }
       else if (pval > max_used_pval)
-	max_used_pval = pval;
+        max_used_pval = pval;
     }
     else {
       // Assume entry->value isn't greater than Int.NATIVE_MAX/2 right away.
@@ -901,7 +901,7 @@ class CM_GreedyDual
   }
 
   int add_entry (string cache_name, CacheEntry entry,
-		 int old_entry, mapping cache_context)
+                 int old_entry, mapping cache_context)
   {
     int need_size_update;
     entry->cache_name = cache_name;
@@ -975,7 +975,7 @@ class CM_GreedyDual
       if (cm_prefs && cm_prefs->inhibit_eviction) break;
 
       MORE_CACHE_WERR ("evict: Size %db > %db - evicting %O / %O.\n",
-		       size, max_size, entry->cache_name, entry);
+                       size, max_size, entry->cache_name, entry);
 
       low_remove_entry (entry->cache_name, entry);
     }
@@ -1011,9 +1011,9 @@ class CM_GreedyDual
     if (max_used_pval > Int.NATIVE_MAX / 2) {
       int|float pval_base;
       if (HeapElement lowest = priority_queue->low_peek())
-	pval_base = lowest->value;
+        pval_base = lowest->value;
       else
-	return;
+        return;
 
       // To cope with concurrent updates, we replace the lookup
       // mapping and start adding back the entries from the old one.
@@ -1026,11 +1026,11 @@ class CM_GreedyDual
       mapping(string:mapping(mixed:CacheEntry)) old_lookup = lookup;
       lookup = ([]);
       foreach (old_lookup; string cache_name;) {
-	lookup[cache_name] = ([]);
-	if (CacheStats cs = stats[cache_name]) {
-	  cs->count = 0;
-	  cs->size = 0;
-	}
+        lookup[cache_name] = ([]);
+        if (CacheStats cs = stats[cache_name]) {
+          cs->count = 0;
+          cs->size = 0;
+        }
       }
       priority_queue = ADT.Heap();
       size = 0;
@@ -1043,24 +1043,24 @@ class CM_GreedyDual
       //     in order to avoid issues with reentrancy and races
       //     (mainly to protect new_lm during the loop that updates it).
       foreach (old_lookup; string cache_name; mapping(mixed:CacheEntry) old_lm) {
-	if (CacheStats cs = stats[cache_name]) {
-	  if (mapping(mixed:CacheEntry) new_lm = lookup[cache_name])
-	    foreach (old_lm; mixed key; CacheEntry entry) {
-	      entry->element()->pos = -1;
-	      int|float pval = entry->pval -= pval_base;
-	      if (!new_lm[key]) {
-		// Relying on the interpreter lock here.
-		new_lm[key] = entry;
+        if (CacheStats cs = stats[cache_name]) {
+          if (mapping(mixed:CacheEntry) new_lm = lookup[cache_name])
+            foreach (old_lm; mixed key; CacheEntry entry) {
+              entry->element()->pos = -1;
+              int|float pval = entry->pval -= pval_base;
+              if (!new_lm[key]) {
+                // Relying on the interpreter lock here.
+                new_lm[key] = entry;
 
-		priority_queue->push(entry->element());
-		if (pval > max_pval) max_pval = pval;
+                priority_queue->push(entry->element());
+                if (pval > max_pval) max_pval = pval;
 
-		cs->count++;
-		cs->size += entry->size;
-		size += entry->size;
-	      }
-	    }
-	}
+                cs->count++;
+                cs->size += entry->size;
+                size += entry->size;
+              }
+            }
+        }
       }
 
       key = 0;
@@ -1070,18 +1070,18 @@ class CM_GreedyDual
 #endif
 
       if (intp (max_pval))
-	max_used_pval = max_pval;
+        max_used_pval = max_pval;
 
       CACHE_WERR ("%O: Rebased priority values - "
-		  "old base was %O, new range is 0..%O.\n",
-		  this, pval_base, max_pval);
+                  "old base was %O, new range is 0..%O.\n",
+                  this, pval_base, max_pval);
 
       if (Configuration admin_config = roxenp()->get_admin_configuration())
-	// Log an event, in case we suspect this starts to happen a lot.
-	admin_config->log_event ("roxen", "ram-cache-rebase", this->name, ([
-				   "old-pval-base": pval_base,
-				   "new-max-pval": max_pval,
-				 ]));
+        // Log an event, in case we suspect this starts to happen a lot.
+        admin_config->log_event ("roxen", "ram-cache-rebase", this->name, ([
+                                   "old-pval-base": pval_base,
+                                   "new-max-pval": max_pval,
+                                 ]));
     }
   }
 }
@@ -1098,7 +1098,7 @@ with the cost of each entry fixed at 1, which makes it optimize the
 cache hit ratio.";
 
   float calc_value (string cache_name, CacheEntry entry,
-		    int old_entry, mapping cache_context)
+                    int old_entry, mapping cache_context)
   {
     ASSERT_IF_DEBUG (entry->size /*%O*/ > 10, entry->size);
     return 1.0 / entry->size;
@@ -1123,8 +1123,8 @@ class CM_GDS_Time
     protected string _sprintf (int flag)
     {
       return flag == 'O' &&
-	sprintf ("CM_GDS_Time.CacheEntry(%O: %s, %db, %O, %O)",
-		 pval, format_key(), size, value, cost);
+        sprintf ("CM_GDS_Time.CacheEntry(%O: %s, %db, %O, %O)",
+                 pval, format_key(), size, value, cost);
     }
   }
 
@@ -1146,32 +1146,32 @@ class CM_GDS_Time
   //! assumes this is in microseconds.)
 
   protected void save_start_hrtime (string cache_name, mixed key,
-				    mapping cache_context)
+                                    mapping cache_context)
   {
     if (mapping all_ctx = cache_context || cache_contexts->get()) {
       int start = gettime_func() - all_ctx[0];
 
       if (mapping(mixed:int) ctx = all_ctx[cache_name]) {
 #if 0
-	if (!zero_type (ctx[key]))
-	  // This warning is useful since strictly speaking we don't
-	  // know which cache_lookup calls to use as start for the
-	  // time measurement, so the time cost might be bogus. If it
-	  // isn't the last one then you should probably replace some
-	  // calls with cache_peek.
-	  werror ("Warning: Detected repeated missed lookup calls.\n%s\n",
-		  describe_backtrace (backtrace()));
+        if (!zero_type (ctx[key]))
+          // This warning is useful since strictly speaking we don't
+          // know which cache_lookup calls to use as start for the
+          // time measurement, so the time cost might be bogus. If it
+          // isn't the last one then you should probably replace some
+          // calls with cache_peek.
+          werror ("Warning: Detected repeated missed lookup calls.\n%s\n",
+                  describe_backtrace (backtrace()));
 #endif
-	ctx[key] = start;
+        ctx[key] = start;
       }
       else
-	all_ctx[cache_name] = ([key: start]);
+        all_ctx[cache_name] = ([key: start]);
     }
 
     else {
 #ifdef DEBUG
       werror ("Warning: Got call from %O without cache context mapping.\n%s\n",
-	      Thread.this_thread(), describe_backtrace (backtrace()));
+              Thread.this_thread(), describe_backtrace (backtrace()));
 #endif
     }
   }
@@ -1195,64 +1195,64 @@ class CM_GDS_Time
   }
 
   protected int entry_create_hrtime (string cache_name, mixed key,
-				     mapping cache_context)
+                                     mapping cache_context)
   {
     if (mapping all_ctx = cache_context || cache_contexts->get())
       if (mapping(mixed:int) ctx = all_ctx[cache_name]) {
-	int start = m_delete (ctx, key);
-	if (!zero_type (start)) {
-	  int duration = (gettime_func() - all_ctx[0]) - start;
+        int start = m_delete (ctx, key);
+        if (!zero_type (start)) {
+          int duration = (gettime_func() - all_ctx[0]) - start;
 #if 0
-	  // This assertion is disabled for now, since it doesn't work
-	  // correctly when entry creations are interleaved instead of
-	  // properly nested.
-	  //
-	  // However, handling that would mean more overhead. Just to
-	  // detect interleaving we need to store the real timestamp
-	  // in save_start_hrtime, in addition to the one with
-	  // all_ctx[0] subtracted. And to evenly distribute the
-	  // overlapping time between the interleaved entries, we'd
-	  // have to track them and update their creation costs
-	  // afterwards. If all that work is concentrated to this
-	  // function (to keep save_start_hrtime as lean as possible
-	  // since it's called much more often), it'd be an O(n^2)
-	  // process.
-	  //
-	  // Also note that this assertion might trig if gettime_func
-	  // isn't monotonic (c.f. FIXME in CM_GDS_RealTime.gettime_func).
-	  ASSERT_IF_DEBUG (duration /*%O*/ >= 0 /* start: %O, all_ctx: %O */,
-			   duration, start, all_ctx);
+          // This assertion is disabled for now, since it doesn't work
+          // correctly when entry creations are interleaved instead of
+          // properly nested.
+          //
+          // However, handling that would mean more overhead. Just to
+          // detect interleaving we need to store the real timestamp
+          // in save_start_hrtime, in addition to the one with
+          // all_ctx[0] subtracted. And to evenly distribute the
+          // overlapping time between the interleaved entries, we'd
+          // have to track them and update their creation costs
+          // afterwards. If all that work is concentrated to this
+          // function (to keep save_start_hrtime as lean as possible
+          // since it's called much more often), it'd be an O(n^2)
+          // process.
+          //
+          // Also note that this assertion might trig if gettime_func
+          // isn't monotonic (c.f. FIXME in CM_GDS_RealTime.gettime_func).
+          ASSERT_IF_DEBUG (duration /*%O*/ >= 0 /* start: %O, all_ctx: %O */,
+                           duration, start, all_ctx);
 #endif
-	  if (duration < 0)
-	    // Can get negative duration when entry creation is
-	    // interleaved. Consider this case (t_acc is all_ctx[0]):
-	    //
-	    //                  0                            t5
-	    // Create entry A:  |----------------------------|
-	    //                      t1               t3
-	    // Create entry B:      |----------------|
-	    //           t_acc == 0 ^         t2         t4
-	    // Create entry C:                |----------|
-	    //                     t_acc == 0 ^          ^ t_acc == t3
-	    //
-	    // When we get here for entry C, the accumulated time is
-	    // t3, which could be larger than t4 - t2, thereby causing
-	    // negative duration. Setting the duration to 0 here not
-	    // only affects this entry; it also gives too much time
-	    // (t4 - t3) to the entry A which encompasses both
-	    // interleaved entries. The error stops there, though.
-	    duration = 0;
-	  all_ctx[0] += duration;
-	  return duration;
-	}
+          if (duration < 0)
+            // Can get negative duration when entry creation is
+            // interleaved. Consider this case (t_acc is all_ctx[0]):
+            //
+            //                  0                            t5
+            // Create entry A:  |----------------------------|
+            //                      t1               t3
+            // Create entry B:      |----------------|
+            //           t_acc == 0 ^         t2         t4
+            // Create entry C:                |----------|
+            //                     t_acc == 0 ^          ^ t_acc == t3
+            //
+            // When we get here for entry C, the accumulated time is
+            // t3, which could be larger than t4 - t2, thereby causing
+            // negative duration. Setting the duration to 0 here not
+            // only affects this entry; it also gives too much time
+            // (t4 - t3) to the entry A which encompasses both
+            // interleaved entries. The error stops there, though.
+            duration = 0;
+          all_ctx[0] += duration;
+          return duration;
+        }
       }
 #ifdef DEBUG
     // Note that this also happens if the caller calls cache_set()
     // several times to add the same entry. That should be avoided
     // (see the docs for cache_set).
     werror ("Warning: No preceding lookup for this key - "
-	    "cannot determine entry creation time.\n%s\n",
-	    describe_backtrace (backtrace()));
+            "cannot determine entry creation time.\n%s\n",
+            describe_backtrace (backtrace()));
 #endif
     return 0;
   }
@@ -1269,19 +1269,19 @@ class CM_GDS_Time
   // entry.
 
   float calc_value (string cache_name, CacheEntry entry,
-		    int old_entry, mapping cache_context)
+                    int old_entry, mapping cache_context)
   {
     if (int hrtime = !old_entry &&
-	entry_create_hrtime (cache_name, entry->key, cache_context)) {
+        entry_create_hrtime (cache_name, entry->key, cache_context)) {
       float cost = entry->cost = (float) hrtime;
 
       if (array(float|int) mean_entry = mean_costs[cache_name]) {
-	[float mean_cost, int mean_count] = mean_entry;
-	mean_entry[0] = (mean_count * mean_cost + cost) / (mean_count + 1);
-	if (mean_count < 1000) mean_entry[1] = mean_count + 1;
+        [float mean_cost, int mean_count] = mean_entry;
+        mean_entry[0] = (mean_count * mean_cost + cost) / (mean_count + 1);
+        if (mean_count < 1000) mean_entry[1] = mean_count + 1;
       }
       else
-	mean_costs[cache_name] = ({cost, 1});
+        mean_costs[cache_name] = ({cost, 1});
 
       return cost / entry->size;
     }
@@ -1397,11 +1397,11 @@ mapping(string:CacheManager) cache_manager_prefs = ([
   // also be a few caches in GDS(1), but it's not large enough to
   // really matter).
   "default": (System.CPU_TIME_IS_THREAD_LOCAL != "yes" ||
-	      System.CPU_TIME_RESOLUTION > 10000 ?
-	      // Don't use cpu time if it's too bad. Buglet: We just
-	      // assume the real time is better.
-	      cm_gds_realtime :
-	      cm_gds_cputime),
+              System.CPU_TIME_RESOLUTION > 10000 ?
+              // Don't use cpu time if it's too bad. Buglet: We just
+              // assume the real time is better.
+              cm_gds_realtime :
+              cm_gds_cputime),
 #else
   "default": cm_gds_realtime,
 #endif
@@ -1413,10 +1413,10 @@ mapping(string:CacheManager) cache_manager_prefs = ([
 //! All available cache managers.
 array(CacheManager) cache_managers =
   Array.uniq (({cache_manager_prefs->default,
-		cache_manager_prefs->no_cpu_timings,
-		cache_manager_prefs->no_thread_timings,
-		cache_manager_prefs->no_timings,
-	      }));
+                cache_manager_prefs->no_cpu_timings,
+                cache_manager_prefs->no_thread_timings,
+                cache_manager_prefs->no_timings,
+              }));
 
 protected array(int) string_to_oid(string s)
 {
@@ -1446,30 +1446,30 @@ class CacheStatsMIB
       string_to_oid(name);
     string label = "cache-"+name+"-";
     ::create(oid, ({}),
-	     ({
-	       UNDEFINED,
-	       SNMP.String(name,     label+"name"),
-	       SNMP.Gauge(get_count, label+"numEntries"),
-	       SNMP.Gauge(get_size,  label+"numBytes"),
-	       ({
-		 SNMP.Counter(get_hits, label+"numHits"),
-		 SNMP.Integer(get_cost_hits, label+"costHits"),
+             ({
+               UNDEFINED,
+               SNMP.String(name,     label+"name"),
+               SNMP.Gauge(get_count, label+"numEntries"),
+               SNMP.Gauge(get_size,  label+"numBytes"),
+               ({
+                 SNMP.Counter(get_hits, label+"numHits"),
+                 SNMP.Integer(get_cost_hits, label+"costHits"),
 #ifdef CACHE_BYTE_HR_STATS
-		 SNMP.Counter(get_byte_hits, label+"byteHits"),
+                 SNMP.Counter(get_byte_hits, label+"byteHits"),
 #else
-		 UNDEFINED,	/* Reserved */
+                 UNDEFINED,	/* Reserved */
 #endif
-	       }),
-	       ({
-		 SNMP.Counter(get_misses, label+"numMisses"),
-		 SNMP.Integer(get_cost_misses, label+"costMisses"),
+               }),
+               ({
+                 SNMP.Counter(get_misses, label+"numMisses"),
+                 SNMP.Integer(get_cost_misses, label+"costMisses"),
 #ifdef CACHE_BYTE_HR_STATS
-		 SNMP.Counter(get_byte_misses, label+"byteMisses"),
+                 SNMP.Counter(get_byte_misses, label+"byteMisses"),
 #else
-		 UNDEFINED,	/* Reserved */
+                 UNDEFINED,	/* Reserved */
 #endif
-	       }),
-	     }));
+               }),
+             }));
   }
 }
 
@@ -1493,17 +1493,17 @@ class CacheManagerMIB
     array(int) oid = mib->path + string_to_oid(manager->name);
     string label = "cacheManager-"+manager->name+"-";
     ::create(oid, ({}),
-	     ({
-	       UNDEFINED,
-	       SNMP.String(manager->name, label+"name"),
-	       ({
-		 SNMP.Integer(get_entries,         label+"numEntries"),
-		 SNMP.Integer(get_size,            label+"numBytes"),
-		 SNMP.Counter(get_entry_add_count, label+"addedEntries"),
-		 SNMP.Counter(get_byte_add_count,  label+"addedBytes"),
-	       }),
-	       UNDEFINED,	// Reserved for CacheStatsMIB.
-	     }));
+             ({
+               UNDEFINED,
+               SNMP.String(manager->name, label+"name"),
+               ({
+                 SNMP.Integer(get_entries,         label+"numEntries"),
+                 SNMP.Integer(get_size,            label+"numBytes"),
+                 SNMP.Counter(get_entry_add_count, label+"addedEntries"),
+                 SNMP.Counter(get_byte_add_count,  label+"addedBytes"),
+               }),
+               UNDEFINED,	// Reserved for CacheStatsMIB.
+             }));
   }
 }
 
@@ -1542,7 +1542,7 @@ protected void update_cache_size_balance()
   else {
     foreach (cache_managers, CacheManager mgr)
       used_size += mgr_used[mgr] =
-	mgr->size + (mgr->total_size_limit - mgr->size_limit);
+        mgr->size + (mgr->total_size_limit - mgr->size_limit);
 
     if (used_size < (int) (0.9 * total_size_limit)) {
       // The caches are underpopulated. Set the limits so that they all can
@@ -1552,13 +1552,13 @@ protected void update_cache_size_balance()
       // seriously out of hand.
       int extra = total_size_limit - used_size;
       CACHE_WERR ("Rebalance: %db under the limit - free growth "
-		  "(overshoot %db).\n", extra,
-		  extra * sizeof (cache_managers) + used_size -
-		  total_size_limit);
+                  "(overshoot %db).\n", extra,
+                  extra * sizeof (cache_managers) + used_size -
+                  total_size_limit);
 
       foreach (cache_managers, CacheManager mgr) {
-	mgr->total_size_limit = max (rebalance_min_size, mgr_used[mgr] + extra);
-	mgr->update_size_limit();
+        mgr->total_size_limit = max (rebalance_min_size, mgr_used[mgr] + extra);
+        mgr->update_size_limit();
       }
     }
 
@@ -1572,106 +1572,106 @@ protected void update_cache_size_balance()
       float total_weight = 0.0;
 
       foreach (cache_managers, CacheManager mgr) {
-	int reserved = (int) (rebalance_keep_factor * mgr_used[mgr]);
-	if (reserved < rebalance_min_size) {
-	  // Don't reserve more than the used size - the rest is up for grabs
-	  // by whichever cache fills it first. If that's under
-	  // rebalance_min_size it means we get some "overshoot" room here
-	  // too, like above.
-	  reserved = mgr_used[mgr];
+        int reserved = (int) (rebalance_keep_factor * mgr_used[mgr]);
+        if (reserved < rebalance_min_size) {
+          // Don't reserve more than the used size - the rest is up for grabs
+          // by whichever cache fills it first. If that's under
+          // rebalance_min_size it means we get some "overshoot" room here
+          // too, like above.
+          reserved = mgr_used[mgr];
 #ifdef CACHE_DEBUG
-	  overshoot_size += rebalance_min_size - reserved;
+          overshoot_size += rebalance_min_size - reserved;
 #endif
-	}
-	reserved_size += mgr_reserved_size[mgr] = reserved;
+        }
+        reserved_size += mgr_reserved_size[mgr] = reserved;
 
-	float hits;
-	float misses;
-	if (mgr->has_cost) {
-	  hits = mgr->cost_hits;
-	  misses = mgr->cost_misses;
-	} else {
-	  hits = mgr->hits;
-	  misses = mgr->misses;
-	}
+        float hits;
+        float misses;
+        if (mgr->has_cost) {
+          hits = mgr->cost_hits;
+          misses = mgr->cost_misses;
+        } else {
+          hits = mgr->hits;
+          misses = mgr->misses;
+        }
 
-	float lookups = hits + misses;
-	float hit_rate_per_byte = lookups != 0.0 && mgr_used[mgr] ?
-	  hits / lookups / mgr_used[mgr] : 0.0;
+        float lookups = hits + misses;
+        float hit_rate_per_byte = lookups != 0.0 && mgr_used[mgr] ?
+          hits / lookups / mgr_used[mgr] : 0.0;
 
-	// add_rate is a measurement on how many new bytes a cache could put
-	// into use, and hit_rate_per_byte weighs in a projection on how
-	// successful it would be caching those bytes.
-	float weight = max (mgr->add_rate * hit_rate_per_byte, 0.0);
-	mgr_weights[mgr] = weight;
-	total_weight += weight;
+        // add_rate is a measurement on how many new bytes a cache could put
+        // into use, and hit_rate_per_byte weighs in a projection on how
+        // successful it would be caching those bytes.
+        float weight = max (mgr->add_rate * hit_rate_per_byte, 0.0);
+        mgr_weights[mgr] = weight;
+        total_weight += weight;
 
-	CACHE_WERR ("Rebalance weight %s: Reserved %db, "
-		    "add rate %g, hr %g, hr/b %g, weight %g.\n",
-		    mgr->name, reserved, mgr->add_rate,
-		    lookups != 0.0 ? mgr->hits / lookups : 0.0,
-		    hit_rate_per_byte, weight);
+        CACHE_WERR ("Rebalance weight %s: Reserved %db, "
+                    "add rate %g, hr %g, hr/b %g, weight %g.\n",
+                    mgr->name, reserved, mgr->add_rate,
+                    lookups != 0.0 ? mgr->hits / lookups : 0.0,
+                    hit_rate_per_byte, weight);
       }
 
       if (total_weight > 0.0) {
-	// Don't change anything if there's no weight on any cache
-	// manager. That means there's no activity.
+        // Don't change anything if there's no weight on any cache
+        // manager. That means there's no activity.
 
-	if (reserved_size > total_size_limit) {
-	  // The caches are over the limit so much there's no room for
-	  // weighted redistribution. Either total_size_limit has shrunk or
-	  // they have overshot it as a result of the free growth policy.
-	  // Shrink each cache manager relative to its current size.
+        if (reserved_size > total_size_limit) {
+          // The caches are over the limit so much there's no room for
+          // weighted redistribution. Either total_size_limit has shrunk or
+          // they have overshot it as a result of the free growth policy.
+          // Shrink each cache manager relative to its current size.
 
-	  // Ensure no manager gets below rebalance_min_size. Note that if a
-	  // cache uses less than rebalance_min_size then the remaining space
-	  // is available to the other caches, which means that sum of the
-	  // limits might get larger than total_size_limit. That's intentional
-	  // - it's a variant of the "overshoot" policy above.
-	  int total_above_min = total_size_limit;
-	  foreach (cache_managers, CacheManager mgr) {
-	    int reserved = min (mgr_used[mgr], rebalance_min_size);
-	    used_size -= reserved;
-	    mgr_used[mgr] -= reserved;
-	    total_above_min -= reserved;
-	  }
+          // Ensure no manager gets below rebalance_min_size. Note that if a
+          // cache uses less than rebalance_min_size then the remaining space
+          // is available to the other caches, which means that sum of the
+          // limits might get larger than total_size_limit. That's intentional
+          // - it's a variant of the "overshoot" policy above.
+          int total_above_min = total_size_limit;
+          foreach (cache_managers, CacheManager mgr) {
+            int reserved = min (mgr_used[mgr], rebalance_min_size);
+            used_size -= reserved;
+            mgr_used[mgr] -= reserved;
+            total_above_min -= reserved;
+          }
 
-	  if (used_size > 0) {
-	    CACHE_WERR ("Rebalance: %db over the limit - shrinking linearly "
-			"(overshoot %db).\n", used_size - total_above_min,
-			rebalance_min_size * sizeof (cache_managers) +
-			total_above_min - total_size_limit);
+          if (used_size > 0) {
+            CACHE_WERR ("Rebalance: %db over the limit - shrinking linearly "
+                        "(overshoot %db).\n", used_size - total_above_min,
+                        rebalance_min_size * sizeof (cache_managers) +
+                        total_above_min - total_size_limit);
 
-	    foreach (cache_managers, CacheManager mgr) {
-	      int new_size = rebalance_min_size +
-		(int) (((float) mgr_used[mgr] / used_size) * total_above_min);
-	      CACHE_WERR ("Rebalance shrink %s: From %db to %db - diff %db.\n",
-			  mgr->name, mgr->total_size_limit, new_size,
-			  new_size - mgr->total_size_limit);
-	      mgr->total_size_limit = new_size;
-	      mgr->update_size_limit();
-	    }
-	  }
-	}
+            foreach (cache_managers, CacheManager mgr) {
+              int new_size = rebalance_min_size +
+                (int) (((float) mgr_used[mgr] / used_size) * total_above_min);
+              CACHE_WERR ("Rebalance shrink %s: From %db to %db - diff %db.\n",
+                          mgr->name, mgr->total_size_limit, new_size,
+                          new_size - mgr->total_size_limit);
+              mgr->total_size_limit = new_size;
+              mgr->update_size_limit();
+            }
+          }
+        }
 
-	else {
-	  int size_for_rebalance = total_size_limit - reserved_size;
-	  CACHE_WERR ("Rebalance: %db for rebalance (reserved %db, "
-		      "overshoot %db)\n", size_for_rebalance, reserved_size,
-		      overshoot_size);
+        else {
+          int size_for_rebalance = total_size_limit - reserved_size;
+          CACHE_WERR ("Rebalance: %db for rebalance (reserved %db, "
+                      "overshoot %db)\n", size_for_rebalance, reserved_size,
+                      overshoot_size);
 
-	  foreach (cache_managers, CacheManager mgr) {
-	    int new_size = max (mgr_reserved_size[mgr] +
-				(int) ((mgr_weights[mgr] / total_weight) *
-				       size_for_rebalance),
-				rebalance_min_size);
-	    CACHE_WERR ("Rebalance on weight %s: From %db to %db - diff %db.\n",
-			mgr->name, mgr->total_size_limit, new_size,
-			new_size - mgr->total_size_limit);
-	    mgr->total_size_limit = new_size;
-	    mgr->update_size_limit();
-	  }
-	}
+          foreach (cache_managers, CacheManager mgr) {
+            int new_size = max (mgr_reserved_size[mgr] +
+                                (int) ((mgr_weights[mgr] / total_weight) *
+                                       size_for_rebalance),
+                                rebalance_min_size);
+            CACHE_WERR ("Rebalance on weight %s: From %db to %db - diff %db.\n",
+                        mgr->name, mgr->total_size_limit, new_size,
+                        new_size - mgr->total_size_limit);
+            mgr->total_size_limit = new_size;
+            mgr->update_size_limit();
+          }
+        }
       }
     }
   }
@@ -1679,8 +1679,8 @@ protected void update_cache_size_balance()
 #ifdef DEBUG
   foreach (cache_managers, CacheManager mgr)
     ASSERT_IF_DEBUG (mgr/*%O*/->total_size_limit /*%O*/ == 0 ||
-		     mgr->total_size_limit >= rebalance_min_size,
-		     mgr, mgr->total_size_limit);
+                     mgr->total_size_limit >= rebalance_min_size,
+                     mgr, mgr->total_size_limit);
 #endif
 
   last_cache_size_balance = now;
@@ -1690,7 +1690,7 @@ protected void periodic_update_cache_size_balance()
 {
   update_cache_size_balance();
   roxenp()->background_run (rebalance_interval, 
-			    periodic_update_cache_size_balance);
+                            periodic_update_cache_size_balance);
 }
 
 #ifdef DEBUG_CACHE_SIZES
@@ -1700,9 +1700,9 @@ protected int cmp_sizeof_cache_entry (string cache_name, CacheEntry entry)
   mixed data = entry->data;
   mapping opts = (["block_strings": 1,
 #if DEBUG_CACHE_SIZES > 1
-		   "collect_internals": 1,
+                   "collect_internals": 1,
 #endif
-		 ]);
+                 ]);
   if (function(int|mapping:int) cm_cb =
       objectp (data) && data->cache_count_memory)
     res = cm_cb (opts) + Pike.count_memory (-1, entry, entry->key);
@@ -1710,9 +1710,9 @@ protected int cmp_sizeof_cache_entry (string cache_name, CacheEntry entry)
     res = Pike.count_memory (opts, entry, entry->key, data);
 #if DEBUG_CACHE_SIZES > 1
   werror ("Internals counted for %O / %O: ({\n%{%s,\n%}})\n",
-	  cache_name, entry,
-	  sort (map (opts->collect_internals,
-		     lambda (mixed m) {return sprintf ("%O", m);})));
+          cache_name, entry,
+          sort (map (opts->collect_internals,
+                     lambda (mixed m) {return sprintf ("%O", m);})));
 #endif
   return res;
 }
@@ -1729,7 +1729,7 @@ mapping(string:CacheManager) cache_list()
 }
 
 CacheManager cache_register (string cache_name,
-			     void|string|CacheManager manager,
+                             void|string|CacheManager manager,
                              void|CacheManagerPrefs prefs)
 //! Registers a new cache. Returns its @[CacheManager] instance.
 //!
@@ -1764,7 +1764,7 @@ CacheManager cache_register (string cache_name,
     string cache_type = manager;
     manager = cache_manager_prefs[cache_type];
     if (!manager) error ("Unknown cache manager type %O requested.\n",
-			 cache_type);
+                         cache_type);
   }
 
   string cache_name_prefix = (cache_name/":")[0];
@@ -1802,18 +1802,18 @@ void cache_unregister (string cache_name)
       // The cache is still gone, so remove its associated CacheStats.
       string cache_name_prefix = (cache_name/":")[0];
       if (cache_name_prefix != cache_name) {
-	m_delete(mgr->stats, cache_name);
+        m_delete(mgr->stats, cache_name);
       }
       if (!caches[cache_name_prefix]) {
-	string prefix = cache_name_prefix + ":";
-	foreach(caches; string name;) {
-	  if (has_prefix(name, prefix)) {
-	    // There's another cache that uses the CacheStats object.
-	    return;
-	  }
-	}
-	// None of the caches uses the CacheStats object.
-	m_delete(mgr->stats, cache_name_prefix);
+        string prefix = cache_name_prefix + ":";
+        foreach(caches; string name;) {
+          if (has_prefix(name, prefix)) {
+            // There's another cache that uses the CacheStats object.
+            return;
+          }
+        }
+        // None of the caches uses the CacheStats object.
+        m_delete(mgr->stats, cache_name_prefix);
       }
     }
   }
@@ -1848,7 +1848,7 @@ void cache_change_manager (string cache_name, CacheManager manager)
     // Move over the entries.
     destruct (lock);
     int entry_size_diff = (Pike.count_memory (0, manager->CacheEntry (0, 0)) -
-			   Pike.count_memory (0, old_mgr->CacheEntry (0, 0)));
+                           Pike.count_memory (0, old_mgr->CacheEntry (0, 0)));
     foreach (old_lm; mixed key; CacheEntry old_ent) {
       old_mgr->remove_entry (cache_name, old_ent);
       CacheEntry new_ent = manager->CacheEntry (key, old_ent->data);
@@ -1870,19 +1870,19 @@ void cache_expire (void|string cache_name)
     if (CacheManager mgr = caches[cn]) {
       CacheManagerPrefs cm_prefs = mgr->prefs[cn];
       if (cm_prefs && cm_prefs->inhibit_eviction) {
-	continue;
+        continue;
       }
       if (mapping(mixed:CacheEntry) lm = mgr->lookup[cn]) {
-	if (sizeof (mgr->lookup) == 1 || !cache_name) {
-	  // Only one cache in this manager, or zapping all caches.
-	  mgr->evict (0);
-	  mgr->update_size_limit();
-	}
-	else
-	  foreach (lm;; CacheEntry entry) {
-	    MORE_CACHE_WERR ("cache_expire: Removing %O\n", entry);
-	    mgr->remove_entry (cn, entry);
-	  }
+        if (sizeof (mgr->lookup) == 1 || !cache_name) {
+          // Only one cache in this manager, or zapping all caches.
+          mgr->evict (0);
+          mgr->update_size_limit();
+        }
+        else
+          foreach (lm;; CacheEntry entry) {
+            MORE_CACHE_WERR ("cache_expire: Removing %O\n", entry);
+            mgr->remove_entry (cn, entry);
+          }
       }
     }
   }
@@ -1925,23 +1925,23 @@ mixed cache_lookup (string cache_name, mixed key, void|mapping cache_context)
     if (CacheEntry entry = lm[key]) {
 
       if (entry->timeout && entry->timeout <= time (1) || !entry->data) {
-	mgr->remove_entry (cache_name, entry);
-	mgr->got_miss (cache_name, key, cache_context);
-	MORE_CACHE_WERR ("cache_lookup (%O, %s): %s\n",
-			 cache_name, RXML.utils.format_short (key),
-			 entry->data ? "Timed out" : "Destructed");
-	return UNDEFINED;
+        mgr->remove_entry (cache_name, entry);
+        mgr->got_miss (cache_name, key, cache_context);
+        MORE_CACHE_WERR ("cache_lookup (%O, %s): %s\n",
+                         cache_name, RXML.utils.format_short (key),
+                         entry->data ? "Timed out" : "Destructed");
+        return UNDEFINED;
       }
 
       mgr->got_hit (cache_name, entry, cache_context);
       MORE_CACHE_WERR ("cache_lookup (%O, %s): Hit\n",
-		       cache_name, RXML.utils.format_short (key));
+                       cache_name, RXML.utils.format_short (key));
       return entry->data;
     }
 
   mgr->got_miss (cache_name, key, cache_context);
   MORE_CACHE_WERR ("cache_lookup (%O, %s): Miss\n",
-		   cache_name, RXML.utils.format_short (key));
+                   cache_name, RXML.utils.format_short (key));
   return UNDEFINED;
 }
 
@@ -1954,25 +1954,25 @@ mixed cache_peek (string cache_name, mixed key)
     if (mapping(mixed:CacheEntry) lm = mgr->lookup[cache_name])
       if (CacheEntry entry = lm[key]) {
 
-	if (entry->timeout && entry->timeout <= time (1)) {
-	  mgr->remove_entry (cache_name, entry);
-	  MORE_CACHE_WERR ("cache_peek (%O, %s): Timed out\n",
-			   cache_name, RXML.utils.format_short (key));
-	  return UNDEFINED;
-	}
+        if (entry->timeout && entry->timeout <= time (1)) {
+          mgr->remove_entry (cache_name, entry);
+          MORE_CACHE_WERR ("cache_peek (%O, %s): Timed out\n",
+                           cache_name, RXML.utils.format_short (key));
+          return UNDEFINED;
+        }
 
-	MORE_CACHE_WERR ("cache_peek (%O, %s): Entry found\n",
-			 cache_name, RXML.utils.format_short (key));
-	return entry->data;
+        MORE_CACHE_WERR ("cache_peek (%O, %s): Entry found\n",
+                         cache_name, RXML.utils.format_short (key));
+        return entry->data;
       }
 
   MORE_CACHE_WERR ("cache_peek (%O, %s): Entry not found\n",
-		   cache_name, RXML.utils.format_short (key));
+                   cache_name, RXML.utils.format_short (key));
   return UNDEFINED;
 }
 
 mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
-		 void|mapping|int(1..1) cache_context)
+                 void|mapping|int(1..1) cache_context)
 //! Adds an entry to a cache.
 //!
 //! @param cache_name
@@ -2024,13 +2024,13 @@ mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
     new_entry->timeout = time (1) + timeout;
 
   mgr->add_entry (cache_name, new_entry,
-		  intp (cache_context) && cache_context,
-		  mappingp (cache_context) && cache_context);
+                  intp (cache_context) && cache_context,
+                  mappingp (cache_context) && cache_context);
 
   MORE_CACHE_WERR ("cache_set (%O, %s, %s, %O): %O\n",
-		   cache_name, RXML.utils.format_short (key),
-		   sprintf (objectp (data) ? "%O" : "%t", data), timeout,
-		   new_entry);
+                   cache_name, RXML.utils.format_short (key),
+                   sprintf (objectp (data) ? "%O" : "%t", data), timeout,
+                   new_entry);
 
   return data;
 }
@@ -2047,7 +2047,7 @@ void cache_remove (string cache_name, mixed key)
   if (CacheManager mgr = caches[cache_name])
     if (mapping(mixed:CacheEntry) lm = mgr->lookup[cache_name])
       if (CacheEntry entry = lm[key])
-	mgr->remove_entry (cache_name, entry);
+        mgr->remove_entry (cache_name, entry);
 }
 
 mapping(mixed:CacheEntry) cache_entries (string cache_name)
@@ -2122,40 +2122,40 @@ protected void cache_clean()
     if (mapping(mixed:CacheEntry) lm = mgr->lookup[cache_name]) {
       foreach (lm;; CacheEntry entry) {
 
-	if (!entry->data) {
-	  MORE_CACHE_WERR ("%s: Removing destructed entry %O\n",
-			   cache_name, entry);
-	  destr_garb_size += entry->size;
-	  mgr->remove_entry (cache_name, entry);
-	}
+        if (!entry->data) {
+          MORE_CACHE_WERR ("%s: Removing destructed entry %O\n",
+                           cache_name, entry);
+          destr_garb_size += entry->size;
+          mgr->remove_entry (cache_name, entry);
+        }
 
-	else if (entry->timeout && entry->timeout <= now) {
-	  MORE_CACHE_WERR ("%s: Removing timed out entry %O\n",
-			   cache_name, entry);
-	  timeout_garb_size += entry->size;
-	  mgr->remove_entry (cache_name, entry);
-	}
+        else if (entry->timeout && entry->timeout <= now) {
+          MORE_CACHE_WERR ("%s: Removing timed out entry %O\n",
+                           cache_name, entry);
+          timeout_garb_size += entry->size;
+          mgr->remove_entry (cache_name, entry);
+        }
 
-	else {
+        else {
 #ifdef DEBUG_CACHE_SIZES
-	  cache_count++;
-	  cache_size += entry->size;
-	  int size = cmp_sizeof_cache_entry (cache_name, entry);
-	  if (size != entry->cmp_size) {
-	    // Note that there are a lot of sources for false alarms here.
-	    // E.g. RXML trees can increase in size due to new <if>/<else>
-	    // branches getting visited, the entry might just happen to be in
-	    // use during the count_memory call here, and there are often
-	    // minor differences for whatever reason..
-	    werror ("Size diff in %O: Is %d, was %d in cache_set() - "
-		    "diff %d: %O\n",
-		    cache_name, size, entry->cmp_size,
-		    size - entry->cmp_size, entry);
-	    // Update to avoid repeated messages.
-	    entry->cmp_size = size;
-	  }
+          cache_count++;
+          cache_size += entry->size;
+          int size = cmp_sizeof_cache_entry (cache_name, entry);
+          if (size != entry->cmp_size) {
+            // Note that there are a lot of sources for false alarms here.
+            // E.g. RXML trees can increase in size due to new <if>/<else>
+            // branches getting visited, the entry might just happen to be in
+            // use during the count_memory call here, and there are often
+            // minor differences for whatever reason..
+            werror ("Size diff in %O: Is %d, was %d in cache_set() - "
+                    "diff %d: %O\n",
+                    cache_name, size, entry->cmp_size,
+                    size - entry->cmp_size, entry);
+            // Update to avoid repeated messages.
+            entry->cmp_size = size;
+          }
 #endif
-	}
+        }
       }
     }
 
@@ -2164,12 +2164,12 @@ protected void cache_clean()
     // These might show false alarms due to races.
     if (cache_count != st->count)
       werror ("Entry count difference for %O: "
-	      "Have %d, expected %d - diff %d.\n",
-	      cache_name, cache_count, st->count, cache_count - st->count);
+              "Have %d, expected %d - diff %d.\n",
+              cache_name, cache_count, st->count, cache_count - st->count);
     if (cache_size != st->size)
       werror ("Entry size difference for %O: "
-	      "Have %d, expected %d - diff %d.\n",
-	      cache_name, cache_size, st->size, cache_size - st->size);
+              "Have %d, expected %d - diff %d.\n",
+              cache_name, cache_size, st->size, cache_size - st->size);
     cache_sizes[mgr] += st->size;
 #endif
   }
@@ -2182,17 +2182,17 @@ protected void cache_clean()
     // This might show false alarms due to races.
     if (cache_sizes[mgr] != mgr->size)
       werror ("Cache size difference for %O: "
-	      "Have %d, expected %d - diff %d.\n",
-	      mgr, cache_sizes[mgr], mgr->size, cache_sizes[mgr] - mgr->size);
+              "Have %d, expected %d - diff %d.\n",
+              mgr, cache_sizes[mgr], mgr->size, cache_sizes[mgr] - mgr->size);
 #endif
   }
 
   vt = gethrvtime() - vt;	// -1 - -1 if cpu time isn't working.
   t = gethrtime() - t;
   CACHE_WERR ("Finished RAM cache cleanup: "
-	      "%db stale, %db timed out, took %s.\n",
-	      destr_garb_size, timeout_garb_size,
-	      Roxen.format_hrtime (vt || t));
+              "%db stale, %db timed out, took %s.\n",
+              destr_garb_size, timeout_garb_size,
+              Roxen.format_hrtime (vt || t));
 
   int stat_last_period = now - last_gc_run;
   int stat_tot_period = now - cache_start_time;
@@ -2228,16 +2228,16 @@ protected void cache_clean()
       sum_gc_runs = old_weight * sum_gc_runs + 1.0;
       sum_gc_time = old_weight * sum_gc_time + (float) (vt || t);
       sum_destruct_garbage_size = (old_weight * sum_destruct_garbage_size +
-				   (float) destr_garb_size);
+                                   (float) destr_garb_size);
       sum_timeout_garbage_size = (old_weight * sum_timeout_garbage_size +
-				  (float) timeout_garb_size);
+                                  (float) timeout_garb_size);
     }
 
     if (total_size) {
       avg_destruct_garbage_ratio = (old_weight * avg_destruct_garbage_ratio +
-				    our_weight * destr_garb_size / total_size);
+                                    our_weight * destr_garb_size / total_size);
       avg_timeout_garbage_ratio = (old_weight * avg_timeout_garbage_ratio +
-				   our_weight * timeout_garb_size / total_size);
+                                   our_weight * timeout_garb_size / total_size);
     }
   }
 
@@ -2245,15 +2245,15 @@ protected void cache_clean()
 
   if (Configuration admin_config = roxenp()->get_admin_configuration())
     admin_config->log_event ("roxen", "ram-cache-gc", 0, ([
-			       "handle-cputime": vt,
-			       "handle-time": t,
-			       "stale-size": destr_garb_size,
-			       "timed-out-size": timeout_garb_size,
-			     ]));
+                               "handle-cputime": vt,
+                               "handle-time": t,
+                               "stale-size": destr_garb_size,
+                               "timed-out-size": timeout_garb_size,
+                             ]));
 
   // Fall back to 60 secs just in case the config is messed up somehow.
   roxenp()->background_run (roxenp()->query ("mem_cache_gc_2") || 60,
-			    cache_clean);
+                            cache_clean);
 }
 
 
@@ -2321,7 +2321,7 @@ private int max_persistence;
 private void store_session(string db_name, string id, mixed data, int t) {
   data = encode_value(data);
   db(db_name)->query("REPLACE INTO session_cache VALUES (%s,%d,%s)",
-		     id, t, data);
+                     id, t, data);
 }
 
 // GC that, depending on the sessions session_persistence either
@@ -2333,18 +2333,18 @@ private void session_cache_handler() {
   clean:
     foreach(session_buckets[-1]; string id; mixed data) {
       if(session_persistence[id]<t) {
-	m_delete(session_buckets[-1], id);
-	m_delete(session_persistence, id);
-	continue;
+        m_delete(session_buckets[-1], id);
+        m_delete(session_persistence, id);
+        continue;
       }
       for(int i; i<SESSION_BUCKETS-2; i++)
-	if(session_buckets[i][id]) {
-	  continue clean;
-	}
+        if(session_buckets[i][id]) {
+          continue clean;
+        }
       if(objectp(data)) {
-	m_delete(session_buckets[-1], id);
-	m_delete(session_persistence, id);
-	continue;
+        m_delete(session_buckets[-1], id);
+        m_delete(session_persistence, id);
+        continue;
       }
       store_session("local", id, data, session_persistence[id]);
       m_delete(session_buckets[-1], id);
@@ -2364,10 +2364,10 @@ private void session_cache_destruct() {
     report_notice("Synchronizing session cache");
     foreach(session_buckets, mapping(string:mixed) session_bucket)
       foreach(session_bucket; string id; mixed data)
-	if(session_persistence[id]>t) {
-	  store_session("local", id, data, session_persistence[id]);
-	  m_delete(session_persistence, id);
-	}
+        if(session_persistence[id]>t) {
+          store_session("local", id, data, session_persistence[id]);
+          m_delete(session_persistence, id);
+        }
   }
   report_notice("Session cache synchronized\n");
 }
@@ -2402,8 +2402,8 @@ mixed get_session_data(string id, void|string db_name) {
   if (!db_name)
     foreach(session_buckets, mapping bucket)
       if(data=bucket[id]) {
-	session_buckets[0][id] = data;
-	return data;
+        session_buckets[0][id] = data;
+        return data;
       }
   data = db(db_name || "local")->
     query("SELECT data FROM session_cache WHERE id=%s", id);
@@ -2432,7 +2432,7 @@ mixed get_session_data(string id, void|string db_name) {
 //! @seealso
 //!   get_session_data, clear_session
 string set_session_data(mixed data, void|string id, void|int persistence,
-			void|int(0..1)|string store) {
+                        void|int(0..1)|string store) {
   if(!id) id = ([function(void:string)]roxenp()->create_unique_id)();
   if (intp (store)) {
     session_persistence[id] = persistence;
@@ -2451,9 +2451,9 @@ int setup_session_table (string db_name)
   Sql.Sql conn = db (db_name);
   if (!conn) return 0;
   conn->query("CREATE TABLE IF NOT EXISTS session_cache ("
-	      "id CHAR(32) NOT NULL PRIMARY KEY, "
-	      "persistence INT UNSIGNED NOT NULL DEFAULT 0, "
-	      "data BLOB NOT NULL)");
+              "id CHAR(32) NOT NULL PRIMARY KEY, "
+              "persistence INT UNSIGNED NOT NULL DEFAULT 0, "
+              "data BLOB NOT NULL)");
   return 1;
 }
 
@@ -2468,7 +2468,7 @@ private void setup_tables() {
 //! Initializes the session handler.
 void init_session_cache() {
   db = (([function(string:function(string:object(Sql.Sql)))]master()->resolv)
-	("DBManager.cached_get"));
+        ("DBManager.cached_get"));
   setup_tables();
 }
 

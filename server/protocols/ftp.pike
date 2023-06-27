@@ -183,7 +183,7 @@ class RequestID2
     _num = ++__num[0];
     if (m_rid) {
       report_debug("REQUESTID: New request id #%d (CHILD to #%d).\n",
-		   _num, m_rid->_num);
+                   _num, m_rid->_num);
     } else {
       report_debug("REQUESTID: New request id #%d (MASTER).\n", _num);
     }
@@ -194,19 +194,19 @@ class RequestID2
     if (m_rid) {
       object o = this_object();
       foreach(indices(m_rid), string var) {
-	if (object_variablep(o, var)) {
+        if (object_variablep(o, var)) {
 #ifdef DEBUG
-	  if (catch {
+          if (catch {
 #endif /* DEBUG */
-	    o[var] = m_rid[var];
+            o[var] = m_rid[var];
 #ifdef DEBUG
-	  }) {
-	    report_error("FTP2: "
-			 "Failed to copy variable %s (value:%O)\n",
-			 var, m_rid[var]);
-	  }
+          }) {
+            report_error("FTP2: "
+                         "Failed to copy variable %s (value:%O)\n",
+                         var, m_rid[var]);
+          }
 #endif /* DEBUG */
-	}
+        }
       }
       o->misc = m_rid->misc + ([]);
     } else {
@@ -289,12 +289,12 @@ class FileWrapper
     remove_call_out(delayed_nonblocking);
     if (r_cb) {
       if (data) {
-	// We need to call r_cb as soon as possible, but we can't do it here
-	// and we can't enable the read_callback just yet to maintain order.
-	call_out(delayed_nonblocking, 0, w_cb);
-	f->set_nonblocking(0, w_cb, 0);
+        // We need to call r_cb as soon as possible, but we can't do it here
+        // and we can't enable the read_callback just yet to maintain order.
+        call_out(delayed_nonblocking, 0, w_cb);
+        f->set_nonblocking(0, w_cb, 0);
       } else {
-	f->set_nonblocking(read_callback, w_cb, close_callback);
+        f->set_nonblocking(read_callback, w_cb, close_callback);
       }
     } else {
       f->set_nonblocking(0, w_cb, 0);
@@ -325,19 +325,19 @@ class FileWrapper
     ftpsession->touch_me();
     if (data) {
       if (n) {
-	if (n < sizeof(data)) {
-	  string d = data[..n-1];
-	  data = data[n..];
-	  return convert(d);
-	} else {
-	  string d = data;
-	  data = 0;
-	  return convert(d + f->read(n - sizeof(d)));
-	}
+        if (n < sizeof(data)) {
+          string d = data[..n-1];
+          data = data[n..];
+          return convert(d);
+        } else {
+          string d = data;
+          data = 0;
+          return convert(d + f->read(n - sizeof(d)));
+        }
       } else {
-	string d = data;
-	data = 0;
-	return convert(d + f->read());
+        string d = data;
+        data = 0;
+        return convert(d + f->read());
       }
     }
     return(convert(f->read(n)));
@@ -555,8 +555,8 @@ class PutFileWrapper
           code = 226;
         else
           code = 550;
-	response_code = code;
-	response = ({msg});
+        response_code = code;
+        response = ({msg});
       }
       gotdata = gotdata[n+1..];
     }
@@ -637,7 +637,7 @@ protected string name_from_uid(RequestID master_session, int uid)
 #define LS_FLAG_v	0x80000
 
 class LS_L(protected RequestID master_session,
-	   protected int|void flags)
+           protected int|void flags)
 {
   protected constant decode_mode = ({
     ({ S_IRUSR, S_IRUSR, 1, "r" }),
@@ -658,7 +658,7 @@ class LS_L(protected RequestID master_session,
   });
 
   protected constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-			      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
+                              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
 
   string ls_l(string file, array st)
   {
@@ -673,7 +673,7 @@ class LS_L(protected RequestID master_session,
 
     foreach(decode_mode, array(string|int) info) {
       if ((mode & info[0]) == info[1]) {
-	perm[info[2]] = info[3];
+        perm[info[2]] = info[3];
       }
     }
 
@@ -685,12 +685,12 @@ class LS_L(protected RequestID master_session,
     if (!(flags & LS_FLAG_n)) {
       // Use symbolic names for uid and gid.
       if (!stringp(st[5])) {
-	user = name_from_uid(master_session, st[5]);
+        user = name_from_uid(master_session, st[5]);
       }
 
       if (!stringp(st[6])) {
-	// FIXME: Convert st[6] to symbolic group name.
-	if (!st[6]) group = "wheel";
+        // FIXME: Convert st[6] to symbolic group name.
+        if (!st[6]) group = "wheel";
       }
     }
 
@@ -701,22 +701,22 @@ class LS_L(protected RequestID master_session,
     if ((st[3] <= now - 15778800) || (st[3] > now)) {
       // Month Day  Year
       ts = sprintf("%s %02d  %04d",
-		   months[lt->mon], lt->mday, 1900+lt->year);
+                   months[lt->mon], lt->mday, 1900+lt->year);
     } else {
       // Month Day Hour:minute
       ts = sprintf("%s %02d %02d:%02d",
-		   months[lt->mon], lt->mday, lt->hour, lt->min);
+                   months[lt->mon], lt->mday, lt->hour, lt->min);
     }
 
     if (flags & LS_FLAG_G) {
       // No group.
       return sprintf("%s   1 %-10s %12d %s %s\n", perm*"",
-		     user, (st[1]<0? 512:st[1]),
-		     ts, file);
+                     user, (st[1]<0? 512:st[1]),
+                     ts, file);
     } else {
       return sprintf("%s   1 %-10s %-6s %12d %s %s\n", perm*"",
-		     user, group, (st[1]<0? 512:st[1]),
-		     ts, file);
+                     user, group, (st[1]<0? 512:st[1]),
+                     ts, file);
     }
   }
 }
@@ -758,8 +758,8 @@ class LSFile
       // ls is always ASCII-mode...
       s = replace(s, "\n", "\r\n");
       if (conv) {
-	// EBCDIC or potentially other charsets.
-	s = conv->feed(s)->drain();
+        // EBCDIC or potentially other charsets.
+        s = conv->feed(s)->drain();
       }
     }
     output_queue += ({ s });
@@ -790,36 +790,36 @@ class LSFile
 
     if (!(flags & LS_FLAG_U)) {
       if (flags & LS_FLAG_S) {
-	array(int) sizes = allocate(sizeof(files));
-	int i;
-	for (i=0; i < sizeof(files); i++) {
-	  array|object st = stat_file(combine_path(dir, files[i]));
-	  if (st) {
-	    sizes[i] = st[1];
-	  } else {
-	    // Should not happen, but...
-	    files -= ({ files[i] });
-	  }
-	}
-	sort(sizes, files);
+        array(int) sizes = allocate(sizeof(files));
+        int i;
+        for (i=0; i < sizeof(files); i++) {
+          array|object st = stat_file(combine_path(dir, files[i]));
+          if (st) {
+            sizes[i] = st[1];
+          } else {
+            // Should not happen, but...
+            files -= ({ files[i] });
+          }
+        }
+        sort(sizes, files);
       } else if (flags & LS_FLAG_t) {
-	array(int) times = allocate(sizeof(files));
-	int i;
-	for (i=0; i < sizeof(files); i++) {
-	  array|object st = stat_file(combine_path(dir, files[i]));
-	  if (st) {
-	    times[i] = -st[-4];	// Note: Negative time.
-	  } else {
-	    // Should not happen, but...
-	    files -= ({ files[i] });
-	  }
-	}
-	sort(times, files);
+        array(int) times = allocate(sizeof(files));
+        int i;
+        for (i=0; i < sizeof(files); i++) {
+          array|object st = stat_file(combine_path(dir, files[i]));
+          if (st) {
+            times[i] = -st[-4];	// Note: Negative time.
+          } else {
+            // Should not happen, but...
+            files -= ({ files[i] });
+          }
+        }
+        sort(times, files);
       } else {
-	sort(files);
+        sort(files);
       }
       if (flags & LS_FLAG_r) {
-	files = reverse(files);
+        files = reverse(files);
       }
     }
 
@@ -830,41 +830,41 @@ class LSFile
       string long = combine_path(dir, short);
       array|object st = stat_file(long);
       if (st) {
-	if (flags & LS_FLAG_Q) {
-	  // Enclose in quotes.
-	  // Space needs to be quoted to be compatible with -m
-	  short = "\"" +
-	    replace(short,
-		    ({ "\n", "\r", "\\", "\"", "\'", " " }),
-		    ({ "\\n", "\\r", "\\\\", "\\\"", "\\\'", "\\020" })) +
-	    "\"";
-	}
-	short = string_to_utf8(short);
-	if (flags & LS_FLAG_F) {
-	  if (st[1] < 0) {
-	    // Directory
-	    short += "/";
-	  } else if (st[0] & 0111) {
-	    // Executable
-	    short += "*";
-	  }
-	}
-	int blocks = 1;
-	if (st[1] >= 0) {
-	  blocks = (st[1] + 1023)/1024;	// Blocks are 1KB.
-	}
-	total += blocks;
-	if (flags & LS_FLAG_s) {
-	  res += sprintf("%7d ", blocks);
-	}
-	if (flags & LS_FLAG_b) {
-	  short = quote_non_print(short);
-	}
-	if (flags & LS_FLAG_l) {
-	  res += ls_l(short, st);
-	} else {
-	  res += short + "\n";
-	}
+        if (flags & LS_FLAG_Q) {
+          // Enclose in quotes.
+          // Space needs to be quoted to be compatible with -m
+          short = "\"" +
+            replace(short,
+                    ({ "\n", "\r", "\\", "\"", "\'", " " }),
+                    ({ "\\n", "\\r", "\\\\", "\\\"", "\\\'", "\\020" })) +
+            "\"";
+        }
+        short = string_to_utf8(short);
+        if (flags & LS_FLAG_F) {
+          if (st[1] < 0) {
+            // Directory
+            short += "/";
+          } else if (st[0] & 0111) {
+            // Executable
+            short += "*";
+          }
+        }
+        int blocks = 1;
+        if (st[1] >= 0) {
+          blocks = (st[1] + 1023)/1024;	// Blocks are 1KB.
+        }
+        total += blocks;
+        if (flags & LS_FLAG_s) {
+          res += sprintf("%7d ", blocks);
+        }
+        if (flags & LS_FLAG_b) {
+          short = quote_non_print(short);
+        }
+        if (flags & LS_FLAG_l) {
+          res += ls_l(short, st);
+        } else {
+          res += short + "\n";
+        }
       }
     }
     switch (flags & (LS_FLAG_l|LS_FLAG_C|LS_FLAG_m)) {
@@ -902,7 +902,7 @@ class LSFile
       string long = fix_path(short);
 
       if ((!sizeof(long)) || (long[-1] != '/')) {
-	long += "/";
+        long += "/";
       }
       RequestID session = RequestID2(master_session);
       session->method = "DIR";
@@ -910,80 +910,80 @@ class LSFile
       mixed err;
       mapping(string:array) dir;
       err = catch {
-	dir = session->conf->find_dir_stat(long, session);
+        dir = session->conf->find_dir_stat(long, session);
       };
 
       destruct(session);
 
       if (err) {
-	report_error("FTP: LSFile->list_next_directory(): "
-		     "find_dir_stat(\"%s\") failed:\n"
-		     "%s\n", long, describe_backtrace(err));
+        report_error("FTP: LSFile->list_next_directory(): "
+                     "find_dir_stat(\"%s\") failed:\n"
+                     "%s\n", long, describe_backtrace(err));
       }
 
       DWRITE("FTP: LSFile->list_next_directory(): "
-	     "find_dir_stat(\"%s\") => %O\n", long, dir);
+             "find_dir_stat(\"%s\") => %O\n", long, dir);
 
       // Put them in the stat cache.
       foreach(indices(dir||({})), string f) {
-	stat_cache[combine_path(long, f)] = dir[f];
+        stat_cache[combine_path(long, f)] = dir[f];
       }
 
       dir = dir || ([]);
 
       if (flags & LS_FLAG_a) {
-	if (long != "/") {
-	  dir[".."] = stat_file(combine_path(long,"../"));
-	}
-	dir["."] = stat_file(combine_path(long));
+        if (long != "/") {
+          dir[".."] = stat_file(combine_path(long,"../"));
+        }
+        dir["."] = stat_file(combine_path(long));
       }
 
       string listing = "";
       if (sizeof(dir)) {
-	if (!(flags & LS_FLAG_A)) {
-	  foreach(indices(dir), string f) {
-	    if (sizeof(f) && (f[0] == '.')) {
-	      m_delete(dir, f);
-	    }
-	  }
-	} else if (!(flags & LS_FLAG_a)) {
-	  foreach(indices(dir), string f) {
-	    if ((< ".", ".." >)[f]) {
-	      m_delete(dir, f);
-	    }
-	  }
-	}
-	if (flags & LS_FLAG_R) {
-	  foreach(indices(dir), string f) {
-	    if (!((<".","..">)[f])) {
-	      array(mixed) st = dir[f];
-	      if (st && (st[1] < 0)) {
-		if (short[-1] == '/') {
-		  dir_stack->push(short + f);
-		} else {
-		  dir_stack->push(short + "/" + f);
-		}
-	      }
-	    }
-	  }
-	}
-	if (sizeof(dir)) {
-	  listing = list_files(indices(dir), long);
-	} else if (flags & LS_FLAG_l) {
-	  listing = "total 0\n";
-	}
+        if (!(flags & LS_FLAG_A)) {
+          foreach(indices(dir), string f) {
+            if (sizeof(f) && (f[0] == '.')) {
+              m_delete(dir, f);
+            }
+          }
+        } else if (!(flags & LS_FLAG_a)) {
+          foreach(indices(dir), string f) {
+            if ((< ".", ".." >)[f]) {
+              m_delete(dir, f);
+            }
+          }
+        }
+        if (flags & LS_FLAG_R) {
+          foreach(indices(dir), string f) {
+            if (!((<".","..">)[f])) {
+              array(mixed) st = dir[f];
+              if (st && (st[1] < 0)) {
+                if (short[-1] == '/') {
+                  dir_stack->push(short + f);
+                } else {
+                  dir_stack->push(short + "/" + f);
+                }
+              }
+            }
+          }
+        }
+        if (sizeof(dir)) {
+          listing = list_files(indices(dir), long);
+        } else if (flags & LS_FLAG_l) {
+          listing = "total 0\n";
+        }
       } else {
-	DWRITE("FTP: LSFile->list_next_directory(): NO FILES!\n");
+        DWRITE("FTP: LSFile->list_next_directory(): NO FILES!\n");
 
-	if (flags & LS_FLAG_l) {
-	  listing = "total 0\n";
-	}
+        if (flags & LS_FLAG_l) {
+          listing = "total 0\n";
+        }
       }
       if (name_directories) {
-	listing = "\n" + short + ":\n" + listing;
+        listing = "\n" + short + ":\n" + listing;
       }
       if (listing != "") {
-	output(listing);
+        output(listing);
       }
       session = RequestID2(master_session);
       session->method = "LIST";
@@ -1019,7 +1019,7 @@ class LSFile
   {
     if (!sizeof(output_queue) || output_queue[-1]) {
       while (list_next_directory())
-	;
+        ;
     }
   }
 
@@ -1041,10 +1041,10 @@ class LSFile
 
     if (s) {
       if (n && (n < sizeof(s))) {
-	output_queue[output_pos] = s[n..];
-	s = s[..n-1];
+        output_queue[output_pos] = s[n..];
+        s = s[..n-1];
       } else {
-	output_queue[output_pos++] = 0;
+        output_queue[output_pos++] = 0;
       }
       return s;
     } else {
@@ -1055,10 +1055,10 @@ class LSFile
   }
 
   void create(string cwd_, array(string) argv_, int flags_,
-	      object session_, string output_mode_, object ftpsession_)
+              object session_, string output_mode_, object ftpsession_)
   {
     DWRITE("FTP: LSFile(\"%s\", %O, %08x, X, \"%s\")\n",
-	   cwd_, argv_, flags_, output_mode_);
+           cwd_, argv_, flags_, output_mode_);
 
     ::create(session_, flags_);
 
@@ -1081,26 +1081,26 @@ class LSFile
       string long = fix_path(short);
       array|object st = stat_file(long, session);
       if (st) {
-	if ((< -2, -3 >)[st[1]] &&
-	    (!(flags & LS_FLAG_d))) {
-	  // Directory
-	  dir_stack->push(short);
-	} else {
-	  files[n_files++] = short;
-	}
+        if ((< -2, -3 >)[st[1]] &&
+            (!(flags & LS_FLAG_d))) {
+          // Directory
+          dir_stack->push(short);
+        } else {
+          files[n_files++] = short;
+        }
       } else {
-	output(short + ": not found\n");
-	session->conf->log(([ "error":404 ]), session);
+        output(short + ": not found\n");
+        session->conf->log(([ "error":404 ]), session);
       }
       destruct(session);
     }
 
     DWRITE("FTP: LSFile: %d files, %d directories\n",
-	   n_files, dir_stack->ptr);
+           n_files, dir_stack->ptr);
 
     if (n_files) {
       if (n_files < sizeof(files)) {
-	files -= ({ 0 });
+        files -= ({ 0 });
       }
       string s = list_files(files, cwd);	// May modify dir_stack (-R)
       output(s);
@@ -1112,7 +1112,7 @@ class LSFile
     }
     if (dir_stack->ptr) {
       name_directories = dir_stack->ptr &&
-	((dir_stack->ptr > 1) || n_files);
+        ((dir_stack->ptr > 1) || n_files);
 
       list_next_directory();
     } else {
@@ -1182,33 +1182,33 @@ class TelnetSession {
     }
     if (fd) {
       if (!to_send) {
-	// Support for delayed close.
-	BACKEND_CLOSE(fd);
+        // Support for delayed close.
+        BACKEND_CLOSE(fd);
       } else if (sizeof(to_send)) {
-	int n = fd->write(to_send);
+        int n = fd->write(to_send);
 
-	if (n >= 0) {
-	  conf->hsent += n;
+        if (n >= 0) {
+          conf->hsent += n;
 
-	  to_send = to_send[n..];
+          to_send = to_send[n..];
 
-	  if (sizeof(to_send)) {
-	    fd->set_write_callback(send_data);
-	  }
-	} else {
-	  // Error.
-	  DWRITE("TELNET: write failed: errno:%d\n", fd->errno());
-	  BACKEND_CLOSE(fd);
-	}
+          if (sizeof(to_send)) {
+            fd->set_write_callback(send_data);
+          }
+        } else {
+          // Error.
+          DWRITE("TELNET: write failed: errno:%d\n", fd->errno());
+          BACKEND_CLOSE(fd);
+        }
       } else {
-	// Nothing to send for the moment.
+        // Nothing to send for the moment.
 
-	// FIXME: Is this the correct use?
-	fd->set_write_callback(0);
+        // FIXME: Is this the correct use?
+        fd->set_write_callback(0);
 
-	if (write_cb) {
-	  DWRITE("TELNET: Write callback with nothing to send.\n");
-	}
+        if (write_cb) {
+          DWRITE("TELNET: Write callback with nothing to send.\n");
+        }
       }
     } else {
       report_error("FTP2: Write callback with no fd.\n");
@@ -1218,22 +1218,22 @@ class TelnetSession {
 
   private mapping(string:function) default_cb = ([
     "BRK":lambda() {
-	    if (fd) {
-	      fd->close();
-	      fd = 0;
-	    }
-	    destruct();
-	    throw(0);
-	  },
+            if (fd) {
+              fd->close();
+              fd = 0;
+            }
+            destruct();
+            throw(0);
+          },
     "AYT":lambda() {
-	    send("\377\361");	// NOP
-	  },
+            send("\377\361");	// NOP
+          },
     "WILL":lambda(int code) {
-	      send(sprintf("\377\376%c", code));	// DON'T xxx
-	   },
+              send(sprintf("\377\376%c", code));	// DON'T xxx
+           },
     "DO":lambda(int code) {
-	   send(sprintf("\377\374%c", code));	// WON'T xxx
-	 },
+           send(sprintf("\377\374%c", code));	// WON'T xxx
+         },
   ]);
 
   private int sync = 0;
@@ -1272,98 +1272,98 @@ class TelnetSession {
     for(lineno = 0; lineno < sizeof(lines); lineno++) {
       string line = lines[lineno];
       if (search(line, "\377") != -1) {
-	array a = line / "\377";
+        array a = line / "\377";
 
-	string parsed_line = a[0];
-	int i;
-	for (i=1; i < sizeof(a); i++) {
-	  string part = a[i];
-	  if (sizeof(part)) {
-	    string name = TelnetCodes[part[0]];
+        string parsed_line = a[0];
+        int i;
+        for (i=1; i < sizeof(a); i++) {
+          string part = a[i];
+          if (sizeof(part)) {
+            string name = TelnetCodes[part[0]];
 
-	    DWRITE("TELNET: Code %s\n", name || "Unknown");
+            DWRITE("TELNET: Code %s\n", name || "Unknown");
 
-	    int j;
-	    function fun;
-	    switch (name) {
-	    case 0:
-	      // FIXME: Should probably have a warning here.
-	      break;
-	    default:
-	      if (fun = (cb[name] || default_cb[name])) {
-		mixed err = catch {
-		  fun();
-		};
-		if (err) {
-		  throw(err);
-		} else if (!zero_type(err)) {
-		  // We were just destructed.
-		  return;
-		}
-	      }
-	      a[i] = a[i][1..];
-	      break;
-	    case "EC":	// Erase Character
-	      for (j=i; j--;) {
-		if (sizeof(a[j])) {
-		  a[j] = a[j][..sizeof(a[j])-2];
-		  break;
-		}
-	      }
-	      a[i] = a[i][1..];
-	      break;
-	    case "EL":	// Erase Line
-	      for (j=0; j < i; j++) {
-		a[j] = "";
-	      }
-	      a[i] = a[i][1..];
-	      break;
-	    case "WILL":
-	    case "WON'T":
-	    case "DO":
-	    case "DON'T":
-	      if (fun = (cb[name] || default_cb[name])) {
-		fun(a[i][1]);
-	      }
-	      a[i] = a[i][2..];
-	      break;
-	    case "DM":	// Data Mark
-	      if (sync) {
-		for (j=0; j < i; j++) {
-		  a[j] = "";
-		}
-	      }
-	      a[i] = a[i][1..];
-	      sync = 0;
-	      break;
-	    }
-	  } else {
-	    a[i] = "\377";
-	    i++;
-	  }
-	}
-	line = a * "";
+            int j;
+            function fun;
+            switch (name) {
+            case 0:
+              // FIXME: Should probably have a warning here.
+              break;
+            default:
+              if (fun = (cb[name] || default_cb[name])) {
+                mixed err = catch {
+                  fun();
+                };
+                if (err) {
+                  throw(err);
+                } else if (!zero_type(err)) {
+                  // We were just destructed.
+                  return;
+                }
+              }
+              a[i] = a[i][1..];
+              break;
+            case "EC":	// Erase Character
+              for (j=i; j--;) {
+                if (sizeof(a[j])) {
+                  a[j] = a[j][..sizeof(a[j])-2];
+                  break;
+                }
+              }
+              a[i] = a[i][1..];
+              break;
+            case "EL":	// Erase Line
+              for (j=0; j < i; j++) {
+                a[j] = "";
+              }
+              a[i] = a[i][1..];
+              break;
+            case "WILL":
+            case "WON'T":
+            case "DO":
+            case "DON'T":
+              if (fun = (cb[name] || default_cb[name])) {
+                fun(a[i][1]);
+              }
+              a[i] = a[i][2..];
+              break;
+            case "DM":	// Data Mark
+              if (sync) {
+                for (j=0; j < i; j++) {
+                  a[j] = "";
+                }
+              }
+              a[i] = a[i][1..];
+              sync = 0;
+              break;
+            }
+          } else {
+            a[i] = "\377";
+            i++;
+          }
+        }
+        line = a * "";
       }
       if (!lineno) {
-	line = rest + line;
+        line = rest + line;
       }
       if (lineno < (sizeof(lines)-1)) {
-	if ((!sync) && read_cb) {
-	  DWRITE("TELNET: Calling read_callback(X, \"%s\")\n", line);
-	  read_cb(id, line);
-	}
+        if ((!sync) && read_cb) {
+          DWRITE("TELNET: Calling read_callback(X, \"%s\")\n", line);
+          read_cb(id, line);
+        }
       } else {
-	DWRITE("TELNET: Partial line is \"%s\"\n", line);
-	rest = line;
+        DWRITE("TELNET: Partial line is \"%s\"\n", line);
+        rest = line;
       }
     }
   }
 
   void create(object f,
-	      function(mixed,string:void) r_cb,
-	      function(mixed|void:string) w_cb,
-	      function(mixed|void:void) c_cb,
-	      mapping callbacks, mixed|void new_id)
+              function(mixed,string:void) r_cb,
+              function(mixed|void:string) w_cb,
+              function(mixed|void:void) c_cb,
+              mapping callbacks, mixed|void new_id)
   {
     fd = f;
     cb = callbacks;
@@ -1392,7 +1392,7 @@ class FTPSession
 
     // The following is a command suggested by the author of ncftp.
     "CLNT":LOCALE(1, "<sp> <client-name> <sp> <client-version> "
-		  "[<sp> <optional platform info>] (Set client name)"),
+                  "[<sp> <optional platform info>] (Set client name)"),
 
     // These are from RFC 7151
     "HOST":LOCALE(2, "<sp> hostname (Host name)"),
@@ -1448,7 +1448,7 @@ class FTPSession
     "MODE":LOCALE(34, "<sp> <mode-code> (Transfer mode)"),
     // File action commands
     "ALLO":LOCALE(35, "<sp> <decimal-integer> [<sp> R <sp> <decimal-integer>]"
-		  " (Allocate space for file)"),
+                  " (Allocate space for file)"),
     "REST":LOCALE(36, "<sp> marker (Set restart marker)"),
     "STOR":LOCALE(37, "<sp> file-name (Store file)"),
     "STOU":LOCALE(38, "(Store file with unique name)"),
@@ -1577,8 +1577,8 @@ class FTPSession
 
       ::set_write_callback(0);
       if (end_marker) {
-	DWRITE("FTP2: write_cb(): Sending EOF.\n");
-	return(0);	// Mark EOF
+        DWRITE("FTP2: write_cb(): Sending EOF.\n");
+        return(0);	// Mark EOF
       }
       DWRITE("FTP2: write_cb(): Sending \"\"\n");
       return("");	// Shouldn't happen, but...
@@ -1587,44 +1587,44 @@ class FTPSession
 
 #if constant(SSL.File)
       if (s == 1) {
-	DWRITE("FTP2: write_cb(): STARTTLS.\n");
+        DWRITE("FTP2: write_cb(): STARTTLS.\n");
 
-	// NB: This callback is only called when the send buffers
-	//     are empty, and it is thus safe to switch to TLS.
+        // NB: This callback is only called when the send buffers
+        //     are empty, and it is thus safe to switch to TLS.
 
-	// Switch to TLS.
-	if (!fd->renegotiate) {
-	  fd = SSL.File(fd, port_obj->ctx);
-	  master_session->my_fd = fd;
-	  fd->accept();
-	}
-	// Restore the callbacks in the new SSL connection.
-	::set_write_callback(write_cb);
-	return "";
+        // Switch to TLS.
+        if (!fd->renegotiate) {
+          fd = SSL.File(fd, port_obj->ctx);
+          master_session->my_fd = fd;
+          fd->accept();
+        }
+        // Restore the callbacks in the new SSL connection.
+        ::set_write_callback(write_cb);
+        return "";
       } else if (s == 2) {
-	DWRITE("FTP2: write_cb(): ENDTLS.\n");
+        DWRITE("FTP2: write_cb(): ENDTLS.\n");
 
-	if (fd->renegotiate &&
-	    !has_prefix(sprintf("%O", port_obj), "SSLProtocol")) {
-	  // Deactive StartTLS connection.
-	  master_session->my_fd = fd = fd->shutdown();
+        if (fd->renegotiate &&
+            !has_prefix(sprintf("%O", port_obj), "SSLProtocol")) {
+          // Deactive StartTLS connection.
+          master_session->my_fd = fd = fd->shutdown();
 
-	  if (fd) {
-	    // Move the callbacks back to the raw connection.
-	    ::set_write_callback(write_cb);
-	  }
-	}
-	return "";
+          if (fd) {
+            // Move the callbacks back to the raw connection.
+            ::set_write_callback(write_cb);
+          }
+        }
+        return "";
       }
 #endif
 
       DWRITE("FTP2: write_cb(): Sending %O.\n", s);
 
       if ((to_send->is_empty()) && (!end_marker)) {
-	::set_write_callback(0);
+        ::set_write_callback(0);
       } else if (stringp(to_send->peek())) {
-	// Not about to switch TLS mode.
-	::set_write_callback(write_cb);
+        // Not about to switch TLS mode.
+        ::set_write_callback(write_cb);
       }
       return(s);
     }
@@ -1653,11 +1653,11 @@ class FTPSession
     if (sizeof(data) > 1) {
       data[0] = sprintf("%03d-%s\r\n", code, data[i]);
       for (i = sizeof(data)-1; --i; ) {
-	if (enumerate_all) {
-	  data[i] = sprintf("%03d-%s\r\n", code, data[i]);
-	} else {
-	  data[i] = " " + data[i] + "\r\n";
-	}
+        if (enumerate_all) {
+          data[i] = sprintf("%03d-%s\r\n", code, data[i]);
+        } else {
+          data[i] = " " + data[i] + "\r\n";
+        }
       }
     }
     data[sizeof(data)-1] = sprintf("%03d %s\r\n", code, data[sizeof(data)-1]);
@@ -1665,10 +1665,10 @@ class FTPSession
 
     if (sizeof(s)) {
       if (to_send->is_empty()) {
-	to_send->put(string_to_utf8(s));
-	::set_write_callback(write_cb);
+        to_send->put(string_to_utf8(s));
+        ::set_write_callback(write_cb);
       } else {
-	to_send->put(string_to_utf8(s));
+        to_send->put(string_to_utf8(s));
       }
     } else {
       DWRITE("FTP2: send(): Nothing to send!\n");
@@ -1732,9 +1732,9 @@ class FTPSession
 
     foreach(langs; int i; string lang) {
       if (lang == current) {
-	langs[i] = current + "*";
-	current = 0;
-	break;
+        langs[i] = current + "*";
+        current = 0;
+        break;
       }
     }
 
@@ -1770,21 +1770,21 @@ class FTPSession
       // shells.
       //	/grubba 1998-05-21
       if (!allowed_shells) {
-	object(Stdio.File) file = Stdio.File();
+        object(Stdio.File) file = Stdio.File();
 
-	if (file->open(port_obj->query_option("shells"), "r")) {
-	  allowed_shells =
-	    aggregate_multiset(@(Array.map(file->read(0x7fffffff)/"\n",
-					   lambda(string line) {
-					     return(((((line/"#")[0])/"") -
-						     ({" ", "\t"}))*"");
-					   } )-({""})));
-	  DWRITE("ftp.pike: allowed_shells: %O\n", allowed_shells);
-	} else {
-	  report_debug("ftp.pike: Failed to open shell database (%O)\n",
-		       port_obj->query_option("shells"));
-	  return 0;
-	}
+        if (file->open(port_obj->query_option("shells"), "r")) {
+          allowed_shells =
+            aggregate_multiset(@(Array.map(file->read(0x7fffffff)/"\n",
+                                           lambda(string line) {
+                                             return(((((line/"#")[0])/"") -
+                                                     ({" ", "\t"}))*"");
+                                           } )-({""})));
+          DWRITE("ftp.pike: allowed_shells: %O\n", allowed_shells);
+        } else {
+          report_debug("ftp.pike: Failed to open shell database (%O)\n",
+                       port_obj->query_option("shells"));
+          return 0;
+        }
       }
       return(allowed_shells[shell]);
     }
@@ -1801,9 +1801,9 @@ class FTPSession
     }
     if (!sizeof(s)) {
       if (cwd[-1] == '/') {
-	return(cwd);
+        return(cwd);
       } else {
-	return(cwd + "/");
+        return(cwd + "/");
       }
     } else if (s[0] == '~') {
       return(combine_path("/", s));
@@ -1830,28 +1830,28 @@ class FTPSession
     if(pasv_port) {
       object fd = pasv_port->accept();
       if(fd) {
-	// On a multihomed server host, the default data transfer port
-	// (L-1) MUST be associated with the same local IP address as
-	// the corresponding control connection to port L.
-	// RFC 1123 4.1.2.12
+        // On a multihomed server host, the default data transfer port
+        // (L-1) MUST be associated with the same local IP address as
+        // the corresponding control connection to port L.
+        // RFC 1123 4.1.2.12
 
-	array(string) remote = (fd->query_address()||"? ?")/" ";
+        array(string) remote = (fd->query_address()||"? ?")/" ";
 #ifdef FD_DEBUG
-	mark_fd(fd->query_fd(),
-		"ftp communication: -> "+remote[0]+":"+remote[1]);
+        mark_fd(fd->query_fd(),
+                "ftp communication: -> "+remote[0]+":"+remote[1]);
 #endif
-	if(pasv_callback) {
-	  pasv_callback(fd, "", @pasv_args);
-	  pasv_callback = 0;
-	} else {
-	  pasv_accepted += ({ fd });
-	}
+        if(pasv_callback) {
+          pasv_callback(fd, "", @pasv_args);
+          pasv_callback = 0;
+        } else {
+          pasv_accepted += ({ fd });
+        }
       }
     }
   }
 
   private void ftp_async_accept(function(object,mixed ...:void) fun,
-				mixed ... args)
+                                mixed ... args)
   {
     DWRITE("FTP: async_accept(%O, %@O)...\n", fun, args);
     touch_me();
@@ -1870,7 +1870,7 @@ class FTPSession
    */
 
   private void ftp_async_connect(function(object,string,mixed ...:void) fun,
-				 mixed ... args)
+                                 mixed ... args)
   {
     DWRITE("FTP: async_connect(%O, %@O)...\n", fun, args);
 
@@ -1891,25 +1891,25 @@ class FTPSession
 #ifndef FTP2_USE_ANY_SOURCE_PORT
     if(local_port-1 < 1024 && geteuid())
       privs = Privs("FTP: Opening the data connection on " + local_addr +
-		    ":" + (local_port-1) + ".");
+                    ":" + (local_port-1) + ".");
 
     if(!f->open_socket(local_port-1, local_addr))
     {
       privs = 0;
       DWRITE("FTP: socket(%d, %O) failed. Trying with any port.\n",
-	     local_port-1, local_addr);
+             local_port-1, local_addr);
 
 #endif
       if(!f->open_socket(0, local_addr))
       {
-	DWRITE("FTP: socket(0, %O) failed. "
-	       "Trying with any port, any ip.\n", local_addr);
-	if (!f->open_socket()) {
-	  DWRITE("FTP: socket() failed. Out of sockets?\n");
-	  fun(0, 0, @args);
-	  destruct(f);
-	  return;
-	}
+        DWRITE("FTP: socket(0, %O) failed. "
+               "Trying with any port, any ip.\n", local_addr);
+        if (!f->open_socket()) {
+          DWRITE("FTP: socket() failed. Out of sockets?\n");
+          fun(0, 0, @args);
+          destruct(f);
+          return;
+        }
       }
 #ifndef FTP2_USE_ANY_SOURCE_PORT
     }
@@ -1919,50 +1919,50 @@ class FTPSession
     Stdio.File raw_connection = f;
 
     f->set_nonblocking(lambda(mixed ignored, string data) {
-			 DWRITE("FTP: async_connect ok. Got data.\n");
-			 f->set_nonblocking(0,0,0,0,0);
-			 fun(f, data, @args);
-		       },
-		       lambda(mixed ignored) {
-			 DWRITE("FTP: async_connect ok.\n");
-			 f->set_nonblocking(0,0,0,0,0);
-			 fun(f, "", @args);
-		       },
-		       lambda(mixed ignored) {
-			 DWRITE("FTP: connect_and_send failed: %s (%d)\n",
-				strerror(f->errno()), f->errno());
-			 destruct(f);
-			 fun(0, 0, @args);
-		       },
-		       lambda(mixed ignored) {
-			 DWRITE("FTP: connect_and_send failed (oob): %s (%d)\n",
-				strerror(f->errno()), f->errno());
-			 destruct(f);
-			 fun(0, 0, @args);
-		       });
+                         DWRITE("FTP: async_connect ok. Got data.\n");
+                         f->set_nonblocking(0,0,0,0,0);
+                         fun(f, data, @args);
+                       },
+                       lambda(mixed ignored) {
+                         DWRITE("FTP: async_connect ok.\n");
+                         f->set_nonblocking(0,0,0,0,0);
+                         fun(f, "", @args);
+                       },
+                       lambda(mixed ignored) {
+                         DWRITE("FTP: connect_and_send failed: %s (%d)\n",
+                                strerror(f->errno()), f->errno());
+                         destruct(f);
+                         fun(0, 0, @args);
+                       },
+                       lambda(mixed ignored) {
+                         DWRITE("FTP: connect_and_send failed (oob): %s (%d)\n",
+                                strerror(f->errno()), f->errno());
+                         destruct(f);
+                         fun(0, 0, @args);
+                       });
 
 #ifdef FD_DEBUG
     mark_fd(raw_connection->query_fd(),
-	    sprintf("ftp communication: %s:%d -> %s:%d",
-		    local_addr, local_port - 1,
-		    dataport_addr, dataport_port));
+            sprintf("ftp communication: %s:%d -> %s:%d",
+                    local_addr, local_port - 1,
+                    dataport_addr, dataport_port));
 #endif
 
     if(mixed err = catch{
-	if (!(raw_connection->connect(dataport_addr, dataport_port))) {
-	  DWRITE("FTP: connect(%O, %O) failed with: %s!\n"
-		 "FTP: local_addr: %O:%O (%O)\n",
-		 dataport_addr, dataport_port,
-		 strerror(raw_connection->errno()),
-		 local_addr, local_port-1,
-		 raw_connection->is_open() && raw_connection->query_address(1));
-	  destruct(f);
-	  fun(0, 0, @args);
-	  return;
-	}
+        if (!(raw_connection->connect(dataport_addr, dataport_port))) {
+          DWRITE("FTP: connect(%O, %O) failed with: %s!\n"
+                 "FTP: local_addr: %O:%O (%O)\n",
+                 dataport_addr, dataport_port,
+                 strerror(raw_connection->errno()),
+                 local_addr, local_port-1,
+                 raw_connection->is_open() && raw_connection->query_address(1));
+          destruct(f);
+          fun(0, 0, @args);
+          return;
+        }
       }) {
       DWRITE("FTP: Illegal IP address (%s:%d) in async connect.\n",
-	     dataport_addr||"", dataport_port);
+             dataport_addr||"", dataport_port);
       DWRITE("FTP: %s\n", describe_backtrace(err));
       destruct(f);
       fun(0, 0, @args);
@@ -1997,7 +1997,7 @@ class FTPSession
     {
       //DWRITE("FTP: fd: %O: %O\n", fd, mkmapping(indices(fd), values(fd)));
       if (fd->set_blocking) {
-	fd->set_blocking();       // Force close() to flush any buffers.
+        fd->set_blocking();       // Force close() to flush any buffers.
       }
       call_out(fd->close, 0);
       fd = 0;
@@ -2014,7 +2014,7 @@ class FTPSession
   }
 
   private mapping|array|object stat_file(string fname,
-					 object|void session)
+                                         object|void session)
   {
     mapping file;
 
@@ -2024,7 +2024,7 @@ class FTPSession
 
     foreach(conf->first_modules(), function funp) {
       if ((file = funp(session))) {
-	break;
+        break;
       }
     }
 
@@ -2046,40 +2046,40 @@ class FTPSession
   }
 
   private void send_error(string cmd, string f, mapping file,
-			  object session)
+                          object session)
   {
     switch(file && file->error) {
     case 301:
     case 302:
       if (file->extra_heads && file->extra_heads->Location) {
-	send(504, ({ sprintf(LOCALE(87, "'%s': %s: Redirect to %O."),
-			     cmd, f, file->extra_heads->Location) }));
+        send(504, ({ sprintf(LOCALE(87, "'%s': %s: Redirect to %O."),
+                             cmd, f, file->extra_heads->Location) }));
       } else {
-	send(504, ({ sprintf(LOCALE(88, "'%s': %s: Redirect."), cmd, f) }));
+        send(504, ({ sprintf(LOCALE(88, "'%s': %s: Redirect."), cmd, f) }));
       }
       break;
     case 401:
       send(530, ({ sprintf(LOCALE(89, "'%s': %s: Access denied."),
-			   cmd, f) }));
+                           cmd, f) }));
       break;
     case 403:
       send(451, ({ sprintf(LOCALE(90, "'%s': %s: Forbidden."),
-			   cmd, f) }));
+                           cmd, f) }));
       break;
     case 405:
       send(550, ({ sprintf(LOCALE(91, "'%s': %s: Method not allowed."),
-			   cmd, f) }));
+                           cmd, f) }));
       break;
     case 500:
       send(451, ({ sprintf(LOCALE(93, "'%s': Requested action aborted: "
-				  "local error in processing."), cmd) }));
+                                  "local error in processing."), cmd) }));
       break;
     default:
       if (!file) {
-	file = ([ "error":404 ]);
+        file = ([ "error":404 ]);
       }
       send(550, ({ sprintf(LOCALE(94, "'%s': %s: No such file or directory."),
-			   cmd, f) }));
+                           cmd, f) }));
       break;
     }
     session->conf->log(file, session);
@@ -2090,12 +2090,12 @@ class FTPSession
     string s = port_obj->query_option("FTPWelcome");
 
     s = replace(s,
-		({ "$roxen_version", "$roxen_build", "$full_version",
-		   "$pike_version", "$ident",
-		   "$site", }),
-		({ roxen->roxen_ver, roxen->roxen_build,
-		   roxen->real_version, version(), roxen->version(),
-		   conf->query_name(), }));
+                ({ "$roxen_version", "$roxen_build", "$full_version",
+                   "$pike_version", "$ident",
+                   "$site", }),
+                ({ roxen->roxen_ver, roxen->roxen_build,
+                   roxen->real_version, version(), roxen->version(),
+                   conf->query_name(), }));
 
     send(220, s/"\n", 1);
   }
@@ -2114,23 +2114,23 @@ class FTPSession
       array|object st = file;
       file = 0;
       if (st && (st[1] < 0) && !((<"RMD", "XRMD", "CHMOD">)[cmd])) {
-	send(550, ({ sprintf(LOCALE(95, "%s: not a plain file."), fname) }));
-	return 0;
+        send(550, ({ sprintf(LOCALE(95, "%s: not a plain file."), fname) }));
+        return 0;
       }
       mixed err;
       if ((err = catch(file = conf->get_file(session)))) {
-	report_error("FTP: Error opening file \"%s\"\n"
-		     "%s\n", fname, describe_backtrace(err));
-	send(550, ({ sprintf(LOCALE(96, "%s: Error, can't open file."), fname) }));
-	return 0;
+        report_error("FTP: Error opening file \"%s\"\n"
+                     "%s\n", fname, describe_backtrace(err));
+        send(550, ({ sprintf(LOCALE(96, "%s: Error, can't open file."), fname) }));
+        return 0;
       }
     } else if ((< "STOR", "APPE", "MKD", "XMKD", "MOVE" >)[cmd]) {
       mixed err;
       if ((err = catch(file = conf->get_file(session)))) {
-	report_error("FTP: Error opening file \"%s\"\n"
-		     "%s\n", fname, describe_backtrace(err));
-	send(550, ({ sprintf(LOCALE(96, "%s: Error, can't open file."), fname) }));
-	return 0;
+        report_error("FTP: Error opening file \"%s\"\n"
+                     "%s\n", fname, describe_backtrace(err));
+        send(550, ({ sprintf(LOCALE(96, "%s: Error, can't open file."), fname) }));
+        return 0;
       }
     }
 
@@ -2154,10 +2154,10 @@ class FTPSession
 
     if (!file->len) {
       if (file->data) {
-	file->len = sizeof(file->data);
+        file->len = sizeof(file->data);
       }
       if (objectp(file->file)) {
-	file->len += file->file->stat()[1];
+        file->len += file->file->stat()[1];
       }
     }
 
@@ -2165,7 +2165,7 @@ class FTPSession
   }
 
   private void connected_to_send(object fd, string ignored,
-				 mapping file, object session)
+                                 mapping file, object session)
   {
     DWRITE("FTP: connected_to_send(%O, %O, %O, X)\n", fd, ignored, file);
 
@@ -2183,11 +2183,11 @@ class FTPSession
     if(fd)
     {
       if (file->len) {
-	send(150, ({ sprintf(LOCALE(97, "Opening %s data connection for %s (%d bytes)."),
-			     modes[file->mode], file->full_path, file->len) }));
+        send(150, ({ sprintf(LOCALE(97, "Opening %s data connection for %s (%d bytes)."),
+                             modes[file->mode], file->full_path, file->len) }));
       } else {
-	send(150, ({ sprintf(LOCALE(98, "Opening %s mode data connection for %s"),
-			     modes[file->mode], file->full_path) }));
+        send(150, ({ sprintf(LOCALE(98, "Opening %s mode data connection for %s"),
+                             modes[file->mode], file->full_path) }));
       }
 
       SSLMode ssl_mask = SSL_ACTIVE;
@@ -2195,19 +2195,19 @@ class FTPSession
 
 #if constant(SSL.File)
       if (use_ssl & ssl_mask) {
-	DWRITE("FTP: Initiating SSL/TLS connection.\n");
+        DWRITE("FTP: Initiating SSL/TLS connection.\n");
 
-	// RFC 4217 7:
-	// For i) and ii), the FTP client MUST be the TLS client and the FTP
-	// server MUST be the TLS server.
-	//
-	// That is to say, it does not matter which side initiates the
-	// connection with a connect() call or which side reacts to the
-	// connection via the accept() call; the FTP client, as defined in
-	// [RFC-959], is always the TLS client, as defined in [RFC-2246].
-	fd = SSL.File(fd, port_obj->ctx);
-	fd->accept();
-	DWRITE("FTP: Created an sslfile: %O\n", fd);
+        // RFC 4217 7:
+        // For i) and ii), the FTP client MUST be the TLS client and the FTP
+        // server MUST be the TLS server.
+        //
+        // That is to say, it does not matter which side initiates the
+        // connection with a connect() call or which side reacts to the
+        // connection via the accept() call; the FTP client, as defined in
+        // [RFC-959], is always the TLS client, as defined in [RFC-2246].
+        fd = SSL.File(fd, port_obj->ctx);
+        fd->accept();
+        DWRITE("FTP: Created an sslfile: %O\n", fd);
       }
 #endif
     }
@@ -2220,38 +2220,38 @@ class FTPSession
     switch(file->mode) {
     case "A":
       if (file->data) {
-	file->data = replace(file->data,
-			     ({ "\r\n", "\n",   "\r" }),
-			     ({ "\r\n", "\r\n", "\r\n" }));
+        file->data = replace(file->data,
+                             ({ "\r\n", "\n",   "\r" }),
+                             ({ "\r\n", "\r\n", "\r\n" }));
       }
       if(objectp(file->file) && file->file->set_nonblocking)
       {
-	// The list_stream object doesn't support nonblocking I/O,
-	// but converts to ASCII anyway, so we don't have to do
-	// anything about it.
-	file->file = ToAsciiWrapper(file->file, 0, this_object());
+        // The list_stream object doesn't support nonblocking I/O,
+        // but converts to ASCII anyway, so we don't have to do
+        // anything about it.
+        file->file = ToAsciiWrapper(file->file, 0, this_object());
       }
       break;
     case "E":
       // EBCDIC handling here.
       if (file->data) {
-	Charset.Encoder conv = Charset.encoder("EBCDIC-US", "");
-	file->data = conv->feed(file->data)->drain();
+        Charset.Encoder conv = Charset.encoder("EBCDIC-US", "");
+        file->data = conv->feed(file->data)->drain();
       }
       if(objectp(file->file) && file->file->set_nonblocking)
       {
-	// The list_stream object doesn't support nonblocking I/O,
-	// but converts to ASCII anyway, so we don't have to do
-	// anything about it.
-	// But EBCDIC doen't work...
-	file->file = ToEBCDICWrapper(file->file, 0, this_object());
+        // The list_stream object doesn't support nonblocking I/O,
+        // but converts to ASCII anyway, so we don't have to do
+        // anything about it.
+        // But EBCDIC doen't work...
+        file->file = ToEBCDICWrapper(file->file, 0, this_object());
       }
       break;
     default:
       // "I" and "L"
       // Binary -- no conversion needed.
       if (objectp(file->file) && file->file->set_nonblocking) {
-	file->file = BinaryWrapper(file->file, 0, this_object());
+        file->file = BinaryWrapper(file->file, 0, this_object());
       }
       break;
     }
@@ -2308,18 +2308,18 @@ class FTPSession
 
     if (fd) {
       send(150, ({ sprintf(LOCALE(100, "Opening %s mode data connection for %s."),
-			   modes[mode], args) }));
+                           modes[mode], args) }));
 
       SSLMode ssl_mask = SSL_ACTIVE;
       if (pasv_port) ssl_mask = SSL_PASSIVE;
 
 #if constant(SSL.File)
       if (use_ssl & ssl_mask) {
-	DWRITE("FTP: Initiating SSL/TLS connection.\n");
+        DWRITE("FTP: Initiating SSL/TLS connection.\n");
 
-	fd = SSL.File(fd, port_obj->ctx);
-	fd->accept();
-	DWRITE("FTP: Created an sslfile: %O\n", fd);
+        fd = SSL.File(fd, port_obj->ctx);
+        fd->accept();
+        DWRITE("FTP: Created an sslfile: %O\n", fd);
       }
 #endif
     } else {
@@ -2350,32 +2350,32 @@ class FTPSession
     mapping file;
     if (file = open_file(args, session, "STOR")) {
       if (!(file->pipe)) {
-	if (fd) {
-	  BACKEND_CLOSE(fd);
-	}
-	switch(file->error) {
-	case 401:
-	  send(530, ({ sprintf(LOCALE(101, "%s: Need account for storing files."), args)}));
-	  break;
-	case 413:
-	  send(550, ({ sprintf(LOCALE(102, "%s: Quota exceeded."), args) }));
-	  break;
-	case 501:
-	  send(502, ({ sprintf(LOCALE(103, "%s: Command not implemented."), args) }));
-	  break;
-	default:
-	  send(550, ({ sprintf(LOCALE(104, "%s: Error opening file."), args) }));
-	  break;
-	}
-	session->conf->log(file, session);
-	destruct(session);
-	return;
+        if (fd) {
+          BACKEND_CLOSE(fd);
+        }
+        switch(file->error) {
+        case 401:
+          send(530, ({ sprintf(LOCALE(101, "%s: Need account for storing files."), args)}));
+          break;
+        case 413:
+          send(550, ({ sprintf(LOCALE(102, "%s: Quota exceeded."), args) }));
+          break;
+        case 501:
+          send(502, ({ sprintf(LOCALE(103, "%s: Command not implemented."), args) }));
+          break;
+        default:
+          send(550, ({ sprintf(LOCALE(104, "%s: Error opening file."), args) }));
+          break;
+        }
+        session->conf->log(file, session);
+        destruct(session);
+        return;
       }
       master_session->file = file;
     } else {
       // Error message has already been sent.
       if (fd) {
-	BACKEND_CLOSE(fd);
+        BACKEND_CLOSE(fd);
       }
       destruct(session);
     }
@@ -2463,7 +2463,7 @@ class FTPSession
     int need_quoting;
     foreach(indices(Quote), string c) {
       if (need_quoting = (search(cmdline, c) >= 0)) {
-	break;
+        break;
       }
     }
     if (!need_quoting) {
@@ -2478,37 +2478,37 @@ class FTPSession
     for(i=0; i < sizeof(cmdline); i++) {
       string c;
       if (Specials[c = cmdline[i..i]]) {
-	if (argstart < i) {
-	  arg = (arg || "") + cmdline[argstart..i-1];
-	}
-	switch(c) {
-	case "\"":
-	case "\'":
-	case "\`":
-	  // NOTE: We handle all of the above as \'.
-	  int j = search(cmdline, c, i+1);
-	  if (j == -1) {
-	    // No endquote!
-	    // Simulate one at EOL.
-	    j = sizeof(cmdline);
-	  }
-	  arg = (arg || "") + cmdline[i+1..j-1];
-	  i = j;
-	  break;
-	case "\\":
-	  i++;
-	  arg += cmdline[i..i];
-	  break;
-	case " ":
-	case "\t":
-	  // IFS
-	  if (arg) {
-	    res += ({ arg });
-	    arg = 0;
-	  }
-	  break;
-	}
-	argstart = i+1;
+        if (argstart < i) {
+          arg = (arg || "") + cmdline[argstart..i-1];
+        }
+        switch(c) {
+        case "\"":
+        case "\'":
+        case "\`":
+          // NOTE: We handle all of the above as \'.
+          int j = search(cmdline, c, i+1);
+          if (j == -1) {
+            // No endquote!
+            // Simulate one at EOL.
+            j = sizeof(cmdline);
+          }
+          arg = (arg || "") + cmdline[i+1..j-1];
+          i = j;
+          break;
+        case "\\":
+          i++;
+          arg += cmdline[i..i];
+          break;
+        case " ":
+        case "\t":
+          // IFS
+          if (arg) {
+            res += ({ arg });
+            arg = 0;
+          }
+          break;
+        }
+        argstart = i+1;
       }
     }
     if (argstart < i) {
@@ -2547,8 +2547,8 @@ class FTPSession
             array(array(string)) new_matches = ({});
             foreach(matches, array(string) path) {
               array(string) dir;
-	      RequestID id = RequestID2(master_session);
-	      id->method = "LIST";
+              RequestID id = RequestID2(master_session);
+              id->method = "LIST";
               dir = id->conf->find_dir(combine_path(cwd, path*"/")+"/", id);
               if (dir && sizeof(dir)) {
                 dir = glob(part, dir);
@@ -2567,7 +2567,7 @@ class FTPSession
                   }
                 }
               }
-	      destruct(id);
+              destruct(id);
             }
             matches = new_matches;
           } else {
@@ -2595,16 +2595,16 @@ class FTPSession
           }
           // Filter out non-existing or forbiden files/directories
           matches = Array.filter(matches,
-				 lambda(string short, string cwd,
-					object m_id) {
-				   object id = RequestID2(m_id);
-				   id->method = "LIST";
-				   id->not_query = combine_path(cwd, short);
-				   mapping res =
-				     id->conf->stat_file(id->not_query, id);
-				   destruct(id);
-				   return res;
-				 }, cwd, master_session);
+                                 lambda(string short, string cwd,
+                                        object m_id) {
+                                   object id = RequestID2(m_id);
+                                   id->method = "LIST";
+                                   id->not_query = combine_path(cwd, short);
+                                   mapping res =
+                                     id->conf->stat_file(id->not_query, id);
+                                   destruct(id);
+                                   return res;
+                                 }, cwd, master_session);
           if (sizeof(matches)) {
             args[index] = matches;
           }
@@ -2675,30 +2675,30 @@ class FTPSession
 
   private array(array(string)|string|int)
     ls_getopt_args = Array.map(ls_options,
-			       lambda(array(array(string)|int|string) entry) {
-				 return({ entry[1], Getopt.NO_ARG, entry[0] });
-			       });
+                               lambda(array(array(string)|int|string) entry) {
+                                 return({ entry[1], Getopt.NO_ARG, entry[0] });
+                               });
 
   private string ls_help(string ls)
   {
     return sprintf("Usage: %s [OPTION]... [FILE]...\n"
-		   "List information about the FILEs "
-		   "(the current directory by default).\n"
-		   "Sort entries alphabetically if none "
-		   "of -cftuSUX nor --sort.\n"
-		   "\n"
-		   "%@s\n",
-		   ls,
-		   Array.map(ls_options,
-			     lambda(array entry) {
-			       if (sizeof(entry[0]) > 1) {
-				 return(sprintf("  %s, %-22s %s\n",
-						@(entry[0]), entry[2]));
-			       }
-			       return(sprintf("  %s  "
-					      "                       %s\n",
-					      entry[0][0], entry[2]));
-			     }));
+                   "List information about the FILEs "
+                   "(the current directory by default).\n"
+                   "Sort entries alphabetically if none "
+                   "of -cftuSUX nor --sort.\n"
+                   "\n"
+                   "%@s\n",
+                   ls,
+                   Array.map(ls_options,
+                             lambda(array entry) {
+                               if (sizeof(entry[0]) > 1) {
+                                 return(sprintf("  %s, %-22s %s\n",
+                                                @(entry[0]), entry[2]));
+                               }
+                               return(sprintf("  %s  "
+                                              "                       %s\n",
+                                              entry[0][0], entry[2]));
+                             }));
   }
 
   void call_ls(array(string) argv)
@@ -2756,17 +2756,17 @@ class FTPSession
       file->data = ls_help(argv[0]);
     } else {
       if (flags & LS_FLAG_d) {
-	flags &= ~LS_FLAG_R;
+        flags &= ~LS_FLAG_R;
       }
       if (flags & (LS_FLAG_f|LS_FLAG_C|LS_FLAG_m)) {
-	flags &= ~LS_FLAG_l;
+        flags &= ~LS_FLAG_l;
       }
       if (flags & LS_FLAG_C) {
-	flags &= ~LS_FLAG_m;
+        flags &= ~LS_FLAG_m;
       }
 
       file->file = LSFile(cwd, argv[1..], flags, session,
-			  file->mode, this_object());
+                          file->mode, this_object());
 
 #ifdef FTP_USE_HANDLER_THREADS
       // Create the listing synchronously when running in
@@ -2798,7 +2798,7 @@ class FTPSession
   >);
 
   protected string format_factlist(multiset(string) all,
-				   multiset(string)|void selected)
+                                   multiset(string)|void selected)
   {
     if (!selected) selected = (<>);
 
@@ -2806,7 +2806,7 @@ class FTPSession
     foreach(sort(indices(all)), string fact) {
       ret += fact;
       if (selected[fact]) {
-	ret += "*";
+        ret += "*";
       }
       ret += ";";
     }
@@ -2817,12 +2817,12 @@ class FTPSession
   {
     mapping lt = gmtime(t);
     return sprintf("%04d%02d%02d%02d%02d%02d",
-		   lt->year + 1900, lt->mon + 1, lt->mday,
-		   lt->hour, lt->min, lt->sec);
+                   lt->year + 1900, lt->mon + 1, lt->mday,
+                   lt->hour, lt->min, lt->sec);
   }
 
   mapping(string:string) make_MLSD_facts(string f, mapping(string:array) dir,
-					object session)
+                                        object session)
   {
     array st = dir[f];
 
@@ -2834,35 +2834,35 @@ class FTPSession
       facts->size = (string)st[1];
       facts->type = "file";
       if (current_mlst_facts["media-type"]) {
-	string|array(string) ct = session->conf->type_from_filename(f);
-	if (arrayp(ct)) {
-	  ct = (sizeof(ct) > 1) && ct[1];
-	}
-	facts["media-type"] = ct || "application/octet-stream";
+        string|array(string) ct = session->conf->type_from_filename(f);
+        if (arrayp(ct)) {
+          ct = (sizeof(ct) > 1) && ct[1];
+        }
+        facts["media-type"] = ct || "application/octet-stream";
       }
     } else {
       if (!current_mlst_facts->type) {
-	if ((< "..", "." >)[f]) {
-	  // RFC 3659 7.5.1.2:
-	  //
-	  // The type=cdir fact indicates the listed entry contains a
-	  // pathname of the directory whose contents are listed. An
-	  // entry of this type will only be returned as a part of the
-	  // result of an MLSD command when the type fact is included,
-	  // and provides a name for the listed directory, and facts
-	  // about that directory. In a sense, it can be viewed as
-	  // representing the title of the listing, in a machine
-	  // friendly format. It may appear at any point of the
-	  // listing, it is not restricted to appearing at the start,
-	  // though frequently may do so, and may occur multiple
-	  // times. It MUST NOT be included if the type fact is not
-	  // included, or there would be no way for the user-PI to
-	  // distinguish the name of the directory from an entry in
-	  // the directory.
-	  return 0;
-	}
+        if ((< "..", "." >)[f]) {
+          // RFC 3659 7.5.1.2:
+          //
+          // The type=cdir fact indicates the listed entry contains a
+          // pathname of the directory whose contents are listed. An
+          // entry of this type will only be returned as a part of the
+          // result of an MLSD command when the type fact is included,
+          // and provides a name for the listed directory, and facts
+          // about that directory. In a sense, it can be viewed as
+          // representing the title of the listing, in a machine
+          // friendly format. It may appear at any point of the
+          // listing, it is not restricted to appearing at the start,
+          // though frequently may do so, and may occur multiple
+          // times. It MUST NOT be included if the type fact is not
+          // included, or there would be no way for the user-PI to
+          // distinguish the name of the directory from an entry in
+          // the directory.
+          return 0;
+        }
       } else {
-	facts->type = ([ "..":"pdir", ".":"cdir" ])[f] || "dir";
+        facts->type = ([ "..":"pdir", ".":"cdir" ])[f] || "dir";
       }
     }
 
@@ -2913,13 +2913,13 @@ class FTPSession
   {
     if (!facts) return 0;
     return map(sort(indices(facts)),
-	       lambda(string s, mapping f) {
-		 return s + "=" + f[s] + ";";
-	       }, facts) * "";
+               lambda(string s, mapping f) {
+                 return s + "=" + f[s] + ";";
+               }, facts) * "";
   }
 
   string make_MLSD_fact(string f, mapping(string:array) dir,
-			object session)
+                        object session)
   {
     string facts = format_MLSD_facts(make_MLSD_facts(f, dir, session));
     if (!facts) return 0;
@@ -2946,8 +2946,8 @@ class FTPSession
     // NB: MLST expands "." and "..", so make_MLSD_fact() won't
     //     return zero here.
     send(250,({ LOCALE(105, "OK") }) +
-	 Array.map(indices(dir), make_MLSD_fact, dir, session) +
-	 ({ LOCALE(105, "OK") }) );
+         Array.map(indices(dir), make_MLSD_fact, dir, session) +
+         ({ LOCALE(105, "OK") }) );
   }
 
   /*
@@ -2961,12 +2961,12 @@ class FTPSession
     if (session_limit > 0) {
 
       if (session_limit <= (port_obj->ftp_sessions[user])) {
-	return 0;		// Session limit reached.
+        return 0;		// Session limit reached.
       }
 
       if (logged_in) {
-	report_error("Internal error in session-handler.");
-	return 1;
+        report_error("Internal error in session-handler.");
+        return 1;
       }
 
       DWRITE("FTP2: Increasing # of sessions for user %O\n", user);
@@ -2987,7 +2987,7 @@ class FTPSession
 
       DWRITE("FTP2: Decreasing # of sessions for user %O\n", user);
       if ((--port_obj->ftp_sessions[user]) < 0) {
-	port_obj->ftp_sessions[user] = 0;
+        port_obj->ftp_sessions[user] = 0;
       }
     }
     logged_in = 0;
@@ -3127,8 +3127,8 @@ class FTPSession
     if (args[0] == '[') {
       // IPv6 literal address.
       if (args[-1] != ']') {
-	send(501, ({ LOCALE(205, "Invalid HOST syntax.") }));
-	return;
+        send(501, ({ LOCALE(205, "Invalid HOST syntax.") }));
+        return;
       }
     } else if (has_value(args, ":")) {
       send(501, ({ LOCALE(205, "Invalid HOST syntax.") }));
@@ -3150,8 +3150,8 @@ class FTPSession
       Configuration new_conf = find_conf_for_host(args);
 
       if (!new_conf) {
-	send(504, ({ LOCALE(206, "Unknown host.") }));
-	return;
+        send(504, ({ LOCALE(206, "Unknown host.") }));
+        return;
       }
       master_session->conf = conf = new_conf;
       master_session->misc->host = args;
@@ -3159,7 +3159,7 @@ class FTPSession
 
       // Support delayed loading.
       if (!conf->inited) {
-	conf->enable_all_modules();
+        conf->enable_all_modules();
       }
     }
 
@@ -3186,7 +3186,7 @@ class FTPSession
       return;
     }
     if ((port_obj->query_option("require_starttls") < 0) ||
-	!port_obj->ctx) {
+        !port_obj->ctx) {
       // RFC 2228 AUTH:
       // If the server is not willing to accept the named security
       // mechanism, it should respond with reply code 534.
@@ -3271,48 +3271,48 @@ class FTPSession
       master_session->not_query = "Anonymous";
       user = 0;
       if (port_obj->query_option("anonymous_ftp")) {
-	if (check_login()) {
+        if (check_login()) {
 #if 0
-	  send(200, ({ LOCALE(113, "Anonymous ftp, at your service") }));
+          send(200, ({ LOCALE(113, "Anonymous ftp, at your service") }));
 #else /* !0 */
-	  // ncftp doesn't like the above answer -- stupid program!
-	  send(331, ({ LOCALE(114, "Anonymous ftp accepted, send "
-			      "your complete e-mail address as password.") }));
+          // ncftp doesn't like the above answer -- stupid program!
+          send(331, ({ LOCALE(114, "Anonymous ftp accepted, send "
+                              "your complete e-mail address as password.") }));
 #endif /* 0 */
-	  conf->log(([ "error":200 ]), master_session);
-	} else {
-	  send(530, ({
-		 sprintf(LOCALE(115, "Too many anonymous users (%d)."),
-			 port_obj->query_option("ftp_user_session_limit"))
-	  }));
-	  conf->log(([ "error":403 ]), master_session);
-	}
+          conf->log(([ "error":200 ]), master_session);
+        } else {
+          send(530, ({
+                 sprintf(LOCALE(115, "Too many anonymous users (%d)."),
+                         port_obj->query_option("ftp_user_session_limit"))
+          }));
+          conf->log(([ "error":403 ]), master_session);
+        }
       } else {
-	send(530, ({ LOCALE(116, "Anonymous ftp disabled") }));
-	conf->log(([ "error":403 ]), master_session);
+        send(530, ({ LOCALE(116, "Anonymous ftp disabled") }));
+        conf->log(([ "error":403 ]), master_session);
       }
     } else {
       if (port_obj->ctx && !fd->renegotiate &&
-	  (port_obj->query_option("require_starttls") == 1)) {
-	conf->log(([ "error":403 ]), master_session);
-	send(530, ({ LOCALE(117, "You need to AUTH TLS first.") }));
+          (port_obj->query_option("require_starttls") == 1)) {
+        conf->log(([ "error":403 ]), master_session);
+        send(530, ({ LOCALE(117, "You need to AUTH TLS first.") }));
 
-	return;
+        return;
       }
       if (check_login()) {
-	send(331, ({ sprintf(LOCALE(118, "Password required for %s."), user) }));
-	master_session->not_query = user;
-	conf->log(([ "error":407 ]), master_session);
+        send(331, ({ sprintf(LOCALE(118, "Password required for %s."), user) }));
+        master_session->not_query = user;
+        conf->log(([ "error":407 ]), master_session);
       } else {
-	// Session limit exceeded.
-	send(530, ({
-	  sprintf(LOCALE(119, "Concurrent session limit (%d) exceeded "
-			 "for user \"%s\"."),
-		  port_obj->query_option("ftp_user_session_limit"), user)
-	}));
-	conf->log(([ "error":403 ]), master_session);
-	user = 0;
-	return;
+        // Session limit exceeded.
+        send(530, ({
+          sprintf(LOCALE(119, "Concurrent session limit (%d) exceeded "
+                         "for user \"%s\"."),
+                  port_obj->query_option("ftp_user_session_limit"), user)
+        }));
+        conf->log(([ "error":403 ]), master_session);
+        user = 0;
+        return;
       }
     }
   }
@@ -3321,27 +3321,27 @@ class FTPSession
   {
     if (!user) {
       if (port_obj->query_option("anonymous_ftp")) {
-	if (login()) {
-	  send(230, ({ LOCALE(120, "Guest login ok, access restrictions apply.") }));
-	  master_session->method = "LOGIN";
-	  master_session->not_query = "Anonymous User:"+args;
-	  conf->log(([ "error":200 ]), master_session);
-	  logged_in = -1;
-	} else {
-	  send(530, ({
-		 sprintf(LOCALE(115, "Too many anonymous users (%d)."),
-			 port_obj->query_option("ftp_user_session_limit"))
-	  }));
-	  conf->log(([ "error":403 ]), master_session);
-	}
+        if (login()) {
+          send(230, ({ LOCALE(120, "Guest login ok, access restrictions apply.") }));
+          master_session->method = "LOGIN";
+          master_session->not_query = "Anonymous User:"+args;
+          conf->log(([ "error":200 ]), master_session);
+          logged_in = -1;
+        } else {
+          send(530, ({
+                 sprintf(LOCALE(115, "Too many anonymous users (%d)."),
+                         port_obj->query_option("ftp_user_session_limit"))
+          }));
+          conf->log(([ "error":403 ]), master_session);
+        }
       } else {
-	send(503, ({ LOCALE(121, "Login with USER first.") }));
+        send(503, ({ LOCALE(121, "Login with USER first.") }));
       }
       return;
     }
 
     if (port_obj->ctx && !fd->renegotiate &&
-	(port_obj->query_option("require_starttls") == 1)) {
+        (port_obj->query_option("require_starttls") == 1)) {
       // NB: Reachable through the following exotic command sequence:
       //
       //     AUTH TLS, USER, PASS, CCC, PASS
@@ -3371,24 +3371,24 @@ class FTPSession
 
     if (!auth_user) {
       if (!port_obj->query_option("guest_ftp")) {
-	send(530, ({ sprintf(LOCALE(122, "User %s access denied."), user) }));
-	conf->log(([ "error":401 ]), session);
+        send(530, ({ sprintf(LOCALE(122, "User %s access denied."), user) }));
+        conf->log(([ "error":401 ]), session);
       } else {
-	// Guest user.
-	string u = user;
-	user = 0;
-	if (login()) {
-	  send(230, ({ sprintf(LOCALE(123, "Guest user %s logged in."), u) }));
-	  logged_in = -1;
-	  conf->log(([ "error":200 ]), session);
-	  DWRITE("FTP: Guest-user: %O\n", session->realauth);
-	} else {
-	  send(530, ({
-		 sprintf(LOCALE(124, "Too many anonymous/guest users (%d)."),
-			 port_obj->query_option("ftp_user_session_limit"))
-	  }));
-	  conf->log(([ "error":403 ]), session);
-	}
+        // Guest user.
+        string u = user;
+        user = 0;
+        if (login()) {
+          send(230, ({ sprintf(LOCALE(123, "Guest user %s logged in."), u) }));
+          logged_in = -1;
+          conf->log(([ "error":200 ]), session);
+          DWRITE("FTP: Guest-user: %O\n", session->realauth);
+        } else {
+          send(530, ({
+                 sprintf(LOCALE(124, "Too many anonymous/guest users (%d)."),
+                         port_obj->query_option("ftp_user_session_limit"))
+          }));
+          conf->log(([ "error":403 ]), session);
+        }
       }
       destruct (session);
       return;
@@ -3407,19 +3407,19 @@ class FTPSession
     {
       mapping ses_misc = session->misc, mses_misc = master_session->misc;
       foreach (({"authenticated_user", "user", "password", "uid", "gid",
-		 "gecos", "home", "shell"}), string field) {
-	mixed val = ses_misc[field];
-	if (zero_type (val))
-	  m_delete (mses_misc, field);
-	else
-	  mses_misc[field] = val;
+                 "gecos", "home", "shell"}), string field) {
+        mixed val = ses_misc[field];
+        if (zero_type (val))
+          m_delete (mses_misc, field);
+        else
+          mses_misc[field] = val;
       }
     }
 
     if (!port_obj->query_option("named_ftp") ||
-	!check_shell(auth_user->shell())) {
+        !check_shell(auth_user->shell())) {
       send(530, ({ LOCALE(125, "You are not allowed to use named-ftp."),
-		   LOCALE(126, "Try using anonymous, or check /etc/shells") }));
+                   LOCALE(126, "Try using anonymous, or check /etc/shells") }));
       conf->log(([ "error":402 ]), session);
       auth_user = 0;
       destruct (session);
@@ -3428,8 +3428,8 @@ class FTPSession
 
     if (!login()) {
       send(530, ({
-	     sprintf(LOCALE(127, "Too many concurrent sessions (limit is %d)."),
-		port_obj->query_option("ftp_user_session_limit"))
+             sprintf(LOCALE(127, "Too many concurrent sessions (limit is %d)."),
+                port_obj->query_option("ftp_user_session_limit"))
       }));
       conf->log(([ "error":403 ]), session);
       destruct (session);
@@ -3440,7 +3440,7 @@ class FTPSession
       // Check if it is possible to cd to the users home-directory.
       string home = auth_user->homedir();
       if ((home == "") || (home[-1] != '/')) {
-	home += "/";
+        home += "/";
       }
 
       // Compatibility...
@@ -3452,7 +3452,7 @@ class FTPSession
       destruct(stat_session);
 
       if (st && (st[1] < 0)) {
-	cwd = home;
+        cwd = home;
       }
     }
 
@@ -3482,7 +3482,7 @@ class FTPSession
     ncwd = session->not_query; // Makes internal redirects to work.
     if (!st) {
       send(550, ({ sprintf(LOCALE(129, "%s: No such file or directory, or access denied."),
-			   ncwd) }));
+                           ncwd) }));
       session->conf->log(session->file || ([ "error":404 ]), session);
       destruct(session);
       return;
@@ -3506,19 +3506,19 @@ class FTPSession
 
     if (files) {
       files = reverse(sort(Array.filter(files, lambda(string s) {
-						 return(s[..5] == "README");
-					       })));
+                                                 return(s[..5] == "README");
+                                               })));
       foreach(files, string f) {
-	array|object st = conf->stat_file(replace(cwd + f, "//", "/"),
-					  session);
+        array|object st = conf->stat_file(replace(cwd + f, "//", "/"),
+                                          session);
 
-	if (st && (st[1] >= 0)) {
-	  reply = ({ sprintf(LOCALE(132, "Please read the file %s."), f),
-		     sprintf(LOCALE(133, "It was last modified %s - %d days ago."),
-			     ctime(st[3]) - "\n",
-			     (time(1) - st[3])/86400),
-		     "" }) + reply;
-	}
+        if (st && (st[1] >= 0)) {
+          reply = ({ sprintf(LOCALE(132, "Please read the file %s."), f),
+                     sprintf(LOCALE(133, "It was last modified %s - %d days ago."),
+                             ctime(st[3]) - "\n",
+                             (time(1) - st[3])/86400),
+                     "" }) + reply;
+        }
       }
     }
     string message;
@@ -3626,10 +3626,10 @@ class FTPSession
       dataport_port = e*256 + f;
 
       if (pasv_port) {
-	destruct(pasv_port);
+        destruct(pasv_port);
       }
       send(200, ({ sprintf(LOCALE(140, "PORT command ok (%s port %d)"),
-			   dataport_addr, dataport_port) }));
+                           dataport_addr, dataport_port) }));
     }
   }
 
@@ -3664,17 +3664,17 @@ class FTPSession
     if (segments[1] == "1") {
       // IPv4.
       if ((sizeof(segments[2]/".") != 4) ||
-	  sizeof(replace(segments[2], ".0123456789"/"", allocate(11, "")))) {
-	send(501, ({ sprintf(LOCALE(144, "Bad IPv4 address: '%s'"), segments[2]) }));
-	return;
+          sizeof(replace(segments[2], ".0123456789"/"", allocate(11, "")))) {
+        send(501, ({ sprintf(LOCALE(144, "Bad IPv4 address: '%s'"), segments[2]) }));
+        return;
       }
     } else {
       // IPv6.
       // FIXME: Improve the validation?
       if (sizeof(replace(lower_case(segments[2]), ".:0123456789abcdef"/"",
-			 allocate(18, "")))) {
-	send(501, ({ sprintf(LOCALE(145, "Bad IPv6 address: '%s'"), segments[2]) }));
-	return;
+                         allocate(18, "")))) {
+        send(501, ({ sprintf(LOCALE(145, "Bad IPv6 address: '%s'"), segments[2]) }));
+        return;
       }
     }
     if ((((int)segments[3]) <= 0) || (((int)segments[3]) > 65535)) {
@@ -3688,7 +3688,7 @@ class FTPSession
       destruct(pasv_port);
     }
     send(200, ({ sprintf(LOCALE(147, "EPRT command ok (%s port %d)"),
-			 dataport_addr, dataport_port) }));
+                         dataport_addr, dataport_port) }));
   }
 
   void ftp_PASV(string args)
@@ -3722,21 +3722,21 @@ class FTPSession
       if (max > 65535) max = 65535;
       if (min < 0) min = 0;
       for (port = min; port <= max; port++) {
-	if (pasv_port->bind(port, pasv_accept_callback, local_addr)) {
-	  break;
-	}
+        if (pasv_port->bind(port, pasv_accept_callback, local_addr)) {
+          break;
+        }
       }
       if (port > max) {
-	destruct(pasv_port);
-	pasv_port = 0;
-	send(452, ({ LOCALE(150, "Requested action aborted: Out of ports.") }));
-	return;
+        destruct(pasv_port);
+        pasv_port = 0;
+        send(452, ({ LOCALE(150, "Requested action aborted: Out of ports.") }));
+        return;
       }
     }
     send(227, ({ LOCALE(151, "Entering Passive Mode.") +
-		 sprintf(" (%s,%d,%d)",
-			 replace(public_addr, ".", ","),
-			 (port>>8), (port&0xff)) }));
+                 sprintf(" (%s,%d,%d)",
+                         replace(public_addr, ".", ","),
+                         (port>>8), (port&0xff)) }));
   }
 
   void ftp_EPSV(string args)
@@ -3748,11 +3748,11 @@ class FTPSession
 
     if (!(< 0, e_mode >)[args]) {
       if (lower_case(args) == "all") {
-	epsv_only = 1;
-	send(200, ({ LOCALE(152, "Entering EPSV ALL mode.") }));
+        epsv_only = 1;
+        send(200, ({ LOCALE(152, "Entering EPSV ALL mode.") }));
       } else {
-	send(522, ({ sprintf(LOCALE(153, "Network protocol not supported, use %s."),
-			     e_mode) }));
+        send(522, ({ sprintf(LOCALE(153, "Network protocol not supported, use %s."),
+                             e_mode) }));
       }
       return;
     }
@@ -3771,19 +3771,19 @@ class FTPSession
       if (max > 65535) max = 65535;
       if (min < 1) min = 1;
       for (port = min; port <= max; port++) {
-	if (pasv_port->bind(port, pasv_accept_callback, local_addr)) {
-	  break;
-	}
+        if (pasv_port->bind(port, pasv_accept_callback, local_addr)) {
+          break;
+        }
       }
       if (port > max) {
-	destruct(pasv_port);
-	pasv_port = 0;
-	send(452, ({ LOCALE(150, "Requested action aborted: Out of ports.") }));
-	return;
+        destruct(pasv_port);
+        pasv_port = 0;
+        send(452, ({ LOCALE(150, "Requested action aborted: Out of ports.") }));
+        return;
       }
     }
     send(229, ({ LOCALE(154, "Entering Extended Passive Mode") +
-		 sprintf(" (|||%d|)", /* "1", local_addr,*/ port) }));
+                 sprintf(" (|||%d|)", /* "1", local_addr,*/ port) }));
   }
 
   void ftp_TYPE(string args)
@@ -3813,7 +3813,7 @@ class FTPSession
     }
 
     send(200, ({ sprintf(LOCALE(156, "Using %s mode for transferring files."),
-			 modes[mode]) }));
+                         modes[mode]) }));
   }
 
   void ftp_RETR(string args)
@@ -3832,26 +3832,26 @@ class FTPSession
     mapping file;
     if (file = open_file(args, session, "RETR")) {
       if (restart_point) {
-	if (file->data) {
-	  if (sizeof(file->data) >= restart_point) {
-	    file->data = file->data[restart_point..];
-	    restart_point = 0;
-	  } else {
-	    restart_point -= sizeof(file->data);
-	    m_delete(file, "data");
-	  }
-	}
-	if (restart_point) {
-	  if (!(file->file && file->file->seek &&
-		(file->file->seek(restart_point) != -1))) {
-	    restart_point = 0;
-	    send(550, ({ LOCALE(157, "'RETR': Error restoring restart point.") }));
-	    discard_data_connection();
-	    destruct(session);
-	    return;
-	  }
-	  restart_point = 0;
-	}
+        if (file->data) {
+          if (sizeof(file->data) >= restart_point) {
+            file->data = file->data[restart_point..];
+            restart_point = 0;
+          } else {
+            restart_point -= sizeof(file->data);
+            m_delete(file, "data");
+          }
+        }
+        if (restart_point) {
+          if (!(file->file && file->file->seek &&
+                (file->file->seek(restart_point) != -1))) {
+            restart_point = 0;
+            send(550, ({ LOCALE(157, "'RETR': Error restoring restart point.") }));
+            discard_data_connection();
+            destruct(session);
+            return;
+          }
+          restart_point = 0;
+        }
       }
 
       connect_and_send(file, session);
@@ -3886,7 +3886,7 @@ class FTPSession
   {
     if (curr_pipe) {
       catch {
-	destruct(curr_pipe);
+        destruct(curr_pipe);
       };
       curr_pipe = 0;
       send(426, ({ LOCALE(159, "Data transmission terminated.") }));
@@ -4000,16 +4000,16 @@ class FTPSession
 
     if (st && (st[1] < 0)) {
       if (args[-1] != '/') {
-	args += "/";
+        args += "/";
       }
 
       session->file = ([]);
       session->file->full_path = args;
 
       mapping(string:array(mixed)) dir =
-	session->conf->find_dir_stat(args, session) || ([]);
+        session->conf->find_dir_stat(args, session) || ([]);
       if (args != "/") {
-	dir[".."] = stat_file(combine_path(args,"../"));
+        dir[".."] = stat_file(combine_path(args,"../"));
       }
       dir["."] = stat_file(combine_path(args));
 
@@ -4017,7 +4017,7 @@ class FTPSession
       // NOTE: send_MLSD_response is asynchronous!
     } else {
       if (st) {
-	session->file->error = 405;
+        session->file->error = 405;
       }
       send_error("MLSD", args, session->file, session);
       discard_data_connection();
@@ -4047,7 +4047,7 @@ class FTPSession
       ftp_OPTS_UTF8(a[1..]);
     } else {
       send(502, ({ sprintf(LOCALE(167, "OPTS command '%s' is not currently supported."),
-			   a[0]) }));
+                           a[0]) }));
     }
   }
 
@@ -4055,7 +4055,7 @@ class FTPSession
   {
     if (sizeof(args) != 1) {
       send(501, ({ sprintf(LOCALE(168, "'OPTS MLST %s': incorrect arguments"),
-			   args*" ") }));
+                           args*" ") }));
       return;
     }
 
@@ -4068,7 +4068,7 @@ class FTPSession
     current_mlst_facts = new_mlst_facts;
 
     send(200, ({ sprintf("MLST OPTS %s",
-			 format_factlist(new_mlst_facts)) }));
+                         format_factlist(new_mlst_facts)) }));
   }
 
   void ftp_OPTS_UTF8(array(string) args)
@@ -4129,11 +4129,11 @@ class FTPSession
       return;
     } else if (st[1] != -2) {
       if (st[1] == -3) {
-	send(504, ({ sprintf(LOCALE(170, "%s is a module mountpoint."), args) }));
-	session->conf->log(([ "error":405 ]), session);
+        send(504, ({ sprintf(LOCALE(170, "%s is a module mountpoint."), args) }));
+        session->conf->log(([ "error":405 ]), session);
       } else {
-	send(504, ({ sprintf(LOCALE(171, "%s is not a directory."), args) }));
-	session->conf->log(([ "error":405 ]), session);
+        send(504, ({ sprintf(LOCALE(171, "%s is not a directory."), args) }));
+        session->conf->log(([ "error":405 ]), session);
       }
       destruct(session);
       return;
@@ -4182,8 +4182,8 @@ class FTPSession
     args = lower_case(String.trim_all_whites(args || ""));
     if (sizeof(args)) {
       if (!roxen.set_locale(args)) {
-	send(504, ({ sprintf(LOCALE(173, "Unsupported language: %s"), args) }));
-	return;
+        send(504, ({ sprintf(LOCALE(173, "Unsupported language: %s"), args) }));
+        return;
       }
       master_session->misc->pref_languages->languages = ({ args });
       master_session->misc["accept-language"] = args;
@@ -4213,9 +4213,9 @@ class FTPSession
   void ftp_FEAT(string args)
   {
     array a = sort(Array.filter(indices(cmd_help),
-				lambda(string s) {
-				  return(this_object()["ftp_"+s]);
-				}));
+                                lambda(string s) {
+                                  return(this_object()["ftp_"+s]);
+                                }));
     if (!port_obj->ctx) {
       a -= ({ "AUTH" });
     }
@@ -4226,19 +4226,19 @@ class FTPSession
     a += ({ "TVFS" });	// RFC 3659
     a += ({ "UTF8" });	// RFC 2640
     a = Array.map(a,
-		  lambda(string s) {
-		    return(([ "REST":"REST STREAM",
-			      "MLST":sprintf("MLST %s",
-					     format_factlist(supported_mlst_facts,
-							     current_mlst_facts)),
-			      "MLSD":"",
-			      "AUTH":"AUTH TLS",
-			      "LANG":sprintf("LANG %s", format_langlist()),
-		    ])[s] || s);
-		  }) - ({ "" });
+                  lambda(string s) {
+                    return(([ "REST":"REST STREAM",
+                              "MLST":sprintf("MLST %s",
+                                             format_factlist(supported_mlst_facts,
+                                                             current_mlst_facts)),
+                              "MLSD":"",
+                              "AUTH":"AUTH TLS",
+                              "LANG":sprintf("LANG %s", format_langlist()),
+                    ])[s] || s);
+                  }) - ({ "" });
 
     send(211, ({ LOCALE(176, "The following features are supported:") }) + a +
-	 ({ "END" }));
+         ({ "END" }));
   }
 
   void ftp_MDTM(string args)
@@ -4298,37 +4298,37 @@ class FTPSession
        */
       string local_addr = fd->query_address(1);
       if (has_value(local_addr, ":")) {
-	// IPv6.
-	local_addr = "[" + replace(local_addr, " ", "]:");
+        // IPv6.
+        local_addr = "[" + replace(local_addr, " ", "]:");
       } else {
-	local_addr = replace(local_addr, " ", ":");
+        local_addr = replace(local_addr, " ", ":");
       }
       string remote_addr = fd->query_address();
       if (has_value(remote_addr, ":")) {
-	// IPv6.
-	remote_addr = "[" + replace(remote_addr, " ", "]:");
+        // IPv6.
+        remote_addr = "[" + replace(remote_addr, " ", "]:");
       } else {
-	remote_addr = replace(remote_addr, " ", ":");
+        remote_addr = replace(remote_addr, " ", ":");
       }
       send(211,
-	   sprintf(LOCALE(177, "%s FTP server status:\n"
-			  "Version %s\n"
-			  "Listening on %s\n"
-			  "Connected to %s\n"
-			  "Logged in %s\n"
-			  "TYPE: %s, FORM: %s; STRUcture: %s; transfer MODE: %s\n"
-			  "End of status"),
-		   local_addr,
-		   roxen.version(),
-		   port_obj->sorted_urls * "\nListening on ",
-		   remote_addr,
-		   user?sprintf("as %s", user):"anonymously",
-		   (["A":"ASCII", "E":"EBCDIC", "I":"IMAGE", "L":"LOCAL"])
-		   [mode],
-		   "Non-Print",
-		   "File",
-		   "Stream"
-		   )/"\n");
+           sprintf(LOCALE(177, "%s FTP server status:\n"
+                          "Version %s\n"
+                          "Listening on %s\n"
+                          "Connected to %s\n"
+                          "Logged in %s\n"
+                          "TYPE: %s, FORM: %s; STRUcture: %s; transfer MODE: %s\n"
+                          "End of status"),
+                   local_addr,
+                   roxen.version(),
+                   port_obj->sorted_urls * "\nListening on ",
+                   remote_addr,
+                   user?sprintf("as %s", user):"anonymously",
+                   (["A":"ASCII", "E":"EBCDIC", "I":"IMAGE", "L":"LOCAL"])
+                   [mode],
+                   "Non-Print",
+                   "File",
+                   "Stream"
+                   )/"\n");
       return;
     }
     string long = fix_path(args);
@@ -4340,10 +4340,10 @@ class FTPSession
       string s = LS_L(master_session)->ls_l(args, st);
 
       send(213, ({
-	    sprintf(LOCALE(178, "Status of \"%s\"."), args),
-	    @((s/"\n") - ({""})),
-	    "End of Status",
-	   }));
+            sprintf(LOCALE(178, "Status of \"%s\"."), args),
+            @((s/"\n") - ({""})),
+            "End of Status",
+           }));
     }
   }
 
@@ -4356,24 +4356,24 @@ class FTPSession
   {
     if ((< "", 0 >)[args]) {
       send(214, ({
-	     LOCALE(180, "The following commands are recognized (* =>'s unimplemented):"),
-	@(sprintf(" %#70s", sort(Array.map(indices(cmd_help),
-					   lambda(string s) {
-					     return(upper_case(s)+
-						    (this_object()["ftp_"+s]?
-						     "   ":"*  "));
-					   }))*"\n")/"\n"),
-	@(FTP2_XTRA_HELP),
+             LOCALE(180, "The following commands are recognized (* =>'s unimplemented):"),
+        @(sprintf(" %#70s", sort(Array.map(indices(cmd_help),
+                                           lambda(string s) {
+                                             return(upper_case(s)+
+                                                    (this_object()["ftp_"+s]?
+                                                     "   ":"*  "));
+                                           }))*"\n")/"\n"),
+        @(FTP2_XTRA_HELP),
       }));
     } else {
       args = upper_case(args);
       if ((args/" ")[0] == "SITE") {
-	array(string) a = (args/" ")-({""});
-	if (sizeof(a) == 1) {
-	  send(214, ({ LOCALE(181, "The following SITE commands are recognized:"),
-		       @(sprintf(" %#70s", sort(indices(site_help))*"\n")/"\n")
-	       }));
-	} else if (site_help[a[1]]) {
+        array(string) a = (args/" ")-({""});
+        if (sizeof(a) == 1) {
+          send(214, ({ LOCALE(181, "The following SITE commands are recognized:"),
+                       @(sprintf(" %#70s", sort(indices(site_help))*"\n")/"\n")
+               }));
+        } else if (site_help[a[1]]) {
           send(214, map(site_help[a[1]]/"\n",
                         lambda(string desc, string cmd) {
                           return sprintf(LOCALE(182, "Syntax: SITE %s %s%s"),
@@ -4381,16 +4381,16 @@ class FTPSession
                                          (this_object()["ftp_SITE_" + cmd]?
                                           "":"; unimplemented"));
                         }, a[1]));
-	} else {
-	  send(504, ({ sprintf(LOCALE(183, "Unknown SITE command %s."), a[1]) }));
-	}
+        } else {
+          send(504, ({ sprintf(LOCALE(183, "Unknown SITE command %s."), a[1]) }));
+        }
       } else if ((args/" ")[0] == "OPTS") {
-	array(string) a = (args/" ")-({""});
-	if (sizeof(a) == 1) {
-	  send(214, ({ LOCALE(184, "The following OPTS commands are recognized:"),
-		       @(sprintf(" %#70s", sort(indices(opts_help))*"\n")/"\n")
-	       }));
-	} else if (opts_help[a[1]]) {
+        array(string) a = (args/" ")-({""});
+        if (sizeof(a) == 1) {
+          send(214, ({ LOCALE(184, "The following OPTS commands are recognized:"),
+                       @(sprintf(" %#70s", sort(indices(opts_help))*"\n")/"\n")
+               }));
+        } else if (opts_help[a[1]]) {
           send(214, map(opts_help[a[1]]/"\n",
                         lambda(string desc, string opt) {
                           return sprintf(LOCALE(185, "Syntax: OPTS %s %s%s"),
@@ -4398,11 +4398,11 @@ class FTPSession
                                          (this_object()["ftp_OPTS_" + opt]?
                                           "":"; unimplemented"));
                         }, a[1]));
-	} else {
-	  send(504, ({ sprintf(LOCALE(186, "Unknown OPTS command %s."), a[1]) }));
-	}
+        } else {
+          send(504, ({ sprintf(LOCALE(186, "Unknown OPTS command %s."), a[1]) }));
+        }
       } else {
-	if (cmd_help[args]) {
+        if (cmd_help[args]) {
           send(214, map(cmd_help[args]/"\n",
                         lambda(string desc, string cmd) {
                           return sprintf(LOCALE(187, "Syntax: %s %s%s"),
@@ -4410,9 +4410,9 @@ class FTPSession
                                          (this_object()["ftp_" + cmd]?
                                           "":"; unimplemented"));
                         }, args));
-	} else {
-	  send(504, ({ sprintf(LOCALE(188, "Unknown command %s."), args) }));
-	}
+        } else {
+          send(504, ({ sprintf(LOCALE(188, "Unknown command %s."), args) }));
+        }
       }
     }
   }
@@ -4441,7 +4441,7 @@ class FTPSession
       this_object()["ftp_SITE_"+a[0]](a[1..]);
     } else {
       send(502, ({ sprintf(LOCALE(190, "SITE command '%s' is not currently supported."),
-			   a[0]) }));
+                           a[0]) }));
     }
   }
 
@@ -4449,7 +4449,7 @@ class FTPSession
   {
     if (sizeof(args) < 2) {
       send(501, ({ sprintf(LOCALE(191, "'SITE CHMOD %s': incorrect arguments"),
-			   args*" ") }));
+                           args*" ") }));
       return;
     }
 
@@ -4461,9 +4461,9 @@ class FTPSession
       mode *= 010;
       if(m[0] < '0' || m[0] > '7')
       {
-	// This is not an octal number...
-	mode = -1;
-	break;
+        // This is not an octal number...
+        mode = -1;
+        break;
       }
       mode += (int)("0"+m);
     }
@@ -4481,7 +4481,7 @@ class FTPSession
     session->not_query = fname;
     if (open_file(fname, session, "CHMOD")) {
       send(250, ({ sprintf(LOCALE(193, "Changed permissions of %s to 0%o."),
-			   fname, mode) }));
+                           fname, mode) }));
       session->conf->log(([ "error":200 ]), session);
     }
     destruct(session);
@@ -4491,7 +4491,7 @@ class FTPSession
   {
     if (sizeof(args) < 1) {
       send(501, ({ sprintf(LOCALE(194, "'SITE UMASK %s': incorrect arguments"),
-			   args*" ") }));
+                           args*" ") }));
       return;
     }
 
@@ -4503,9 +4503,9 @@ class FTPSession
       mode *= 010;
       if(m[0] < '0' || m[0] > '7')
       {
-	// This is not an octal number...
-	mode = -1;
-	break;
+        // This is not an octal number...
+        mode = -1;
+        break;
       }
       mode += (int)("0"+m);
     }
@@ -4535,26 +4535,26 @@ class FTPSession
     if (fd) {
       int t = (time() - time_touch);
       if (t > FTP2_TIMEOUT) {
-	// Recomended by RFC 1123 4.1.3.2
-	send(421, ({ LOCALE(199, "Connection timed out.") }));
-	send(0,0);
-	if (master_session->file) {
-	  if (objectp(master_session->file->file)) {
-	    destruct(master_session->file->file);
-	  }
-	  if (objectp(master_session->file->pipe)) {
-	    destruct(master_session->file->pipe);
-	  }
-	}
-	if (objectp(pasv_port)) {
-	  destruct(pasv_port);
-	}
-	master_session->method = "QUIT";
-	master_session->not_query = user || "Anonymous";
-	master_session->conf->log(([ "error":408 ]), master_session);
+        // Recomended by RFC 1123 4.1.3.2
+        send(421, ({ LOCALE(199, "Connection timed out.") }));
+        send(0,0);
+        if (master_session->file) {
+          if (objectp(master_session->file->file)) {
+            destruct(master_session->file->file);
+          }
+          if (objectp(master_session->file->pipe)) {
+            destruct(master_session->file->pipe);
+          }
+        }
+        if (objectp(pasv_port)) {
+          destruct(pasv_port);
+        }
+        master_session->method = "QUIT";
+        master_session->not_query = user || "Anonymous";
+        master_session->conf->log(([ "error":408 ]), master_session);
       } else {
-	// Not time yet to sever the connection.
-	call_out(timeout, FTP2_TIMEOUT + 30 - t);
+        // Not time yet to sever the connection.
+        call_out(timeout, FTP2_TIMEOUT + 30 - t);
       }
     } else {
       // We ought to be dead already...
@@ -4667,51 +4667,51 @@ class FTPSession
 
     if (cmd_help[cmd]) {
       if (!logged_in) {
-	if (!(< "REIN", "USER", "PASS", "SYST", "AUTH",
-		"ACCT", "QUIT", "ABOR", "HELP", "FEAT", "HOST" >)[cmd]) {
-	  send(530, ({ LOCALE(200, "You need to login first.") }));
+        if (!(< "REIN", "USER", "PASS", "SYST", "AUTH",
+                "ACCT", "QUIT", "ABOR", "HELP", "FEAT", "HOST" >)[cmd]) {
+          send(530, ({ LOCALE(200, "You need to login first.") }));
 
-	  return;
-	}
+          return;
+        }
       }
       if (!port_obj->query_option("rfc2428_support") &&
-	  (< "EPRT", "EPSV" >)[cmd]) {
-	send(502, ({ sprintf(LOCALE(201, "support for '%s' is disabled."), cmd) }));
-	return;
+          (< "EPRT", "EPSV" >)[cmd]) {
+        send(502, ({ sprintf(LOCALE(201, "support for '%s' is disabled."), cmd) }));
+        return;
       }
       if (this_object()["ftp_"+cmd]) {
-	conf->requests++;
+        conf->requests++;
 #ifndef FTP_USE_HANDLER_THREADS
-	mixed err;
-	if (err = catch {
-	  this_object()["ftp_"+cmd](args);
-	}) {
-	  report_error("Internal server error in FTP2\n"
-		       "Handling command %O\n%s\n",
-		       line, describe_backtrace(err));
-	}
+        mixed err;
+        if (err = catch {
+          this_object()["ftp_"+cmd](args);
+        }) {
+          report_error("Internal server error in FTP2\n"
+                       "Handling command %O\n%s\n",
+                       line, describe_backtrace(err));
+        }
 #else
-	roxen->handle(lambda(function f, string cmd, string args, string line) {
-			//  For e.g. PASS the args string may contain
-			//  cleartext password.
-			string args_copy = args;
-			if (cmd == "PASS")
-			  args = "CENSORED";
+        roxen->handle(lambda(function f, string cmd, string args, string line) {
+                        //  For e.g. PASS the args string may contain
+                        //  cleartext password.
+                        string args_copy = args;
+                        if (cmd == "PASS")
+                          args = "CENSORED";
 
-			restore_locale();
+                        restore_locale();
 
-			mixed err;
-			if (err = catch {
-			  f(args_copy);
-			}) {
-			  report_error("Internal server error in FTP2\n"
-				       "Handling command %O\n%s\n",
-				       line, describe_backtrace(err));
-			}
-		      }, this_object()["ftp_"+cmd], cmd, args, line);
+                        mixed err;
+                        if (err = catch {
+                          f(args_copy);
+                        }) {
+                          report_error("Internal server error in FTP2\n"
+                                       "Handling command %O\n%s\n",
+                                       line, describe_backtrace(err));
+                        }
+                      }, this_object()["ftp_"+cmd], cmd, args, line);
 #endif
       } else {
-	send(502, ({ sprintf(LOCALE(202, "'%s' is not currently supported."), cmd) }));
+        send(502, ({ sprintf(LOCALE(202, "'%s' is not currently supported."), cmd) }));
       }
     } else {
       send(502, ({ sprintf(LOCALE(203, "Unknown command '%s'."), cmd) }));
@@ -4742,7 +4742,7 @@ class FTPSession
     master_session->method = "QUIT";
     master_session->not_query = user || "Anonymous";
     conf->log(([ "error":204, "request_time":(time(1)-master_session->time) ]),
-	      master_session);
+              master_session);
     // Make sure we disappear...
     destruct();
   }
@@ -4798,8 +4798,8 @@ class FTPSession
 
 #if 0
     werror("FTP: conf:%O\n"
-	   "FTP:urls:%O\n",
-	   mkmapping(indices(conf), values(conf)), port_obj->urls);
+           "FTP:urls:%O\n",
+           mkmapping(indices(conf), values(conf)), port_obj->urls);
 #endif /* 0 */
 
     if (fd->renegotiate) {
@@ -4828,18 +4828,18 @@ class FTPSession
       // IPv4
       string addr = c->query_option("passive_public_address");
       if (sizeof(addr)) {
-	// NB: blocking_host_to_ip() is caching, so this should be fine.
-	string ip = roxen.blocking_host_to_ip(addr);
-	array(string) a = (array(string))map((array(int))(ip/"."), `&, 255);
-	if ((sizeof(a) == 4) && (ip == (a * "."))) {
-	  // Looks like we got an IPv4 number.
-	  public_addr = ip;
-	} else {
-	  report_warning("FTP2: Failed to convert %O into an IPv4 address.\n"
-			 "FTP2: Got: %O.\n"
-			 "FTP2: Falling back to default: %O.\n",
-			 addr, ip, local_addr);
-	}
+        // NB: blocking_host_to_ip() is caching, so this should be fine.
+        string ip = roxen.blocking_host_to_ip(addr);
+        array(string) a = (array(string))map((array(int))(ip/"."), `&, 255);
+        if ((sizeof(a) == 4) && (ip == (a * "."))) {
+          // Looks like we got an IPv4 number.
+          public_addr = ip;
+        } else {
+          report_warning("FTP2: Failed to convert %O into an IPv4 address.\n"
+                         "FTP2: Got: %O.\n"
+                         "FTP2: Falling back to default: %O.\n",
+                         addr, ip, local_addr);
+        }
       }
     }
 

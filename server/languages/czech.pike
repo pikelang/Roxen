@@ -92,7 +92,7 @@ string date(int timestamp, mapping|void m)
   }
   if(m["full"])
     return (ctime(timestamp)[11..15]+", "+
-	   ordered(t1["mday"]) + " " +
+           ordered(t1["mday"]) + " " +
            month(t1["mon"]+1) + " " +
            (t1["year"]+1900));
   if(m["date"])

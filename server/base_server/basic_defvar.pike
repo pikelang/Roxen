@@ -26,13 +26,13 @@ Variable.Variable getvar( string name )
 }
 
 int deflocaledoc( string locale, string variable,
-		   string name, string doc, mapping|void translate )
+                   string name, string doc, mapping|void translate )
 //! Equivalent to variables[variable]->deflocaledoc( loc,name, doc, translate )
 //! This is a compatibility function, and as such is deprecated.
 //! But it will be supported for the forseeable function.
 {
   report_error("Warning: [%O:%O:%O] deflocaledoc is deprecated. Ignored.\n",
-	       this_object(), locale, variable );
+               this_object(), locale, variable );
 }
 
 
@@ -106,70 +106,70 @@ Variable.Variable defvar(string var, mixed value,
     {
     case TYPE_STRING:
       vv = Variable.String( value,
-			    type&~VAR_TYPE_MASK,
-			    name,
-			    doc_str );
+                            type&~VAR_TYPE_MASK,
+                            name,
+                            doc_str );
       break;
     case TYPE_FILE:
       vv = Variable.File( value,
-			  type&~VAR_TYPE_MASK,
-			  name,
-			  doc_str );
+                          type&~VAR_TYPE_MASK,
+                          name,
+                          doc_str );
       break;
     case TYPE_INT:
       vv = Variable.Int( value,
-			 type&~VAR_TYPE_MASK,
-			 name,
-			 doc_str );
+                         type&~VAR_TYPE_MASK,
+                         name,
+                         doc_str );
       break;
     case TYPE_DIR:
       vv = Variable.Directory( value,
-			       type&~VAR_TYPE_MASK,
-			       name,
-			       doc_str );
+                               type&~VAR_TYPE_MASK,
+                               name,
+                               doc_str );
       break;
     case TYPE_STRING_LIST:
       if( arrayp( misc ) || mappingp( misc) )
-	vv = Variable.StringChoice( value,
-				    misc,
-				    type&~VAR_TYPE_MASK,
-				    name,
-				    doc_str);
+        vv = Variable.StringChoice( value,
+                                    misc,
+                                    type&~VAR_TYPE_MASK,
+                                    name,
+                                    doc_str);
       else
-	vv = Variable.StringList( value,
-				  type&~VAR_TYPE_MASK,
-				  name,
-				  doc_str );
+        vv = Variable.StringList( value,
+                                  type&~VAR_TYPE_MASK,
+                                  name,
+                                  doc_str );
       break;
     case TYPE_INT_LIST:
       if( arrayp( misc ) )
-	vv = Variable.IntChoice( value,
-				 misc,
-				 type&~VAR_TYPE_MASK,
-				 name,
-				 doc_str  );
+        vv = Variable.IntChoice( value,
+                                 misc,
+                                 type&~VAR_TYPE_MASK,
+                                 name,
+                                 doc_str  );
       else
-	vv = Variable.IntList( value,
-			       type&~VAR_TYPE_MASK,
-			       name,
-			       doc_str );
+        vv = Variable.IntList( value,
+                               type&~VAR_TYPE_MASK,
+                               name,
+                               doc_str );
       break;
 
     case TYPE_FLAG:
       vv = Variable.Flag( value,
-			  type&~VAR_TYPE_MASK,
-			  name,
-			  doc_str );
+                          type&~VAR_TYPE_MASK,
+                          name,
+                          doc_str );
       break;
     case TYPE_DIR_LIST:
       if( arrayp( misc ) )
 error("Variable type "+(type&VAR_TYPE_MASK)+" with misc no longer supported.\n"
       "Define a custom variable type (see etc/modules/Variable.pmod)\n");
       else
-	vv = Variable.DirectoryList( value,
-				     type&~VAR_TYPE_MASK,
-				     name,
-				     doc_str );
+        vv = Variable.DirectoryList( value,
+                                     type&~VAR_TYPE_MASK,
+                                     name,
+                                     doc_str );
       break;
     case TYPE_FILE_LIST:
       if( arrayp( misc ) )
@@ -178,40 +178,40 @@ error("Variable type "+(type&VAR_TYPE_MASK)+" with misc no longer supported.\n"
       "Define a custom variable type (see etc/modules/Variable.pmod)\n");
       }
       else
-	vv = Variable.FileList( value,
-				type&~VAR_TYPE_MASK,
-				name,
-				doc_str );
+        vv = Variable.FileList( value,
+                                type&~VAR_TYPE_MASK,
+                                name,
+                                doc_str );
       break;
     case TYPE_LOCATION:
       vv = Variable.Location( value,
-			      type&~VAR_TYPE_MASK,
-			      name,
-			      doc_str );
+                              type&~VAR_TYPE_MASK,
+                              name,
+                              doc_str );
       break;
     case TYPE_TEXT:
       vv = Variable.Text( value,
-			  type&~VAR_TYPE_MASK,
-			  name,
-			  doc_str );
+                          type&~VAR_TYPE_MASK,
+                          name,
+                          doc_str );
       break;
     case TYPE_PASSWORD:
       vv = Variable.Password( value,
-			      type&~VAR_TYPE_MASK,
-			      name,
-			      doc_str );
+                              type&~VAR_TYPE_MASK,
+                              name,
+                              doc_str );
       break;
     case TYPE_FLOAT:
       vv = Variable.Float( value,
-			   type&~VAR_TYPE_MASK,
-			   name,
-			   doc_str );
+                           type&~VAR_TYPE_MASK,
+                           name,
+                           doc_str );
       break;
     case TYPE_FONT:
       vv = Variable.FontChoice( value,
-				type&~VAR_TYPE_MASK,
-				name,
-				doc_str );
+                                type&~VAR_TYPE_MASK,
+                                name,
+                                doc_str );
       break;
     case TYPE_URL:
       vv = Variable.URL( value,
@@ -221,13 +221,13 @@ error("Variable type "+(type&VAR_TYPE_MASK)+" with misc no longer supported.\n"
       break;
     case TYPE_URL_LIST:
       vv = Variable.URLList( value,
-			     type&~VAR_TYPE_MASK,
-			     name,
-			     doc_str );
+                             type&~VAR_TYPE_MASK,
+                             name,
+                             doc_str );
       break;
     default:
       error("Variable type "+(type&VAR_TYPE_MASK)+" no longer supported.\n"
-	    "Define a custom variable type (see etc/modules/Variable.pmod)\n");
+            "Define a custom variable type (see etc/modules/Variable.pmod)\n");
     }
   }
 
@@ -260,7 +260,7 @@ mixed query(string|void var, int|void ok)
 }
 
 Variable.Variable definvisvar(string name, mixed value, int type,
-			      array|void misc)
+                              array|void misc)
 //! Convenience function, define an invisible variable, this variable
 //! will be saved, but it won't be visible in the administration interface.
 {

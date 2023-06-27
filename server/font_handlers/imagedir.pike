@@ -20,11 +20,11 @@ Thread.Mutex lock = Thread.Mutex();
 #endif
 
 protected mapping nullchar = ([ "image":Image.Image(1,1),
-				"alpha":Image.Image(1,1) ]);
+                                "alpha":Image.Image(1,1) ]);
 protected mapping spacechar = ([ "image":Image.Image(10,1),
-				 "alpha":Image.Image(10,1) ]);
+                                 "alpha":Image.Image(10,1) ]);
 protected mapping smallspacechar = ([ "image":Image.Image(2,1),
-				      "alpha":Image.Image(2,1) ]);
+                                      "alpha":Image.Image(2,1) ]);
 class myFont
 {
   inherit Font;
@@ -75,10 +75,10 @@ class myFont
     Image.Image rr;
     if(floatp(x_spacing))
       rr=Image.Image((int)abs(`+(0,@res->image->xsize())*x_spacing),
-		     max(0,@res->image->ysize()));
+                     max(0,@res->image->ysize()));
     else
       rr=Image.Image(abs(`+(0,@res->image->xsize())+(sizeof(res)*x_spacing)),
-		     max(0,@res->image->ysize()));
+                     max(0,@res->image->ysize()));
 
 
     float start;
@@ -93,9 +93,9 @@ class myFont
       else
         rr->paste(r->image,(int)start,rr->ysize()-r->image->ysize());
       if(floatp(x_spacing))
-	start += r->image->xsize()*x_spacing;
+        start += r->image->xsize()*x_spacing;
       else
-	start += r->image->xsize()+x_spacing;
+        start += r->image->xsize()+x_spacing;
     }
     return rr;
   }
@@ -111,10 +111,10 @@ class myFont
     Image.Image rr;
     if(floatp(y_spacing))
       rr = Image.Image( max(0,@res->xsize()),
-			(int)abs(`+(0,@res->ysize())*y_spacing) );
+                        (int)abs(`+(0,@res->ysize())*y_spacing) );
     else
       rr = Image.Image( max(0,@res->xsize()),
-    			abs(`+(0,@res->ysize())+(sizeof(res)*y_spacing)) );
+                        abs(`+(0,@res->ysize())+(sizeof(res)*y_spacing)) );
 
     float start;
     if( y_spacing < 0 )  start = (float)rr->ysize()-res[0]->ysize();
@@ -125,9 +125,9 @@ class myFont
       else if( j_center ) rr->paste(r,(rr->xsize()-r->xsize())/2,(int)start);
       else                rr->paste( r, 0, (int)start );
       if(floatp(y_spacing))
-	start += r->ysize()*y_spacing;
+        start += r->ysize()*y_spacing;
       else
-	start += r->ysize()+y_spacing;
+        start += r->ysize()+y_spacing;
     }
     return rr;
   }
@@ -163,13 +163,13 @@ protected string font_name( string what )
   mapping _meta_data=([]);
   Parser.HTML()->
     add_containers( ([ "name":lambda(string t, mapping m, string c) {
-				what=c; return ""; },
-		       "meta":lambda(string t, mapping m, string c) {
-				_meta_data[m->name]=c; },
-		       "xpad":lambda(string t, mapping m, string c) {
-				_meta_data->xpad = (int)c; },
-		       "ypad":lambda(string t, mapping m, string c) {
-				_meta_data->ypad = (int)c; },
+                                what=c; return ""; },
+                       "meta":lambda(string t, mapping m, string c) {
+                                _meta_data[m->name]=c; },
+                       "xpad":lambda(string t, mapping m, string c) {
+                                _meta_data->xpad = (int)c; },
+                       "ypad":lambda(string t, mapping m, string c) {
+                                _meta_data->ypad = (int)c; },
     ]) )->finish(what);
 
   what=(lower_case( replace(what," ","_") )/"\n")[0]-"\r";
@@ -244,7 +244,7 @@ Font open( string name, int size, int bold, int italic )
   }
   if( font_list[ name ] )
     return myFont( font_list[name], size,
-		   xpad, ypad );
+                   xpad, ypad );
 }
 
 

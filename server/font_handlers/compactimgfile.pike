@@ -175,12 +175,12 @@ void update_font_list()
       {
         CIF t = open_tar( fpath );
         if( Stdio.File f = t->open( "fontname", "r" ) ) {
-	  string name = f->read();
-	  if( Stdio.File f = t->open( "fontinfo", "r" ) )
-	    font_list[font_name( "<name>"+name+"</name>"+f->read() )] = fpath;
-	  else
-	    font_list[font_name( name )] = fpath;
-	}
+          string name = f->read();
+          if( Stdio.File f = t->open( "fontinfo", "r" ) )
+            font_list[font_name( "<name>"+name+"</name>"+f->read() )] = fpath;
+          else
+            font_list[font_name( name )] = fpath;
+        }
         else
           destruct( t );
       }

@@ -116,14 +116,14 @@ protected mapping http_low_answer(int errno, string data, string|void desc)
 
 // Note: This does a TRACE_LEAVE.
 protected mapping(string:mixed) errno_to_status (int err, int(0..1) create,
-						 RequestID id)
+                                                 RequestID id)
 {
   switch (err) {
     case System.ENOENT:
       if (!create) {
-	SIMPLE_TRACE_LEAVE ("File not found");
-	id->misc->error_code = Protocols.HTTP.HTTP_NOT_FOUND;
-	return 0;
+        SIMPLE_TRACE_LEAVE ("File not found");
+        id->misc->error_code = Protocols.HTTP.HTTP_NOT_FOUND;
+        return 0;
       }
       // Fall through.
 
@@ -139,15 +139,15 @@ protected mapping(string:mixed) errno_to_status (int err, int(0..1) create,
     case System.EPERM:
       TRACE_LEAVE(sprintf("%s: Permission denied", id->method));
       return Roxen.http_status(Protocols.HTTP.HTTP_FORBIDDEN,
-			       "Permission denied.");
+                               "Permission denied.");
 
     case System.EEXIST:
       TRACE_LEAVE(sprintf("%s failed. Directory name already exists. ",
-			  id->method));
+                          id->method));
       // FIXME: More methods are probably allowed, but what use is
       // that header anyway?
       return Roxen.http_method_not_allowed("GET, HEAD",
-					   "Collection already exists.");
+                                           "Collection already exists.");
 
 #if constant(System.ENAMETOOLONG)
     case System.ENAMETOOLONG:
@@ -158,8 +158,8 @@ protected mapping(string:mixed) errno_to_status (int err, int(0..1) create,
     default:
       SIMPLE_TRACE_LEAVE ("Unexpected I/O error: %s", strerror (err));
       return Roxen.http_status (Protocols.HTTP.HTTP_INTERNAL_ERR,
-				"Unexpected I/O error: %s",
-				strerror (err));
+                                "Unexpected I/O error: %s",
+                                strerror (err));
   }
 }
 
@@ -185,119 +185,119 @@ string status()
 void create()
 {
   defvar("mountpoint", "/", LOCALE(15,"Mount point"),
-	 TYPE_LOCATION|VAR_INITIAL|VAR_NO_DEFAULT,
-	 LOCALE(16,"Where the module will be mounted in the site's virtual "
-		"file system."));
+         TYPE_LOCATION|VAR_INITIAL|VAR_NO_DEFAULT,
+         LOCALE(16,"Where the module will be mounted in the site's virtual "
+                "file system."));
 
   defvar("searchpath", "NONE", LOCALE(17,"Search path"),
-	 TYPE_DIR|VAR_INITIAL|VAR_NO_DEFAULT,
-	 LOCALE(18,"The directory that contains the files."));
+         TYPE_DIR|VAR_INITIAL|VAR_NO_DEFAULT,
+         LOCALE(18,"The directory that contains the files."));
 
   defvar(".files", 0, LOCALE(19,"Show hidden files"), TYPE_FLAG|VAR_MORE,
-	 LOCALE(20,"If set, hidden files, ie files that begin with a '.', "
-		"will be shown in directory listings." ));
+         LOCALE(20,"If set, hidden files, ie files that begin with a '.', "
+                "will be shown in directory listings." ));
 
   defvar("dir", 1, LOCALE(21,"Enable directory listings per default"),
-	 TYPE_FLAG|VAR_MORE,
-	 LOCALE(22,"If set, it will be possible to get a directory listings "
-		"from directories in this file system. It is possible to "
-		"force a directory to never be browsable by putting a "
-		"<tt>.www_not_browsable</tt> or a <tt>.nodiraccess</tt> file "
-		"in it. Similarly it is possible to let a directory be "
-		"browsable, even if the file system is not, by putting a "
-		"<tt>.www_browsable</tt> file in it.\n"));
+         TYPE_FLAG|VAR_MORE,
+         LOCALE(22,"If set, it will be possible to get a directory listings "
+                "from directories in this file system. It is possible to "
+                "force a directory to never be browsable by putting a "
+                "<tt>.www_not_browsable</tt> or a <tt>.nodiraccess</tt> file "
+                "in it. Similarly it is possible to let a directory be "
+                "browsable, even if the file system is not, by putting a "
+                "<tt>.www_browsable</tt> file in it.\n"));
 
   defvar("nobrowse", ({ ".www_not_browsable", ".nodiraccess" }),
-	 LOCALE(23,"List prevention files"), TYPE_STRING_LIST|VAR_MORE,
-	 LOCALE(24,"All directories containing any of these files will not be "
-		"browsable."));
+         LOCALE(23,"List prevention files"), TYPE_STRING_LIST|VAR_MORE,
+         LOCALE(24,"All directories containing any of these files will not be "
+                "browsable."));
 
   defvar("no-parse", 0, LOCALE(65, "Raw files"), TYPE_FLAG|VAR_MORE,
-	 LOCALE(66, "If set files from this filesystem will be returned "
-		"without any further processing. This disables eg RXML "
-		"parsing of files."));
+         LOCALE(66, "If set files from this filesystem will be returned "
+                "without any further processing. This disables eg RXML "
+                "parsing of files."));
 
   defvar("tilde", 0, LOCALE(25,"Show backup files"), TYPE_FLAG|VAR_MORE,
-	 LOCALE(26,"If set, files ending with '~', '#' or '.bak' will "+
-		"be shown in directory listings"));
+         LOCALE(26,"If set, files ending with '~', '#' or '.bak' will "+
+                "be shown in directory listings"));
 
   defvar("put", 0, LOCALE(27,"Handle the PUT method"), TYPE_FLAG,
-	 LOCALE(28,"If set, it will be possible to upload files with the HTTP "
-		"method PUT, or through FTP."));
+         LOCALE(28,"If set, it will be possible to upload files with the HTTP "
+                "method PUT, or through FTP."));
 
   defvar("delete", 0, LOCALE(29,"Handle the DELETE method"), TYPE_FLAG,
-	 LOCALE(30,"If set, it will be possible to delete files with the HTTP "
-		"method DELETE, or through FTP."));
+         LOCALE(30,"If set, it will be possible to delete files with the HTTP "
+                "method DELETE, or through FTP."));
 
   defvar("check_auth", 1, LOCALE(31,"Require authentication for modification"),
-	 TYPE_FLAG,
-	 LOCALE(32,"Only allow users authenticated by a authentication module "
-		"to use methods that can modify the files, such as PUT or "
-		"DELETE. If this is not set the file system will be a "
-		"<b>very</b> public one since anyone will be able to edit "
-		"files."));
+         TYPE_FLAG,
+         LOCALE(32,"Only allow users authenticated by a authentication module "
+                "to use methods that can modify the files, such as PUT or "
+                "DELETE. If this is not set the file system will be a "
+                "<b>very</b> public one since anyone will be able to edit "
+                "files."));
 
   defvar("stat_cache", 0, LOCALE(33,"Cache the results of stat(2)"),
-	 TYPE_FLAG|VAR_MORE,
-	 LOCALE(34,"A performace option that can speed up retrieval of files "
-		"from NFS with up to 50%. In turn it uses some memory and the "
-		"file system will not notice that files have changed unless "
-		"it gets a pragma no-cache request (produced e.g. by "
-		"Alt-Ctrl-Reload in Netscape). Therefore this option should "
-		"not be used on file systems that change a lot."));
+         TYPE_FLAG|VAR_MORE,
+         LOCALE(34,"A performace option that can speed up retrieval of files "
+                "from NFS with up to 50%. In turn it uses some memory and the "
+                "file system will not notice that files have changed unless "
+                "it gets a pragma no-cache request (produced e.g. by "
+                "Alt-Ctrl-Reload in Netscape). Therefore this option should "
+                "not be used on file systems that change a lot."));
 
   defvar("access_as_user", 0, LOCALE(35,"Access files as the logged in user"),
-	 TYPE_FLAG|VAR_MORE,
-	 LOCALE(36,"If set, the module will access files as the authenticated "
-		"user. This assumes that a authentication module which imports"
-		" the users from the operating systems, such as the <i>User "
-		"database</i> module is used. This option is very useful for "
-		"named FTP sites, but it will have severe performance impacts "
-		"since all threads will be locked for each access."));
+         TYPE_FLAG|VAR_MORE,
+         LOCALE(36,"If set, the module will access files as the authenticated "
+                "user. This assumes that a authentication module which imports"
+                " the users from the operating systems, such as the <i>User "
+                "database</i> module is used. This option is very useful for "
+                "named FTP sites, but it will have severe performance impacts "
+                "since all threads will be locked for each access."));
 
   defvar("access_as_user_db",
-	 Variable.UserDBChoice( " all", VAR_MORE,
-				 LOCALE(53,"Authentication database to use"), 
-				 LOCALE(54,"The User database module to use "
-					"when authenticating users for the "
-					"access file as the logged in user "
-					"feature."),
-				my_configuration()));
+         Variable.UserDBChoice( " all", VAR_MORE,
+                                 LOCALE(53,"Authentication database to use"), 
+                                 LOCALE(54,"The User database module to use "
+                                        "when authenticating users for the "
+                                        "access file as the logged in user "
+                                        "feature."),
+                                my_configuration()));
 
   defvar( "access_as_user_throw", 0,
-	  LOCALE(55,"Access files as the logged in user forces login"),
-	  TYPE_FLAG|VAR_MORE,
-	  LOCALE(56,"If true, a user will have to be logged in to access files in "
-		 "this filesystem") );
+          LOCALE(55,"Access files as the logged in user forces login"),
+          TYPE_FLAG|VAR_MORE,
+          LOCALE(56,"If true, a user will have to be logged in to access files in "
+                 "this filesystem") );
 
   defvar("no_symlinks", 0, LOCALE(37,"Forbid access to symlinks"),
-	 TYPE_FLAG|VAR_MORE,
-	 LOCALE(38,"It set, the file system will not follow symbolic links. "
-		"This option can lower performace by a lot." ));
+         TYPE_FLAG|VAR_MORE,
+         LOCALE(38,"It set, the file system will not follow symbolic links. "
+                "This option can lower performace by a lot." ));
 
   defvar("charset", "iso-8859-1", LOCALE(39,"File contents charset"),
-	 TYPE_STRING,
-	 LOCALE(40,"The charset of the contents of the files on this file "
-		"system. This variable makes it possible for Roxen to use "
-		"any text file, no matter what charset it is written in. If"
-		" necessary, Roxen will convert the file to Unicode before "
-		"processing the file."));
+         TYPE_STRING,
+         LOCALE(40,"The charset of the contents of the files on this file "
+                "system. This variable makes it possible for Roxen to use "
+                "any text file, no matter what charset it is written in. If"
+                " necessary, Roxen will convert the file to Unicode before "
+                "processing the file."));
 
   defvar("path_encoding", "iso-8859-1", LOCALE(41,"Filename charset"),
-	 TYPE_STRING,
-	 LOCALE(42,"The charset of the file names of the files on this file "
-		"system. Unlike the <i>File contents charset</i> variable, "
-		"this might not work for all charsets simply because not "
-		"all browsers support anything except ISO-8859-1 "
-		"in URLs."));
+         TYPE_STRING,
+         LOCALE(42,"The charset of the file names of the files on this file "
+                "system. Unlike the <i>File contents charset</i> variable, "
+                "this might not work for all charsets simply because not "
+                "all browsers support anything except ISO-8859-1 "
+                "in URLs."));
 
   defvar("internal_files", ({}), LOCALE(43,"Internal files"), TYPE_STRING_LIST,
-	 LOCALE(44,"A list of glob patterns that matches files which should be "
-		"considered internal. Internal files cannot be requested "
-		"directly from a browser, won't show up in directory listings "
-		"and can never be uploaded, moved or deleted by a browser."
-		"They can only be accessed internally, e.g. with the RXML tags"
-		" <tt>&lt;insert&gt;</tt> and <tt>&lt;use&gt;</tt>."));
+         LOCALE(44,"A list of glob patterns that matches files which should be "
+                "considered internal. Internal files cannot be requested "
+                "directly from a browser, won't show up in directory listings "
+                "and can never be uploaded, moved or deleted by a browser."
+                "They can only be accessed internally, e.g. with the RXML tags"
+                " <tt>&lt;insert&gt;</tt> and <tt>&lt;use&gt;</tt>."));
 }
 
 // Cached defvar values.
@@ -334,7 +334,7 @@ void start()
       normalized_path = System.normalize_path(path + ".");
     }) {
     report_error(LOCALE(1, "Path normalization of %s: %s failed.\n"),
-		 path, mountpoint);
+                 path, mountpoint);
 #ifdef __NT__
     normalized_path = replace(path, "/", "\\");
 #else
@@ -363,42 +363,42 @@ string query_location()
 ADT.Trie query_snmp_mib(array(int) base_oid, array(int) oid_suffix)
 {
   return SNMP.SimpleMIB(base_oid, oid_suffix,
-			({
-			  UNDEFINED,
-			  SNMP.String(query_location, "location",
-				      "Mount point in the virtual filesystem."),
-			  SNMP.String(query_name, "name"),
-			  SNMP.String(lambda() {
-					return query("charset");
-				      }, "charset"),
-			  SNMP.Counter(lambda() {
-					 return accesses;
-				       }, "accesses"),
-			  SNMP.Counter(lambda() {
-					 return errors;
-				       }, "errors"),
-			  SNMP.Counter(lambda() {
-					 return redirects;
-				       }, "redirects"),
-			  SNMP.Counter(lambda() {
-					 return dirlists;
-				       }, "dirlists"),
-			  SNMP.Counter(lambda() {
-					 return puts;
-				       }, "puts"),
-			  SNMP.Counter(lambda() {
-					 return mkdirs;
-				       }, "mkdirs"),
-			  SNMP.Counter(lambda() {
-					 return moves;
-				       }, "moves"),
-			  SNMP.Counter(lambda() {
-					 return chmods;
-				       }, "chmods"),
-			  SNMP.Counter(lambda() {
-					 return deletes;
-				       }, "deletes"),
-			}));
+                        ({
+                          UNDEFINED,
+                          SNMP.String(query_location, "location",
+                                      "Mount point in the virtual filesystem."),
+                          SNMP.String(query_name, "name"),
+                          SNMP.String(lambda() {
+                                        return query("charset");
+                                      }, "charset"),
+                          SNMP.Counter(lambda() {
+                                         return accesses;
+                                       }, "accesses"),
+                          SNMP.Counter(lambda() {
+                                         return errors;
+                                       }, "errors"),
+                          SNMP.Counter(lambda() {
+                                         return redirects;
+                                       }, "redirects"),
+                          SNMP.Counter(lambda() {
+                                         return dirlists;
+                                       }, "dirlists"),
+                          SNMP.Counter(lambda() {
+                                         return puts;
+                                       }, "puts"),
+                          SNMP.Counter(lambda() {
+                                         return mkdirs;
+                                       }, "mkdirs"),
+                          SNMP.Counter(lambda() {
+                                         return moves;
+                                       }, "moves"),
+                          SNMP.Counter(lambda() {
+                                         return chmods;
+                                       }, "chmods"),
+                          SNMP.Counter(lambda() {
+                                         return deletes;
+                                       }, "deletes"),
+                        }));
 }
 
 #define FILTER_INTERNAL_FILE(f, id) \
@@ -443,7 +443,7 @@ mixed stat_file( string f, RequestID id )
   Stat fs;
 
   FILESYSTEM_WERR("stat_file for \""+f+"\"" +
-		  (id->misc->internal_get ? " (internal)" : ""));
+                  (id->misc->internal_get ? " (internal)" : ""));
 
   string norm_f = real_path(f, id);
   if (!norm_f) return 0;
@@ -539,31 +539,31 @@ protected string low_real_path(string f, RequestID id)
 #if constant(System.normalize_path)
       if (!has_prefix(norm_f, normalized_path) &&
 #ifdef __NT__
-	  (norm_f+"\\" != normalized_path)
+          (norm_f+"\\" != normalized_path)
 #else /* !__NT__ */
-	  (norm_f+"/" != normalized_path)
+          (norm_f+"/" != normalized_path)
 #endif /* __NT__ */
-	  ) {
-	errors++;
-	report_error(LOCALE(52, "Path verification of %O failed:\n"
-			    "%O is not a prefix of %O\n"
-			    ), f, normalized_path, norm_f);
-	return 0;
+          ) {
+        errors++;
+        report_error(LOCALE(52, "Path verification of %O failed:\n"
+                            "%O is not a prefix of %O\n"
+                            ), f, normalized_path, norm_f);
+        return 0;
       }
 
       string oldf = f;
       // Regenerate f from norm_f.
       f = decode_path(replace(norm_f[sizeof(normalized_path)..], "\\", "/"));
       if (has_suffix(oldf, "/") && !has_suffix(f, "/")) {
-	// Restore the "/" stripped by encode_path() on NT.
-	f += "/";
+        // Restore the "/" stripped by encode_path() on NT.
+        f += "/";
       }
 #endif /* constant(System.normalize_path) */
     }) {
     errors++;
     report_error(LOCALE(71, "Path normalization failure for %O:\n"
-			"%s\n"),
-		 f, describe_backtrace(err));
+                        "%s\n"),
+                 f, describe_backtrace(err));
   }
   return norm_f;
 }
@@ -592,8 +592,8 @@ mapping(string:mixed) lock_file(string path, DAVLock lock, RequestID id)
     return
       // FIXME: Sane realm.
       Roxen.http_auth_required("foo",
-			       "<h1>Permission to 'LOCK' files denied</h1>",
-			       id);
+                               "<h1>Permission to 'LOCK' files denied</h1>",
+                               id);
   }
   register_lock(path, lock, id);
   return 0;
@@ -607,8 +607,8 @@ mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID|int(0..0)
     return
       // FIXME: Sane realm.
       Roxen.http_auth_required("foo",
-			       "<h1>Permission to 'UNLOCK' files denied</h1>",
-			       id);
+                               "<h1>Permission to 'UNLOCK' files denied</h1>",
+                               id);
   }
   unregister_lock(path, lock, id);
   return 0;
@@ -626,8 +626,8 @@ array(string) list_lock_files() {
 }
 
 protected variant mapping(string:mixed)|int(0..1) write_access(string path,
-							       int(0..1) recursive,
-							       RequestID id)
+                                                               int(0..1) recursive,
+                                                               RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "write_access(%O, %O, %O)\n", path, recursive, id);
   if(query("check_auth") && (!id->conf->authenticate( id ) ) ) {
@@ -636,8 +636,8 @@ protected variant mapping(string:mixed)|int(0..1) write_access(string path,
     // FIXME: Recursion and htaccess?
     return
       Roxen.http_auth_required("foo",
-			       sprintf("<h1>Permission to '%s' denied</h1>",
-				       id->method), id);
+                               sprintf("<h1>Permission to '%s' denied</h1>",
+                                       id->method), id);
   }
   TRACE_LEAVE("Fall back to the default write access checks.");
   return ::write_access(path, recursive, id);
@@ -648,7 +648,7 @@ array find_dir( string f, RequestID id )
   array dir;
 
   FILESYSTEM_WERR("find_dir for \""+f+"\"" +
-		  (id->misc->internal_get ? " (internal)" : ""));
+                  (id->misc->internal_get ? " (internal)" : ""));
 
   string norm_f = real_path(f, id);
 
@@ -703,7 +703,7 @@ array find_dir( string f, RequestID id )
 }
 
 void recursive_rm(string real_dir, string virt_dir,
-		  int(0..1) check_status_needed, RequestID id)
+                  int(0..1) check_status_needed, RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "Deleting all files in directory %O...", real_dir);
   foreach(get_dir(real_dir) || ({}), string fname) {
@@ -712,8 +712,8 @@ void recursive_rm(string real_dir, string virt_dir,
 
     Stat stat = file_stat(real_fname);
     SIMPLE_TRACE_ENTER(this, "Deleting %s %O.",
-		       stat?(stat->isdir?"directory":"file"):"missing",
-		       real_fname);
+                       stat?(stat->isdir?"directory":"file"):"missing",
+                       real_fname);
     if (!stat) {
       id->set_status_for_path(virt_fname, 404);
       TRACE_LEAVE("File not found.");
@@ -742,12 +742,12 @@ void recursive_rm(string real_dir, string virt_dir,
       if (errno() != System.EEXIST)
 #endif
       {
-	id->set_status_for_path(virt_fname, 403);
-	TRACE_LEAVE("Deletion failed.");
+        id->set_status_for_path(virt_fname, 403);
+        TRACE_LEAVE("Deletion failed.");
       }
 #if constant(System.EEXIST)
       else {
-	TRACE_LEAVE("Directory not empty.");
+        TRACE_LEAVE("Directory not empty.");
       }
 #endif
     } else {
@@ -756,8 +756,8 @@ void recursive_rm(string real_dir, string virt_dir,
       unlock_path(virt_fname, id);
 
       if (id->misc->quota_obj && stat->isreg()) {
-	id->misc->quota_obj->deallocate(virt_fname,
-					stat->size());
+        id->misc->quota_obj->deallocate(virt_fname,
+                                        stat->size());
       }
       TRACE_LEAVE("Ok.");
     }
@@ -779,8 +779,8 @@ void done_with_put( array(object|string|int) id_arr )
   [to, from, id, oldf, size] = id_arr;
 
   FILESYSTEM_WERR(sprintf("done_with_put(%O)\n"
-			  "from: %O\n",
-			  id_arr, mkmapping(indices(from), values(from))));
+                          "from: %O\n",
+                          id_arr, mkmapping(indices(from), values(from))));
 
   to->close();
   from->set_blocking();
@@ -789,11 +789,11 @@ void done_with_put( array(object|string|int) id_arr )
   if (putting[from] && (putting[from] != 0x7fffffff)) {
     // Truncated!
     id->send_result(Roxen.http_status(400,
-				      "Bad Request - "
-				      "Expected more data."));
+                                      "Bad Request - "
+                                      "Expected more data."));
   } else {
     id->send_result(Roxen.http_status((size < 0)?201:200,
-				      "Transfer Complete."));
+                                      "Transfer Complete."));
   }
 }
 
@@ -831,7 +831,7 @@ void got_put_data( array(object|string|int) id_arr, string data )
     return;
   } else {
     if (id->misc->quota_obj &&
-	!id->misc->quota_obj->allocate(oldf, bytes)) {
+        !id->misc->quota_obj->allocate(oldf, bytes)) {
       to->close();
       from->set_blocking();
       m_delete(putting, from);
@@ -885,7 +885,7 @@ int contains_symlinks(string root, string path)
     Stat rr;
     if (rr = file_stat(root, 1)) {
       if (rr[1] == -3) {
-	return(1);
+        return(1);
       }
     } else {
       return(0);
@@ -930,7 +930,7 @@ mapping make_collection(string coll, RequestID id)
   if(!query("put"))
   {
     TRACE_LEAVE(sprintf("%s disallowed (since PUT is disallowed)",
-			id->method));
+                        id->method));
     return Roxen.http_status(405, "Disallowed.");
   }
 
@@ -938,10 +938,10 @@ mapping make_collection(string coll, RequestID id)
 
   if (size != -1) {
     TRACE_LEAVE(sprintf("%s failed. Directory name already exists. ",
-			id->method));
+                        id->method));
     if (id->method == "MKCOL") {
       return Roxen.http_status(405,
-			       "Collection already exists.");
+                               "Collection already exists.");
     }
     return 0;
   }
@@ -959,9 +959,9 @@ mapping make_collection(string coll, RequestID id)
     privs = 0;
     errors++;
     report_error(LOCALE(46,"Creation of %O failed. Permission denied.\n"),
-		 coll);
+                 coll);
     TRACE_LEAVE(sprintf("%s: Contains symlinks. Permission denied",
-			id->method));
+                        id->method));
     return Roxen.http_status(403, "Permission denied.");
   }
 
@@ -1005,7 +1005,7 @@ mixed find_file( string f, RequestID id )
   int code;
 
   FILESYSTEM_WERR("Request for \""+f+"\"" +
-		  (id->misc->internal_get ? " (internal)" : ""));
+                  (id->misc->internal_get ? " (internal)" : ""));
 
   /* only used for the quota system, thus rather unessesary to do for
      each request....
@@ -1070,8 +1070,8 @@ mixed find_file( string f, RequestID id )
 
     default:
       if( f[ -1 ] == '/' ||	/* Trying to access file with '/' appended */
-	  !norm_f) {		/* Or a file that is not normalizable. */
-	return 0;
+          !norm_f) {		/* Or a file that is not normalizable. */
+        return 0;
       }
 
       TRACE_ENTER("Opening file \"" + f + "\"", 0);
@@ -1084,13 +1084,13 @@ mixed find_file( string f, RequestID id )
 
       if(!o || (no_symlinks && (contains_symlinks(path, f))))
       {
-	errors++;
-	report_error(LOCALE(45,"Open of %s failed. Permission denied.\n"),f);
+        errors++;
+        report_error(LOCALE(45,"Open of %s failed. Permission denied.\n"),f);
 
-	TRACE_LEAVE("");
-	TRACE_LEAVE("Permission denied.");
-	return Roxen.http_status(403, "File exists, but access forbidden "
-				 "by user");
+        TRACE_LEAVE("");
+        TRACE_LEAVE("Permission denied.");
+        return Roxen.http_status(403, "File exists, but access forbidden "
+                                 "by user");
       }
 
       // Add a cache callback.
@@ -1101,17 +1101,17 @@ mixed find_file( string f, RequestID id )
       accesses++;
       if( charset != "iso-8859-1" )
       {
-	if( id->set_output_charset )
-	  id->set_output_charset( charset, 2 );
+        if( id->set_output_charset )
+          id->set_output_charset( charset, 2 );
         id->misc->input_charset = charset;
       }
       if (query("no-parse")) {
-	TRACE_ENTER("Content-type mapping module", id->conf->types_module);
-	array(string) tmp = id->conf->type_from_filename(norm_f, 1);
-	TRACE_LEAVE(tmp?sprintf("Returned type %s %s.", tmp[0], tmp[1]||"")
-		    : "Missing type.");
-	TRACE_LEAVE("No parse return");
-	return Roxen.http_file_answer(o, tmp[0]) + ([ "encoding":tmp[1] ]);
+        TRACE_ENTER("Content-type mapping module", id->conf->types_module);
+        array(string) tmp = id->conf->type_from_filename(norm_f, 1);
+        TRACE_LEAVE(tmp?sprintf("Returned type %s %s.", tmp[0], tmp[1]||"")
+                    : "Missing type.");
+        TRACE_LEAVE("No parse return");
+        return Roxen.http_file_answer(o, tmp[0]) + ([ "encoding":tmp[1] ]);
       }
       TRACE_LEAVE("Normal return");
       return o;
@@ -1141,16 +1141,16 @@ mixed find_file( string f, RequestID id )
     {
       id->misc->error_code = 405;
       TRACE_LEAVE(sprintf("%s disallowed (since PUT is disallowed)",
-			  id->method));
+                          id->method));
       return 0;
     }
 
     if (size != -1) {
       TRACE_LEAVE(sprintf("%s failed. Directory name already exists. ",
-			  id->method));
+                          id->method));
       if (id->method == "MKCOL") {
-	return Roxen.http_status(405,
-				 "Collection already exists.");
+        return Roxen.http_status(405,
+                                 "Collection already exists.");
       }
       return 0;
     }
@@ -1167,9 +1167,9 @@ mixed find_file( string f, RequestID id )
       privs = 0;
       errors++;
       report_error(LOCALE(46,"Creation of %O failed. Permission denied.\n"),
-		   f);
+                   f);
       TRACE_LEAVE(sprintf("%s: Contains symlinks. Permission denied",
-			  id->method));
+                          id->method));
       return Roxen.http_status(403, "Permission denied.");
     }
 
@@ -1182,32 +1182,32 @@ mixed find_file( string f, RequestID id )
       string msg = safe_chmod(f, 0777 & ~(id->misc->umask || 022));
       privs = 0;
       if (msg) {
-	TRACE_LEAVE(sprintf("%s: chmod %O failed: %s", id->method, f, msg));
+        TRACE_LEAVE(sprintf("%s: chmod %O failed: %s", id->method, f, msg));
       } else {
-	TRACE_LEAVE(sprintf("%s: Success", id->method));
+        TRACE_LEAVE(sprintf("%s: Success", id->method));
       }
       TRACE_LEAVE("Success");
       if (id->method == "MKCOL") {
-	return Roxen.http_status(201, "Created");
+        return Roxen.http_status(201, "Created");
       }
       return Roxen.http_string_answer("Ok");
     } else {
       privs = 0;
       SIMPLE_TRACE_LEAVE("%s: Failed (err: %d: %s)",
-			 id->method, err_code, strerror(err_code));
+                         id->method, err_code, strerror(err_code));
       TRACE_LEAVE("Failure");
       if (id->method == "MKCOL") {
-	if (err_code ==
+        if (err_code ==
 #if constant(System.ENOENT)
-	    System.ENOENT
+            System.ENOENT
 #else
-	    2
+            2
 #endif
-	    ) {
-	  return Roxen.http_status(409, "Missing intermediate.");
-	} else {
-	  return Roxen.http_status(507, "Failed.");
-	}
+            ) {
+          return Roxen.http_status(409, "Missing intermediate.");
+        } else {
+          return Roxen.http_status(507, "Failed.");
+        }
       }
       return 0;
     }
@@ -1240,7 +1240,7 @@ mixed find_file( string f, RequestID id )
 
     QUOTA_WERR("Checking quota.\n");
     if (id->misc->quota_obj && (id->misc->len > 0) &&
-	!id->misc->quota_obj->check_quota(URI, id->misc->len)) {
+        !id->misc->quota_obj->check_quota(URI, id->misc->len)) {
       errors++;
       report_warning(LOCALE(47,"Creation of %O failed. Out of quota.\n"),f);
       TRACE_LEAVE("PUT: Out of quota.");
@@ -1298,16 +1298,16 @@ mixed find_file( string f, RequestID id )
       //   This is not a problem, since that has been handled
       //   by the protocol module.
       if (id->misc->len > 0) {
-	putting[my_fd] -= strlen(id->data);
+        putting[my_fd] -= strlen(id->data);
       }
       int bytes = to->write( id->data );
       if (id->misc->quota_obj) {
-	QUOTA_WERR("Allocating " + bytes + "bytes.");
-	if (!id->misc->quota_obj->allocate(URI, bytes)) {
-	  TRACE_LEAVE("PUT: A string");
-	  TRACE_LEAVE("PUT: Out of quota");
-	  return Roxen.http_status(507, "Out of disk quota.");
-	}
+        QUOTA_WERR("Allocating " + bytes + "bytes.");
+        if (!id->misc->quota_obj->allocate(URI, bytes)) {
+          TRACE_LEAVE("PUT: A string");
+          TRACE_LEAVE("PUT: Out of quota");
+          return Roxen.http_status(507, "Out of disk quota.");
+        }
       }
     }
     if(!putting[my_fd]) {
@@ -1315,10 +1315,10 @@ mixed find_file( string f, RequestID id )
       TRACE_LEAVE("PUT: Just a string");
       TRACE_LEAVE("Put: Success");
       if (size < 0) {
-	return Roxen.http_status(201, "Created.");
+        return Roxen.http_status(201, "Created.");
       } else {
-	// FIXME: Isn't 204 better? /mast
-	return Roxen.http_string_answer("Ok");
+        // FIXME: Isn't 204 better? /mast
+        return Roxen.http_string_answer("Ok");
       }
     }
 
@@ -1415,7 +1415,7 @@ mixed find_file( string f, RequestID id )
 #ifdef __NT__
     foreach(id->misc->move_from/"/", string segment) {
       if (has_suffix(segment, " ")) {
-	// Path segments on NT may not end with space.
+        // Path segments on NT may not end with space.
         return Roxen.http_status(405, "MV: Invalid filesystem path.");
       }
     }
@@ -1434,8 +1434,8 @@ mixed find_file( string f, RequestID id )
     }
 
     if (query("no_symlinks") &&
-	((contains_symlinks(path, f)) ||
-	 (contains_symlinks(path, id->misc->move_from)))) {
+        ((contains_symlinks(path, f)) ||
+         (contains_symlinks(path, id->misc->move_from)))) {
       errors++;
       TRACE_LEAVE("MV: Contains symlinks. Permission denied");
       return Roxen.http_status(403, "Permission denied.");
@@ -1443,7 +1443,7 @@ mixed find_file( string f, RequestID id )
 
     // NB: Consider the case of moving of directories containing locked files.
     if (mapping(string:mixed) ret =
-	write_access(({ f, relative_from }), 1, id)) {
+        write_access(({ f, relative_from }), 1, id)) {
       TRACE_LEAVE("MV: Locked");
       return ret;
     }
@@ -1503,8 +1503,8 @@ mixed find_file( string f, RequestID id )
 #ifdef __NT__
     foreach(new_uri/"/", string segment) {
       if (has_suffix(segment, " ")) {
-	// Path segments on NT may not end with space.
-	return Roxen.http_status(405, "MOVE: Invalid filesystem path.");
+        // Path segments on NT may not end with space.
+        return Roxen.http_status(405, "MOVE: Invalid filesystem path.");
       }
     }
 #endif
@@ -1579,21 +1579,21 @@ mixed find_file( string f, RequestID id )
 
       TRACE_ENTER(sprintf("Destination exists: %d\n", size), 0);
       int(0..1) overwrite =
-	!id->request_headers->overwrite ||
-	id->request_headers->overwrite == "T";
+        !id->request_headers->overwrite ||
+        id->request_headers->overwrite == "T";
       if (!overwrite) {
-	privs = 0;
-	TRACE_LEAVE("");
-	TRACE_LEAVE("MOVE disallowed (overwrite header:F).");
-	return Roxen.http_status(412);
+        privs = 0;
+        TRACE_LEAVE("");
+        TRACE_LEAVE("MOVE disallowed (overwrite header:F).");
+        return Roxen.http_status(412);
       }
       if(!query("delete"))
       {
-	privs = 0;
-	id->misc->error_code = 405;
-	TRACE_LEAVE("");
-	TRACE_LEAVE("MOVE disallowed (DELE disabled)");
-	return 0;
+        privs = 0;
+        id->misc->error_code = 405;
+        TRACE_LEAVE("");
+        TRACE_LEAVE("MOVE disallowed (DELE disabled)");
+        return 0;
       }
       TRACE_LEAVE("Overwrite allowed.");
       if (overwrite || (size > -1)) {
@@ -1615,9 +1615,9 @@ mixed find_file( string f, RequestID id )
           TRACE_LEAVE("Recursive delete ok.");
         }
       } else {
-	privs = 0;
-	TRACE_LEAVE("MOVE: Cannot overwrite directory");
-	return Roxen.http_status(412);
+        privs = 0;
+        TRACE_LEAVE("MOVE: Cannot overwrite directory");
+        return Roxen.http_status(412);
       }
     }
 
@@ -1626,7 +1626,7 @@ mixed find_file( string f, RequestID id )
     int err_code = errno();
     privs = 0;
     TRACE_LEAVE(sprintf("==> %d (errno: %d: %s)\n",
-			code, err_code, strerror(err_code)));
+                        code, err_code, strerror(err_code)));
 
     TRACE_ENTER("MOVE: Accepted", 0);
 
@@ -1644,7 +1644,7 @@ mixed find_file( string f, RequestID id )
       mixed ret = errno_to_status (err_code, 1, id);
       if (ret) return ret;
       if (id->misc->error_code) {
-	return Roxen.http_status(id->misc->error_code);
+        return Roxen.http_status(id->misc->error_code);
       }
       return 0;
     }
@@ -1675,22 +1675,22 @@ mixed find_file( string f, RequestID id )
     }
 
     if ((size < 0) &&
-	(String.trim_whites(id->request_headers->depth||"infinity") !=
-	 "infinity")) {
+        (String.trim_whites(id->request_headers->depth||"infinity") !=
+         "infinity")) {
       // RFC 2518 8.6.2:
       //   The DELETE method on a collection MUST act as if a "Depth: infinity"
       //   header was used on it.
       TRACE_LEAVE(sprintf("DELETE: Bad depth header: %O.",
-			  id->request_headers->depth));
+                          id->request_headers->depth));
       return Roxen.http_status(400, "Unsupported depth.");
     }
 
     if (size < 0) {
       mapping|int(0..1) res =
-	write_access(({ combine_path(f, "../"), f }), 1, id);
+        write_access(({ combine_path(f, "../"), f }), 1, id);
       if (mappingp(res)) {
-	SIMPLE_TRACE_LEAVE("DELETE: Recursive write access denied.");
-	return res;
+        SIMPLE_TRACE_LEAVE("DELETE: Recursive write access denied.");
+        return res;
       }
 #if 0
       report_notice(LOCALE(64,"DELETING the directory %s.\n"), f);
@@ -1704,32 +1704,32 @@ mixed find_file( string f, RequestID id )
       recursive_rm(norm_f, query_location() + f, res, id);
 
       if (!rm(norm_f) && errno() != System.ENOENT) {
-	if (id->multi_status_size() > start_ms_size) {
-	  if (errno() != System.EEXIST
+        if (id->multi_status_size() > start_ms_size) {
+          if (errno() != System.EEXIST
 #if constant (System.ENOTEMPTY)
-	      && errno() != System.ENOTEMPTY
+              && errno() != System.ENOTEMPTY
 #endif
-	     )
-	  {
-	    return errno_to_status (errno(), 0, id);
-	  }
-	} else {
-	  return errno_to_status (errno(), 0, id);
-	}
+             )
+          {
+            return errno_to_status (errno(), 0, id);
+          }
+        } else {
+          return errno_to_status (errno(), 0, id);
+        }
 
-	if (id->multi_status_size() > start_ms_size) {
-	  TRACE_LEAVE("DELETE: Partial failure.");
-	  return ([]);
-	}
+        if (id->multi_status_size() > start_ms_size) {
+          TRACE_LEAVE("DELETE: Partial failure.");
+          return ([]);
+        }
       } else {
-	unlock_path(f, id);
+        unlock_path(f, id);
       }
     } else {
       mapping|int(0..1) res =
-	write_access(({ combine_path(f, "../"), f }), 0, id);
+        write_access(({ combine_path(f, "../"), f }), 0, id);
       if (res) {
-	SIMPLE_TRACE_LEAVE("DELETE: Write access denied.");
-	return res;
+        SIMPLE_TRACE_LEAVE("DELETE: Write access denied.");
+        return res;
       }
 
 #if 0
@@ -1740,17 +1740,17 @@ mixed find_file( string f, RequestID id )
 
       /* Clear the stat-cache for this file */
       if (stat_cache) {
-	cache_set("stat_cache", f, 0);
+        cache_set("stat_cache", f, 0);
       }
 
       SETUID_TRACE("Deleting file", 0);
 
       if(!rm(norm_f))
       {
-	privs = 0;
-	id->misc->error_code = 405;
-	TRACE_LEAVE("DELETE: Failed");
-	return 0;
+        privs = 0;
+        id->misc->error_code = 405;
+        TRACE_LEAVE("DELETE: Failed");
+        return 0;
       }
       privs = 0;
       deletes++;
@@ -1758,7 +1758,7 @@ mixed find_file( string f, RequestID id )
       unlock_path(f, id);
 
       if (id->misc->quota_obj && (size > 0)) {
-	id->misc->quota_obj->deallocate(URI, size);
+        id->misc->quota_obj->deallocate(URI, size);
       }
     }
     TRACE_LEAVE("DELETE: Success");
@@ -1774,7 +1774,7 @@ mixed find_file( string f, RequestID id )
 }
 
 mapping copy_file(string source, string dest, PropertyBehavior behavior,
-		  Overwrite overwrite, RequestID id)
+                  Overwrite overwrite, RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "COPY: Copy %O to %O.", source, dest);
   Stat source_st = stat_file(source, id);
@@ -1794,7 +1794,7 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
   if (query("no_symlinks") && (contains_symlinks(path, dest))) {
     errors++;
     report_error(LOCALE(57,"Copy to %O failed. Permission denied.\n"),
-		 dest);
+                 dest);
     TRACE_LEAVE("COPY: Contains symlinks. Permission denied");
     return Roxen.http_status(403, "Permission denied.");
   }
@@ -1818,76 +1818,76 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
       return Roxen.http_status(412, "Destination already exists.");
     case DO_OVERWRITE:
       if (!query("delete")) {
-	TRACE_LEAVE("COPY: Deletion not allowed.");
-	TRACE_LEAVE("");
-	return Roxen.http_status(405, "Not allowed.");
+        TRACE_LEAVE("COPY: Deletion not allowed.");
+        TRACE_LEAVE("");
+        return Roxen.http_status(405, "Not allowed.");
       }
       object privs;
       SETUID_TRACE("Deleting destination", 0);
       if (dest_st->isdir) {
-	int start_ms_size = id->multi_status_size();
-	recursive_rm(dest_path, mountpoint + dest, 1, id);
+        int start_ms_size = id->multi_status_size();
+        recursive_rm(dest_path, mountpoint + dest, 1, id);
 
-	if (!rm(dest_path) && errno() != System.ENOENT) {
-	  privs = 0;
-	  if (id->multi_status_size() > start_ms_size) {
-	    if (errno() != System.EEXIST
+        if (!rm(dest_path) && errno() != System.ENOENT) {
+          privs = 0;
+          if (id->multi_status_size() > start_ms_size) {
+            if (errno() != System.EEXIST
 #if constant (System.ENOTEMPTY)
-		&& errno() != System.ENOTEMPTY
+                && errno() != System.ENOTEMPTY
 #endif
-	       )
-	    {
-	      TRACE_LEAVE("");
-	      return errno_to_status (errno(), 0, id);
-	    }
-	  } else {
-	    TRACE_LEAVE("");
-	    return errno_to_status (errno(), 0, id);
-	  }
+               )
+            {
+              TRACE_LEAVE("");
+              return errno_to_status (errno(), 0, id);
+            }
+          } else {
+            TRACE_LEAVE("");
+            return errno_to_status (errno(), 0, id);
+          }
 
-	  if (id->multi_status_size() > start_ms_size) {
-	    privs = 0;
-	    TRACE_LEAVE("COPY: Partial failure in destination directory delete.");
-	    TRACE_LEAVE("");
-	    return ([]);
-	  }
-	} else {
-	  unlock_path(dest, id);
-	}
-	SIMPLE_TRACE_LEAVE("COPY: Delete ok.");
+          if (id->multi_status_size() > start_ms_size) {
+            privs = 0;
+            TRACE_LEAVE("COPY: Partial failure in destination directory delete.");
+            TRACE_LEAVE("");
+            return ([]);
+          }
+        } else {
+          unlock_path(dest, id);
+        }
+        SIMPLE_TRACE_LEAVE("COPY: Delete ok.");
       } else if (source_st->isdir) {
-	if (!rm(dest_path)) {
-	  privs = 0;
-	  if (errno() != System.ENOENT)
-	  {
-	    mapping(string:mixed) status = errno_to_status (errno(), 0, id);
-	    if (!status) status = (["error": id->misc->error_code]);
-	    id->set_status_for_path(mountpoint + dest,
-				    status->error, status->rettext);
-	    TRACE_LEAVE("");
-	    return ([]);
-	  }
-	  SIMPLE_TRACE_LEAVE("COPY: File deletion failed (destination disappeared).");
-	} else {
-	  SIMPLE_TRACE_LEAVE("COPY: File deletion ok.");
+        if (!rm(dest_path)) {
+          privs = 0;
+          if (errno() != System.ENOENT)
+          {
+            mapping(string:mixed) status = errno_to_status (errno(), 0, id);
+            if (!status) status = (["error": id->misc->error_code]);
+            id->set_status_for_path(mountpoint + dest,
+                                    status->error, status->rettext);
+            TRACE_LEAVE("");
+            return ([]);
+          }
+          SIMPLE_TRACE_LEAVE("COPY: File deletion failed (destination disappeared).");
+        } else {
+          SIMPLE_TRACE_LEAVE("COPY: File deletion ok.");
 
-	  unlock_path(dest, id);
-	}
+          unlock_path(dest, id);
+        }
       } else {
-	SIMPLE_TRACE_LEAVE("COPY: No need to perform deletion.");
+        SIMPLE_TRACE_LEAVE("COPY: No need to perform deletion.");
       }
       privs = 0;
       break;
     case MAYBE_OVERWRITE:
       if ((source_st->isreg != dest_st->isreg) ||
-	  (source_st->isdir != dest_st->isdir)) {
-	TRACE_LEAVE("COPY: Resource types for source and destination differ.");
-	TRACE_LEAVE("");
-	return Roxen.http_status(412, "Destination and source are different resource types.");
+          (source_st->isdir != dest_st->isdir)) {
+        TRACE_LEAVE("COPY: Resource types for source and destination differ.");
+        TRACE_LEAVE("");
+        return Roxen.http_status(412, "Destination and source are different resource types.");
       } else if (source_st->isdir) {
-	TRACE_LEAVE("Already done (both are directories).");
-	TRACE_LEAVE("");
-	return Roxen.http_status(204, "Destination already existed.");
+        TRACE_LEAVE("Already done (both are directories).");
+        TRACE_LEAVE("");
+        return Roxen.http_status(204, "Destination already existed.");
       }
       break;
     }
@@ -1910,9 +1910,9 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
       string msg = safe_chmod(dest_path, 0777 & ~(id->misc->umask || 022));
       privs = 0;
       if (msg) {
-	TRACE_LEAVE(sprintf("Chmod %O failed: %s", dest_path, msg));
+        TRACE_LEAVE(sprintf("Chmod %O failed: %s", dest_path, msg));
       } else {
-	TRACE_LEAVE("Success");
+        TRACE_LEAVE("Success");
       }
       return Roxen.http_status(dest_st?204:201, "Created");
     } else {
@@ -1924,7 +1924,7 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
     if (query("no_symlinks") && (contains_symlinks(path, source))) {
       errors++;
       report_error(LOCALE(57,"Copy to %O failed. Permission denied.\n"),
-		   dest);
+                   dest);
       TRACE_LEAVE("COPY: Contains symlinks. Permission denied");
       return Roxen.http_status(403, "Permission denied.");
     }
@@ -1932,11 +1932,11 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
 
     QUOTA_WERR("Checking quota.\n");
     if (id->misc->quota_obj && (id->misc->len > 0) &&
-	!id->misc->quota_obj->check_quota(mountpoint + dest,
-					  source_st->size)) {
+        !id->misc->quota_obj->check_quota(mountpoint + dest,
+                                          source_st->size)) {
       errors++;
       report_warning(LOCALE(47,"Creation of %O failed. Out of quota.\n"),
-		     dest_path);
+                     dest_path);
       TRACE_LEAVE("PUT: Out of quota.");
       return Roxen.http_status(507, "Out of disk quota.");
     }
@@ -1961,23 +1961,23 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
     while (len > 0) {
       string buf = source_file->read((len > 4096)?4096:len);
       if (buf && sizeof(buf)) {
-	int sub_len;
-	len -= (sub_len = sizeof(buf));
-	while (sub_len > 0) {
-	  int written = dest_file->write(buf);
-	  if ((sub_len -= written) > 0) {
-	    if (!written) {
-	      SIMPLE_TRACE_LEAVE("Write failed with errno %d",
-				 dest_file->errno());
-	      dest_file->close();
-	      source_file->close();
-	      return Roxen.http_status(Protocols.HTTP.DAV_STORAGE_FULL);
-	    }
-	    buf = buf[written..];
-	  }
-	}
+        int sub_len;
+        len -= (sub_len = sizeof(buf));
+        while (sub_len > 0) {
+          int written = dest_file->write(buf);
+          if ((sub_len -= written) > 0) {
+            if (!written) {
+              SIMPLE_TRACE_LEAVE("Write failed with errno %d",
+                                 dest_file->errno());
+              dest_file->close();
+              source_file->close();
+              return Roxen.http_status(Protocols.HTTP.DAV_STORAGE_FULL);
+            }
+            buf = buf[written..];
+          }
+        }
       } else {
-	break;
+        break;
       }
     }
     if (len > 0) {
@@ -1988,7 +1988,7 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
     dest_file->close();
     source_file->close();
     return Roxen.http_status(dest_st?Protocols.HTTP.HTTP_NO_CONTENT:
-			     Protocols.HTTP.HTTP_CREATED);
+                             Protocols.HTTP.HTTP_CREATED);
   }
 }
 
@@ -1997,7 +1997,7 @@ string query_name()
   if (path) {
     if (sizeof(path) > 20) {
       return sprintf((string)LOCALE(63,"%s from %s...%s"),
-		     mountpoint, path[..7], path[sizeof(path)-8..]);
+                     mountpoint, path[..7], path[sizeof(path)-8..]);
     }
     return sprintf((string)LOCALE(50,"%s from %s"), mountpoint, path);
   }

@@ -19,10 +19,10 @@ constant module_doc  = "Generates a robots.txt on demand from various informatio
 void create() {
 
   defvar("disallow",
-	 Variable.StringList( ({"/cgi-bin/"}), 0,
-			      "Disallow paths", "Disallow search engine access to the "
-			      "listed paths in addition to what is said in the robots.txt "
-			      "and what this module derives automatically.") );
+         Variable.StringList( ({"/cgi-bin/"}), 0,
+                              "Disallow paths", "Disallow search engine access to the "
+                              "listed paths in addition to what is said in the robots.txt "
+                              "and what this module derives automatically.") );
 }
 
 // The cache and it's dependencies.
@@ -92,15 +92,15 @@ mapping first_try(RequestID id) {
 
       int type=0;
       if(has_prefix(lower_case(line), "disallow"))
-	type=1;
+        type=1;
       if(has_prefix(lower_case(line), "user-agent"))
-	type=2;
+        type=2;
 
       // Correct keywords with wrong case
       if(type==1 && !has_prefix(line, "Disallow"))
-	line = "Disallow" + line[8..];
+        line = "Disallow" + line[8..];
       if(type==2 && !has_prefix(line, "User-agent"))
-	line = "User-agent" + line[10..];
+        line = "User-agent" + line[10..];
 
       // Find the first section that applies to all user agents. Note that
       // the module does not collapse several sections with the same user
@@ -109,25 +109,25 @@ mapping first_try(RequestID id) {
       // will probably work for any decent robots.txt parser. Don't bet
       // that all robots have a decent robots.txt-parser though.
       if(type==2) {
-	string star;
-	sscanf(line+" ", "User-agent:%*[ \t]%s%*[ \t#]", star);
-	if(star=="*")
-	  in_common = 1;
-	else
-	  in_common = 0;
+        string star;
+        sscanf(line+" ", "User-agent:%*[ \t]%s%*[ \t#]", star);
+        if(star=="*")
+          in_common = 1;
+        else
+          in_common = 0;
       }
       if(in_common && !common_found)
-	common_found = 1;
+        common_found = 1;
 
       if(type==1) {
-	string path;
-	sscanf(line+" ", "Disallow:%*[ \t]%s%*[ \t#]", path);
-	if(in_common && path && forbidden[path])
-	  m_delete(forbidden, path);
+        string path;
+        sscanf(line+" ", "Disallow:%*[ \t]%s%*[ \t#]", path);
+        if(in_common && path && forbidden[path])
+          m_delete(forbidden, path);
       }
 
       if(common_found && !in_common && forbidden)
-	robots += make_rules(forbidden);
+        robots += make_rules(forbidden);
 
       if(type==2) robots += "\n";
       robots += line + "\n";

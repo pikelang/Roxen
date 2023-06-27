@@ -16,11 +16,11 @@ void really_do_create( RequestID id  )
   while( strlen(id->variables->url) && id->variables->url[-1] == '/' )
     id->variables->url = id->variables->url[..strlen(id->variables->url)-2];
   DBManager.create_group( c_name(id->variables->name,id),
-			     id->variables->lname,
-			     id->variables->comment,
-			     (strlen(id->variables->url)?
-			     "mysql://"+id->variables->url+"/" : 
-			     ""));
+                             id->variables->lname,
+                             id->variables->comment,
+                             (strlen(id->variables->url)?
+                             "mysql://"+id->variables->url+"/" : 
+                             ""));
 }
 
 
@@ -51,13 +51,13 @@ must be a MySQL server.</p>")+#"<p>
   <tr>
   <td valign=top colspan='2'>
     "+_(453,"The identifier of the group. This is used internally in Roxen,"
-	   " and must be unique. "
-	   "If you leave it as automatic, an identifier is selected "
-	   "automatically.")+#"
+           " and must be unique. "
+           "If you leave it as automatic, an identifier is selected "
+           "automatically.")+#"
    </td>
    <td valign=top colspan='2' width='100%'>
      "+_(454,"The name of the database group. This is what is"
-	 " shown in the configuration interface.")+#"
+         " shown in the configuration interface.")+#"
    </td>
  </tr>
   <tr>
@@ -84,38 +84,38 @@ the username <i>foo</i> and password <i>bar</i>, set this URL to
     {
       id->variables->url = Stdio.append_path(id->variables->url, "/");
       if(catch(Sql.Sql( "mysql://"+id->variables->url ) ))
-	error = sprintf( "<font color='&usr.warncolor;'>"+
-			 _(456,"Cannot connect to %s")+
-			 "</font>", "mysql://"+id->variables->url );
+        error = sprintf( "<font color='&usr.warncolor;'>"+
+                         _(456,"Cannot connect to %s")+
+                         "</font>", "mysql://"+id->variables->url );
       else
-	find_dbs = 1;
+        find_dbs = 1;
     }
     if(!strlen(error))
       if (!sizeof(id->variables->lname))
-	error="<font color='&usr.warncolor;'>"+
-	  _(355,"Please give a name for the group.")+
-	  "</font>";
+        error="<font color='&usr.warncolor;'>"+
+          _(355,"Please give a name for the group.")+
+          "</font>";
     if(!strlen(error))
       if( DBManager.get_group( c_name(id->variables->name,id) ) )
-	error=sprintf("<font color='&usr.warncolor;'>"+
-		      _(457,"A database group named %s already exists")+
- 		      "</font>", id->variables->name );
+        error=sprintf("<font color='&usr.warncolor;'>"+
+                      _(457,"A database group named %s already exists")+
+                      "</font>", id->variables->name );
     if( !strlen( error ) )
       if( Roxen.is_mysql_keyword( id->variables->name ) )
-	error = sprintf("<font color='&usr.warncolor;'>"+
-			_(410,"%s is a MySQL keyword, used by MySQL. "
-			  "Please select another name.")+
-			"</font>", id->variables->name );
+        error = sprintf("<font color='&usr.warncolor;'>"+
+                        _(410,"%s is a MySQL keyword, used by MySQL. "
+                          "Please select another name.")+
+                        "</font>", id->variables->name );
       else
       {
-	really_do_create( id );
-	if( find_dbs )
-	  RXML.user_set_var( "var.go-on",
-			     sprintf("<redirect to='import_dbs.pike?group=%s&amp;&usr.set-wiz-id;'/>",
-				     Roxen.http_encode_url(c_name(id->variables->name,id))));
-	else
-	  RXML.user_set_var( "var.go-on", "<redirect to='/dbs/'/>" );
-	return "";
+        really_do_create( id );
+        if( find_dbs )
+          RXML.user_set_var( "var.go-on",
+                             sprintf("<redirect to='import_dbs.pike?group=%s&amp;&usr.set-wiz-id;'/>",
+                                     Roxen.http_encode_url(c_name(id->variables->name,id))));
+        else
+          RXML.user_set_var( "var.go-on", "<redirect to='/dbs/'/>" );
+        return "";
       }
   }
   return replace( form, "ERROR", error );

@@ -45,12 +45,12 @@ constant module_doc  =
 void create()
 {
   defvar("ext", Variable.Flag(0, VAR_MORE,
-			      "Append format to generated images",
-			      "Append the image format (.gif, .png, "
-			      ".jpg, etc) to the generated images. "
-			      "This is not necessary, but might seem "
-			      "nicer, especially to people who try "
-			      "to mirror your site."));
+                              "Append format to generated images",
+                              "Append the image format (.gif, .png, "
+                              ".jpg, etc) to the generated images. "
+                              "This is not necessary, but might seem "
+                              "nicer, especially to people who try "
+                              "to mirror your site."));
 }
 
 mapping tagdocumentation() {
@@ -65,8 +65,8 @@ mapping tagdocumentation() {
  Creates graphical buttons.</short></p>
 </desc>"
 
-	   +doc
-	   +imagecache,
+           +doc
+           +imagecache,
 
 "gbutton-url":#"<desc type='cont'><p><short>
  Generates an URI to the button.</short> <tag>gbutton-url</tag> takes
@@ -74,8 +74,8 @@ mapping tagdocumentation() {
  image cache attributes.</p>
 </desc>"
 
-	   +doc
-	   +imagecache,
+           +doc
+           +imagecache,
   ]);
 }
 
@@ -258,7 +258,7 @@ string status() {
   array s=button_cache->status();
   return sprintf("<b>Images in cache:</b> %d images<br />\n"
                  "<b>Cache size:</b> %s",
-		 s[0], Roxen.sizetostring(s[1]));
+                 s[0], Roxen.sizetostring(s[1]));
 }
 
 mapping(string:function) query_action_buttons() {
@@ -357,8 +357,8 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
     
     if (mappingp(tmp)) {
       if (tmp->error != 401)
-	RXML.parse_error("Failed to load frame image: %O (error: %O)\n",
-			 args->border_image, tmp->error);
+        RXML.parse_error("Failed to load frame image: %O (error: %O)\n",
+                         args->border_image, tmp->error);
       return tmp;
     }
     set_image( tmp );
@@ -371,19 +371,19 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
     string data = Stdio.read_file("roxen-images/gbutton.xcf");
     if (!data)
       error ("Failed to load default frame image "
-	     "(roxen-images/gbutton.xcf): " + strerror (errno()));
+             "(roxen-images/gbutton.xcf): " + strerror (errno()));
     mixed err = catch {
       set_image(Image.XCF.decode_layers(data));
     };
     if( !frame )
       if (err) {
-	catch (err[0] = "Failed to decode default frame image "
-	       "(roxen-images/gbutton.xcf): " + err[0]);
-	throw (err);
+        catch (err[0] = "Failed to decode default frame image "
+               "(roxen-images/gbutton.xcf): " + err[0]);
+        throw (err);
       }
       else
-	error("Failed to decode default frame image "
-	      "(roxen-images/gbutton.xcf).\n");
+        error("Failed to decode default frame image "
+              "(roxen-images/gbutton.xcf).\n");
   }
 
   if( !frame )
@@ -478,17 +478,17 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
       
       //  Early bail for fixed-point fonts which are too large
       if (real_height > try_font_size * 2)
-	break;
+        break;
       
       //  Go up or down in size?
       if (real_height == text_height)
-	break;
+        break;
       if (real_height > text_height)
-	max_font_size = try_font_size - 1;
+        max_font_size = try_font_size - 1;
       else {
-	if (min_font_size == max_font_size)
-	  break;
-	min_font_size = try_font_size;
+        if (min_font_size == max_font_size)
+          break;
+        min_font_size = try_font_size;
       }
     } while (max_font_size - min_font_size >= 0);
     
@@ -503,7 +503,7 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
     }
     if (args->cnd)
       text_img = text_img->scale((int) round(text_img->xsize() * 0.8),
-				 text_img->ysize());
+                                 text_img->ysize());
   } else
     text_height = 0;
 
@@ -549,14 +549,14 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
       switch (args->ica)
       {
       case "left":
-	icn_x = left;
-	txt_x = icn_x + i_width + i_spc;
-	break;
+        icn_x = left;
+        txt_x = icn_x + i_width + i_spc;
+        break;
       default:
       case "right":
-	txt_x = left;
-	icn_x = req_width - right - i_width;
-	break;
+        txt_x = left;
+        icn_x = req_width - right - i_width;
+        break;
       }
     break;
 
@@ -568,26 +568,26 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
       switch (args->ica)
       {
       case "left":
-	icn_x = left;
-	txt_x = (req_width - right - left - i_width - i_spc - t_width) / 2;
-	txt_x += icn_x + i_width + i_spc;
-	break;
+        icn_x = left;
+        txt_x = (req_width - right - left - i_width - i_spc - t_width) / 2;
+        txt_x += icn_x + i_width + i_spc;
+        break;
       default:
       case "center":
       case "center_before":
       case "center-before":
-	icn_x = (req_width - i_width - i_spc - t_width) / 2;
-	txt_x = icn_x + i_width + i_spc;
-	break;
+        icn_x = (req_width - i_width - i_spc - t_width) / 2;
+        txt_x = icn_x + i_width + i_spc;
+        break;
       case "center_after":
       case "center-after":
-	txt_x = (req_width - i_width - i_spc - t_width) / 2;
-	icn_x = txt_x + t_width + i_spc;
-	break;
+        txt_x = (req_width - i_width - i_spc - t_width) / 2;
+        icn_x = txt_x + t_width + i_spc;
+        break;
       case "right":
-	icn_x = req_width - right - i_width;
-	txt_x = left + (icn_x - i_spc - t_width - left) / 2;
-	break;
+        icn_x = req_width - right - i_width;
+        txt_x = left + (icn_x - i_spc - t_width - left) / 2;
+        break;
       }
       break;
       
@@ -597,13 +597,13 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
       {
       default:
       case "left":
-	icn_x = left;
-	txt_x = req_width - right - t_width;
-	break;
+        icn_x = left;
+        txt_x = req_width - right - t_width;
+        break;
       case "right":
-	icn_x = req_width - right - i_width;
-	txt_x = icn_x - i_spc - t_width;
-	break;
+        icn_x = req_width - right - i_width;
+        txt_x = icn_x - i_spc - t_width;
+        break;
       }
       break;
     }
@@ -822,14 +822,14 @@ int get_file_stat( string f, RequestID id  )
   if (stat_cache = id->misc->gbutton_statcache) {
     if (!id->misc->persistent_cache_crawler)
       if (res = stat_cache[f])
-	return (res > 0) && res;
+        return (res > 0) && res;
   } else
     stat_cache = id->misc->gbutton_statcache = ([ ]);
   
   int was_internal = id->misc->internal_get;
   id->misc->internal_get = 1;
   res = stat_cache[ f ] = (id->conf->stat_file( f,id ) ||
-			   ({ 0,0,0,0 }) )[ST_MTIME] || -1;
+                           ({ 0,0,0,0 }) )[ST_MTIME] || -1;
   if (!was_internal)
     m_delete(id->misc, "internal_get");
   return (res > 0) && res;
@@ -842,11 +842,11 @@ class ButtonFrame {
   {
 //     int t = gethrtime();
     string fi = (args["frame-image"] ||
-		 id->misc->defines["gbutton-frame-image"]);
+                 id->misc->defines["gbutton-frame-image"]);
     if( fi ) {
       //  Reject empty file paths for sufficiently high compat_level
       if (fi == "" && compat_level >= 5.2)
-	RXML.parse_error("Empty frame-image attribute not allowed.");
+        RXML.parse_error("Empty frame-image attribute not allowed.");
       
       fi = Roxen.fix_relative( fi, id );
     }
@@ -866,46 +866,46 @@ class ButtonFrame {
     
     mapping new_args =
       ([
-	"pagebg" :parse_color(args->pagebgcolor ||
-			      id->misc->defines->theme_bgcolor ||
-			      id->misc->defines->bgcolor ||
-			      args->bgcolor ||
-			      "#eeeeee"),                 // _page_ bg color
-	"bg"  : parse_color(args->bgcolor ||
-			    id->misc->defines->theme_bgcolor ||
-			    id->misc->defines->bgcolor ||
-			    "#eeeeee"),                   //  Background color
-	"txt" : parse_color(args->textcolor ||
-			    id->misc->defines->theme_bgcolor ||
-			    id->misc->defines->fgcolor ||
-			    "#000000"),                   //  Text color
-	"txtalpha": (args->textalpha?(float)args->textalpha:1.0),
-	"txtmode": (args->textmode||"normal"),
-	"cnd" : (args->condensed ||                       //  Condensed text
-		 (lower_case(args->textstyle || "") == "condensed")),
-	"wi"  : (int) args->width,                        //  Min button width
-	"al"  : args->align || "left",                    //  Text alignment
-	"dim" : (args->dim ||                             //  Button dimming
-		 (< "dim", "disabled" >)[lower_case(args->state || "")]),
-	"icn" : args->icon_src &&
-	Roxen.fix_relative(args->icon_src, id),  // Icon URL
-	"icd" : args->icon_data,                          //  Inline icon data
-	"ica" : lower_case(args->align_icon || "left"),   //  Icon alignment
-	"icva": lower_case(args->valign_icon || "middle"),//  Vertical align
-	"font": (args->font||id->misc->defines->font||
-		 roxen->query("default_font")),
-	"fontkey": roxen->fonts->verify_font(args->font||id->misc->defines->font),
-	"border_image":fi,
-	"extra_layers":args["extra-layers"],
-	"extra_left_layers":args["extra-left-layers"],
-	"extra_right_layers":args["extra-right-layers"],
-	"extra_background_layers":args["extra-background-layers"],
-	"extra_mask_layers":args["extra-mask-layers"],
-	"extra_frame_layers":args["extra-frame-layers"],
-	"scale":args["scale"],
-	"format":args["format"],
-	"gamma":args["gamma"],
-	"crop":args["crop"],
+        "pagebg" :parse_color(args->pagebgcolor ||
+                              id->misc->defines->theme_bgcolor ||
+                              id->misc->defines->bgcolor ||
+                              args->bgcolor ||
+                              "#eeeeee"),                 // _page_ bg color
+        "bg"  : parse_color(args->bgcolor ||
+                            id->misc->defines->theme_bgcolor ||
+                            id->misc->defines->bgcolor ||
+                            "#eeeeee"),                   //  Background color
+        "txt" : parse_color(args->textcolor ||
+                            id->misc->defines->theme_bgcolor ||
+                            id->misc->defines->fgcolor ||
+                            "#000000"),                   //  Text color
+        "txtalpha": (args->textalpha?(float)args->textalpha:1.0),
+        "txtmode": (args->textmode||"normal"),
+        "cnd" : (args->condensed ||                       //  Condensed text
+                 (lower_case(args->textstyle || "") == "condensed")),
+        "wi"  : (int) args->width,                        //  Min button width
+        "al"  : args->align || "left",                    //  Text alignment
+        "dim" : (args->dim ||                             //  Button dimming
+                 (< "dim", "disabled" >)[lower_case(args->state || "")]),
+        "icn" : args->icon_src &&
+        Roxen.fix_relative(args->icon_src, id),  // Icon URL
+        "icd" : args->icon_data,                          //  Inline icon data
+        "ica" : lower_case(args->align_icon || "left"),   //  Icon alignment
+        "icva": lower_case(args->valign_icon || "middle"),//  Vertical align
+        "font": (args->font||id->misc->defines->font||
+                 roxen->query("default_font")),
+        "fontkey": roxen->fonts->verify_font(args->font||id->misc->defines->font),
+        "border_image":fi,
+        "extra_layers":args["extra-layers"],
+        "extra_left_layers":args["extra-left-layers"],
+        "extra_right_layers":args["extra-right-layers"],
+        "extra_background_layers":args["extra-background-layers"],
+        "extra_mask_layers":args["extra-mask-layers"],
+        "extra_frame_layers":args["extra-frame-layers"],
+        "scale":args["scale"],
+        "format":args["format"],
+        "gamma":args["gamma"],
+        "crop":args["crop"],
       ]);
 
     //  Remove extra layer attributes to avoid *-* copying below
@@ -925,7 +925,7 @@ class ButtonFrame {
       //  file. If so we need to extend the argument data with e.g.
       //  current language fork.
       if (Sitebuilder.sb_prepare_imagecache)
-	new_args = Sitebuilder.sb_prepare_imagecache(new_args, fi, id);
+        new_args = Sitebuilder.sb_prepare_imagecache(new_args, fi, id);
 #endif
     }
 
@@ -933,7 +933,7 @@ class ButtonFrame {
       new_args->stat_icn = get_file_stat(icn_path, id);
 #if constant(Sitebuilder) && constant(Sitebuilder.sb_prepare_imagecache)
       if (Sitebuilder.sb_prepare_imagecache)
-	new_args = Sitebuilder.sb_prepare_imagecache(new_args, icn_path, id);
+        new_args = Sitebuilder.sb_prepare_imagecache(new_args, icn_path, id);
 #endif
     }
 
@@ -993,22 +993,22 @@ class TagGButton {
       [string img_src, mapping new_args, int timeout]=mk_url(id);
 
       mapping img_attrs = ([ "src"    : img_src,
-			     "alt"    : args->alt || (string)content,
-			     "border" : args->border,
-			     "hspace" : args->hspace,
-			     "vspace" : args->vspace ]);
+                             "alt"    : args->alt || (string)content,
+                             "border" : args->border,
+                             "hspace" : args->hspace,
+                             "vspace" : args->vspace ]);
       if (img_align)
         img_attrs->align = img_align;
       if (title)
-	img_attrs->title = title;
+        img_attrs->title = title;
       
       int no_draw = !id->misc->generate_images;
       if (mapping size = button_cache->metadata( ({ new_args, (string)content }),
-						 id, no_draw, timeout)) {
-	//  Image in cache (no_draw above prevents generation on-the-fly, i.e.
-	//  first image will lack sizes).
-	img_attrs->width = size->xsize;
-	img_attrs->height = size->ysize;
+                                                 id, no_draw, timeout)) {
+        //  Image in cache (no_draw above prevents generation on-the-fly, i.e.
+        //  first image will lack sizes).
+        img_attrs->width = size->xsize;
+        img_attrs->height = size->ysize;
       }
 
       result = Roxen.make_tag("img", img_attrs, !args->noxml);
@@ -1016,16 +1016,16 @@ class TagGButton {
       //  Make button clickable if not dimmed
       if(args->href && !new_args->dim)
       {
-	mapping a_attrs = ([ "href"    : args->href ]);
+        mapping a_attrs = ([ "href"    : args->href ]);
 
-	foreach(indices(args), string arg)
-	  if(has_value("/target/onmousedown/onmouseup/onclick/ondblclick/"
-		       "onmouseout/onmouseover/onkeypress/onkeyup/"
-		       "onkeydown/style/class/id/accesskey/",
-		       "/" + lower_case(arg) + "/"))
-	    a_attrs[arg] = args[arg];
+        foreach(indices(args), string arg)
+          if(has_value("/target/onmousedown/onmouseup/onclick/ondblclick/"
+                       "onmouseout/onmouseover/onkeypress/onkeyup/"
+                       "onkeydown/style/class/id/accesskey/",
+                       "/" + lower_case(arg) + "/"))
+            a_attrs[arg] = args[arg];
 
-	result = Roxen.make_container("a", a_attrs, result);
+        result = Roxen.make_container("a", a_attrs, result);
       }
 
       return 0;

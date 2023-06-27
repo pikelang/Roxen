@@ -14,27 +14,27 @@ void create(Configuration c)
   ::create(c);
 
   defvar("FrontPagePort", 0, "Frontpage: Server Port", TYPE_INT,
-	 "If this variable is set (ie not zero) ");
+         "If this variable is set (ie not zero) ");
 
   killvar("location");
   defvar("location", "/", "Frontpage: Root Mountpoint", TYPE_LOCATION,
-	 "This is where the module will be inserted in the "
-	 "namespace of your server. In most cases this should be the root "
-	 "file system. This module will only answer to requests if the "
-	 "url has vti_bin in it. Some examples:<pre>\n"
-	 "	/cgi-bin/         		Ignored.\n"
-	 "	/_vti_bin/ 			Handled.\n"
-	 "	/index.html 			Ignored.\n"
-	 "	/mysubweb/_vti_bin/		Handled.\n</pre>"
-	 "As you can see the only time you would want to change this is "
-	 "if you don't want the root _vti_bin to be handled.");
+         "This is where the module will be inserted in the "
+         "namespace of your server. In most cases this should be the root "
+         "file system. This module will only answer to requests if the "
+         "url has vti_bin in it. Some examples:<pre>\n"
+         "	/cgi-bin/         		Ignored.\n"
+         "	/_vti_bin/ 			Handled.\n"
+         "	/index.html 			Ignored.\n"
+         "	/mysubweb/_vti_bin/		Handled.\n</pre>"
+         "As you can see the only time you would want to change this is "
+         "if you don't want the root _vti_bin to be handled.");
 
   killvar("searchpath");
   defvar("searchpath", "<DOCUMENT ROOT>", "Frontpage: Document Root",
-	 TYPE_DIR|VAR_INITIAL,
-	 "This is where the module will find the files in the <b>real</b> "
-	 "file system. In a normal setup, this would mean the same directory "
-	 "as the root filesystem is mounted from.");
+         TYPE_DIR|VAR_INITIAL,
+         "This is where the module will find the files in the <b>real</b> "
+         "file system. In a normal setup, this would mean the same directory "
+         "as the root filesystem is mounted from.");
 
   killvar("ex");
   killvar("ext");

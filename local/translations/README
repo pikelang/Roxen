@@ -5,18 +5,18 @@ HOWTO:
   1)  In your module file add the following code after the #include
       of <module.h>:
 
-	//<locale-token project="myproject">LOCALE</locale-token>
-	//<locale-token project="myproject">DLOCALE</locale-token>
-	#define LOCALE(X,Y)	_STR_LOCALE("myproject",X,Y)
-	#define DLOCALE(X,Y)	_DEF_LOCALE("myproject",X,Y)
+        //<locale-token project="myproject">LOCALE</locale-token>
+        //<locale-token project="myproject">DLOCALE</locale-token>
+        #define LOCALE(X,Y)	_STR_LOCALE("myproject",X,Y)
+        #define DLOCALE(X,Y)	_DEF_LOCALE("myproject",X,Y)
 
       After the above definitions, you can use
 
-	LOCALE(0, "String to localize")
+        LOCALE(0, "String to localize")
 
       for strings that must be immediately translated, and
 
-	DLOCALE(0, "String to localize")
+        DLOCALE(0, "String to localize")
 
       for strings that may have deferred translation (eg
       variable documentation).
@@ -24,9 +24,9 @@ HOWTO:
   2)  Add the following lines to the beginning of create() in your
       module:
 
-	Locale.register_project("myproject",
-	                        combine_path(__FILE__,
-	                                     "../../translations/%L/myproject.xml"));
+        Locale.register_project("myproject",
+                                combine_path(__FILE__,
+                                             "../../translations/%L/myproject.xml"));
 
       Note: You need to specify the correct number of ../ to get
             to the translations directory.
@@ -34,14 +34,14 @@ HOWTO:
   3)  Create a project description xml file in the configs directory
       specifying the files that are part of your module:
 
-	<?xml version="1.0" encoding="iso-8859-1"?>
+        <?xml version="1.0" encoding="iso-8859-1"?>
 
-	<project name="myproject">
-	  <nocopy />
-	  <baselang>eng</baselang>
-	  <xmlpath>%L/myproject.xml</xmlpath>
-	  <file>../modules/myproject.pike</file>
-	</project>
+        <project name="myproject">
+          <nocopy />
+          <baselang>eng</baselang>
+          <xmlpath>%L/myproject.xml</xmlpath>
+          <file>../modules/myproject.pike</file>
+        </project>
 
       Note: The file names are specified relative to the translations
             directory.
@@ -55,7 +55,7 @@ HOWTO:
   4)  Now you can actually generate the translation template files.
       On Unix, Linux and MacOS X, you simply run make:
 
-	make
+        make
 
       On NT you will have to invoke the extractor by hand:
 
@@ -66,21 +66,21 @@ HOWTO:
       the command in step 4.
       On Unix, Linux and MacOS X:
 
-	mkdir ger
-	touch ger/myproject.xml
-	make
+        mkdir ger
+        touch ger/myproject.xml
+        make
 
       On NT:
 
-	mkdir ger
-	copy eng/myproject.xml ger
+        mkdir ger
+        copy eng/myproject.xml ger
         ../../ntstart --silent-start --program -x extract_locale --config="%PWD%/myproject.xml" --wipe --sync
 
       Note: Language catalogs are named according to ISO 639-2/T. To get
             a list valid of ISO 639-2/T codes you can execute:
 
-	../../start --silent-start --program \
-	  -e 'write("%O", Standards.ISO639_2.list_languages_t());'
+        ../../start --silent-start --program \
+          -e 'write("%O", Standards.ISO639_2.list_languages_t());'
 
   6)  To update the translation files, simply rerun the command in step 4.
       Strings that need to be translated will be marked with <new/>.

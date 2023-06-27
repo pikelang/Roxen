@@ -47,8 +47,8 @@ string status()
 {
   array s = image_cache->status();
   return sprintf("<b>Images in cache:</b> %d images<br />\n"
-		 "<b>Cache size:</b> %s",
-		 s[0], Roxen.sizetostring(s[1]));
+                 "<b>Cache size:</b> %s",
+                 s[0], Roxen.sizetostring(s[1]));
 }
 
 private constant font = "budbird";
@@ -57,7 +57,7 @@ private constant width = 120;
 private constant timeout = 3600;
 
 private Image.Image|array(Image.Layer)|mapping generate_image(mapping args,
-							      RequestID id)
+                                                              RequestID id)
 {
   Font f = resolve_font(args->font || font);
 
@@ -141,10 +141,10 @@ mapping(string:mixed) get_captcha(RequestID id, void|mapping options)
 
   do {
     challenge = (string)map(allocate(5),
-			    lambda(int i)
-			    {
-			      return random(25)+65;
-			    });
+                            lambda(int i)
+                            {
+                              return random(25)+65;
+                            });
   } while(consumed_captchas[challenge] || old_consumed_captchas[challenge]);
 
   mapping opt_args = ([ "background-color":1,
@@ -165,12 +165,12 @@ mapping(string:mixed) get_captcha(RequestID id, void|mapping options)
   string compact_time = Gmp.mpz(time())->digits(36);
 
   string secret = compact_time + "-" + my_hash(compact_time +
-					       lower_case(challenge));
+                                               lower_case(challenge));
 
   return ([ "url"          : url,
-	    "secret"       : secret,
-	    "image-width"  : width,
-	    "image-height" : height, ]);
+            "secret"       : secret,
+            "image-width"  : width,
+            "image-height" : height, ]);
 }
 
 int(0..1) verify_captcha(string response, string secret)
@@ -187,9 +187,9 @@ int(0..1) verify_captcha(string response, string secret)
     int ts = (int)Gmp.mpz(compact_time, 36);
 
     if (time(1) - ts < timeout &&
-	my_hash (compact_time + lower_case(response)) == hash &&
-	!consumed_captchas[response] &&
-	!old_consumed_captchas[response]) {
+        my_hash (compact_time + lower_case(response)) == hash &&
+        !consumed_captchas[response] &&
+        !old_consumed_captchas[response]) {
       consumed_captchas[response] = 1;
       return 1;
     }
@@ -225,10 +225,10 @@ class TagCaptchaVerify {
 
     array do_return(RequestID id) {
       if(ok) {
-	_ok = 1;
-	result = content;
+        _ok = 1;
+        result = content;
       } else {
-	_ok = 0;
+        _ok = 0;
       }
       return 0;
     }
@@ -294,7 +294,7 @@ constant tagdoc = ([
      ([ "&_.url;":#"<desc type='entity'>
                        <p>URL to the captcha image.</p>
                      </desc>",
-	"&_.secret;":#"<desc type='entity'>
+        "&_.secret;":#"<desc type='entity'>
                           <p>
                             Encrypted (hashed) secret that can be sent to
                             clients and should be used together with the

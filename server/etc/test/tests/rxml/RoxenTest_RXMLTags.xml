@@ -685,12 +685,12 @@ e</result>
     <define tag="form001">
       <set variable="var.ro" value="write"/>
       <for from="1" to="2" variable="var.ix">
-	<maketag name="input" type="tag">
-	  <if variable="var.ro">
-	    <attrib name="readonly">READONLY</attrib>
-	  </if>
-	</maketag>
-	<unset variable="var.ro" />
+        <maketag name="input" type="tag">
+          <if variable="var.ro">
+            <attrib name="readonly">READONLY</attrib>
+          </if>
+        </maketag>
+        <unset variable="var.ro" />
       </for>
     </define>
     <form001/>
@@ -1166,7 +1166,7 @@ e</result>
 <test>
   <rxml type="any">
     <!-- Compat difference: Produced ({"a","b","c","a","b","c"}) prior
-	 to 5.0. -->
+         to 5.0. -->
     <set variable="var.foo" split=",">a,b,c</set>
     <append variable="var.foo" type="any">&var.foo;</append>
     &var.foo;
@@ -1718,7 +1718,7 @@ e</result>
 <test>
   <rxml>
     [<substring separator="," trimwhites="" index="2">1, 2
-	, 3</substring>]
+        , 3</substring>]
     [<substring separator=" " from="2" to="-2" trim-chars="go ">To go or not to goto.</substring>]
     [<substring separator=" " from="2" to="-2" ignore-empty="" trim-chars="go ">To go or not to goto.</substring>]
     [<substring trim-chars="^nt">To go or not to goto.</substring>]
@@ -2022,7 +2022,7 @@ e</result>
 <test>
   <rxml type="array">
     <substring after=",," before="::"
-	       separator-chars=":," ignore-empty="" trimwhites="" result-array="">,a,, , b: c,  d ::e : f,, </substring>
+               separator-chars=":," ignore-empty="" trimwhites="" result-array="">,a,, , b: c,  d ::e : f,, </substring>
   </rxml>
   <equal>({"b", "c", "d"})</equal>
 </test>
@@ -2030,7 +2030,7 @@ e</result>
 <test>
   <rxml type="array">
     <substring after=",," before=",," to="-1"
-	       separator-chars=":," ignore-empty="" trimwhites="" result-array="">,a,, , b: c,  d ::e : f,, g</substring>
+               separator-chars=":," ignore-empty="" trimwhites="" result-array="">,a,, , b: c,  d ::e : f,, g</substring>
   </rxml>
   <equal>({"b", "c", "d", "e", "f"})</equal>
 </test>
@@ -2080,10 +2080,10 @@ e</result>
     [<substring separator-chars="|,:;">a,b:c|f</substring>]
     [<substring separator-whites="" join="">
     Remove   all whitespace,
-	please. </substring>]
+        please. </substring>]
     [<substring separator-whites="">
     Normalize   all whitespace,
-	please. </substring>]
+        please. </substring>]
     [<substring separator-chars="^0-9&lt;&gt;" join="">:bv&amp;a2de &lt;44&gt;:3</substring>]
     [<substring separator="&auml;" case-insensitive="" join="-">Åäö åÄö å&auml;Ö</substring>]
     [<substring separator="ä" case-insensitive="">Åäö åÄö å&auml;Ö</substring>]
@@ -2704,7 +2704,7 @@ hej</result>
       [&var.items;]
       <emit source="values" values="&var.items;" split=",">
         &_.value;
-	<cache shared>(&_.value;)</cache>,
+        <cache shared>(&_.value;)</cache>,
       </emit>
     </cache>
     ;
@@ -2724,7 +2724,7 @@ hej</result>
     <cache shared nohash key="yo3">
       [&var.items;]
       <emit source="values" values="&var.items;" split=",">
-	<cache shared key="&_.value;">&_.value;(&var.foo;)</cache>,
+        <cache shared key="&_.value;">&_.value;(&var.foo;)</cache>,
       </emit>
     </cache>
     ;
@@ -2876,8 +2876,8 @@ hej</result>
       <if false>
       </if>
       <else>
-	foo
-	<nocache>bar</nocache>
+        foo
+        <nocache>bar</nocache>
       </else>
     </cache>
   </rxml>
@@ -2891,8 +2891,8 @@ hej</result>
       <if true>
       </if>
       <else>
-	foo
-	<nocache>bar</nocache>
+        foo
+        <nocache>bar</nocache>
       </else>
     </cache>
   </rxml>
@@ -2911,7 +2911,7 @@ hej</result>
   <rxml type="string">
     <cache>
       <define tag="mytag" scope="rx">
-	<set variable="rx.count" value="0"/>
+        <set variable="rx.count" value="0"/>
       </define>
       a<mytag />b
     </cache>
@@ -2924,8 +2924,8 @@ hej</result>
     ><cache
       ><define container="foo">[&_.contents;]</define
       ><nocache
-	><foo>a</foo
-	><foo>b</foo
+        ><foo>a</foo
+        ><foo>b</foo
       ></nocache
     ></cache
   ></rxml>
@@ -2946,10 +2946,10 @@ hej</result>
   <rxml type="string">
     <cache>
       <if variable="test.pass = 1"> <!-- Evaluated dynamically -->
-	<nocache><set variable="var.x" value="1"/></nocache>
+        <nocache><set variable="var.x" value="1"/></nocache>
       </if>
       <else>
-	<nocache><set variable="var.x" value="1"/></nocache>
+        <nocache><set variable="var.x" value="1"/></nocache>
       </else>
       <nocache>[&var.x;]</nocache>
     </cache>
@@ -2961,10 +2961,10 @@ hej</result>
   <rxml type="string">
     <cache>
       <if variable="test.pass = 1"> <!-- Evaluated dynamically -->
-	<nocache><set variable="var.x" value="1"/></nocache>
+        <nocache><set variable="var.x" value="1"/></nocache>
       </if>
       <else>
-	<set variable="var.x" value="1"/>
+        <set variable="var.x" value="1"/>
       </else>
       <nocache>[&var.x;]</nocache>
     </cache>
@@ -2979,14 +2979,14 @@ hej</result>
   <rxml type="string">
     <cache>
       <if variable="test.pass = 1"> <!-- Evaluated statically -->
-	<set variable="var.x" value="1"/>
+        <set variable="var.x" value="1"/>
       </if>
       <else> <!-- Evaluated dynamically -->
-	<nocache><set variable="var.x" value="2"/></nocache>
+        <nocache><set variable="var.x" value="2"/></nocache>
       </else>
       <nocache>
-	<if variable="test.pass = &var.x;">ok</if>
-	<else>var.x=&var.x;</else>
+        <if variable="test.pass = &var.x;">ok</if>
+        <else>var.x=&var.x;</else>
       </nocache>
     </cache>
   </rxml>
@@ -2997,11 +2997,11 @@ hej</result>
   <rxml type="string">
     <cache>
       <if variable="test.pass = 1"> <!-- Evaluated statically -->
-	<set variable="var.x" value="1"/>
+        <set variable="var.x" value="1"/>
       </if>
       <else> <!-- Currently never removed in cache since the content
-		  is never evaluated. -->
-	<set variable="var.x" value="2"/>
+                  is never evaluated. -->
+        <set variable="var.x" value="2"/>
       </else>
       <nocache>[&var.x;]</nocache>
     </cache>
@@ -3013,10 +3013,10 @@ hej</result>
   <rxml type="string">
     <cache shared nohash key="yo4">
       <if variable="test.pass = 1"> <!-- Evaluated dynamically -->
-	<nocache><set variable="var.x" value="1"/></nocache>
+        <nocache><set variable="var.x" value="1"/></nocache>
       </if>
       <else>
-	<set variable="var.x" value="1"/>
+        <set variable="var.x" value="1"/>
       </else>
       <nocache>[&var.x;]</nocache>
     </cache>
@@ -3046,10 +3046,10 @@ hej</result>
   <rxml type="string">
     <cache>
       <define tag="foo" scope="bar">
-	<set variable="bar.x">17</set>
-	<set variable="_.y">18</set>
-	<charset out="iso-8859-2"/>
-	&_.x;&bar.y;
+        <set variable="bar.x">17</set>
+        <set variable="_.y">18</set>
+        <charset out="iso-8859-2"/>
+        &_.x;&bar.y;
       </define>
       <foo/>
     </cache>
@@ -3063,9 +3063,9 @@ hej</result>
   <rxml type="string">
     <cache>
       <scope scope="tag">
-	<set variable="tag.foo" value="1"/>
-	<charset out="iso-8859-2"/>
-	&_.foo;
+        <set variable="tag.foo" value="1"/>
+        <charset out="iso-8859-2"/>
+        &_.foo;
       </scope>
     </cache>
   </rxml>
@@ -3076,9 +3076,9 @@ hej</result>
   <rxml type="string">
     <cache>
       <trimlines>
-	<if not variable="var.foo">
-	  <nocache>&test.pass;</nocache>
-	</if>
+        <if not variable="var.foo">
+          <nocache>&test.pass;</nocache>
+        </if>
       </trimlines>
     </cache>
   </rxml>
@@ -3098,7 +3098,7 @@ hej</result>
       <set variable="var.x">y</set>
       [<nocache>&var.x;</nocache>]
       <emit source="TESTER" scope="var" maxrows="2">
-	&var.theta;
+        &var.theta;
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3112,7 +3112,7 @@ hej</result>
       <set variable="var.x">y</set>
       [&var.x;]
       <emit source="TESTER" scope="var" maxrows="1">
-	&var.theta;
+        &var.theta;
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3126,7 +3126,7 @@ hej</result>
       <set variable="var.x">y</set>
       [<nocache>&var.x;</nocache>]
       <emit source="TESTER" scope="var" maxrows="2">
-	<nocache>&var.theta;</nocache>
+        <nocache>&var.theta;</nocache>
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3140,7 +3140,7 @@ hej</result>
       <set variable="var.x">y</set>
       [&var.x;]
       <emit source="TESTER" scope="var" maxrows="1">
-	<nocache>&var.theta;</nocache>
+        <nocache>&var.theta;</nocache>
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3152,12 +3152,12 @@ hej</result>
   <rxml type="string">
     <cache>
       <emit source="TESTER" scope="var" maxrows="1">
-	<set variable="var.x">y</set>
-	[<nocache>&var.x;</nocache>]
-	<emit source="TESTER" scope="var" maxrows="2">
-	  &var.theta;
-	</emit>
-	[<nocache>&var.x;</nocache>]
+        <set variable="var.x">y</set>
+        [<nocache>&var.x;</nocache>]
+        <emit source="TESTER" scope="var" maxrows="2">
+          &var.theta;
+        </emit>
+        [<nocache>&var.x;</nocache>]
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3169,12 +3169,12 @@ hej</result>
   <rxml type="string">
     <cache>
       <emit source="TESTER" scope="var" maxrows="1">
-	<set variable="var.x">y</set>
-	[<nocache>&var.x;</nocache>]
-	<emit source="TESTER" scope="var" maxrows="2">
-	  <nocache>&var.theta;</nocache>
-	</emit>
-	[<nocache>&var.x;</nocache>]
+        <set variable="var.x">y</set>
+        [<nocache>&var.x;</nocache>]
+        <emit source="TESTER" scope="var" maxrows="2">
+          <nocache>&var.theta;</nocache>
+        </emit>
+        [<nocache>&var.x;</nocache>]
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3188,10 +3188,10 @@ hej</result>
       <set variable="var.x">y</set>
       [<nocache>&var.x;</nocache>]
       <emit source="TESTER" scope="var" maxrows="1">
-	<emit source="TESTER" scope="var" maxrows="2">
-	  &var.theta;
-	</emit>
-	[<nocache>&var.x;</nocache>]
+        <emit source="TESTER" scope="var" maxrows="2">
+          &var.theta;
+        </emit>
+        [<nocache>&var.x;</nocache>]
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3205,27 +3205,10 @@ hej</result>
       <set variable="var.x">y</set>
       [<nocache>&var.x;</nocache>]
       <emit source="TESTER" scope="var" maxrows="1">
-	<emit source="TESTER" scope="var" maxrows="2">
-	  <nocache>&var.theta;</nocache>
-	</emit>
-	[<nocache>&var.x;</nocache>]
-      </emit>
-      [<nocache>&var.x;</nocache>]
-    </cache>
-  </rxml>
-  <result>[y][][y]</result>
-</test>
-
-<test>
-  <rxml type="string">
-    <cache>
-      <set variable="var.x">y</set>
-      [&var.x;]
-      <emit source="TESTER" scope="var" maxrows="1">
-	<emit source="TESTER" scope="var" maxrows="1">
-	  &var.theta;
-	</emit>
-	[<nocache>&var.x;</nocache>]
+        <emit source="TESTER" scope="var" maxrows="2">
+          <nocache>&var.theta;</nocache>
+        </emit>
+        [<nocache>&var.x;</nocache>]
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3239,10 +3222,27 @@ hej</result>
       <set variable="var.x">y</set>
       [&var.x;]
       <emit source="TESTER" scope="var" maxrows="1">
-	<emit source="TESTER" scope="var" maxrows="1">
-	  <nocache>&var.theta;</nocache>
-	</emit>
-	[<nocache>&var.x;</nocache>]
+        <emit source="TESTER" scope="var" maxrows="1">
+          &var.theta;
+        </emit>
+        [<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [&var.x;]
+      <emit source="TESTER" scope="var" maxrows="1">
+        <emit source="TESTER" scope="var" maxrows="1">
+          <nocache>&var.theta;</nocache>
+        </emit>
+        [<nocache>&var.x;</nocache>]
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3254,11 +3254,11 @@ hej</result>
   <rxml type="string">
     <cache>
       <emit source="TESTER" scope="var" maxrows="1">
-	<set variable="var.x">y</set>
-	[<nocache>&var.x;</nocache>]
-	<emit source="TESTER" scope="var" maxrows="1">
-	  &var.theta;
-	</emit>
+        <set variable="var.x">y</set>
+        [<nocache>&var.x;</nocache>]
+        <emit source="TESTER" scope="var" maxrows="1">
+          &var.theta;
+        </emit>
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3270,11 +3270,11 @@ hej</result>
   <rxml type="string">
     <cache>
       <emit source="TESTER" scope="var" maxrows="1">
-	<set variable="var.x">y</set>
-	[<nocache>&var.x;</nocache>]
-	<emit source="TESTER" scope="var" maxrows="1">
-	  <nocache>&var.theta;</nocache>
-	</emit>
+        <set variable="var.x">y</set>
+        [<nocache>&var.x;</nocache>]
+        <emit source="TESTER" scope="var" maxrows="1">
+          <nocache>&var.theta;</nocache>
+        </emit>
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3286,11 +3286,11 @@ hej</result>
   <rxml type="string">
     <cache>
       <emit source="TESTER" scope="var" maxrows="1">
-	<set variable="var.x">y</set>
-	[&var.x;]
-	<emit source="TESTER" scope="var" maxrows="2">
-	  &var.theta;
-	</emit>
+        <set variable="var.x">y</set>
+        [&var.x;]
+        <emit source="TESTER" scope="var" maxrows="2">
+          &var.theta;
+        </emit>
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3302,11 +3302,11 @@ hej</result>
   <rxml type="string">
     <cache>
       <emit source="TESTER" scope="var" maxrows="1">
-	<set variable="var.x">y</set>
-	[&var.x;]
-	<emit source="TESTER" scope="var" maxrows="2">
-	  <nocache>&var.theta;</nocache>
-	</emit>
+        <set variable="var.x">y</set>
+        [&var.x;]
+        <emit source="TESTER" scope="var" maxrows="2">
+          <nocache>&var.theta;</nocache>
+        </emit>
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3320,8 +3320,8 @@ hej</result>
       <set variable="var.x">y</set>
       [<nocache>&var.x;</nocache>]
       <emit source="TESTER" scope="var" maxrows="1">
-	<set variable="var.x">z</set>
-	[<nocache>&var.x;</nocache>]
+        <set variable="var.x">z</set>
+        [<nocache>&var.x;</nocache>]
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3335,8 +3335,8 @@ hej</result>
       <set variable="var.x">y</set>
       [&var.x;]
       <emit source="TESTER" scope="var" maxrows="1">
-	<set variable="var.x">z</set>
-	[<nocache>&var.x;</nocache>]
+        <set variable="var.x">z</set>
+        [<nocache>&var.x;</nocache>]
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3350,8 +3350,8 @@ hej</result>
       <set variable="var.x">y</set>
       [<nocache>&var.x;</nocache>]
       <emit source="TESTER" scope="var" maxrows="1">
-	<set variable="var.x">z</set>
-	[&var.x;]
+        <set variable="var.x">z</set>
+        [&var.x;]
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3363,15 +3363,15 @@ hej</result>
   <rxml type="string">
     <cache>
       <emit source="TESTER" scope="var" maxrows="1">
-	<set variable="var.x">x</set>
-	[<nocache>&var.x;</nocache>]
-	<nocache><set variable="var.x">y</set></nocache>
-	[<nocache>&var.x;</nocache>]
-	<emit source="TESTER" scope="var" maxrows="1">
-	  <set variable="var.x">z</set>
-	  [<nocache>&var.x;</nocache>]
-	</emit>
-	[<nocache>&var.x;</nocache>]
+        <set variable="var.x">x</set>
+        [<nocache>&var.x;</nocache>]
+        <nocache><set variable="var.x">y</set></nocache>
+        [<nocache>&var.x;</nocache>]
+        <emit source="TESTER" scope="var" maxrows="1">
+          <set variable="var.x">z</set>
+          [<nocache>&var.x;</nocache>]
+        </emit>
+        [<nocache>&var.x;</nocache>]
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3383,15 +3383,15 @@ hej</result>
   <rxml type="string">
     <cache>
       <emit source="TESTER" scope="var" maxrows="1">
-	<set variable="var.x">x</set>
-	[&var.x;]
-	<nocache><set variable="var.x">y</set></nocache>
-	[<nocache>&var.x;</nocache>]
-	<emit source="TESTER" scope="var" maxrows="1">
-	  <set variable="var.x">z</set>
-	  [<nocache>&var.x;</nocache>]
-	</emit>
-	[<nocache>&var.x;</nocache>]
+        <set variable="var.x">x</set>
+        [&var.x;]
+        <nocache><set variable="var.x">y</set></nocache>
+        [<nocache>&var.x;</nocache>]
+        <emit source="TESTER" scope="var" maxrows="1">
+          <set variable="var.x">z</set>
+          [<nocache>&var.x;</nocache>]
+        </emit>
+        [<nocache>&var.x;</nocache>]
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3403,15 +3403,15 @@ hej</result>
   <rxml type="string">
     <cache>
       <emit source="TESTER" scope="var" maxrows="1">
-	<set variable="var.x">x</set>
-	[<nocache>&var.x;</nocache>]
-	<nocache><set variable="var.x">y</set></nocache>
-	[&var.x;]
-	<emit source="TESTER" scope="var" maxrows="1">
-	  <set variable="var.x">z</set>
-	  [<nocache>&var.x;</nocache>]
-	</emit>
-	[<nocache>&var.x;</nocache>]
+        <set variable="var.x">x</set>
+        [<nocache>&var.x;</nocache>]
+        <nocache><set variable="var.x">y</set></nocache>
+        [&var.x;]
+        <emit source="TESTER" scope="var" maxrows="1">
+          <set variable="var.x">z</set>
+          [<nocache>&var.x;</nocache>]
+        </emit>
+        [<nocache>&var.x;</nocache>]
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3423,15 +3423,15 @@ hej</result>
   <rxml type="string">
     <cache>
       <emit source="TESTER" scope="var" maxrows="1">
-	<set variable="var.x">x</set>
-	[<nocache>&var.x;</nocache>]
-	<nocache><set variable="var.x">y</set></nocache>
-	[<nocache>&var.x;</nocache>]
-	<emit source="TESTER" scope="var" maxrows="1">
-	  <set variable="var.x">z</set>
-	  [&var.x;]
-	</emit>
-	[<nocache>&var.x;</nocache>]
+        <set variable="var.x">x</set>
+        [<nocache>&var.x;</nocache>]
+        <nocache><set variable="var.x">y</set></nocache>
+        [<nocache>&var.x;</nocache>]
+        <emit source="TESTER" scope="var" maxrows="1">
+          <set variable="var.x">z</set>
+          [&var.x;]
+        </emit>
+        [<nocache>&var.x;</nocache>]
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3445,10 +3445,10 @@ hej</result>
       <set variable="var.x">y</set>
       [<nocache>&var.x;</nocache>]
       <emit source="TESTER" scope="var" maxrows="2">
-	&var.theta;
+        &var.theta;
       </emit>
       <emit source="TESTER" scope="var" maxrows="1">
-	&var.theta;
+        &var.theta;
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3462,10 +3462,10 @@ hej</result>
       <set variable="var.x">y</set>
       [<nocache>&var.x;</nocache>]
       <emit source="TESTER" scope="var" maxrows="2">
-	<nocache>&var.theta;</nocache>
+        <nocache>&var.theta;</nocache>
       </emit>
       <emit source="TESTER" scope="var" maxrows="1">
-	<nocache>&var.theta;</nocache>
+        <nocache>&var.theta;</nocache>
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3479,12 +3479,12 @@ hej</result>
       <set variable="var.x">y</set>
       [<nocache>&var.x;</nocache>]
       <emit source="TESTER" scope="var" maxrows="1">
-	&var.theta;
+        &var.theta;
       </emit>
       <set variable="var.x">z</set>
       [<nocache>&var.x;</nocache>]
       <emit source="TESTER" scope="var" maxrows="2">
-	&var.theta;
+        &var.theta;
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3498,12 +3498,12 @@ hej</result>
       <set variable="var.x">y</set>
       [<nocache>&var.x;</nocache>]
       <emit source="TESTER" scope="var" maxrows="1">
-	<nocache>&var.theta;</nocache>
+        <nocache>&var.theta;</nocache>
       </emit>
       <set variable="var.x">z</set>
       [<nocache>&var.x;</nocache>]
       <emit source="TESTER" scope="var" maxrows="2">
-	<nocache>&var.theta;</nocache>
+        <nocache>&var.theta;</nocache>
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3517,12 +3517,12 @@ hej</result>
       <set variable="var.x">y</set>
       [&var.x;]
       <emit source="TESTER" scope="var" maxrows="2">
-	&var.theta;
+        &var.theta;
       </emit>
       <set variable="var.x">z</set>
       [<nocache>&var.x;</nocache>]
       <emit source="TESTER" scope="var" maxrows="1">
-	&var.theta;
+        &var.theta;
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3536,12 +3536,12 @@ hej</result>
       <set variable="var.x">y</set>
       [&var.x;]
       <emit source="TESTER" scope="var" maxrows="2">
-	<nocache>&var.theta;</nocache>
+        <nocache>&var.theta;</nocache>
       </emit>
       <set variable="var.x">z</set>
       [<nocache>&var.x;</nocache>]
       <emit source="TESTER" scope="var" maxrows="1">
-	<nocache>&var.theta;</nocache>
+        <nocache>&var.theta;</nocache>
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3555,12 +3555,12 @@ hej</result>
       <set variable="var.x">y</set>
       [<nocache>&var.x;</nocache>]
       <emit source="TESTER" scope="var" maxrows="1">
-	&var.theta;
+        &var.theta;
       </emit>
       <set variable="var.x">z</set>
       [&var.x;]
       <emit source="TESTER" scope="var" maxrows="1">
-	&var.theta;
+        &var.theta;
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3574,12 +3574,12 @@ hej</result>
       <set variable="var.x">y</set>
       [<nocache>&var.x;</nocache>]
       <emit source="TESTER" scope="var" maxrows="1">
-	<nocache>&var.theta;</nocache>
+        <nocache>&var.theta;</nocache>
       </emit>
       <set variable="var.x">z</set>
       [&var.x;]
       <emit source="TESTER" scope="var" maxrows="1">
-	<nocache>&var.theta;</nocache>
+        <nocache>&var.theta;</nocache>
       </emit>
       [<nocache>&var.x;</nocache>]
     </cache>
@@ -3590,14 +3590,14 @@ hej</result>
 <test>
   <rxml type="string">
     <!-- Use <eval><![CDATA[..]]> to get result compilation without
-	 source compilation. -->
+         source compilation. -->
     <eval>
       <![CDATA[
-	<cache shared="yes">
-	  <set variable="var.foo" type="text/plain">
-	    <nocache>tjo</nocache>
-	  </set>
-	</cache>
+        <cache shared="yes">
+          <set variable="var.foo" type="text/plain">
+            <nocache>tjo</nocache>
+          </set>
+        </cache>
       ]]>
     </eval>
   </rxml>
@@ -3608,7 +3608,7 @@ hej</result>
   <rxml type="string">
     <cache shared="yes">
       <set variable="var.foo" type="text/plain">
-	<nocache>tjo</nocache>
+        <nocache>tjo</nocache>
       </set>
     </cache>
   </rxml>
@@ -3636,7 +3636,7 @@ hej</result>
     </define>
     <cache shared="">
       <emit source="values" variable="var.data">
-	<x>&_.value;</x>
+        <x>&_.value;</x>
       </emit>
     </cache>
   </rxml>
@@ -3949,7 +3949,7 @@ e</random></rxml>
   <rxml>
     <set variable="var.contents" value="13-12-1972"/>
     <sscanf variables="var.d,var.m,var.y"
-	    format="%s-%s-%s">&var.contents;</sscanf>
+            format="%s-%s-%s">&var.contents;</sscanf>
     &var.y;-&var.m;-&var.d;
   </rxml>
   <result>1972-12-13</result>
@@ -3960,7 +3960,7 @@ e</random></rxml>
     <set variable="var.contents" value="13-12-1972"/>
     <nooutput>
       <sscanf variables="var.d,var.m,var.y"
-	      format="%s-%s-%s">&var.contents;</sscanf>
+              format="%s-%s-%s">&var.contents;</sscanf>
     </nooutput>
     &var.y;-&var.m;-&var.d;
   </rxml>

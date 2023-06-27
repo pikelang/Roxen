@@ -8,12 +8,12 @@ constant cvs_version = "$Id$";
 void create()
 {
   defvar("location", "/demo/", "Mount point", TYPE_LOCATION,
-	 "This is where the module will be inserted in the "+
-	 "namespace of your server.");
+         "This is where the module will be inserted in the "+
+         "namespace of your server.");
 
   defvar("dbpath", "../var/demomodule-bookmarks", "Database path",
-	 TYPE_STRING, "This is the path to the module's Yabu database.",
-	 0, 1); // Don't show this variable
+         TYPE_STRING, "This is the path to the module's Yabu database.",
+         0, 1); // Don't show this variable
 }
 
 void start(int level, Configuration conf)
@@ -114,12 +114,12 @@ No more bottles of beer on the wall";
   if (!stringp( data ))
     data = "";
   return Roxen.http_string_answer( Roxen.parse_rxml
-				   ( sprintf( FOO, (int)f,
-					      data,
-					      replace(data, ({ "<", ">", "&" }),
-						      ({"&lt;","&gt;","&amp;"})),
-					      ((int)f)-1,
-					      ((int)f)+1), id));
+                                   ( sprintf( FOO, (int)f,
+                                              data,
+                                              replace(data, ({ "<", ">", "&" }),
+                                                      ({"&lt;","&gt;","&amp;"})),
+                                              ((int)f)-1,
+                                              ((int)f)+1), id));
 }
 
 #pragma deprecation_warnings

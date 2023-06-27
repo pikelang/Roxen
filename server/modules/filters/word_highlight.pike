@@ -12,14 +12,14 @@ constant module_doc  = "Highlights the words stored in the form variable "
 void create() {
 
   defvar("pre", Variable.String("<font style=\"background-color: yellow\">", 0,
-				"Pre string",
-				"The string that will be inserted before "
-				"any occurence of a to-be-highlighted word.") );
+                                "Pre string",
+                                "The string that will be inserted before "
+                                "any occurence of a to-be-highlighted word.") );
 
   defvar("post", Variable.String("</font>", 0,
-				 "Post string",
-				 "The string that will be inserted after "
-				 "any occurence of a to-be-highlighted word.") );
+                                 "Post string",
+                                 "The string that will be inserted after "
+                                 "any occurence of a to-be-highlighted word.") );
 }
 
 string do_highlighting(string txt, RequestID id) {
@@ -31,8 +31,8 @@ string do_highlighting(string txt, RequestID id) {
   Parser.HTML p = Parser.HTML();
   p->add_quote_tag("!--", 0, "--");
   p->_set_data_callback(lambda(Parser.HTML p, string in) {
-			  return ({ replace(in, from, to) });
-			} );
+                          return ({ replace(in, from, to) });
+                        } );
 
   return p->finish(txt)->read();
 }

@@ -17,5 +17,5 @@ string parse( RequestID id )
   return sprintf( "<use file='/template' />\n"
                   "<tmpl title=' %s '>"
                   "<content>%s</content></tmpl>",
-		  LOCALE(466,"Difference"), (v->diff(2)||"") );
+                  LOCALE(466,"Difference"), (v->diff(2)||"") );
 }

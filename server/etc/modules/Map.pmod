@@ -280,23 +280,23 @@ class Legend {
   private string state_color_scheme = "white-to-red";
   
   private mapping color_schemes = ([ "white-to-red":
-				     ([ 0:({ 0xff,0xff,0xff }),
-					1:({ 0xe0,0xc0,0x80 }),
-					2:({ 0xe0,0x80,0x40 }),
-					3:({ 0xd0,0x40,0x00 }),
-					4:({ 0x80,0x00,0x00 }) ]),
-				     "white-to-green":
-				     ([ 0:({ 0xff,0xff,0xff }),
-					1:({ 0xe0,0xe0,0x80 }),
-					2:({ 0x80,0xe0,0x40 }),
-					3:({ 0x40,0xd0,0x00 }),
-					4:({ 0x00,0x80,0x00 }) ]),
-				     "white-to-purpur":
-				     ([ 0:({ 0xff,0xff,0xff }),
-					1:({ 0xe0,0xc0,0xe0 }),
-					2:({ 0xe0,0x80,0xe0 }),
-					3:({ 0xd0,0x40,0xd0 }),
-					4:({ 0x80,0x00,0x80 }) ]) ]);
+                                     ([ 0:({ 0xff,0xff,0xff }),
+                                        1:({ 0xe0,0xc0,0x80 }),
+                                        2:({ 0xe0,0x80,0x40 }),
+                                        3:({ 0xd0,0x40,0x00 }),
+                                        4:({ 0x80,0x00,0x00 }) ]),
+                                     "white-to-green":
+                                     ([ 0:({ 0xff,0xff,0xff }),
+                                        1:({ 0xe0,0xe0,0x80 }),
+                                        2:({ 0x80,0xe0,0x40 }),
+                                        3:({ 0x40,0xd0,0x00 }),
+                                        4:({ 0x00,0x80,0x00 }) ]),
+                                     "white-to-purpur":
+                                     ([ 0:({ 0xff,0xff,0xff }),
+                                        1:({ 0xe0,0xc0,0xe0 }),
+                                        2:({ 0xe0,0x80,0xe0 }),
+                                        3:({ 0xd0,0x40,0xd0 }),
+                                        4:({ 0x80,0x00,0x80 }) ]) ]);
 
   object scheme(string color_scheme)
   {
@@ -327,14 +327,14 @@ class Legend {
     float adj = (float)sizeof(color_schemes[color_scheme])-2.01;
     int i = (int)(x*adj);
     return color_blend(x*adj-(float)i,
-		       color_schemes[color_scheme][i+1],
-		       color_schemes[color_scheme][i+2]);
+                       color_schemes[color_scheme][i+1],
+                       color_schemes[color_scheme][i+2]);
   }
 
   string float_to_eng(float x)
   {
     array(string) suffix = ({ "a", "f", "p", "n", "u", "m", "",
-			      "k", "M", "G", "T", "P", "E" });
+                              "k", "M", "G", "T", "P", "E" });
     
     float y = floor(log(x)/log(1000.0));
     if((0.1 <= x && x <= 1.0) || y < -6.0 || 6.0 < y)
@@ -348,7 +348,7 @@ class Legend {
 
     for(int i = 0; i < sizeof(opt->titles||({})); i++)
       if(floatp(opt->titles[i]) || intp(opt->titles[i]))
-	opt->titles[i] = float_to_eng((float)opt->titles[i]);
+        opt->titles[i] = float_to_eng((float)opt->titles[i]);
     
     opt->color_scheme = opt->color_scheme || state_color_scheme;
     opt->border = opt->border || 20;
@@ -362,34 +362,34 @@ class Legend {
     int title_h = nom*sizeof(opt->title/"\n")+nom/2;
     int bar_h = 6*nom;
     int width = max(font->text_extents(@opt->title/"\n")[0],
-		    font->text_extents(@opt->titles)[0] + nom+nom/2);
+                    font->text_extents(@opt->titles)[0] + nom+nom/2);
     int height = title_h + bar_h + 2*nom + nom;
     
     Image.Image img = Image.Image(width, height+100, @opt->background_color);
 
     img->paste_alpha_color(font->write(@(opt->title/"\n")),
-			   @opt->title_color, 0, 0);
+                           @opt->title_color, 0, 0);
 
     for(int i = 0; i < bar_h; i++)
       img->line(0, title_h+i, nom, title_h+i,
-		@color_scale(1.0 - i/(float)(bar_h), opt->color_scheme));
+                @color_scale(1.0 - i/(float)(bar_h), opt->color_scheme));
     img->box(0, title_h+bar_h+nom/2, nom, title_h+bar_h+nom/2+(int)(nom*0.8),
-	     @color_scale(0, opt->color_scheme));
+             @color_scale(0, opt->color_scheme));
     img->paste_alpha_color(font->write("0")->scale(0.8),
-			   @opt->title_color, nom+nom/2, title_h+bar_h+nom/2);
+                           @opt->title_color, nom+nom/2, title_h+bar_h+nom/2);
 
     for(int i = 0; i < sizeof(opt->titles); i++) {
       int y = title_h + ((bar_h-1)*i)/((sizeof(opt->titles)-1)||1);
       img->paste_alpha_color(font->write(reverse(opt->titles)[i])->scale(0.8),
-			     @opt->title_color,
-			     nom+nom/2, y-(int) (0.8*nom/2));
+                             @opt->title_color,
+                             nom+nom/2, y-(int) (0.8*nom/2));
     }
 
     img = img->autocrop()->setcolor(@opt->background_color);
     img = img->copy(-opt->border, -opt->border,
-		    img->xsize()+opt->border-1, img->ysize()+opt->border-1);
+                    img->xsize()+opt->border-1, img->ysize()+opt->border-1);
     return img->scale(min(min(fixed_width/(float)img->xsize(), 1.0),
-			  min(fixed_height/(float)img->ysize(), 1.0)));
+                          min(fixed_height/(float)img->ysize(), 1.0)));
   }
 }
 
@@ -427,7 +427,7 @@ class Earth {
   array(string) regions()
   {
     return sort(({ "World", "Europe", "Asia", "Africa", "Arab States",
-		   "North America", "South America", "Oceania" }));
+                   "North America", "South America", "Oceania" }));
   }
 
   object country(string new_country)
@@ -438,16 +438,16 @@ class Earth {
   private string capitalize_country(string s)
   {
     return Array.map(s/" ",
-		     lambda(string w)
-		     {
-		       switch(w) {
-		       case "of":
-		       case "and":
-			 return w;
-		       default:
-			 return capitalize(w);
-		       }
-		     })*" ";
+                     lambda(string w)
+                     {
+                       switch(w) {
+                       case "of":
+                       case "and":
+                         return w;
+                       default:
+                         return capitalize(w);
+                       }
+                     })*" ";
   }
   
   array(string) countries()
@@ -510,44 +510,44 @@ class Earth {
     foreach(indices(map_of_the_earth), string cntry) {
       map->setcolor(@opt->color_fu(cntry, @(opt->fu_args||({}))));
       foreach(map_of_the_earth[cntry], array(float) original_vertices) {
-	array(float) vertices = copy_value(original_vertices);
-	
-	for(int v = 0; v < sizeof(vertices); v += 2) {
-	  array(float) a = transform(vertices[v+0], vertices[v+1], opt);
-	  vertices[v+0] = a[0]*width;
-	  vertices[v+1] = a[1]*height;
-	}
-	
-	map->polyfill(vertices);
+        array(float) vertices = copy_value(original_vertices);
+        
+        for(int v = 0; v < sizeof(vertices); v += 2) {
+          array(float) a = transform(vertices[v+0], vertices[v+1], opt);
+          vertices[v+0] = a[0]*width;
+          vertices[v+1] = a[1]*height;
+        }
+        
+        map->polyfill(vertices);
       }
     }
 
     // Add markers
     if(opt->markers)
       foreach(opt->markers, mapping marker) {
-	int x1 = marker->x - marker->size/2;
-	int x2 = marker->x + marker->size/2;
-	int y1 = marker->y - marker->size/2;
-	int y2 = marker->y + marker->size/2;
-	switch(marker->style) {
-	case "box":
-	  map->box(x1, y1, x2, y2,
-		   @marker->color);
-	case "diamond":
-	default:
-	  map->setcolor(@marker->color);
-	  map->polyfill( ({ x1, marker->y,
-			    marker->x, y1,
-			    x2, marker->y,
-			    marker->x, y2 }) );
-	}
+        int x1 = marker->x - marker->size/2;
+        int x2 = marker->x + marker->size/2;
+        int y1 = marker->y - marker->size/2;
+        int y2 = marker->y + marker->size/2;
+        switch(marker->style) {
+        case "box":
+          map->box(x1, y1, x2, y2,
+                   @marker->color);
+        case "diamond":
+        default:
+          map->setcolor(@marker->color);
+          map->polyfill( ({ x1, marker->y,
+                            marker->x, y1,
+                            x2, marker->y,
+                            marker->x, y2 }) );
+        }
       }
     
     // Apply borders.
     if(opt->border)
       map = Image.Image(map->xsize()+2*opt->border,
-			map->ysize()+2*opt->border,
-			@opt->color_sea)->paste(map, opt->border, opt->border);
+                        map->ysize()+2*opt->border,
+                        @opt->color_sea)->paste(map, opt->border, opt->border);
     
     return map;
   }

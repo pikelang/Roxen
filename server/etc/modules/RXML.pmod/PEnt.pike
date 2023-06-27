@@ -45,7 +45,7 @@ protected void init_entities()
 }
 
 void reset (RXML.Context ctx, RXML.Type _type,
-	    RXML.PCode p_code, RXML.TagSet _tag_set)
+            RXML.PCode p_code, RXML.TagSet _tag_set)
 {
 #ifdef DEBUG
   if (type != _type) error ("Internal error: Type change in reset().\n");
@@ -62,7 +62,7 @@ void reset (RXML.Context ctx, RXML.Type _type,
 }
 
 this_program clone (RXML.Context ctx, RXML.Type type,
-		    RXML.PCode p_code, RXML.TagSet tag_set)
+                    RXML.PCode p_code, RXML.TagSet tag_set)
 {
 #ifdef OLD_RXML_COMPAT
   int new_not_compat = !(ctx && ctx->id && ctx->id->conf->old_rxml_compat);
@@ -72,7 +72,7 @@ this_program clone (RXML.Context ctx, RXML.Type type,
 }
 
 protected void create (RXML.Context ctx, RXML.Type type,
-		       RXML.PCode p_code, RXML.TagSet tag_set, void|int cloned)
+                       RXML.PCode p_code, RXML.TagSet tag_set, void|int cloned)
 {
 #ifdef OLD_RXML_COMPAT
   not_compat = !(ctx && ctx->id && ctx->id->conf->old_rxml_compat);
@@ -102,7 +102,7 @@ constant remove_runtime_tag = 0;
 string _sprintf()
 {
   return sprintf ("RXML.PEnt(%O,%O)%s", type, tag_set,
-		  __object_marker ? "[" + __object_marker->count + "]" : "");
+                  __object_marker ? "[" + __object_marker->count + "]" : "");
 }
 #else
 string _sprintf()

@@ -49,8 +49,8 @@ Stdio.File connect( string url )
 }
 
 void write_fragmented( Stdio.File to,
-		       string what,
-		       int chars )
+                       string what,
+                       int chars )
 {
   foreach( what/((float)chars), string w )
   {
@@ -60,15 +60,15 @@ void write_fragmented( Stdio.File to,
 }
 
 #define EXIT(X)  while(1){write("\n\n\nThe offending response header:\n%O\n\n" \
-				"Protocol: %O (%O)\n" \
-				"Return code: %d (%d)\n" \
-				"Response mapping: %O\n", \
+                                "Protocol: %O (%O)\n" \
+                                "Return code: %d (%d)\n" \
+                                "Response mapping: %O\n", \
                                 headers,prot,expected_prot, \
-				code,expected_code,hd);exit((X));}
+                                code,expected_code,hd);exit((X));}
 
 mapping verify_headers( string headers, int content_length,
-			string expected_prot, int expected_code,
-			int want_last_modified )
+                        string expected_prot, int expected_code,
+                        int want_last_modified )
 {
   array q = headers / "\r\n";
   string prot;

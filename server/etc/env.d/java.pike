@@ -23,13 +23,13 @@ protected int check_jre_dir(string dir)
 protected string findjre()
 {
   string dir = combine_path(combine_path(getcwd(), __FILE__),
-			    "../../../java/jre");
+                            "../../../java/jre");
   if(check_jre_dir(dir))
     return dir;
 
   dir =
     (Process.popen("java -verbose 2>&1 | sed -n -e 's/^[^/]*//' -e "
-		   "'s:/lib/rt\\.jar.*$::' -e p -e q")||"")-"\n";  
+                   "'s:/lib/rt\\.jar.*$::' -e p -e q")||"")-"\n";  
 
   //  Mac OS X uses a non-standard directory
   if (has_value(dir, "JavaVM.framework"))
@@ -39,21 +39,21 @@ protected string findjre()
   if(check_jre_dir(dir))
     return dir;
   foreach(`+(@Array.map(({"/usr/local", "/usr", "/usr/java"}),
-			lambda(string s) {
-			  return Array.map(Array.map(({"jre*","jdk*","java*"}),
-						     glob,
-						     reverse(sort(get_dir(s)||
-								  ({""}))))*
-					   ({}),
-					   lambda(string sb) {
-					     return s+"/"+sb;
-					   });
-			})), string d) {
+                        lambda(string s) {
+                          return Array.map(Array.map(({"jre*","jdk*","java*"}),
+                                                     glob,
+                                                     reverse(sort(get_dir(s)||
+                                                                  ({""}))))*
+                                           ({}),
+                                           lambda(string sb) {
+                                             return s+"/"+sb;
+                                           });
+                        })), string d) {
     if(d && d!="")
       if(check_jre_dir(d+"/jre"))
-	return d+"/jre";
+        return d+"/jre";
       else if(check_jre_dir(d))
-	return d;
+        return d;
   }
   return 0;
 }
@@ -88,7 +88,7 @@ void run(object env)
     foreach(({arch+"/"+threads_type, arch+"/classic", arch+"/server", arch}), string dir) {
       mixed s = file_stat(jrehome+"/lib/"+dir);
       if(s && s[1]==-2)
-	env->append("LD_LIBRARY_PATH", jrehome+"/lib/"+dir);
+        env->append("LD_LIBRARY_PATH", jrehome+"/lib/"+dir);
     }
   }
   

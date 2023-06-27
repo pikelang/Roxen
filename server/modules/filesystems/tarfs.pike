@@ -29,8 +29,8 @@ void create()
 
   defvar("tarfile", "docs.tar", 
          _(5,"Tar file and root path"), TYPE_FILE|VAR_INITIAL,
-	 _(6,"The tarfile, and an optional root path (syntax: /tar/file.tar:/"
-	   "root/dir/)") );
+         _(6,"The tarfile, and an optional root path (syntax: /tar/file.tar:/"
+           "root/dir/)") );
 }
 
 string mp;
@@ -89,5 +89,5 @@ mixed find_file( string f, RequestID id )
   if( !s ) return 0;
   if( s->isdir() ) return -1;
   return StringFile( tar->open( f, "r" )->read(), 
-		     stat_file( f, id ));
+                     stat_file( f, id ));
 }

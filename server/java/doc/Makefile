@@ -1,6 +1,6 @@
 
 doc :
-	javadoc -sourcepath ../src -d . com.roxen.roxen
+        javadoc -sourcepath ../src -d . com.roxen.roxen
 
 manual :
-	./manualify.zsh
+        ./manualify.zsh

@@ -103,42 +103,42 @@ protected void ws_handle_queue()
     if (objectp(msg)) {
       // This is a WebSocket frame so let's process it.
       id->json_logger->log(([
-			     "event": "WEBSOCKET_MESSAGE_BEGIN",
-			     "callback": "websocket_message",
-			   ]));
+                             "event": "WEBSOCKET_MESSAGE_BEGIN",
+                             "callback": "websocket_message",
+                           ]));
       api->websocket_message(this, msg);
       id->json_logger->log(([
-			     "event": "WEBSOCKET_MESSAGE_END",
-			     "callback": "websocket_message",
-			   ]));
+                             "event": "WEBSOCKET_MESSAGE_END",
+                             "callback": "websocket_message",
+                           ]));
     } else if (msg == WS_OPEN_MSG) {
       // This is the first message so let's call the open callback
       id->json_logger->log(([
-			     "event": "WEBSOCKET_MESSAGE_BEGIN",
-			     "callback": "websocket_ready",
-			   ]));
+                             "event": "WEBSOCKET_MESSAGE_BEGIN",
+                             "callback": "websocket_ready",
+                           ]));
       api->websocket_ready(this);
       id->json_logger->log(([
-			     "event": "WEBSOCKET_MESSAGE_END",
-			     "callback": "websocket_ready",
-			   ]));
+                             "event": "WEBSOCKET_MESSAGE_END",
+                             "callback": "websocket_ready",
+                           ]));
     } else if (msg == WS_CLOSE_MSG) {
       id->json_logger->log(([
-			     "event": "WEBSOCKET_MESSAGE_BEGIN",
-			     "callback": "websocket_close",
-			   ]));
+                             "event": "WEBSOCKET_MESSAGE_BEGIN",
+                             "callback": "websocket_close",
+                           ]));
       api->websocket_close(this, ws_close_reason);
       id->json_logger->log(([
-			     "event": "WEBSOCKET_MESSAGE_END",
-			     "callback": "websocket_close",
-			   ]));
+                             "event": "WEBSOCKET_MESSAGE_END",
+                             "callback": "websocket_close",
+                           ]));
       id->end();
       return;
     }
   } else if (!is_ended) {
     id->json_logger->log(([
-			   "event": "WEBSOCKET_API_HANDLER_GONE",
-			 ]));
+                           "event": "WEBSOCKET_API_HANDLER_GONE",
+                         ]));
     id->end();
     is_ended++;
   }

@@ -187,35 +187,35 @@ inline BOOL CServiceModule::Install()
           SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
           szFilePath, NULL, NULL, _T("RPCSS\0"), NULL, NULL,
           m_szServiceName)) {
-	long err = GetLastError();
-	::CloseServiceHandle(hService);
-	::CloseServiceHandle(hSCM);
-	switch(err) {
-	case ERROR_ACCESS_DENIED:
-	  MessageBox(NULL, _T("Couldn't change service (Access Denied)"), m_szServiceName, MB_OK);
-	  break;
-	case ERROR_CIRCULAR_DEPENDENCY:
-	  MessageBox(NULL, _T("Couldn't change service (Circular Dependency)"), m_szServiceName, MB_OK);
-	  break;
-	case ERROR_DUPLICATE_SERVICE_NAME:
-	  MessageBox(NULL, _T("Couldn't change service (Duplicate Service Name)"), m_szServiceName, MB_OK);
-	  break;
-	case ERROR_INVALID_HANDLE:
-	  MessageBox(NULL, _T("Couldn't change service (Invalid Handle)"), m_szServiceName, MB_OK);
-	  break;
-	case ERROR_INVALID_PARAMETER:
-	  MessageBox(NULL, _T("Couldn't change service (Invalid Parameter)"), m_szServiceName, MB_OK);
-	  break;
-	case ERROR_INVALID_SERVICE_ACCOUNT:
-	  MessageBox(NULL, _T("Couldn't change service (Invalid Service Account)"), m_szServiceName, MB_OK);
-	  break;
-	case ERROR_SERVICE_MARKED_FOR_DELETE:
-	  MessageBox(NULL, _T("Couldn't change service (Service Marked For Delete)"), m_szServiceName, MB_OK);
-	  break;
-	default:
-	  MessageBox(NULL, _T("Couldn't change service"), m_szServiceName, MB_OK);
-	  break;
-	}
+        long err = GetLastError();
+        ::CloseServiceHandle(hService);
+        ::CloseServiceHandle(hSCM);
+        switch(err) {
+        case ERROR_ACCESS_DENIED:
+          MessageBox(NULL, _T("Couldn't change service (Access Denied)"), m_szServiceName, MB_OK);
+          break;
+        case ERROR_CIRCULAR_DEPENDENCY:
+          MessageBox(NULL, _T("Couldn't change service (Circular Dependency)"), m_szServiceName, MB_OK);
+          break;
+        case ERROR_DUPLICATE_SERVICE_NAME:
+          MessageBox(NULL, _T("Couldn't change service (Duplicate Service Name)"), m_szServiceName, MB_OK);
+          break;
+        case ERROR_INVALID_HANDLE:
+          MessageBox(NULL, _T("Couldn't change service (Invalid Handle)"), m_szServiceName, MB_OK);
+          break;
+        case ERROR_INVALID_PARAMETER:
+          MessageBox(NULL, _T("Couldn't change service (Invalid Parameter)"), m_szServiceName, MB_OK);
+          break;
+        case ERROR_INVALID_SERVICE_ACCOUNT:
+          MessageBox(NULL, _T("Couldn't change service (Invalid Service Account)"), m_szServiceName, MB_OK);
+          break;
+        case ERROR_SERVICE_MARKED_FOR_DELETE:
+          MessageBox(NULL, _T("Couldn't change service (Service Marked For Delete)"), m_szServiceName, MB_OK);
+          break;
+        default:
+          MessageBox(NULL, _T("Couldn't change service"), m_szServiceName, MB_OK);
+          break;
+        }
         return FALSE;
       }
     } else {
@@ -436,7 +436,7 @@ BOOL CServiceModule::ControlHandler( DWORD dwCtrlType )
 
     switch( dwCtrlType )
     {
-	case CTRL_BREAK_EVENT:  // Ignore Ctrl+Break (may be used by pike)
+        case CTRL_BREAK_EVENT:  // Ignore Ctrl+Break (may be used by pike)
         //printf("%s received\n", ctrlEvent[dwCtrlType]);
         return TRUE;
 
@@ -445,7 +445,7 @@ BOOL CServiceModule::ControlHandler( DWORD dwCtrlType )
     case CTRL_LOGOFF_EVENT:
         //printf("%s received\n", ctrlEvent[dwCtrlType]);
         Stop(TRUE);
-	    return TRUE;
+            return TRUE;
     default:
         printf("Unknown CTRL event %d received\n", dwCtrlType);
     }
@@ -790,9 +790,9 @@ extern "C" int __cdecl _tmain(int argc, _TCHAR **argv, _TCHAR **envp)
 
     // Kill the internal roxen MySql server
     if (!cmdline.IsKeepMysql()) {
-	  _Module.LogEvent(_T("Shutting down MySQL."));
+          _Module.LogEvent(_T("Shutting down MySQL."));
       KillMySql(cmdline.GetConfigDir().c_str());
-	}
+        }
 
     // When we get here, the service has been stopped
     return _Module.m_status.dwWin32ExitCode;

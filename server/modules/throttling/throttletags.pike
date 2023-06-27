@@ -55,7 +55,7 @@ Sets this request's bandwidth to 'value'.</p>
 No subsequent modifications will be done to this request's bandwidth
 after the current one.</p>
 </attr>",
-		]);
+                ]);
 #endif
 
 string|int tag_throttle(string tag, mapping args, RequestID id) {

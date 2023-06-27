@@ -24,12 +24,12 @@ constant thread_safe   = 1;
 void create()
 {
   defvar("colorparsing", ({ "td", "layer", "ilayer", "table" }),
-	 "Tags to parse for color",
-	 TYPE_STRING_LIST|VAR_NOT_CFIF,
-	 "Which tags should be parsed for document colors? "
-	 "This will affect documents without gtext as well as documents "
-	 "with it, the parsing time is relative to the number of parsed "
-	 "tags in a document.");
+         "Tags to parse for color",
+         TYPE_STRING_LIST|VAR_NOT_CFIF,
+         "Which tags should be parsed for document colors? "
+         "This will affect documents without gtext as well as documents "
+         "with it, the parsing time is relative to the number of parsed "
+         "tags in a document.");
 
   defvar("colormode", 0, "Normalize colors in parsed tags",
          TYPE_FLAG|VAR_NOT_CFIF, #"\
@@ -74,15 +74,15 @@ array(string) colorparsing;
 array(RXML.Tag) get_tag_variants(string tag_name, mixed tag)
 {
   return map(Array.uniq( ({ tag_name,
-			    upper_case(tag_name),
-			    lower_case(tag_name),
-			    String.capitalize(lower_case(tag_name)) }) ),
-	     tag);
+                            upper_case(tag_name),
+                            lower_case(tag_name),
+                            String.capitalize(lower_case(tag_name)) }) ),
+             tag);
 }
 
 void init_tag_set (int new_compat_mode,
-		   array(string) new_colorparsing,
-		   int new_colormode)
+                   array(string) new_colorparsing,
+                   int new_colormode)
 {
   //  Register start and end tags individually so we can handle the
   //  <body> container properly. If compatibility with 2.1 or earlier
@@ -96,8 +96,8 @@ void init_tag_set (int new_compat_mode,
   foreach(new_colorparsing, string tag)
     if (lower_case(tag) != "body") {
       non_body_tags +=
-	get_tag_variants(tag, TagPushColor) +
-	get_tag_variants(tag, TagPopColor);
+        get_tag_variants(tag, TagPushColor) +
+        get_tag_variants(tag, TagPopColor);
     }
 
   module_tag_set->clear();
@@ -122,8 +122,8 @@ class TagBody
 
   string name;
   constant flags = (RXML.FLAG_EMPTY_ELEMENT |
-		    RXML.FLAG_COMPAT_PARSE |
-		    RXML.FLAG_NO_PREFIX);
+                    RXML.FLAG_COMPAT_PARSE |
+                    RXML.FLAG_NO_PREFIX);
 
   // Cached settings.
   int body_compat_mode = compat_mode, body_colormode = colormode;
@@ -143,24 +143,24 @@ class TagBody
     {
       //  Check if <body> attribute disables wiretap
       if (args["wiretap"] != "no") {
-	//  Register temporary tags unless we're running in compatibility
-	//  mode.
-	if (!body_compat_mode) {
-	  RXML.Context ctx = RXML_CONTEXT;
-	  foreach(body_runtime_wiretap_tags->get_local_tags(), RXML.Tag tag)
-	    ctx->add_runtime_tag(tag);
-	}
-	
-	args =
-	  mkmapping(map(indices(args), lower_case), values(args)) -
-	  ({ "wiretap" });
-	if (Roxen.init_wiretap_stack(args, id, body_colormode))
-	  return ({ propagate_tag(args) });
+        //  Register temporary tags unless we're running in compatibility
+        //  mode.
+        if (!body_compat_mode) {
+          RXML.Context ctx = RXML_CONTEXT;
+          foreach(body_runtime_wiretap_tags->get_local_tags(), RXML.Tag tag)
+            ctx->add_runtime_tag(tag);
+        }
+        
+        args =
+          mkmapping(map(indices(args), lower_case), values(args)) -
+          ({ "wiretap" });
+        if (Roxen.init_wiretap_stack(args, id, body_colormode))
+          return ({ propagate_tag(args) });
       }
       if (args["wiretap"])
-	return ({ propagate_tag(args - ({ "wiretap" }) ) });
+        return ({ propagate_tag(args - ({ "wiretap" }) ) });
       else
-	return ({ propagate_tag() });
+        return ({ propagate_tag() });
     }
   }
 }
@@ -172,8 +172,8 @@ class TagEndBody
 
   string name, tagname;
   constant flags = (RXML.FLAG_EMPTY_ELEMENT |
-		    RXML.FLAG_COMPAT_PARSE |
-		    RXML.FLAG_NO_PREFIX);
+                    RXML.FLAG_COMPAT_PARSE |
+                    RXML.FLAG_NO_PREFIX);
   
   // Cached settings.
   int body_compat_mode = compat_mode;
@@ -194,9 +194,9 @@ class TagEndBody
     {
       //  Unregister our temporary tags unless we're in compatibility mode
       if (!body_compat_mode) {
-	RXML.Context ctx = RXML_CONTEXT;
-	foreach(body_runtime_wiretap_tags->get_local_tags(), RXML.Tag tag)
-	  ctx->remove_runtime_tag(tag);
+        RXML.Context ctx = RXML_CONTEXT;
+        foreach(body_runtime_wiretap_tags->get_local_tags(), RXML.Tag tag)
+          ctx->remove_runtime_tag(tag);
       }
       return ({ propagate_tag() });
     }
@@ -210,8 +210,8 @@ class TagPushColor
   
   string name;
   constant flags = (RXML.FLAG_EMPTY_ELEMENT |
-		    RXML.FLAG_COMPAT_PARSE |
-		    RXML.FLAG_NO_PREFIX);
+                    RXML.FLAG_COMPAT_PARSE |
+                    RXML.FLAG_NO_PREFIX);
   
   // Cached settings.
   int body_colormode = colormode;
@@ -230,7 +230,7 @@ class TagPushColor
     {
       args = mkmapping(map(indices(args), lower_case), values(args));
       if (Roxen.push_color(name, args, id, body_colormode))
-	return ({ propagate_tag(args) });
+        return ({ propagate_tag(args) });
       return ({ propagate_tag() });
     }
   }
@@ -243,8 +243,8 @@ class TagPopColor
   
   string name, tagname;
   constant flags = (RXML.FLAG_EMPTY_ELEMENT |
-		    RXML.FLAG_COMPAT_PARSE |
-		    RXML.FLAG_NO_PREFIX);
+                    RXML.FLAG_COMPAT_PARSE |
+                    RXML.FLAG_NO_PREFIX);
   
   void create(string _name)
   {
@@ -275,8 +275,8 @@ void start()
     array(string) new_colorparsing = query ("colorparsing");
     int new_colormode = query ("colormode");
     if (compat_mode != new_compat_mode ||
-	!equal (colorparsing, new_colorparsing) ||
-	colormode != new_colormode)
+        !equal (colorparsing, new_colorparsing) ||
+        colormode != new_colormode)
       init_tag_set (new_compat_mode, new_colorparsing, new_colormode);
   }
 }
@@ -288,7 +288,7 @@ RXML.TagSet query_tag_set()
     module_tag_set->add_tag_set_dependency (runtime_wiretap_tags);
   }
   init_tag_set (my_configuration()->query("compat_level") < "2.2",
-		query ("colorparsing"),
-		query ("colormode"));
+                query ("colorparsing"),
+                query ("colormode"));
   return module_tag_set;
 }

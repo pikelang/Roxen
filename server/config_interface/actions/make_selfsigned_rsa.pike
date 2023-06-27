@@ -82,8 +82,8 @@ mixed page_3(object id, object mc)
   /* Remove initial and trailing whitespace, and ignore
    * empty attributes. */
   foreach( ({ "countryName", "stateOrProvinceName",
-	      "localityName", "organizationName",
-	      "organizationUnitName", "commonName" }), attr)
+              "localityName", "organizationName",
+              "organizationUnitName", "commonName" }), attr)
   {
     if (id->variables[attr]) {
       attrs[attr] = global.String.trim_whites (id->variables[attr]);
@@ -95,8 +95,8 @@ mixed page_3(object id, object mc)
   if (attrs->countryName)
     name += ({([ "countryName": PrintableString(attrs->countryName) ])});
   foreach( ({ "stateOrProvinceName",
-	      "localityName", "organizationName",
-	      "organizationUnitName", "commonName" }), attr)
+              "localityName", "organizationName",
+              "organizationUnitName", "commonName" }), attr)
   {
     if (attrs[attr])
       name += ({ ([ attr : UTF8String(attrs[attr]) ]) });
@@ -107,8 +107,8 @@ mixed page_3(object id, object mc)
     (rsa, 24 * 3600 * (int) id->variables->ttl, name);
 
   string res=("<font size='+2'>"+LOCALE(133,"This is your Certificate.")+
-	      "</font>"
-	      "<textarea name='certificate' cols='80' rows='12'>");
+              "</font>"
+              "<textarea name='certificate' cols='80' rows='12'>");
 
   res += Tools.PEM.simple_build_pem("CERTIFICATE", cert);
 
@@ -129,18 +129,18 @@ mixed verify_3(object id, object mc)
       /* FIXME: Should we use a verify function, to get
        * better error handling? */
       id->variables->_error =
-	"Could not open certificate file: "
-	+ (strerror(errno()) || (string) errno())
-	+ ".";
+        "Could not open certificate file: "
+        + (strerror(errno()) || (string) errno())
+        + ".";
       return 1;
     }
     if (file->write(id->variables->certificate)
-	!= strlen(id->variables->certificate))
+        != strlen(id->variables->certificate))
     {
       id->variables->_error =
-	"Write failed: "
-	+ (strerror(file->errno()) || (string) file->errno())
-	+ ".";
+        "Write failed: "
+        + (strerror(file->errno()) || (string) file->errno())
+        + ".";
       return 1;
     }
   }
@@ -151,10 +151,10 @@ mixed wizard_done(object id, object mc)
 {
   roxen.background_run(0, roxen.scan_certs);
   return http_string_answer( sprintf("<p>"+LOCALE(131,"Wrote %d bytes to %s.")+
-				     "</p>\n<p><cf-ok/></p>\n",
-				     strlen(id->variables->certificate),
-				     combine_path(getcwd(), "../local/",
-						  id->variables->cert_file)) );
+                                     "</p>\n<p><cf-ok/></p>\n",
+                                     strlen(id->variables->certificate),
+                                     combine_path(getcwd(), "../local/",
+                                                  id->variables->cert_file)) );
 }
 
 

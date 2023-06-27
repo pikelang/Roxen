@@ -5,25 +5,25 @@ string simple_check( )
 {
   return
     common_wait( ([ 2:"Illegal headers",
-		    3:"Illegal data",
-		    4:"Connection failed",
-		    5:"Bad protocol value in reply",
-		    6:"Bad response code in reply",
-		    7:"No date header",
-		    8:"Bad or no content-length header",
-		    9:"Bad or no last-modified header",
-		    11:"Did not expect headers",
-		    12:"Did not expect data",
-		    13:"Did not expect connection",
-		    14:"Did not expect valid reply",
-		 ]) );
+                    3:"Illegal data",
+                    4:"Connection failed",
+                    5:"Bad protocol value in reply",
+                    6:"Bad response code in reply",
+                    7:"No date header",
+                    8:"Bad or no content-length header",
+                    9:"Bad or no last-modified header",
+                    11:"Did not expect headers",
+                    12:"Did not expect data",
+                    13:"Did not expect connection",
+                    14:"Did not expect valid reply",
+                 ]) );
 }
 
 function run( string script, string file, int|string ... ma  )
 {
   return lambda() {
-	   run_pikescript( script, file, @((array(string))ma) );
-	 };
+           run_pikescript( script, file, @((array(string))ma) );
+         };
 }
 
 #define rtest( COMMENT, SCRIPT, FILE, LEN, ARGS...) \
@@ -158,19 +158,19 @@ void setup( )
   //  stest4( "HTTP/1.1 /nofile",  "http/http11.pike", "/nofile",  0 );
 
   rtest( "REDIRECT (Host)",  "http/http_redirect.pike",
-	 "/redirect.html", "http://test.example.com/", "Host:test.example.com"  );
+         "/redirect.html", "http://test.example.com/", "Host:test.example.com"  );
   rtest( "REDIRECT (Forwarded)",  "http/http_redirect.pike",
-	 "/redirect.html", "https://test.example.com/", "Host:test2.example.com",
-	 "Forwarded: host=\"test.example.com\";proto=https");
+         "/redirect.html", "https://test.example.com/", "Host:test2.example.com",
+         "Forwarded: host=\"test.example.com\";proto=https");
   rtest( "REDIRECT (Multi Forwarded)",  "http/http_redirect.pike",
-	 "/redirect.html", "https://test.example.com/", "Host:test2.example.com",
-	 "Forwarded: host=\"test.example.com\"",
-	 "Forwarded: host=\"test3.example.com\"",
-	 "Forwarded: host=\"test4.example.com\";proto=https");
+         "/redirect.html", "https://test.example.com/", "Host:test2.example.com",
+         "Forwarded: host=\"test.example.com\"",
+         "Forwarded: host=\"test3.example.com\"",
+         "Forwarded: host=\"test4.example.com\";proto=https");
   rtest( "REDIRECT (Simgle Multi Forwarded)",  "http/http_redirect.pike",
-	 "/redirect.html", "https://test.example.com/", "Host:test2.example.com",
-	 "Forwarded: host=\"test.example.com\",host=\"test3.example.com\",host=\"test4.example.com\";proto=https");
+         "/redirect.html", "https://test.example.com/", "Host:test2.example.com",
+         "Forwarded: host=\"test.example.com\",host=\"test3.example.com\",host=\"test4.example.com\";proto=https");
   rtest( "REDIRECT (X-Forwarded)",  "http/http_redirect.pike",
-	 "/redirect.html", "https://test.example.com/", "Host:test2.example.com",
-	 "X-Forwarded-Host: test.example.com", "X-Forwarded-Proto: https");
+         "/redirect.html", "https://test.example.com/", "Host:test2.example.com",
+         "X-Forwarded-Host: test.example.com", "X-Forwarded-Proto: https");
 }

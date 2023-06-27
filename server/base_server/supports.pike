@@ -30,15 +30,15 @@ private array(multiset(string)|mapping(string:string)) split_supports(array(stri
     }
     else
       if(s[0]=='-')
-	neg[s[1..]]=1;
+        neg[s[1..]]=1;
       else
-	pos[s]=1;
+        pos[s]=1;
   }
   return ({pos, neg, m});
 }
 
 private void parse_supports_string(string what, string current_section,
-				   mapping(string:array(string)) defines)
+                                   mapping(string:array(string)) defines)
 {
   what-="\r";
   foreach(replace(what, "\\\n", " ")/"\n"-({""}), string line)
@@ -49,32 +49,32 @@ private void parse_supports_string(string what, string current_section,
       string name, to;
       if(sscanf(line, "#include <%s>", file))
       {
-	if(catch(line=lopen(file,"r")->read()))
-	  report_error("Supports: Cannot include file "+file+"\n");
-	else
-	  parse_supports_string(line, current_section, defines);
+        if(catch(line=lopen(file,"r")->read()))
+          report_error("Supports: Cannot include file "+file+"\n");
+        else
+          parse_supports_string(line, current_section, defines);
       }
       else if(sscanf(line, "#define %[^ \t]%*[ \t]%s", name, to)) {
-	name -= "\t";
-	defines[name] = replace(to, ({"\t",","}), ({" "," "}) )/" "-({""});
-	array add=({});
-	foreach(defines[name], string sup)
-	  if(defines[sup]) {
-	    defines[name]-=({sup});
-	    add+=defines[sup];
-	  }
-	defines[name]+=add;
+        name -= "\t";
+        defines[name] = replace(to, ({"\t",","}), ({" "," "}) )/" "-({""});
+        array add=({});
+        foreach(defines[name], string sup)
+          if(defines[sup]) {
+            defines[name]-=({sup});
+            add+=defines[sup];
+          }
+        defines[name]+=add;
 //	report_debug("#defining '"+name+"' to "+to+"\n");
       }
       else if(sscanf(line, "#section %[^ ] {", name)) {
 //	report_debug("Entering section "+name+"\n");
-	current_section = name;
-	if(!supports[name])
-	  supports[name] = ({});
+        current_section = name;
+        if(!supports[name])
+          supports[name] = ({});
       }
       else if((line-" ") == "#}") {
 //	report_debug("Leaving section "+current_section+"\n");
-	current_section = 0;
+        current_section = 0;
       }
 
     }
@@ -84,27 +84,27 @@ private void parse_supports_string(string what, string current_section,
 
       array add=({});
       foreach(sups, string sup)
-	if(defines[sup]) {
-	  sups-=({sup});
-	  add+=defines[sup];
-	}
+        if(defines[sup]) {
+          sups-=({sup});
+          add+=defines[sup];
+        }
       sups+=add;
 
       if(sizeof(sups) < 2)
-	continue;
+        continue;
 
       if(sups[0] == "default") {
-	array(multiset(string)|mapping(string:string)) tmp=split_supports(sups[1..]);
-	default_supports = [multiset(string)]tmp[0] - [multiset(string)]tmp[1];
+        array(multiset(string)|mapping(string:string)) tmp=split_supports(sups[1..]);
+        default_supports = [multiset(string)]tmp[0] - [multiset(string)]tmp[1];
         default_client_var = [mapping(string:string)]tmp[2];
       }
       else {
-	mixed err;
-	if (err = catch {
-	  supports[current_section]
-	    += ({ ({ Regexp(sups[0])->match }) + split_supports(sups[1..]) });
-	})
-	  report_error("Failed to parse supports regexp:\n%s\n", describe_backtrace(err));
+        mixed err;
+        if (err = catch {
+          supports[current_section]
+            += ({ ({ Regexp(sups[0])->match }) + split_supports(sups[1..]) });
+        })
+          report_error("Failed to parse supports regexp:\n%s\n", describe_backtrace(err));
       }
     }
   }
@@ -183,8 +183,8 @@ mapping(string:string) find_client_var(string from, void|mapping(string:string) 
 
 array(multiset(string)|
       mapping(string:string)) find_supports_and_vars(string from,
-						     void|multiset(string) existing_sup,
-						     void|mapping(string:string) existing_cv)
+                                                     void|multiset(string) existing_sup,
+                                                     void|mapping(string:string) existing_cv)
 {
   if(!multisetp(existing_sup)) existing_sup=(<>);
   if(!mappingp(existing_cv)) existing_cv=([]);

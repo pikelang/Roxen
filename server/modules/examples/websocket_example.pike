@@ -23,9 +23,9 @@ constant module_unique = 0;
 protected void create()
 {
   defvar("location", "/websocket_example/", "Mount point",
-	 TYPE_LOCATION|VAR_INITIAL|VAR_NO_DEFAULT,
-	 "Where the module will be mounted in the site's virtual "
-	 "file system.");
+         TYPE_LOCATION|VAR_INITIAL|VAR_NO_DEFAULT,
+         "Where the module will be mounted in the site's virtual "
+         "file system.");
 }
 
 void start(int ignored, Configuration conf)
@@ -37,7 +37,7 @@ void start(int ignored, Configuration conf)
 string query_name()
 {
   return sprintf("Example module mounted on %s",
-		 query_location());
+                 query_location());
 }
 
 mapping(string:mixed)|int(0..0) find_file(string path, RequestID id)
@@ -68,14 +68,14 @@ void websocket_message(WebSocket ws, Protocols.WebSocket.Frame frame)
 
   if (ws->id->misc->ws_id && ws->id->misc->ws_id != ws_id) {
     werror("Wrong WebSocket ID! Expected %d and got %d\n",
-	   ws->id->misc->ws_id, ws_id);
+           ws->id->misc->ws_id, ws_id);
     ws->close();
     return;
   }
 
   if (ws->id->misc->ws_cnt >= cnt) {
     werror("Messages out of order. Last cnt %d, got %d\n",
-	   ws->id->misc->ws_cnt, cnt);
+           ws->id->misc->ws_cnt, cnt);
     ws->close();
     return;
   }

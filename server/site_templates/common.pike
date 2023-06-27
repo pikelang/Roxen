@@ -45,11 +45,11 @@ object load_modules(Configuration conf)
     // Enable the module but do not call start or save in the
     // configuration. Call start manually.
     if( !conf->find_module( mod ) &&
-	(module = conf->enable_module( mod, 0, 0, 1, 1 )))
+        (module = conf->enable_module( mod, 0, 0, 1, 1 )))
     {
       conf->call_low_start_callbacks( module, 
-				      roxen.find_module( mod ), 
-				      conf->modules[ mod ] );
+                                      roxen.find_module( mod ), 
+                                      conf->modules[ mod ] );
     }
   }
   return enable_modules_lock;
@@ -76,7 +76,7 @@ void init_modules(Configuration conf, RequestID id);
 protected class PreStartCb (RequestID id)
 {
   void pre_start_cb (RoxenModule mod, int save_vars,
-		     Configuration conf, int newly_added)
+                     Configuration conf, int newly_added)
   {
     init_module (conf, mod, id);
   }
@@ -103,12 +103,12 @@ string initial_form( Configuration conf, RequestID id, int setonly )
         +LOCALE(1,"Initial variables for ")+
             Roxen.html_encode_string(mi->get_name())+"</h2></td></tr>"
         "<emit source='module-variables' "
-	  " configuration=\""+conf->name+"\""
-	  " module=\""+mod+#"\"/>";
-	if( !setonly )
-	  res += 
+          " configuration=\""+conf->name+"\""
+          " module=\""+mod+#"\"/>";
+        if( !setonly )
+          res += 
         "<emit noset='1' source='module-variables' "
-	  " configuration=\""+conf->name+"\""
+          " configuration=\""+conf->name+"\""
         " module=\""+mod+#"\">
  <tr>
  <td width='150' valign='top' colspan='2'><b>&_.name;</b></td>
@@ -173,7 +173,7 @@ mixed parse( RequestID id, mapping|void opt )
   
   // set initial variables from form variables...
   Roxen.parse_rxml("<emit source=config-variables configuration='"+
-		   conf->name+"'/>", id );
+                   conf->name+"'/>", id );
   Roxen.parse_rxml( initial_form( conf, id, 1 ), id );
   
   if( id->variables["ok.x"] && form_is_ok( id ) )
@@ -193,9 +193,9 @@ mixed parse( RequestID id, mapping|void opt )
       if(module) {
         // Configuration->call_low_start_callbacks() already called from
         // load_modules() (that we called above). This fix solves EP-1502.
-	conf->call_high_start_callbacks( module,
-				    roxen.find_module( mod ),
-				    1);
+        conf->call_high_start_callbacks( module,
+                                    roxen.find_module( mod ),
+                                    1);
       }
     }
     
@@ -206,12 +206,12 @@ mixed parse( RequestID id, mapping|void opt )
       // one module copy is wanted then avoid it.
       if (!has_value (mod, "#")) mod += "#0";
       if (conf->enabled_modules[mod])
-	continue;
+        continue;
 
       ModuleInfo module = roxen.find_module(mod);
       if(module->locked && (!key || !module->unlocked(key)) ) {
-	report_debug("Ignoring module "+mod+", disabled in license.\n");
-	continue;
+        report_debug("Ignoring module "+mod+", disabled in license.\n");
+        continue;
       }
       conf->enable_module( mod );
     }

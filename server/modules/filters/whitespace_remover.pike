@@ -11,14 +11,14 @@ constant module_doc  = "Removes all whitespace from pages.";
 void create() {
 
   defvar("comment",
-	 Variable.Flag(0, 0, "Strip HTML comments",
-		       "Removes all &lt;!-- --&gt; type of comments") );
+         Variable.Flag(0, 0, "Strip HTML comments",
+                       "Removes all &lt;!-- --&gt; type of comments") );
   defvar("verbatim",
-	 Variable.StringList( ({ "pre", "textarea", "script", "style",
-				 "code" }),
-			      0, "Verbatim tags",
-			      "Whitespace stripping is not performed on the "
-			      "contents of these tags." ) );
+         Variable.StringList( ({ "pre", "textarea", "script", "style",
+                                 "code" }),
+                              0, "Verbatim tags",
+                              "Whitespace stripping is not performed on the "
+                              "contents of these tags." ) );
 }
 
 int gain;
@@ -34,7 +34,7 @@ protected string most_significant_whitespace(string ws)
   if( size )
     gain += size-1;
   return !size ? "" : has_value(ws, "\n") ? "\n"
-		    : has_value(ws, "\t") ? "\t" : " ";
+                    : has_value(ws, "\t") ? "\t" : " ";
 }
 
 protected array(string) remove_consecutive_whitespace(Parser.HTML p, string in)

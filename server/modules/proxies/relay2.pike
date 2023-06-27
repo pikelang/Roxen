@@ -108,7 +108,7 @@ class Relay
       FileWrapper wrapper = q->try_read();
 #ifdef RELAY_DEBUG
       werror("RELAY: Wrapper: %O (%O)\n",
-	     wrapper, wrapper && wrapper->fd);
+             wrapper, wrapper && wrapper->fd);
 #endif
       if (!wrapper) break;
       object(Stdio.File)|SSL.File fd = wrapper->fd;
@@ -154,37 +154,37 @@ class Relay
 
     if (from->request_headers->host) {
       forwarded += ({ ({
-			"by", '=', myip, ';',
-			"for", '=', remoteaddr, ';',
-			"host", '=', from->request_headers->host, ';',
-			"proto", '=', from->port_obj->prot_name,
-		      }) });
+                        "by", '=', myip, ';',
+                        "for", '=', remoteaddr, ';',
+                        "host", '=', from->request_headers->host, ';',
+                        "proto", '=', from->port_obj->prot_name,
+                      }) });
     } else {
       forwarded += ({ ({
-			"by", '=', myip, ';',
-			"for", '=', remoteaddr, ';',
-			"proto", '=', from->port_obj->prot_name,
-		      }) });
+                        "by", '=', myip, ';',
+                        "for", '=', remoteaddr, ';',
+                        "proto", '=', from->port_obj->prot_name,
+                      }) });
     }
 
     mapping res = ([]);
     if( !trim ) {
       foreach( from->request_headers; string i; string|array(string) v)
       {
-	switch( i )
-	{
-	case "accept-encoding":
-	  // We need to support the stuff we pass on in the proxy
-	  // otherwise we might end up with things like double
-	  // gzipped data.
-	  break;
-	case "connection":
-	  // Strip.
-	  break;
-	default:
-	  res[Roxen.canonicalize_http_header (i) || String.capitalize (i)] = v;
-	  break;
-	}
+        switch( i )
+        {
+        case "accept-encoding":
+          // We need to support the stuff we pass on in the proxy
+          // otherwise we might end up with things like double
+          // gzipped data.
+          break;
+        case "connection":
+          // Strip.
+          break;
+        default:
+          res[Roxen.canonicalize_http_header (i) || String.capitalize (i)] = v;
+          break;
+        }
       }
     }
 
@@ -205,7 +205,7 @@ class Relay
     if (Protocol port = from->port_obj) {
       server_host = port->conf_data[from->conf]->hostname;
       if (server_host == "*")
-	server_host = from->conf->get_host();
+        server_host = from->conf->get_host();
     }
     else
       server_host = my_configuration()->get_host();
@@ -213,19 +213,19 @@ class Relay
     // These are set by Apaches mod_proxy and are more or less
     // defacto standard.
     foreach(([ "X-Forwarded-For": remoteaddr,
-	       "X-Forwarded-Host": from->request_headers->host,
-	       "X-Forwarded-Proto": from->port_obj->prot_name,
-	       "X-Forwarded-Server": server_host,
+               "X-Forwarded-Host": from->request_headers->host,
+               "X-Forwarded-Proto": from->port_obj->prot_name,
+               "X-Forwarded-Server": server_host,
 
-	       // RFC 7230 5.7.1
-	       "Via": from->clientprot + " " + server_host,
-	    ]); string field; string|array(string) value) {
+               // RFC 7230 5.7.1
+               "Via": from->clientprot + " " + server_host,
+            ]); string field; string|array(string) value) {
       if (!value) continue;
       array(string)|string old_val = res[lower_case(field)];
       if (arrayp(old_val)) {
-	value = old_val + ({ value });
+        value = old_val + ({ value });
       } else if (stringp(old_val)) {
-	value = ({ old_val, value });
+        value = ({ old_val, value });
       }
       res[field] = value;
     }
@@ -239,13 +239,13 @@ class Relay
     string content_length="";
     foreach( sort( indices( q ) ), string h )
       if(lower_case(h)=="content-length")
-	content_length = (string)h+": "+(string)q[h]+"\r\n";
+        content_length = (string)h+": "+(string)q[h]+"\r\n";
       else
-	if( arrayp( q[h] ) )
-	  foreach( q[h], string w )
-	    res += (string)h+": "+(string)w+"\r\n";
-	else
-	  res += (string)h+": "+(string)q[h]+"\r\n";
+        if( arrayp( q[h] ) )
+          foreach( q[h], string w )
+            res += (string)h+": "+(string)w+"\r\n";
+        else
+          res += (string)h+": "+(string)q[h]+"\r\n";
     return res+content_length;
   }
 
@@ -261,12 +261,12 @@ class Relay
       if (!res) return;	// Not enough data.
       mapping(string:string) headers = res[2];
       if (method == "HEAD") {
-	buflen = sizeof(buffer);
+        buflen = sizeof(buffer);
       } else if (headers["content-length"]) {
-	int cl = (int)headers["content-length"];
-	buflen = cl + sizeof(buffer) - sizeof(res[0]);
+        int cl = (int)headers["content-length"];
+        buflen = cl + sizeof(buffer) - sizeof(res[0]);
       } else {
-	buflen = -2;
+        buflen = -2;
       }
     }
 
@@ -297,19 +297,19 @@ class Relay
     {
       // in what: URL.
       if(!strlen(what))
-	return what; // local, is OK.
+        return what; // local, is OK.
 
       if( what[0] == '/' ) // absolute, is not OK.
       {
-	string base = id->not_query;
-	string f2 = (file/"?")[0];
-	if( strlen(f2) && search(id->not_query, f2 ) != -1)
-	  base = base[..search(id->not_query, f2 )-2];
-	return combine_path( base, what[1..] );
+        string base = id->not_query;
+        string f2 = (file/"?")[0];
+        if( strlen(f2) && search(id->not_query, f2 ) != -1)
+          base = base[..search(id->not_query, f2 )-2];
+        return combine_path( base, what[1..] );
       }
       else if( search( what, url ) == 0 )
       {
-	return replace( what, url, id->not_query );
+        return replace( what, url, id->not_query );
       }
       return what;
     };
@@ -320,31 +320,31 @@ class Relay
       p->xml_tag_syntax(1);
 
       p->_set_tag_callback( lambda(object p, string s) {
-			      string tag_name = p->tag_name();
-			      string rewrite_arg = 0;
-			      switch(tag_name) {
-			      case "a":
-				rewrite_arg = "href";
-				break;
-			      case "img":
-				rewrite_arg = "src";
-				break;
-			      case "form":
-				rewrite_arg = "action";
-				break;
-			      }
-			      if(rewrite_arg) {
-				mapping args = p->tag_args();
-				if(string val = args[rewrite_arg]) {
-				  string new_val = rewrite(val);
-				  if( val != new_val) {
-				    int is_closed = has_suffix(s,"/>");
-				    args[rewrite_arg] = new_val;
-				    return ({ Roxen.make_tag(tag_name, args, is_closed) });
-				  }
-				}
-			      }
-			    });
+                              string tag_name = p->tag_name();
+                              string rewrite_arg = 0;
+                              switch(tag_name) {
+                              case "a":
+                                rewrite_arg = "href";
+                                break;
+                              case "img":
+                                rewrite_arg = "src";
+                                break;
+                              case "form":
+                                rewrite_arg = "action";
+                                break;
+                              }
+                              if(rewrite_arg) {
+                                mapping args = p->tag_args();
+                                if(string val = args[rewrite_arg]) {
+                                  string new_val = rewrite(val);
+                                  if( val != new_val) {
+                                    int is_closed = has_suffix(s,"/>");
+                                    args[rewrite_arg] = new_val;
+                                    return ({ Roxen.make_tag(tag_name, args, is_closed) });
+                                  }
+                                }
+                              }
+                            });
 
       return p->finish( what )->read();
     };
@@ -370,34 +370,34 @@ class Relay
           switch( lower_case( a ) )
           {
            case "connection":
-	     // Strip.
-	     break;
+             // Strip.
+             break;
            case "content-type":
              h[a] = b;
              type = b;
              break;
            default:
-	     if (h[a]) {
-	       if (arrayp(h[a])) h[a] += ({ b });
-	       else h[a] = ({ h[a], b });
-	     }
-	     else
-	       h[a] = b;
+             if (h[a]) {
+               if (arrayp(h[a])) h[a] += ({ b });
+               else h[a] = ({ h[a], b });
+             }
+             else
+               h[a] = b;
           }
 
-	  h["Connection"] = "keep-alive";
+          h["Connection"] = "keep-alive";
         } else
           status = header;
       }
       if(!type)
-	type = "text/html";
+        type = "text/html";
       else if( sscanf( type-" ", "text/%*s;charset=%s", charset ) == 2 )
         type = String.trim_all_whites( (type/";")[0] );
     }
 
 #ifdef RELAY_DEBUG
     werror("RELAY: url: %O, type: %O, data: %O bytes, headers: \n%s\n\n",
-	   id->not_query, type, sizeof(data), headers);
+           id->not_query, type, sizeof(data), headers);
 #endif
 
     if( !headers || !data )
@@ -409,8 +409,8 @@ class Relay
       return;
     }
     if( options->rxml && code >= 200 && code < 300 &&
-	(lower_case(type) == "text/html" ||
-	 lower_case(type) == "text/plain" ))
+        (lower_case(type) == "text/html" ||
+         lower_case(type) == "text/plain" ))
     {
       if( charset )
       {
@@ -421,7 +421,7 @@ class Relay
         };
       }
       if( options->rewrite )
-	do_rewrite( data );
+        do_rewrite( data );
       id->misc->defines = ([]);
       id->misc->defines[" _extra_heads"] = h;
       id->misc->defines[" _error"] = code;
@@ -433,20 +433,20 @@ class Relay
                                                query("post-rxml"), id ) );
     }
     else if( options->rewrite &&
-	     (lower_case(type) == "text/html" ||
-	      lower_case(type) == "text/plain" ))
+             (lower_case(type) == "text/html" ||
+              lower_case(type) == "text/plain" ))
     {
       id->send_result(([ "data":do_rewrite(data),
-			 "type":type,
-			 "extra_heads":h,
-			 "error":code ]) );
+                         "type":type,
+                         "extra_heads":h,
+                         "error":code ]) );
     }
     else
     {
       id->send_result(([ "data":data,
-			 "type":type,
-			 "extra_heads":h,
-			 "error":code ]) );
+                         "type":type,
+                         "extra_heads":h,
+                         "error":code ]) );
     }
     destruct();
     return;
@@ -474,9 +474,9 @@ class Relay
 #endif
       NOCACHE();
       id->send_result(
-	Roxen.http_low_answer(Protocols.HTTP.HTTP_GW_TIMEOUT,
-			      "504 Gateway Timeout: "
-			      "Connection to remote HTTP host failed."));
+        Roxen.http_low_answer(Protocols.HTTP.HTTP_GW_TIMEOUT,
+                              "504 Gateway Timeout: "
+                              "Connection to remote HTTP host failed."));
       destruct();
       return;
     }
@@ -493,12 +493,12 @@ class Relay
     if( options->stream )
     {
       Stdio.sendfile( ({ request_data }), 0, 0, 0, 0, fd,
-		      lambda(int q) {
+                      lambda(int q) {
 #ifdef RELAY_DEBUG
-			werror("RELAY: Request sent OK\n");
+                        werror("RELAY: Request sent OK\n");
 #endif
-			Stdio.sendfile( 0, fd, 0, 0, 0, id->my_fd );
-		      } );
+                        Stdio.sendfile( 0, fd, 0, 0, 0, id->my_fd );
+                      } );
       destruct();
     }
     else
@@ -562,9 +562,9 @@ class Relay
     // Kludge for bug 3127.
     if (linux) {
       if( fd->connect( host, port ) )
-	connected( 1, host, port, use_ssl );
+        connected( 1, host, port, use_ssl );
       else
-	connected( 0, host, port, use_ssl );
+        connected( 0, host, port, use_ssl );
       return;
     }
 
@@ -606,10 +606,10 @@ class Relayer
     if (array(string) split = r->split( file ) )
     {
       if (use_utf8)
-	for (int i = sizeof (split); i--;)
-	  if (stringp (split[i]))
-	    // Catch errors in case the split broke apart a utf8 sequence.
-	    catch (split[i] = utf8_to_string (split[i]));
+        for (int i = sizeof (split); i--;)
+          if (stringp (split[i]))
+            // Catch errors in case the split broke apart a utf8 sequence.
+            catch (split[i] = utf8_to_string (split[i]));
 
       stats[ pattern ]++;
       Relay( id, do_replace( split ), options );
@@ -646,47 +646,47 @@ void create( Configuration c )
             "[LAST ]LOCATION location CALL url-prefix [rxml] [trimheaders] [raw] [utf8] [cache] [stream] [rewrite]\n"
             "[LAST ]MATCH regexp CALL url [rxml] [trimheaders] [raw] [utf8] [cache] [stream] [rewrite] [pcre] [simple]\n"
             "</pre> \\1 to \\9 will be replaced with submatches from the "
-	    "regexp.</p><p>"
+            "regexp.</p><p>"
 
-	    "Rxml, trimheaders etc. are flags. If <b>rxml</b> is specified, "
-	    "the result of the relay will be RXML-parsed. Trimheaders and raw "
-	    "are mutually exclusive. If <b>trimheaders</b> is present, only "
-	    "the most essential headers are sent to the remote server "
-	    "(actually, no headers at all right now), if <b>raw</b> is "
-	    "specified, the request is sent to the remote server exactly as it "
-	    "arrived to Roxen, not even the Host: header is changed.  If "
-	    "<b>utf8</b> is specified the request is utf-8 encoded before it "
-	    "is sent to the remote server. If <b>pcre</b> is specified, "
+            "Rxml, trimheaders etc. are flags. If <b>rxml</b> is specified, "
+            "the result of the relay will be RXML-parsed. Trimheaders and raw "
+            "are mutually exclusive. If <b>trimheaders</b> is present, only "
+            "the most essential headers are sent to the remote server "
+            "(actually, no headers at all right now), if <b>raw</b> is "
+            "specified, the request is sent to the remote server exactly as it "
+            "arrived to Roxen, not even the Host: header is changed.  If "
+            "<b>utf8</b> is specified the request is utf-8 encoded before it "
+            "is sent to the remote server. If <b>pcre</b> is specified, "
       "the PCRE Regexp engine will be used for mathing. "
       "This will be default in the next major release. "
       "Specify <b>simple</b> to keep using simple Regexps after upgrade.</p><p>"
 
-	    "Cache and stream alter the sending of data to the client. If "
-	    "<b>cache</b> is specified, the data can end up in the roxen "
-	    "data cache, if <b>stream</b> is specified, the data is streamed "
-	    "directly from the server to the client. This disables logging, "
-	    "headers will be exactly those sent by the remote server, and this "
-	    "only works for http clients. Less memory is used, however.</p><p>"
+            "Cache and stream alter the sending of data to the client. If "
+            "<b>cache</b> is specified, the data can end up in the roxen "
+            "data cache, if <b>stream</b> is specified, the data is streamed "
+            "directly from the server to the client. This disables logging, "
+            "headers will be exactly those sent by the remote server, and this "
+            "only works for http clients. Less memory is used, however.</p><p>"
 
-	    "For <b>EXTENSION</b> and <b>LOCATION</b>, the URL path+query "
-	    "components (<b>location</b> part trimmed off) is appended to the "
-	    "<b>url-prefix</b> specified; no replacing is done.</p><p>"
+            "For <b>EXTENSION</b> and <b>LOCATION</b>, the URL path+query "
+            "components (<b>location</b> part trimmed off) is appended to the "
+            "<b>url-prefix</b> specified; no replacing is done.</p><p>"
 
-	    "Note that /login.xml is a submatch in itself, it will match all paths containing /login.xml, "
-	    "since /login.xml will be translated to /login.xml(.*) and therefore "
-	    "will match /login.xml, /foo/login.xml, /bar/foo/login.xml and /login.xml?x=3"
-	    "Changing the pattern to ^/login.xml will make it only match /login.xml and anything "
-	    "after /login.xml - e.g. /login.xml?x=2&amp;y=34.</p><p>"
+            "Note that /login.xml is a submatch in itself, it will match all paths containing /login.xml, "
+            "since /login.xml will be translated to /login.xml(.*) and therefore "
+            "will match /login.xml, /foo/login.xml, /bar/foo/login.xml and /login.xml?x=3"
+            "Changing the pattern to ^/login.xml will make it only match /login.xml and anything "
+            "after /login.xml - e.g. /login.xml?x=2&amp;y=34.</p><p>"
 
             "If <b>LAST</b> is specified, the match is only tried if Roxen "
             "fails to find a file (a 404 error). If <b>rewrite</b> is "
-	    "specified, redirects and file contents are rewritten if possible, "
-	    "so that links and images point to the correct place.</p><p>"
+            "specified, redirects and file contents are rewritten if possible, "
+            "so that links and images point to the correct place.</p><p>"
 
-	    "Example:\n"
-	    "<pre>\n"
-	    "LOCATION /&lt;path&gt;/ CALL http://&lt;domain&gt;/&lt;path&gt;/\n"
- 	    "</pre></p>");
+            "Example:\n"
+            "<pre>\n"
+            "LOCATION /&lt;path&gt;/ CALL http://&lt;domain&gt;/&lt;path&gt;/\n"
+            "</pre></p>");
     defvar("pre-rxml", "",
            "Header-RXML", TYPE_TEXT,
            "Included before the page contents for redirectpatterns with "

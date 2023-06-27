@@ -351,12 +351,12 @@ int main(int argc, array(string) argv)
 
   // Test get_next().
   foreach(({
-	    ({ ({ 0, 2, 1, 6, 3, 0, }),
-	       // Disabled.
+            ({ ({ 0, 2, 1, 6, 3, 0, }),
+               // Disabled.
                ({ 0, -1, -1 }),
-	    }),
-	    ({ ({ 1, 2, 1, 6, 3, 0, }),
-	       // Every other hour.
+            }),
+            ({ ({ 1, 2, 1, 6, 3, 0, }),
+               // Every other hour.
                // UTC: 2022-06-22T14:11:43 (Wed)  ==>  2022-06-22T16:11:43 (Wed)
                // CET: 2022-06-22T16:11:43 (Wed)  ==>  2022-06-22T18:11:43 (Wed)
                ({ 1655907103, 1655914303, 1655914303 }),
@@ -368,9 +368,9 @@ int main(int argc, array(string) argv)
                // UTC: 2022-10-31T00:00:00 (Sun)  ==>  2022-10-31T02:00:00 (Sun)
                // CET: 2022-10-31T02:00:00 (Sun)  ==>  2022-10-31T03:00:00 (Sun)
                ({ 1667174400, 1667181600, 1667181600 }),
-	    }),
-	    ({ ({ 2, 2, 1, 6, 3, 0, }),
-	       // Every Friday at 03:00.
+            }),
+            ({ ({ 2, 2, 1, 6, 3, 0, }),
+               // Every Friday at 03:00.
                // UTC: 2022-06-22T14:11:43 (Wed)  ==>  2022-06-24T03:00:00 (Fri)
                // CET: 2022-06-22T16:11:43 (Wed)  ==>  2022-06-24T03:00:00 (Fri)
                ({ 1655907103, 1656039600, 1656032400 }),
@@ -395,9 +395,9 @@ int main(int argc, array(string) argv)
                // UTC: 2022-06-24T14:11:43 (Fri)  ==>  2022-07-01T03:00:00 (Fri)
                // CET: 2022-06-24T16:11:43 (Fri)  ==>  2022-07-01T03:00:00 (Fri)
                ({ 1656079903, 1656644400, 1656637200 }),
-	    }),
-	    ({ ({ 2, 2, 1, 6, 3, 45, }),
-	       // Every Friday at 03:45.
+            }),
+            ({ ({ 2, 2, 1, 6, 3, 45, }),
+               // Every Friday at 03:45.
                // UTC: 2022-06-22T14:11:43 (Wed)  ==>  2022-06-24T03:45:00 (Fri)
                // CET: 2022-06-22T16:11:43 (Wed)  ==>  2022-06-24T03:45:00 (Fri)
                ({ 1655907103, 1656042300, 1656035100 }),
@@ -422,7 +422,7 @@ int main(int argc, array(string) argv)
                // UTC: 2022-06-24T14:11:43 (Fri)  ==>  2022-07-01T03:45:00 (Fri)
                // CET: 2022-06-24T16:11:43 (Fri)  ==>  2022-07-01T03:45:00 (Fri)
                ({ 1656079903, 1656647100, 1656639900 }),
-	    }),
+            }),
             ({ ({ 2, 2, 1, 1, 2, 0, }),
                // Every Sunday at 02:00.
                // Transition to DST:
@@ -480,8 +480,8 @@ int main(int argc, array(string) argv)
                // CET: 2022-10-30T02:00:00 (Sun)  ==>  2022-10-31T02:00:00 (Mon)
                ({ 1667088000, 1667095200, 1667178000 }),
             }),
-	    ({ ({ 2, 1, 1, 0, 3, 0 }),	// PI-172 adjusted from 02:00 to 03:00
-	       // Every day at 03:00.
+            ({ ({ 2, 1, 1, 0, 3, 0 }),	// PI-172 adjusted from 02:00 to 03:00
+               // Every day at 03:00.
                // UTC: 2022-06-22T14:11:43 (Wed)  ==>  2022-06-23T03:00:00 (Thu)
                // CET: 2022-06-22T16:11:43 (Wed)  ==>  2022-06-23T03:00:00 (Thu)
                ({ 1655907103, 1655953200, 1655946000 }),
@@ -523,15 +523,15 @@ int main(int argc, array(string) argv)
                // UTC: 2022-10-30T00:00:00 (Sun)  ==>  2022-10-30T03:00:00 (Sun)
                // CET: 2022-10-30T02:00:00 (Sun)  ==>  2022-10-30T03:00:00 (Sun)
                ({ 1667088000, 1667098800, 1667095200 }),
-	    }),
-	  }), array(array(int)) test) {
+            }),
+          }), array(array(int)) test) {
     val = test[0];
     while(1) {
       foreach(test[1..], [int when, int expected_utc, int expected_cet]) {
         use_utc = 1;
-	int got = get_next(when);
+        int got = get_next(when);
         if (got != expected_utc) {
-	  failures++;
+          failures++;
           werror("Test failed for ({ %s }) (UTC)\n"
                  "%s\n"
                  "When:     %s (%d)\n"
@@ -559,14 +559,14 @@ int main(int argc, array(string) argv)
                  fmt_time(when), when,
                  fmt_time(expected_cet), expected_cet,
                  fmt_time(got), got);
-	} else {
-	  successes++;
-	}
+        } else {
+          successes++;
+        }
       }
       if ((sizeof(val) > 5) && !val[5]) {
-	// Redo in compat mode.
-	val = val[..4];
-	continue;
+        // Redo in compat mode.
+        val = val[..4];
+        continue;
       }
       break;
     }
@@ -744,7 +744,7 @@ private mapping next_day(mapping from, int day)
 }
 
 private mapping next_or_same_time(mapping from, int hour, int minute,
-				  void|int delta)
+                                  void|int delta)
 {
   if (from->hour == hour) {
     if (minute < 0) {
@@ -840,13 +840,13 @@ int get_next( int last )
     if (!last)
     {
       for(int i; i<vals[VALS_REPEAT_COUNT]; i++)
-	m = next_or_same_time( m, vals[VALS_HOUR], vals[VALS_MINUTE] );
+        m = next_or_same_time( m, vals[VALS_HOUR], vals[VALS_MINUTE] );
       return mktime(m);
     }
     else
     {
       for(int i; i<vals[VALS_REPEAT_COUNT]; i++)
-	m = next_time( m, vals[VALS_HOUR], vals[VALS_MINUTE] );
+        m = next_time( m, vals[VALS_HOUR], vals[VALS_MINUTE] );
       return mktime(m);
     }
   }
@@ -857,9 +857,9 @@ int get_next( int last )
     for(int i; i<vals[VALS_REPEAT_COUNT]; i++)
     {
       m = next_or_same_time( next_or_same_day( m, vals[VALS_DAY]-1,
-					       vals[VALS_HOUR]+1,
-					       vals[VALS_MINUTE] ),
-			     vals[VALS_HOUR], vals[VALS_MINUTE], 6*24*3600 );
+                                               vals[VALS_HOUR]+1,
+                                               vals[VALS_MINUTE] ),
+                             vals[VALS_HOUR], vals[VALS_MINUTE], 6*24*3600 );
     }
   }
   else
@@ -867,9 +867,9 @@ int get_next( int last )
     for(int i; i<vals[VALS_REPEAT_COUNT]; i++)
     {
       m = next_or_same_time( next_or_same_day( m, vals[VALS_DAY]-1,
-					       vals[VALS_HOUR],
-					       vals[VALS_MINUTE] ),
-			     vals[VALS_HOUR], vals[VALS_MINUTE], 6*24*3600 );
+                                               vals[VALS_HOUR],
+                                               vals[VALS_MINUTE] ),
+                             vals[VALS_HOUR], vals[VALS_MINUTE], 6*24*3600 );
     }
   }
   return mktime(m);
@@ -920,16 +920,16 @@ string render_form( RequestID id, void|mapping additional_args )
       ({ "6", LOCALE(490, "Friday") }),
       ({ "7", LOCALE(491, "Saturday") }) }), (string)vals[VALS_DAY]);
     inp3 = HTML.select(path()+"4",
-		       "000102030405060708091011121314151617181920212223"/2,
-		       sprintf("%02d", vals[VALS_HOUR]));
+                       "000102030405060708091011121314151617181920212223"/2,
+                       sprintf("%02d", vals[VALS_HOUR]));
     inp4 = HTML.select(path()+"5",
-		       "00153045"/2,
-		       sprintf("%02d", vals[VALS_MINUTE]));
+                       "00153045"/2,
+                       sprintf("%02d", vals[VALS_MINUTE]));
 
     res += "<tr valign='top'><td><input name='" + path() + "' value='2' type='radio' " +
       checked(0,2) + " /></td>\n<td>" +
       sprintf(LOCALE(492, "Every %s %s at %s:%s o'clock."),
-	      inp1, inp2, inp3, inp4) +
+              inp1, inp2, inp3, inp4) +
       "</td></tr>\n";
   }
 
@@ -951,27 +951,27 @@ string render_view( RequestID id, void|mapping additional_args )
       return sprintf(LOCALE(493, "Every %d hour."), res[VALS_REPEAT_HOURS]);
     case 2:
       string period = ({
-	LOCALE(484, "Day"),
-	LOCALE(485, "Sunday"),
-	LOCALE(486, "Monday"),
-	LOCALE(487, "Tuesday"),
-	LOCALE(488, "Wednesday"),
-	LOCALE(489, "Thursday"),
-	LOCALE(490, "Friday"),
-	LOCALE(491, "Saturday")
+        LOCALE(484, "Day"),
+        LOCALE(485, "Sunday"),
+        LOCALE(486, "Monday"),
+        LOCALE(487, "Tuesday"),
+        LOCALE(488, "Wednesday"),
+        LOCALE(489, "Thursday"),
+        LOCALE(490, "Friday"),
+        LOCALE(491, "Saturday")
       })[res[VALS_DAY]];
 
       return sprintf(LOCALE(494, "Every %d %s at %02d:%02d"),
-		     res[VALS_REPEAT_COUNT], period,
-		     res[VALS_HOUR], res[VALS_MINUTE]);
+                     res[VALS_REPEAT_COUNT], period,
+                     res[VALS_HOUR], res[VALS_MINUTE]);
     default:
       return LOCALE(495, "Error in stored value.");
   }
 }
 
 protected void create(array(int) default_value, void|int flags,
-		      void|LocaleString std_name, void|LocaleString std_doc,
-		      multiset(int(0..2))|void valid_sorts)
+                      void|LocaleString std_name, void|LocaleString std_doc,
+                      multiset(int(0..2))|void valid_sorts)
 {
   if (valid_sorts) {
     this_program::valid_sorts &= valid_sorts;

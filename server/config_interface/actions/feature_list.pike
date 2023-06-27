@@ -7,7 +7,7 @@ constant action = "debug_info";
 
 string name= LOCALE(6, "Pike module list");
 string doc = LOCALE(7,"Show information about which features and modules are "
-		    "available in the Pike this Roxen is using.");
+                    "available in the Pike this Roxen is using.");
 
 constant all_features = ({
   // only include modules that are sensible to use with Roxen
@@ -60,14 +60,14 @@ mixed parse(object id)
     ""+ LOCALE(238, "Features") +"\n"
     "<ul>\n"+
     String.implode_nicely( sort(map(features,nice_name)-({0})),
-			   LOCALE(79,"and"))
+                           LOCALE(79,"and"))
     + "</ul><br />\n";
 
   if (sizeof(disabled))
     res += ""+LOCALE(140,"Unavailable features")+"\n"
       "<ul>\n"
       + String.implode_nicely( sort(map(disabled,nice_name)-({0})),
-			       LOCALE(79,"and"))
+                               LOCALE(79,"and"))
       + "</ul><br />\n";
 
   return res+ "<p><cf-ok/></p>";

@@ -57,12 +57,12 @@ void ErrorMsg (int show_last_err, const TCHAR *fmt, ...)
   if (show_last_err && (ExitCode = GetLastError())) {
     LPVOID lpMsgBuf;
     FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		   NULL,
-		   ExitCode,
-		   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
-		   (LPTSTR) &lpMsgBuf,
-		   0,
-		   NULL );
+                   NULL,
+                   ExitCode,
+                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
+                   (LPTSTR) &lpMsgBuf,
+                   0,
+                   NULL );
     _sntprintf (buf + n, sizeof (buf) - n, "%s%s", sep, lpMsgBuf);
     LocalFree (lpMsgBuf);
   }
@@ -125,7 +125,7 @@ BOOL GetServerDir(char * path, int maxlen)
       return FALSE;
     }
     
-	int j;
+        int j;
     for (j = len - 1; j && isspace (path[j]); j--) {}
     len = j + 1;
     path[len] = 0;
@@ -294,6 +294,6 @@ int main(int argc, char* argv[])
     roxenMain = NULL;
   }
 
-	return 0;
+        return 0;
 }
 

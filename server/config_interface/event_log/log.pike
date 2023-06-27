@@ -16,10 +16,10 @@ string parse( RequestID id )
   sort(r2,report);
   for(int i=0;i<min(sizeof(report),1000);i++) 
      report[i] = describe_error(report[i], log[report[i]],
-				id->misc->cf_locale, 2);
+                                id->misc->cf_locale, 2);
   if( sizeof( report ) > 1000 )
     report[1000] =
       sprintf(LOCALE(467,"%d entries skipped. Present in log on disk"),
-	      sizeof( report )-1000 );
+              sizeof( report )-1000 );
   return "</dl>"+(sizeof(report)?(report[..1000]*""):LOCALE(250, "Empty"))+"<dl>";
 }

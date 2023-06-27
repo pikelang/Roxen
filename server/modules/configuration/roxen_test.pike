@@ -92,10 +92,10 @@ void testloop_abort_if_stuck()
 
   if ((time(1) - testloop_alive) > 60 * query("abs_timeout")) {
     report_debug("**** %s: ABS: Testloop has stalled!\n"
-		 "**** %s: ABS: %d seconds since last test.\n",
-		 ctime(time()) - "\n",
-		 ctime(time()) - "\n",
-		 time(1) - testloop_alive);
+                 "**** %s: ABS: %d seconds since last test.\n",
+                 ctime(time()) - "\n",
+                 ctime(time()) - "\n",
+                 time(1) - testloop_alive);
     roxen.engage_abs(0);
   }
 
@@ -110,35 +110,35 @@ void schedule_tests (int|float delay, function func, mixed... args)
 
   testloop_ping();
   call_out (roxen.handle, delay,
-	    lambda (function func, array args) {
-	      // Meddle with the busy_threads counter, so that this
-	      // handler thread running the tests doesn't delay the
-	      // background jobs.
-	      testloop_ping();
-	      roxen->busy_threads--;
-	      mixed err = catch (func (@args));
-	      roxen->busy_threads++;
-	      testloop_ping();
-	      if (err) throw (err);
-	    }, func, args);
+            lambda (function func, array args) {
+              // Meddle with the busy_threads counter, so that this
+              // handler thread running the tests doesn't delay the
+              // background jobs.
+              testloop_ping();
+              roxen->busy_threads--;
+              mixed err = catch (func (@args));
+              roxen->busy_threads++;
+              testloop_ping();
+              if (err) throw (err);
+            }, func, args);
 }
 
 void schedule_tests_single_thread (int|float delay,
-				   function func, mixed... args)
+                                   function func, mixed... args)
 {
   // The opposite of schedule_tests, i.e. tries to ensure no other
   // jobs gets executed in parallel by either background_run or a
   // roxen.handle.
   testloop_ping();
   call_out (lambda (function func, array args) {
-	      testloop_ping();
-	      roxen->hold_handler_threads();
-	      testloop_ping();
-	      mixed err = catch (func (@args));
-	      roxen->release_handler_threads (0);
-	      testloop_ping();
-	      if (err) throw (err);
-	    }, delay, func, args);
+              testloop_ping();
+              roxen->hold_handler_threads();
+              testloop_ping();
+              mixed err = catch (func (@args));
+              roxen->release_handler_threads (0);
+              testloop_ping();
+              if (err) throw (err);
+            }, delay, func, args);
 }
 
 // This function is used to hand over testsuite control
@@ -202,7 +202,7 @@ string rxml_error(RXML.Backtrace err, RXML.Type type) {
   //  werror(describe_backtrace(err)+"\n");
   if (ignore_errors && ignore_errors == err->type) return "";
   return sprintf("[Error (%s): %s]", err->type,
-		 String.trim_all_whites(replace(err->msg, "\n", "")));
+                 String.trim_all_whites(replace(err->msg, "\n", "")));
 }
 
 string canon_html(string in) {
@@ -212,7 +212,7 @@ string canon_html(string in) {
       string ut = p->tag_name();
       mapping args = p->tag_args();
       foreach (sort (map (indices (args), lower_case)), string arg)
-	ut += " " + arg + "='" + args[arg] + "'";
+        ut += " " + arg + "='" + args[arg] + "'";
       if(xml) ut+="/";
       return ({"<", ut, ">"});
     })->finish (in)->read();
@@ -252,7 +252,7 @@ void xml_dummy(Parser.HTML file_parser, mapping m, string c) {
 }
 
 void xml_use_module(Parser.HTML file_parser, mapping m, string c,
-		    mapping ignored, multiset(string) used_modules) {
+                    mapping ignored, multiset(string) used_modules) {
   conf->enable_module(c);
   used_modules[c] = 1;
   return;
@@ -301,7 +301,7 @@ private bool assert_modules(string modules, Parser.HTML file_parser)
 }
 
 void xml_test(Parser.HTML file_parser, mapping args, string c,
-	      mapping(int:RXML.PCode) p_code_cache) {
+              mapping(int:RXML.PCode) p_code_cache) {
 
   testloop_ping();
 
@@ -343,7 +343,7 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
     if( verbose )
     {
       report_debug( "%4d %-69s (pass %d)  ",
-		    ltests, sprintf("%O", test)[..68], pass);
+                    ltests, sprintf("%O", test)[..68], pass);
     }
   };
 
@@ -361,257 +361,257 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
   Parser.HTML parser =
     Roxen.get_xml_parser()->
     add_containers( ([ "rxml" :
-		       lambda(object t, mapping m, string c) {
-			 test_test( c );
-			 id->misc->stat = conf->stat_file ("/index.html", id);
-			 mixed err = catch {
-			   ignore_errors = m["ignore-errors"];
-			   if (pass == 1) {
-			     RXML.Type type = m->type ?
-			       RXML.t_type->encode (m->type) (
-				 conf->default_content_type->parser_prog) :
-			       conf->default_content_type;
-			     if (m->parser)
-			       type = type (RXML.t_parser->encode (m->parser));
-			     RXML.Parser parser = Roxen.get_rxml_parser (id, type, 1);
-			     parser->context->add_scope ("test", (["pass": 1]));
-			     parser->write_end (rxml);
+                       lambda(object t, mapping m, string c) {
+                         test_test( c );
+                         id->misc->stat = conf->stat_file ("/index.html", id);
+                         mixed err = catch {
+                           ignore_errors = m["ignore-errors"];
+                           if (pass == 1) {
+                             RXML.Type type = m->type ?
+                               RXML.t_type->encode (m->type) (
+                                 conf->default_content_type->parser_prog) :
+                               conf->default_content_type;
+                             if (m->parser)
+                               type = type (RXML.t_parser->encode (m->parser));
+                             RXML.Parser parser = Roxen.get_rxml_parser (id, type, 1);
+                             parser->context->add_scope ("test", (["pass": 1]));
+                             parser->write_end (rxml);
 #ifdef GAUGE_RXML_TESTS
-			     werror ("Line %d: Test took %.3f us (pass 1)\n",
-				     file_parser->at_line(),
-				     gauge (res = parser->eval()) * 1e9);
+                             werror ("Line %d: Test took %.3f us (pass 1)\n",
+                                     file_parser->at_line(),
+                                     gauge (res = parser->eval()) * 1e9);
 #else
-			     res = parser->eval();
+                             res = parser->eval();
 #endif
-			     parser->p_code->finish();
-			     p_code_cache[ltests] = parser->p_code;
-			   }
-			   else {
-			     RXML.Context ctx = p_code->new_context (id);
-			     ctx->add_scope ("test", (["pass": 2]));
+                             parser->p_code->finish();
+                             p_code_cache[ltests] = parser->p_code;
+                           }
+                           else {
+                             RXML.Context ctx = p_code->new_context (id);
+                             ctx->add_scope ("test", (["pass": 2]));
 #ifdef GAUGE_RXML_TESTS
-			     werror ("Line %d: Test took %.3f us (pass 2)\n",
-				     file_parser->at_line(),
-				     gauge (res = p_code->eval (ctx)) * 1e9);
+                             werror ("Line %d: Test took %.3f us (pass 2)\n",
+                                     file_parser->at_line(),
+                                     gauge (res = p_code->eval (ctx)) * 1e9);
 #else
-			     res = p_code->eval (ctx);
+                             res = p_code->eval (ctx);
 #endif
-			   }
-			 };
-			 ignore_errors = 0;
-			 if(err && (!m["ignore-errors"] ||
-				    !objectp (err) || !err->is_RXML_Backtrace ||
-				    err->type != m["ignore-errors"]))
-			 {
-			   // Use master()->describe_backtrace() to bypass
-			   // background_failure() and avoid counting this
-			   // error twice.
-			   test_error("Failed (backtrace): %s",
-				      master()->describe_backtrace(err));
-			   throw(1);
-			 }
+                           }
+                         };
+                         ignore_errors = 0;
+                         if(err && (!m["ignore-errors"] ||
+                                    !objectp (err) || !err->is_RXML_Backtrace ||
+                                    err->type != m["ignore-errors"]))
+                         {
+                           // Use master()->describe_backtrace() to bypass
+                           // background_failure() and avoid counting this
+                           // error twice.
+                           test_error("Failed (backtrace): %s",
+                                      master()->describe_backtrace(err));
+                           throw(1);
+                         }
 
-			 if(stringp (res) && !args["no-canon"])
-			   res = canon_html(res);
-			 else
-			   no_canon = 1;
-			 if (stringp (res) && !args["no-strip-ws"])
-			   res = strip_silly_ws (res);
-			 else
-			   no_strip_silly_ws = 1;
-		       },
+                         if(stringp (res) && !args["no-canon"])
+                           res = canon_html(res);
+                         else
+                           no_canon = 1;
+                         if (stringp (res) && !args["no-strip-ws"])
+                           res = strip_silly_ws (res);
+                         else
+                           no_strip_silly_ws = 1;
+                       },
 
-		       "test-in-file":
-		       lambda(object t, mapping m, string c) {
-			 test_test (tag_test_data = c);
-			 set_id_path (id, m->file);
+                       "test-in-file":
+                       lambda(object t, mapping m, string c) {
+                         test_test (tag_test_data = c);
+                         set_id_path (id, m->file);
 
-			 int logerrorsr = rxmlparser->query("logerrorsr");
-			 int quietr = rxmlparser->query("quietr");
-			 if(m["ignore-rxml-run-error"]) {
-			   rxmlparser->getvar("logerrorsr")->set(0);
-			   rxmlparser->getvar("quietr")->set(1);
-			 }
+                         int logerrorsr = rxmlparser->query("logerrorsr");
+                         int quietr = rxmlparser->query("quietr");
+                         if(m["ignore-rxml-run-error"]) {
+                           rxmlparser->getvar("logerrorsr")->set(0);
+                           rxmlparser->getvar("quietr")->set(1);
+                         }
 
-			 res = conf->try_get_file(m->file, id);
+                         res = conf->try_get_file(m->file, id);
 
-			 if(m["ignore-rxml-run-error"]) {
-			   rxmlparser->getvar("logerrorsr")->set(logerrorsr);
-			   rxmlparser->getvar("quietr")->set(quietr);
-			 }
+                         if(m["ignore-rxml-run-error"]) {
+                           rxmlparser->getvar("logerrorsr")->set(logerrorsr);
+                           rxmlparser->getvar("quietr")->set(quietr);
+                         }
 
-			 if(stringp (res) && !args["no-canon"])
-			   res = canon_html(res);
-			 else
-			   no_canon = 1;
-			 if (stringp (res) && !args["no-strip-ws"])
-			   res = strip_silly_ws (res);
-			 else
-			   no_strip_silly_ws = 1;
-		       },
+                         if(stringp (res) && !args["no-canon"])
+                           res = canon_html(res);
+                         else
+                           no_canon = 1;
+                         if (stringp (res) && !args["no-strip-ws"])
+                           res = strip_silly_ws (res);
+                         else
+                           no_strip_silly_ws = 1;
+                       },
 
-		       "result" :
-		       lambda(object t, mapping m, string c) {
-			 if (!m->pass || (int) m->pass == pass) {
-			   if (m->type || m->parser) {
-			     RXML.Type type = m->type ? RXML.t_type->encode (m->type) :
-			       conf->default_content_type (RXML.PNone);
-			     if (m->parser)
-			       type = type (RXML.t_parser->encode (m->parser));
-			     RXML.Parser parser = Roxen.get_rxml_parser (id, type, 1);
-			     parser->context->add_scope ("test", (["pass": pass]));
-			     parser->write_end (c);
-			     c = parser->eval();
-			   }
-			   if( !no_canon )
-			     c = canon_html( c );
-			   if (!no_strip_silly_ws)
-			     c = strip_silly_ws (c);
-			   if (m->not ? res == c : res != c) {
-			     test_error("Failed\n(got: %O\nexpected: %O)\n",
-					res, c);
-			     throw(1);
-			   }
-			   test_ok( );
-			 }
-		       },
+                       "result" :
+                       lambda(object t, mapping m, string c) {
+                         if (!m->pass || (int) m->pass == pass) {
+                           if (m->type || m->parser) {
+                             RXML.Type type = m->type ? RXML.t_type->encode (m->type) :
+                               conf->default_content_type (RXML.PNone);
+                             if (m->parser)
+                               type = type (RXML.t_parser->encode (m->parser));
+                             RXML.Parser parser = Roxen.get_rxml_parser (id, type, 1);
+                             parser->context->add_scope ("test", (["pass": pass]));
+                             parser->write_end (c);
+                             c = parser->eval();
+                           }
+                           if( !no_canon )
+                             c = canon_html( c );
+                           if (!no_strip_silly_ws)
+                             c = strip_silly_ws (c);
+                           if (m->not ? res == c : res != c) {
+                             test_error("Failed\n(got: %O\nexpected: %O)\n",
+                                        res, c);
+                             throw(1);
+                           }
+                           test_ok( );
+                         }
+                       },
 
-		       "glob" :
-		       lambda(object t, mapping m, string c) {
-			 if (m->not ? glob(c, res) : !glob(c, res)) {
-			   test_error("Failed\n(result %O\ndoes not match %O)\n",
-				      res, c);
-			   throw(1);
-			 }
-			 test_ok( );
-		       },
+                       "glob" :
+                       lambda(object t, mapping m, string c) {
+                         if (m->not ? glob(c, res) : !glob(c, res)) {
+                           test_error("Failed\n(result %O\ndoes not match %O)\n",
+                                      res, c);
+                           throw(1);
+                         }
+                         test_ok( );
+                       },
 
-		       "has-value" :
-		       lambda(object t, mapping m, string c) {
-			 if (m->not ? has_value(res, c) : !has_value(res, c)) {
-			   test_error("Failed\n(result %O\ndoes not contain %O)\n",
-				      res, c);
-			   throw(1);
-			 }
-			 test_ok( );
-		       },
+                       "has-value" :
+                       lambda(object t, mapping m, string c) {
+                         if (m->not ? has_value(res, c) : !has_value(res, c)) {
+                           test_error("Failed\n(result %O\ndoes not contain %O)\n",
+                                      res, c);
+                           throw(1);
+                         }
+                         test_ok( );
+                       },
 
-		       "regexp" :
-		       lambda(object t, mapping m, string c) {
-			 if (m->not ? Regexp(c)->match(res) :
-			     !Regexp(c)->match(res)) {
-			   test_error("Failed\n(result %O\ndoes not match %O)\n",
-				      res, c);
-			   throw(1);
-			 }
-			 test_ok( );
-		       },
+                       "regexp" :
+                       lambda(object t, mapping m, string c) {
+                         if (m->not ? Regexp(c)->match(res) :
+                             !Regexp(c)->match(res)) {
+                           test_error("Failed\n(result %O\ndoes not match %O)\n",
+                                      res, c);
+                           throw(1);
+                         }
+                         test_ok( );
+                       },
 
-		       "equal":
-		       lambda(object t, mapping m, string c) {
-			 c = "constant c = (" + c + ");";
-			 program p;
-			 if (mixed err = catch (p = compile_string (c))) {
-			   test_error ("Failed\n(failed to compile %O)\n", c);
-			   throw (1);
-			 }
-			 mixed v;
-			 if (mixed err = catch (v = p()->c)) {
-			   test_error ("Failed\n(failed to clone and "
-				       "get value from %O)\n", c);
-			   throw (1);
-			 }
-			 if (m->not ? equal (res, v) : !equal (res, v)) {
-			   test_error("Failed\n(result %O\ndoes not match %O)\n",
-				      res, v);
-			   throw(1);
-			 }
-			 test_ok( );
-		       },
+                       "equal":
+                       lambda(object t, mapping m, string c) {
+                         c = "constant c = (" + c + ");";
+                         program p;
+                         if (mixed err = catch (p = compile_string (c))) {
+                           test_error ("Failed\n(failed to compile %O)\n", c);
+                           throw (1);
+                         }
+                         mixed v;
+                         if (mixed err = catch (v = p()->c)) {
+                           test_error ("Failed\n(failed to clone and "
+                                       "get value from %O)\n", c);
+                           throw (1);
+                         }
+                         if (m->not ? equal (res, v) : !equal (res, v)) {
+                           test_error("Failed\n(result %O\ndoes not match %O)\n",
+                                      res, v);
+                           throw(1);
+                         }
+                         test_ok( );
+                       },
 
-		       "pike" :
-		       lambda(object t, mapping m, string c) {
-			 c = "string test(string res) {\n" + c + "\n}";
-			 object test;
-			 mixed err = catch {
-			   test = compile_string(c)();
-			 };
-			 if(err) {
-			   int i;
-			   c = map(c/"\n", lambda(string in) {
-					     return sprintf("%3d: %s", ++i, in); }) * "\n";
-			   // Use master()->describe_backtrace() to bypass
-			   // background_failure() and avoid counting this
-			   // error twice.
-			   test_error ("Error while compiling test\n%s\n\n"
-				       "Backtrace:\n%s\n",
-				       c, master()->describe_backtrace(err));
-			   throw(1);
-			 }
-			 string r = test->test(res);
-			 if(r) {
-			   test_error("Failed (%s)\n", r);
-			   throw(1);
-			 }
-			 test_ok( );
-		       },
+                       "pike" :
+                       lambda(object t, mapping m, string c) {
+                         c = "string test(string res) {\n" + c + "\n}";
+                         object test;
+                         mixed err = catch {
+                           test = compile_string(c)();
+                         };
+                         if(err) {
+                           int i;
+                           c = map(c/"\n", lambda(string in) {
+                                             return sprintf("%3d: %s", ++i, in); }) * "\n";
+                           // Use master()->describe_backtrace() to bypass
+                           // background_failure() and avoid counting this
+                           // error twice.
+                           test_error ("Error while compiling test\n%s\n\n"
+                                       "Backtrace:\n%s\n",
+                                       c, master()->describe_backtrace(err));
+                           throw(1);
+                         }
+                         string r = test->test(res);
+                         if(r) {
+                           test_error("Failed (%s)\n", r);
+                           throw(1);
+                         }
+                         test_ok( );
+                       },
     ]) )
 
     ->add_tags( ([ "add" : lambda(object t, mapping m, string c) {
-			     switch(m->what) {
-			       default:
-				 test_error("Could not <add> %O; "
-					    "unknown variable.\n", m->what);
-				 throw (1);
-				 break;
-			       case "prestate":
-				 id->prestate[m->name] = 1;
-				 break;
-			       case "variable":
-				 id->variables[m->name] = m->value || m->name;
-				 break;
-			       case "rvariable":
-				 if(m->split && m->value)
-				   id->real_variables[m->name] = m->value / m->split;
-				 else
-				   id->real_variables[m->name] = ({ m->value || m->name });
-				 break;
-			       case "cookies":
-				 id->cookies[m->name] = m->value || "";
-				 break;
-			       case "supports":
-				 id->supports[m->name] = 1;
-				 break;
-			       case "config":
-				 id->config[m->name] = 1;
-				 break;
-			       case "client_var":
-				 id->client_var[m->name] = m->value || "";
-				 break;
-			       case "misc":
-				 id->misc[m->name] = m->value || "1";
-				 break;
+                             switch(m->what) {
+                               default:
+                                 test_error("Could not <add> %O; "
+                                            "unknown variable.\n", m->what);
+                                 throw (1);
+                                 break;
+                               case "prestate":
+                                 id->prestate[m->name] = 1;
+                                 break;
+                               case "variable":
+                                 id->variables[m->name] = m->value || m->name;
+                                 break;
+                               case "rvariable":
+                                 if(m->split && m->value)
+                                   id->real_variables[m->name] = m->value / m->split;
+                                 else
+                                   id->real_variables[m->name] = ({ m->value || m->name });
+                                 break;
+                               case "cookies":
+                                 id->cookies[m->name] = m->value || "";
+                                 break;
+                               case "supports":
+                                 id->supports[m->name] = 1;
+                                 break;
+                               case "config":
+                                 id->config[m->name] = 1;
+                                 break;
+                               case "client_var":
+                                 id->client_var[m->name] = m->value || "";
+                                 break;
+                               case "misc":
+                                 id->misc[m->name] = m->value || "1";
+                                 break;
 //  			       case "define":
 //  				 id->misc->defines[m->name] = m->value || 1;
 //  				 break;
-			       case "not_query":
-				 id->not_query = m->value;
-				 break;
-			       case "query":
-				 id->query = m->value;
-				 break;
-			       case "request_header":
-			         id->request_headers[m->name] = m->value;
-				 break;
-			     }
-			   },
+                               case "not_query":
+                                 id->not_query = m->value;
+                                 break;
+                               case "query":
+                                 id->query = m->value;
+                                 break;
+                               case "request_header":
+                                 id->request_headers[m->name] = m->value;
+                                 break;
+                             }
+                           },
 
-		   "login" : lambda(Parser.HTML p, mapping m) {
-			       id->realauth = m->user + ":" + m->password;
-			       id->request_headers->authorization =
-				 "Basic " + MIME.encode_base64 (id->realauth, 1);
-			       conf->authenticate(id);
-			     },
+                   "login" : lambda(Parser.HTML p, mapping m) {
+                               id->realauth = m->user + ":" + m->password;
+                               id->request_headers->authorization =
+                                 "Basic " + MIME.encode_base64 (id->realauth, 1);
+                               conf->authenticate(id);
+                             },
     ]) );
 
   if( mixed error = catch(parser->finish(c)) ) {
@@ -619,7 +619,7 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
       // Use master()->describe_backtrace() to bypass background_failure() and
       // avoid counting this error twice.
       test_error ("Failed to parse test: " +
-		  master()->describe_backtrace (error));
+                  master()->describe_backtrace (error));
     fails++;
     lfails++;
   }
@@ -684,7 +684,7 @@ void xml_cache_control(Parser.HTML parser, mapping args)
     cm && cm->prefs[cache_name];
   if (!cm) {
     werror("Self tests: Warning: Cache manager for %O not found.\n",
-	   cache_name);
+           cache_name);
   }
   if (inhibit_eviction) {
     if (cm_prefs && cm_prefs->inhibit_eviction) return;
@@ -768,13 +768,13 @@ void run_xml_tests(string data) {
   int test_tags = 0;
 
   Roxen.get_xml_parser()->add_quote_tag ("!--", "", "--")
-			->add_tags ((["test": lambda () {test_tags++;}]))
-			->finish (data);
+                        ->add_tags ((["test": lambda () {test_tags++;}]))
+                        ->finish (data);
 
   if(test_tags != (ltests + lskipped))
     report_warning("Possibly XML error in testsuite - "
-		   "got %d test tags but did %d tests.\n",
-		   test_tags, ltests);
+                   "got %d test tags but did %d tests.\n",
+                   test_tags, ltests);
 
   if (testsuite_pass_1_ok) {
     // Go through them again, evaluation from the p-code this time.
@@ -801,8 +801,8 @@ void run_xml_tests(string data) {
   string fail_str = lfails ? ("failed on " + lfails) : "zero failures";
   report_debug("Did %d tests, %s, skipped %d%s.\n",
                ltests, fail_str, lskipped,
-	       bkgr_fails ?
-	       ", detected " + bkgr_fails + " background failures" : "");
+               bkgr_fails ?
+               ", detected " + bkgr_fails + " background failures" : "");
 
   if (bkgr_fails) {
     fails += bkgr_fails;
@@ -826,8 +826,8 @@ void run_pike_tests(object test, string path)
 
     string fail_str = fail ? ("failed on " + fail) : "zero failures";
     report_debug("Did %d tests, %s%s.\n", tsts, fail_str,
-		 bkgr_fails ?
-		 ", detected " + bkgr_fails + " background failures" : "");
+                 bkgr_fails ?
+                 ", detected " + bkgr_fails + " background failures" : "");
 
     if (bkgr_fails) {
       fails += bkgr_fails;
@@ -868,13 +868,13 @@ void continue_run_tests( )
       // handler threads disabled (see the single_thread constant in
       // pike_test_common.pike).
       Roxen.get_xml_parser()->add_quote_tag ("?single-thread",
-					     lambda() {single_thread = 1;},
-					     "?")
-			    ->finish (data);
+                                             lambda() {single_thread = 1;},
+                                             "?")
+                            ->finish (data);
       if (single_thread)
-	schedule_tests_single_thread (0, run_xml_tests, data);
+        schedule_tests_single_thread (0, run_xml_tests, data);
       else
-	schedule_tests (0, run_xml_tests, data);
+        schedule_tests (0, run_xml_tests, data);
       return;
     }
     else			// Pike test.
@@ -883,19 +883,19 @@ void continue_run_tests( )
       mixed error;
       tests++;
       if( error=catch( test=compile_file(file)( verbose ) ) ) {
-	// Use master()->describe_backtrace() to bypass background_failure()
-	// and avoid counting this error twice.
-	report_error("################ Failed to compile %s:\n%s", file,
-		     master()->describe_backtrace(error));
-	fails++;
+        // Use master()->describe_backtrace() to bypass background_failure()
+        // and avoid counting this error twice.
+        report_error("################ Failed to compile %s:\n%s", file,
+                     master()->describe_backtrace(error));
+        fails++;
       }
       else
       {
-	if (test->single_thread)
-	  schedule_tests_single_thread (0, run_pike_tests, test, file);
-	else
-	  schedule_tests (0, run_pike_tests,test,file);
-	return;
+        if (test->single_thread)
+          schedule_tests_single_thread (0, run_pike_tests, test, file);
+        else
+          schedule_tests (0, run_pike_tests,test,file);
+        return;
       }
     }
   }
@@ -909,13 +909,13 @@ void continue_run_tests( )
     // Note that e.g. the distmaker parses this string.
     string fail_str = fails ? ("failed on " + fails) : "zero failures";
     report_debug("\nDid a grand total of %d tests, %s.\n\n",
-		 tests, fail_str);
+                 tests, fail_str);
     roxen.restart(0, fails > 127 ? 127 : fails);
   }
   else
     foreach(roxen.configurations, Configuration config)
       if(config->call_provider("roxen_test", "do_continue", tests, fails))
-	return;
+        return;
 }
 
 void do_tests()
@@ -925,7 +925,7 @@ void do_tests()
     return;
   }
   report_debug("\nStarting roxen self test in %s\n",
-	       query("selftestdir"));
+               query("selftestdir"));
 
   array(string) tests_to_run =
     Getopt.find_option(roxen.argv, 0,({"tests"}),0,"" )/",";
@@ -947,7 +947,7 @@ void do_tests()
     }
     fails += sizeof(conf->failed_urls);
     report_error("\nAborting self tests in %s\n",
-		 query("selftestdir"));
+                 query("selftestdir"));
     schedule_tests (0, continue_run_tests);
     return;
   }
@@ -964,23 +964,23 @@ file_loop:
     {
       if( file!="CVS" && st->isdir )
       {
-	string dir = file+"/";
-	foreach( get_dir( dir ), string f )
-	  file_stack->push( dir+f );
+        string dir = file+"/";
+        foreach( get_dir( dir ), string f )
+          file_stack->push( dir+f );
       }
       else if( glob("*/RoxenTest_*", file ) && file[-1]!='~')
       {
-	foreach( tests_to_run; int i; string p ) {
-	  if( glob( "*/"+p+"*", file ) )
-	  {
-	    if (has_suffix (file, ".xml") || has_suffix (file, ".pike")) {
-	      test_files += ({file});
-	      matched_pos[file] = i;
-	    }
-	    continue file_loop;
-	  }
-	}
-	report_debug( "Skipped test %s\n", file);
+        foreach( tests_to_run; int i; string p ) {
+          if( glob( "*/"+p+"*", file ) )
+          {
+            if (has_suffix (file, ".xml") || has_suffix (file, ".pike")) {
+              test_files += ({file});
+              matched_pos[file] = i;
+            }
+            continue file_loop;
+          }
+        }
+        report_debug( "Skipped test %s\n", file);
       }
     }
   }
@@ -1036,54 +1036,54 @@ class TagEmitTESTER {
     switch(m->test) {
     case "6":
       return ({(["integer":  17,
-		 "float":    17.0,
-		 "string":   "foo",
-		 "array":    ({1, 2.0, "3"}),
-		 "multiset": (<1, 2.0, "3">),
-		 "mapping":  ([1: "one", 2.0: 2, "3": 3]),
-		 "object":   class {}(),
-		 "program":  class {},
-		 "zero_integer":   0,
-		 "zero_float":     0.0,
-		 "empty_string":   "",
-		 "empty_array":    ({}),
-		 "empty_multiset": (<>),
-		 "empty_mapping":  ([]),
-		 "zero_int_array": ({0}),
-		 "zero_float_array": ({0.0}),
-		 "empty_string_array": ({""}),
-		 "empty_array_array": ({({})}),
-	       ])});
+                 "float":    17.0,
+                 "string":   "foo",
+                 "array":    ({1, 2.0, "3"}),
+                 "multiset": (<1, 2.0, "3">),
+                 "mapping":  ([1: "one", 2.0: 2, "3": 3]),
+                 "object":   class {}(),
+                 "program":  class {},
+                 "zero_integer":   0,
+                 "zero_float":     0.0,
+                 "empty_string":   "",
+                 "empty_array":    ({}),
+                 "empty_multiset": (<>),
+                 "empty_mapping":  ([]),
+                 "zero_int_array": ({0}),
+                 "zero_float_array": ({0.0}),
+                 "empty_string_array": ({""}),
+                 "empty_array_array": ({({})}),
+               ])});
 
     case "5":
       return ({(["v": EntityVVal ("<&>"), "c": EntityCVal ("<&>")])});
 
     case "4":
       return ({
-	([ "a":"1", "b":EntityCVal("aa"), "c":EntityVVal("ca") ]),
-	([ "a":"2", "b":EntityCVal("ba"), "c":EntityVVal("cb") ]),
-	([ "a":"3", "b":EntityCVal("ab"), "c":EntityVVal("ba") ]),
+        ([ "a":"1", "b":EntityCVal("aa"), "c":EntityVVal("ca") ]),
+        ([ "a":"2", "b":EntityCVal("ba"), "c":EntityVVal("cb") ]),
+        ([ "a":"3", "b":EntityCVal("ab"), "c":EntityVVal("ba") ]),
       });
 
     case "3":
       return ({ (["data":"a"]),
-		(["data":RXML.nil]),
-		(["data":TestNull()]),
-		(["data":RXML.empty]),
-		(["data":EntityDyn()]),
-		(["data": Val.null]),
-	     });
+                (["data":RXML.nil]),
+                (["data":TestNull()]),
+                (["data":RXML.empty]),
+                (["data":EntityDyn()]),
+                (["data": Val.null]),
+             });
 
     case "2":
       return map( "aa,a,aa,a,bb,b,cc,c,aa,a,dd,d,ee,e,aa,a,a,a,aa"/",",
-		  lambda(string in) { return (["data":in]); } );
+                  lambda(string in) { return (["data":in]); } );
     case "1":
     default:
       return ({
-	([ "a":"kex",  "b":"foo",    "c":1, "d":"12foo",   "e":"-8",  "f": "0" ]),
-	([ "a":"kex",  "b":"boo",    "c":2, "d":"foo",     "e":"8",   "f": "-6.4" ]),
-	([ "a":"krut", "b":"gazonk", "c":3, "d":"5foo33a", "e":"11",  "f": "1e6" ]),
-	([ "a":"kox",                "c":4, "d":"5foo4a",  "e":"-11", "f": "0.23" ])
+        ([ "a":"kex",  "b":"foo",    "c":1, "d":"12foo",   "e":"-8",  "f": "0" ]),
+        ([ "a":"kex",  "b":"boo",    "c":2, "d":"foo",     "e":"8",   "f": "-6.4" ]),
+        ([ "a":"krut", "b":"gazonk", "c":3, "d":"5foo33a", "e":"11",  "f": "1e6" ]),
+        ([ "a":"kox",                "c":4, "d":"5foo4a",  "e":"-11", "f": "0.23" ])
       });
     }
   }
@@ -1186,13 +1186,13 @@ class TagTestMisc
     array do_return()
     {
       if (args->set)
-	RXML_CONTEXT->set_misc (args->set, content);
+        RXML_CONTEXT->set_misc (args->set, content);
       else if (args["set-prog"])
-	RXML_CONTEXT->set_misc (TagTestMisc, content);
+        RXML_CONTEXT->set_misc (TagTestMisc, content);
       else if (args->get)
-	return ({RXML_CONTEXT->misc[args->get]});
+        return ({RXML_CONTEXT->misc[args->get]});
       else if (args["get-prog"])
-	return ({RXML_CONTEXT->misc[TagTestMisc]});
+        return ({RXML_CONTEXT->misc[TagTestMisc]});
       return ({});
     }
   }

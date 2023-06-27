@@ -19,34 +19,34 @@ public class JarUtil {
         File dir = new File(sdir);
         FileInputStream j = new FileInputStream(jar);
 
-	ZipInputStream zis = new ZipInputStream(j);
-	ZipEntry ze = null;
+        ZipInputStream zis = new ZipInputStream(j);
+        ZipEntry ze = null;
         
-	while ((ze = zis.getNextEntry()) != null) {
+        while ((ze = zis.getNextEntry()) != null) {
             try {
-		File f = new File(dir, ze.getName());
+                File f = new File(dir, ze.getName());
                 
-		if (ze.isDirectory()) {
-		    f.mkdirs(); 
-		} else {
-		    byte[] buffer = new byte[1024];
-		    int length = 0;
-		    FileOutputStream fos = new FileOutputStream(f);
-		    
-		    while ((length = zis.read(buffer)) >= 0) {
-			fos.write(buffer, 0, length);
-		    }
-		    
-		    fos.close();
-		}
-	    } catch( FileNotFoundException ex ) {
-		// XXX replace with a call to log() when available
-		System.out.println("JarUtil: FileNotFoundException: " +  ze.getName() + " / " + jar );
+                if (ze.isDirectory()) {
+                    f.mkdirs(); 
+                } else {
+                    byte[] buffer = new byte[1024];
+                    int length = 0;
+                    FileOutputStream fos = new FileOutputStream(f);
+                    
+                    while ((length = zis.read(buffer)) >= 0) {
+                        fos.write(buffer, 0, length);
+                    }
+                    
+                    fos.close();
+                }
+            } catch( FileNotFoundException ex ) {
+                // XXX replace with a call to log() when available
+                System.out.println("JarUtil: FileNotFoundException: " +  ze.getName() + " / " + jar );
                 throw(ex);
-	    }
-	}
+            }
+        }
 
-	zis.close();
+        zis.close();
     }
 
     /** Expand a WAR/Jar file into a directory.
@@ -59,44 +59,44 @@ public class JarUtil {
         throws MalformedURLException, IOException
     {
         String s = trim(jar.getFile(), "/");
-	URL u = new URL(s);
-	ZipInputStream zis = new ZipInputStream(u.openStream());
-	ZipEntry ze = null;
+        URL u = new URL(s);
+        ZipInputStream zis = new ZipInputStream(u.openStream());
+        ZipEntry ze = null;
         
-	while ((ze = zis.getNextEntry()) != null) {
+        while ((ze = zis.getNextEntry()) != null) {
             try {
-		File f = new File(dir, ze.getName());
+                File f = new File(dir, ze.getName());
                 
-		if (ze.isDirectory()) {
-		    f.mkdirs(); 
-		} else {
-		    byte[] buffer = new byte[1024];
-		    int length = 0;
-		    FileOutputStream fos = new FileOutputStream(f);
-		    
-		    while ((length = zis.read(buffer)) >= 0) {
-			fos.write(buffer, 0, length);
-		    }
-		    
-		    fos.close();
-		}
-	    } catch( FileNotFoundException ex ) {
-		// XXX replace with a call to log() when available
-		System.out.println("JarUtil: FileNotFoundException: " +  ze.getName() + " / " + s );
-	    }
-	}
+                if (ze.isDirectory()) {
+                    f.mkdirs(); 
+                } else {
+                    byte[] buffer = new byte[1024];
+                    int length = 0;
+                    FileOutputStream fos = new FileOutputStream(f);
+                    
+                    while ((length = zis.read(buffer)) >= 0) {
+                        fos.write(buffer, 0, length);
+                    }
+                    
+                    fos.close();
+                }
+            } catch( FileNotFoundException ex ) {
+                // XXX replace with a call to log() when available
+                System.out.println("JarUtil: FileNotFoundException: " +  ze.getName() + " / " + s );
+            }
+        }
 
-	zis.close();
+        zis.close();
     }
 
     private static String trim(String s, String t) {
-	if (s.startsWith(t)) {
-	    s = s.substring(t.length());
-	}
-	
-	if (s.endsWith(t)) {
-	    s = s.substring(0, s.length() - t.length());
-	}
+        if (s.startsWith(t)) {
+            s = s.substring(t.length());
+        }
+        
+        if (s.endsWith(t)) {
+            s = s.substring(0, s.length() - t.length());
+        }
         
         return s;
     }

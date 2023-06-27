@@ -24,10 +24,10 @@ void check_fpath( string d )
         {
           write( "     Skipping "+d+". Add it manually if you want it.\n");
           write( "     Please note that huge font-dirs can add to roxens "
-		 "boot-time.\n");
+                 "boot-time.\n");
           return;
         }
-	write("      Usable font found in '"+d+"'.\n");
+        write("      Usable font found in '"+d+"'.\n");
         font_dirs += ({ d });
         return;
       }

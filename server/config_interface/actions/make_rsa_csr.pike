@@ -16,7 +16,7 @@ import Standards.ASN1.Types;
 constant action = "SSL";
 
 string name= LOCALE(121, 
-		    "Generate a Certificate Signing Request and an RSA key...");
+                    "Generate a Certificate Signing Request and an RSA key...");
 string doc = doc_string_start + doc_string_end_a;
 
 
@@ -38,35 +38,35 @@ mixed page_1(mixed id, mixed mc)
 mixed page_2(object id, object mc)
 {
   return ("<p><font size='+1'>"+LOCALE(122,"Certificate Attributes?")+
-	  "</font></p>\n<blockquote>"+
-	  LOCALE(123, "An X.509 certificate associates a Common Name "
-	  "with a public key. Some certificate authorities support "
-	  "\"extended certificates\", defined in PKCS#10. An extended "
-	  "certificate may contain other useful information associated "
-	  "with the name and the key. This information is signed by the "
-	  "CA, together with the X.509 certificate.")+
-	  "</blockquote>\n<br />"
+          "</font></p>\n<blockquote>"+
+          LOCALE(123, "An X.509 certificate associates a Common Name "
+          "with a public key. Some certificate authorities support "
+          "\"extended certificates\", defined in PKCS#10. An extended "
+          "certificate may contain other useful information associated "
+          "with the name and the key. This information is signed by the "
+          "CA, together with the X.509 certificate.")+
+          "</blockquote>\n<br />"
 
-	  "<b>"+LOCALE(124, "Email address")+"</b><br />"
+          "<b>"+LOCALE(124, "Email address")+"</b><br />"
           "<var name='emailAddress' type='string'/>"
-	  "<blockquote>"+
-	  LOCALE(125,"An email address to be embedded in the certificate.")+
-	  "</blockquote>\n");
+          "<blockquote>"+
+          LOCALE(125,"An email address to be embedded in the certificate.")+
+          "</blockquote>\n");
 }
 
 mixed page_3(object id, object mc)
 {
   return ("<p><font size='+1'>"+LOCALE(126,"CSR Attributes?")+"</font></p>"+
-	  LOCALE(127,"At last, you can add attributes to the Certificate "
-		 "Signing Request, which are meant for the Certificate "
-		 "Authority and are not included in the issued Certificate.")+
+          LOCALE(127,"At last, you can add attributes to the Certificate "
+                 "Signing Request, which are meant for the Certificate "
+                 "Authority and are not included in the issued Certificate.")+
           "<p><b>"+LOCALE(128,"Challenge Password")+"</b><br />"
-	  "<var name='challengePassword' type='password'/>"
-	  "<blockquote>"+
-	  LOCALE(129,"This password could be used if you ever want to revoke "
-		 "your certificate. Of course, this depends on the policy of "
-		 "your Certificate Authority.")+
-	  "</blockquote></p>\n");
+          "<var name='challengePassword' type='password'/>"
+          "<blockquote>"+
+          LOCALE(129,"This password could be used if you ever want to revoke "
+                 "your certificate. Of course, this depends on the policy of "
+                 "your Certificate Authority.")+
+          "</blockquote></p>\n");
 }
 
 mixed page_4(object id, object mc)
@@ -103,8 +103,8 @@ mixed page_4(object id, object mc)
   /* Remove initial and trailing whitespace, and ignore
    * empty attributes. */
   foreach( ({ "countryName", "stateOrProvinceName", "localityName",
-	      "organizationName", "organizationUnitName", "commonName",
-	      "emailAddress", "challengePassword"}), attr)
+              "organizationName", "organizationUnitName", "commonName",
+              "emailAddress", "challengePassword"}), attr)
   {
     if (id->variables[attr]) {
       attrs[attr] = global.String.trim_whites(id->variables[attr]);
@@ -116,8 +116,8 @@ mixed page_4(object id, object mc)
   if (attrs->countryName)
     name += ({([ "countryName": PrintableString(attrs->countryName) ])});
   foreach( ({ "stateOrProvinceName",
-	      "localityName", "organizationName",
-	      "organizationUnitName", "commonName" }), attr)
+              "localityName", "organizationName",
+              "organizationUnitName", "commonName" }), attr)
   {
     if (attrs[attr])
       name += ({ ([ attr : UTF8String(attrs[attr]) ]) });
@@ -141,16 +141,16 @@ mixed page_4(object id, object mc)
   if (sizeof(cert_attrs))
     csr_attrs->extendedCertificateAttributes =
       ({ Certificate.Attributes(Identifiers.attribute_ids,
-				cert_attrs) });
+                                cert_attrs) });
 
   object csr = CSR.build_csr(rsa,
-			     Certificate.build_distinguished_name(name),
-			     csr_attrs);
+                             Certificate.build_distinguished_name(name),
+                             csr_attrs);
 
   string re;
   string res=("<font size='+2'>"+
-	      LOCALE(130,"This is your Certificate Signing Request.")+
-	      "</font><textarea name='csr' cols='80' rows='12'>");
+              LOCALE(130,"This is your Certificate Signing Request.")+
+              "</font><textarea name='csr' cols='80' rows='12'>");
 
   res += (re=Tools.PEM.simple_build_pem("CERTIFICATE REQUEST", csr->get_der()));
 
@@ -166,19 +166,19 @@ mapping wizard_done( object id )
   object privs = Privs("Storing CSR request.");
   mv( id->variables->save_in_file, id->variables->save_in_file+"~" );
   string fname = combine_path(getcwd(), "../local",
-			      id->variables->save_in_file);
+                              id->variables->save_in_file);
   Stdio.File file = open(fname, "cwx", 0644);
   privs = 0;
   if (!file || file->write(id->variables->csr) != sizeof(id->variables->csr)) {
     return http_string_answer(sprintf("<p>" +
-				      LOCALE(155, "Failed to write CSR to %s.")+
-				      "</p>\n<p><cf-cancel href='?class=&form.class;&amp;&usr.set-wiz-id;'/></p>\n",
-				      fname));
+                                      LOCALE(155, "Failed to write CSR to %s.")+
+                                      "</p>\n<p><cf-cancel href='?class=&form.class;&amp;&usr.set-wiz-id;'/></p>\n",
+                                      fname));
   }
   return http_string_answer( sprintf("<p>"+LOCALE(131,"Wrote %d bytes to %s.")+
-				     "</p>\n<p><cf-ok/></p>\n",
-				     strlen(id->variables->csr),
-				     fname));
+                                     "</p>\n<p><cf-ok/></p>\n",
+                                     strlen(id->variables->csr),
+                                     fname));
 }
 
 

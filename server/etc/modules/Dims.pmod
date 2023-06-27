@@ -10,7 +10,7 @@ class dims {
     if (!res && stringp(data)) {
       // Let's check if data is a path (backwards compat with 8.0 Image.Dims).
       if (Stdio.File file = Stdio.File(data)) {
-	res = ::get(file);
+        res = ::get(file);
       }
     }
 

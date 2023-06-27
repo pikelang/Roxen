@@ -24,7 +24,7 @@ array(array(string)) cmd_log = ({});
 string format_cmd_log()
 {
   return sprintf("Command channel log:\n"
-		 "%{%s %O\n%}", cmd_log);  
+                 "%{%s %O\n%}", cmd_log);  
 }
 
 array get_host_port( string url )
@@ -110,13 +110,13 @@ void got_data(mixed ignored, string data)
     }
     if (line[0] != ' ' && line[3] == ' ') {
       array(array(string|function(string, string:void))) cbs =
-	got_code + ({ ({ "", bad_code }) });
+        got_code + ({ ({ "", bad_code }) });
       got_code = ({});
       foreach(cbs, array(string|function(string,string:void)) cb_info) {
-	if (has_prefix(code, cb_info[0])) {
-	  cb_info[1](code, line_block);
-	  break;
-	}
+        if (has_prefix(code, cb_info[0])) {
+          cb_info[1](code, line_block);
+          break;
+        }
       }
       code = 0;
       line_block = "";
@@ -282,7 +282,7 @@ class do_passive_read
   {
     send(ipv6?"EPSV":"PASV");
     got_code = ({ ({ "227", parse_pasv }),
-		  ({ "229", parse_epsv }), });
+                  ({ "229", parse_epsv }), });
   }
 
   void parse_epsv(string code, string lines)
@@ -291,13 +291,13 @@ class do_passive_read
     array(string) segments;
     int portno;
     if ((sscanf(lines, "229%*s(%s)", port_info) != 2) ||
-	!sizeof(port_info) ||
-	(sizeof(segments = port_info/port_info[0..0]) != 5) ||
-	!(portno = (int)segments[3])) {
+        !sizeof(port_info) ||
+        (sizeof(segments = port_info/port_info[0..0]) != 5) ||
+        !(portno = (int)segments[3])) {
       werror(format_cmd_log());
       werror("Failed to parse EPSV code: %O\n"
-	     "Parsed result: %s\n",
-	     lines, port_info);
+             "Parsed result: %s\n",
+             lines, port_info);
       exit(BADARG);
     }
     fd = Stdio.File();
@@ -316,16 +316,16 @@ class do_passive_read
     if (sizeof(port_info) != 6) {
       werror(format_cmd_log());
       werror("Failed to parse PASV code: %O\n"
-	     "Parsed result: { %{%O, %}}\n",
-	     lines, port_info);
+             "Parsed result: { %{%O, %}}\n",
+             lines, port_info);
       exit(BADARG);
     }
     fd = Stdio.File();
     if (!fd->connect(((array(string))port_info[..3])*".",
-		     port_info[4]*256+port_info[5])) {
+                     port_info[4]*256+port_info[5])) {
       werror(format_cmd_log());
       werror("Failed to connect to passive port: %s\n",
-	     ((array(string))port_info)*",");
+             ((array(string))port_info)*",");
       exit(NOCONN);
     }
     fd->set_nonblocking(got_data, 0, data_closed);
@@ -339,7 +339,7 @@ void send_user(string code, string lines)
 {
   send("USER ftp");
   got_code = ({ ({ "331", send_pass }),
-		({ "230", send_help }) });
+                ({ "230", send_help }) });
 }
 
 void send_pass(string code, string lines)
@@ -402,12 +402,12 @@ void got_passive_list(string list)
   if (list != active_list) {
     werror(format_cmd_log());
     werror("Active and passive LIST differ:\n"
-	   "Active LIST:\n"
-	   "%s\n"
-	   "Passive LIST:\n"
-	   "%s\n",
-	   active_list,
-	   list);
+           "Active LIST:\n"
+           "%s\n"
+           "Passive LIST:\n"
+           "%s\n",
+           active_list,
+           list);
     exit(BADDATA);
   }
   send_type_i();
@@ -429,8 +429,8 @@ void got_active_10k(string raw_10k)
   if (raw_10k != ("\0"*10240)) {
     werror(format_cmd_log());
     werror("Failed to retrieve (active) 10k.\n"
-	   "len: %d\n",
-	   sizeof(raw_10k));
+           "len: %d\n",
+           sizeof(raw_10k));
     exit(BADDATA);
   }
   send_passive_retr_10k();
@@ -446,8 +446,8 @@ void got_passive_10k(string raw_10k)
   if (raw_10k != ("\0"*10240)) {
     werror(format_cmd_log());
     werror("Failed to retrieve (passive) 10k.\n"
-	   "len: %d\n",
-	   sizeof(raw_10k));
+           "len: %d\n",
+           sizeof(raw_10k));
     exit(BADDATA);
   }
   send_quit("200", "");

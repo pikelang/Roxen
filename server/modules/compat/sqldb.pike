@@ -13,11 +13,11 @@ constant module_doc  =
 void create()
 {
   defvar("table", "", "Database URL table",
-	 TYPE_TEXT_FIELD|VAR_INITIAL,
-	 "The table with database URLs in the format:"
-	 "<pre>name\tURL</pre>"
-	 "The database URL is specified as "
-	 "<tt>driver://user name:password@host:port/database</tt>.\n");
+         TYPE_TEXT_FIELD|VAR_INITIAL,
+         "The table with database URLs in the format:"
+         "<pre>name\tURL</pre>"
+         "The database URL is specified as "
+         "<tt>driver://user name:password@host:port/database</tt>.\n");
 }
 
 mapping(string:string) parse_table(string tab)
@@ -57,30 +57,30 @@ string status()
       Sql.Sql o;
 
       mixed err = catch {
-	o = Sql.Sql(sql_urls[s]);
+        o = Sql.Sql(sql_urls[s]);
       };
 
       if (o) {
-	res += sprintf("<tr><td>Connection OK</td>"
-		       "<td><tt>%s</tt></td>"
-		       "<td>%s server on %s"
-		       "</td></tr>\n",
-		       Roxen.html_encode_string (s),
-		       Roxen.html_encode_string (o->server_info()),
-		       Roxen.html_encode_string (o->host_info()));
+        res += sprintf("<tr><td>Connection OK</td>"
+                       "<td><tt>%s</tt></td>"
+                       "<td>%s server on %s"
+                       "</td></tr>\n",
+                       Roxen.html_encode_string (s),
+                       Roxen.html_encode_string (o->server_info()),
+                       Roxen.html_encode_string (o->host_info()));
       } else if (err) {
-	res += sprintf("<tr><td><font color='&usr.warncolor;'>"
-		       "Connection failed</font>: %s</td>"
-		       "<td><tt>%s</tt></td><td>&nbsp;</td></tr>\n",
-		       Roxen.html_encode_string (describe_error (err)),
-		       Roxen.html_encode_string (s));
+        res += sprintf("<tr><td><font color='&usr.warncolor;'>"
+                       "Connection failed</font>: %s</td>"
+                       "<td><tt>%s</tt></td><td>&nbsp;</td></tr>\n",
+                       Roxen.html_encode_string (describe_error (err)),
+                       Roxen.html_encode_string (s));
       }
       else
-	res += sprintf("<tr><td><font color='&usr.warncolor;'>"
-		       "Connection failed</font>: "
-		       "Unknown reason</td>"
-		       "<td><tt>%s</tt></td><td>&nbsp;</td></tr>\n",
-		       Roxen.html_encode_string (s));
+        res += sprintf("<tr><td><font color='&usr.warncolor;'>"
+                       "Connection failed</font>: "
+                       "Unknown reason</td>"
+                       "<td><tt>%s</tt></td><td>&nbsp;</td></tr>\n",
+                       Roxen.html_encode_string (s));
     }
     res += "</table>\n";
   } else {

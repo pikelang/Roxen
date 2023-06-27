@@ -38,14 +38,14 @@ function checkPopupCoord(x, y, popup_index)
   } else {
     if(p.inside) {
       if(!p.hide_timer) {
-	p.hide_timer = setTimeout("clearToPopup('"+parent+"')", p.properties.hide_delay);
+        p.hide_timer = setTimeout("clearToPopup('"+parent+"')", p.properties.hide_delay);
       }
       if(popups.length == 0)
-	releaseMouseEvent();
+        releaseMouseEvent();
     } else if (p.never_inside && p.properties.init_hide_delay > 0) {
-	clearHideTimers(popup_index);
-	p.hide_timer = setTimeout("clearToPopup('"+parent+"')", 
-				  p.properties.init_hide_delay);
+        clearHideTimers(popup_index);
+        p.hide_timer = setTimeout("clearToPopup('"+parent+"')", 
+                                  p.properties.init_hide_delay);
     }
     checkPopupCoord(x, y, popup_index - 1);
   }
@@ -73,8 +73,8 @@ function addPopup(name, properties)
 {
   popups[popups.length] =
     new PopupInfo(name, getObjectLeft(name),
-		  getObjectTop(name) - get_vertical_offset(),
-		  getObjectWidth(name), getObjectHeight(name), properties);
+                  getObjectTop(name) - get_vertical_offset(),
+                  getObjectWidth(name), getObjectHeight(name), properties);
 }
 
 
@@ -164,12 +164,12 @@ function showPopup(e, name, parent, properties)
     if(popups[popups.length - 1].name == name) {
       // The correct popup is allredy there.
       if(properties.hide_2nd_click) {
-	clearToPopup(parent);
+        clearToPopup(parent);
       }
       else if(popups[popups.length - 1].hide_timer) {
-	clearTimeout(popups[popups.length - 1].hide_timer);
-	popups[popups.length - 1].hide_timer = null;
-	popups[popups.length - 1].inside = false;
+        clearTimeout(popups[popups.length - 1].hide_timer);
+        popups[popups.length - 1].hide_timer = null;
+        popups[popups.length - 1].inside = false;
       }
       return retFromEvent(false);
     }
@@ -181,7 +181,7 @@ function showPopup(e, name, parent, properties)
   if (!popup) { alert("Unknown object: " + name); return 0; }
   var parentCoord = (parent != "none"? new PopupCoord(parent): 0);
   var pos = new properties.LayerPosition(new TriggerCoord(e, parentCoord, name),
-					 parentCoord, properties);
+                                         parentCoord, properties);
   shiftTo(popup, pos.x, pos.y + get_vertical_offset());
   if (!properties.dont_bound_popup)
       boundPopup(popup);
@@ -189,7 +189,7 @@ function showPopup(e, name, parent, properties)
   show(popup);
   if(properties.init_hide_delay > 0) {
       popups[popups.length-1].hide_timer = setTimeout("clearToPopup('"+parent+"')", 
-						    properties.init_hide_delay);
+                                                    properties.init_hide_delay);
   }
   captureMouseEvent(popupMove);
   return retFromEvent(false);

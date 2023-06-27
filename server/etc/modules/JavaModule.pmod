@@ -144,7 +144,7 @@ protected void check_exception(object|void e)
     object btto = bt_get_type(e);
     object msgo = throwable_get_message(e);
     throw(RXML.Backtrace(btto && (string)btto, msgo && (string)msgo,
-			 0, bt[..sizeof(bt)-2]));
+                         0, bt[..sizeof(bt)-2]));
   } else {
     object sw = stringwriter_class->alloc();
     stringwriter_init->call_nonvirtual(sw);
@@ -300,11 +300,11 @@ class ModuleWrapper
     protected object caller;
 
     string call(string tag, mapping args, string contents, RequestID id,
-		RXML.Frame frame)
+                RXML.Frame frame)
     {
       object res = _tag_called(caller, tag, objify(args),
-			       stringp(contents)&&contents, make_reqid(id),
-			       make_frame(frame));
+                               stringp(contents)&&contents, make_reqid(id),
+                               make_frame(frame));
       check_exception();
       return res && (string)res;
     }
@@ -347,9 +347,9 @@ class ModuleWrapper
   {
     object r = reqid_class->alloc();
     reqid_init->call_nonvirtual(r, make_conf(id->conf), id->raw_url, id->prot,
-				id->clientprot, id->method, id->realfile,
-				id->virtfile, id->raw, id->query,
-				id->not_query, id->remoteaddr, id->time);
+                                id->clientprot, id->method, id->realfile,
+                                id->virtfile, id->raw, id->query,
+                                id->not_query, id->remoteaddr, id->time);
     check_exception();
     jotoid[r] = id;
     return r;
@@ -386,19 +386,19 @@ class ModuleWrapper
        (s = _data->get(r))) {
       rr->data = (string)s;
       if(r->is_instance_of(response4_class)) {
-	      rr->data = id->conf->parse_rxml(rr->data, id, 0);
-	      rr->stat = id->misc->defines[" _stat"];
-	      rr->error = id->misc->defines[" _error"] || rr->error;
-	      rr->rettext = id->misc->defines[" _rettext"];
-	      if(id->misc->defines[" _extra_heads"])
-	        if(rr->extra_heads)
-	          rr->extra_heads |= id->misc->defines[" _extra_heads"];	
-	        else
-	          rr->extra_heads = id->misc->defines[" _extra_heads"];	
-	      m_delete(rr, "len");
+              rr->data = id->conf->parse_rxml(rr->data, id, 0);
+              rr->stat = id->misc->defines[" _stat"];
+              rr->error = id->misc->defines[" _error"] || rr->error;
+              rr->rettext = id->misc->defines[" _rettext"];
+              if(id->misc->defines[" _extra_heads"])
+                if(rr->extra_heads)
+                  rr->extra_heads |= id->misc->defines[" _extra_heads"];	
+                else
+                  rr->extra_heads = id->misc->defines[" _extra_heads"];	
+              m_delete(rr, "len");
       }
     } else if(r->is_instance_of(response3_class) &&
-	    (s = _file->get(r)))
+            (s = _file->get(r)))
       rr->file = ReaderFile(s);
     check_exception();
     return rr;
@@ -489,12 +489,12 @@ class ModuleWrapper
     check_exception();
     if(callers)
       foreach(values(callers), object c)
-	if(c) {
-	  object name = simpletagcaller_query_name(c);
-	  int flags = simpletagcaller_query_flags(c);
-	  check_exception();
-	  res[(string)name] = ({ flags, JavaSimpleTag(c)->call });
-	}
+        if(c) {
+          object name = simpletagcaller_query_name(c);
+          int flags = simpletagcaller_query_flags(c);
+          check_exception();
+          res[(string)name] = ({ flags, JavaSimpleTag(c)->call });
+        }
     return res;
   }
 
@@ -578,7 +578,7 @@ class ModuleWrapper
         string modname = get_module_name(path);
         object e = jvm->exception_occurred();
         if (e) {
-	  jvm->exception_clear();
+          jvm->exception_clear();
           if (e->is_instance_of(filenotfound_class)) {
             error("Unable to find JAR file");
           } else if (e->is_instance_of(ioexception_class)) {
@@ -616,19 +616,19 @@ class ModuleWrapper
     object a = _getdefvars(modobj);
     check_exception();
     return map(values(a), lambda(object dv) {
-			    array v = allocate(5);
-			    v[0] = stringify(dv_var->get(dv));
-			    check_exception();
-			    v[1] = valify(dv_value->get(dv));
-			    check_exception();
-			    v[2] = stringify(dv_name->get(dv));
-			    check_exception();
-			    v[3] = dv_type->get(dv);
-			    check_exception();
-			    v[4] = stringify(dv_doc->get(dv));
-			    check_exception();
-			    return v;
-			  });
+                            array v = allocate(5);
+                            v[0] = stringify(dv_var->get(dv));
+                            check_exception();
+                            v[1] = valify(dv_value->get(dv));
+                            check_exception();
+                            v[2] = stringify(dv_name->get(dv));
+                            check_exception();
+                            v[3] = dv_type->get(dv);
+                            check_exception();
+                            v[4] = stringify(dv_doc->get(dv));
+                            check_exception();
+                            return v;
+                          });
   }
 
   protected void init(object conf)
@@ -673,10 +673,10 @@ protected object native_queryconfinternal(object conf, object mod)
 }
 
 protected string native_do_output_tag(object args, object var_arr,
-				   object contents, object id)
+                                   object contents, object id)
 {
   return do_output_tag(valify(args), valify(var_arr),
-		       contents && (string)contents, jotoid[id]);
+                       contents && (string)contents, jotoid[id]);
 }
 
 protected string native_parse_rxml(object what, object id)

@@ -20,15 +20,15 @@ once in a while) by:
 constant module_type = MODULE_FILTER | MODULE_TAG;
 
 constant default_process_tags = ([ "link"   : "href",
-				   "script" : "src" ]);
+                                   "script" : "src" ]);
 
 void create(Configuration conf)
 {
   defvar("process_tags",
          Variable.Mapping(default_process_tags, 0,
-			  "Tags to process",
-			  "The tags to process and the corresponding "
-			  "attribute that refers an external resource."));
+                          "Tags to process",
+                          "The tags to process and the corresponding "
+                          "attribute that refers an external resource."));
 }
 
 class TagServeStaticResources
@@ -66,7 +66,7 @@ class TagServeStaticResources
 
           return ({ Roxen.make_tag(tag_name, args, has_suffix (tag_name, "/"),
                                    1) });
-	}
+        }
       }
       return 0;
     };

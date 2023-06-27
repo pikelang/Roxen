@@ -36,14 +36,14 @@ LocaleString module_name = LOCALE(1,"RefDoc for MODULE_USERDB");
 
 LocaleString module_doc =
   LOCALE(2,"This module does nothing special, it implements a simple "
-	 "user database with the passwords and usernames in a string list, "
-	 "but its inlined documentation gets imported into the Roxen "
-	 "programmer manual.\n"
-	 "You definetely don't want to use this module in your virtual "
-	 "servers, since anybody with access to your admin interface or "
-	 "server configuration file automatically gains access to all "
-	 "your passwords. For a budding roxen programmer, the module "
-	 "however does show the basics of making a user database module.");
+         "user database with the passwords and usernames in a string list, "
+         "but its inlined documentation gets imported into the Roxen "
+         "programmer manual.\n"
+         "You definetely don't want to use this module in your virtual "
+         "servers, since anybody with access to your admin interface or "
+         "server configuration file automatically gains access to all "
+         "your passwords. For a budding roxen programmer, the module "
+         "however does show the basics of making a user database module.");
 
 
 protected void create()
@@ -52,9 +52,9 @@ protected void create()
 // could easily be extended to include more information.
 {
   defvar("users", Variable.StringList(({}), VAR_INITIAL,
-				      LOCALE(3,"Users and Passwords"),
-				      LOCALE(4,"A list of username:password "
-					     "pairs.")));
+                                      LOCALE(3,"Users and Passwords"),
+                                      LOCALE(4,"A list of username:password "
+                                             "pairs.")));
 }
 
 

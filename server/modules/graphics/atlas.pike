@@ -30,18 +30,18 @@ void stop()
 void create()
 {
   defvar("ext", Variable.Flag(0, VAR_MORE,
-			      "Append format to generated images",
-			      "Append the image format (.gif, .png, "
-			      ".jpg, etc) to the generated images. "
-			      "This is not necessary, but might seem "
-			      "nicer, especially to people who try "
-			      "to mirror your site."));
+                              "Append format to generated images",
+                              "Append the image format (.gif, .png, "
+                              ".jpg, etc) to the generated images. "
+                              "This is not necessary, but might seem "
+                              "nicer, especially to people who try "
+                              "to mirror your site."));
 }
 
 string status() {
   array s=the_cache->status();
   return sprintf("<b>Images in cache:</b> %d images<br />\n<b>Cache size:</b> %s",
-		 s[0]/2, Roxen.sizetostring(s[1]));
+                 s[0]/2, Roxen.sizetostring(s[1]));
 }
 
 mapping(string:function) query_action_buttons() {
@@ -69,10 +69,10 @@ class TagEmitAtlas {
   array get_dataset( mapping args, RequestID id ) {
     if (args->list=="countries")
       return map(Map.Earth()->countries(),
-		 lambda(string c) { return (["name":c]); });
+                 lambda(string c) { return (["name":c]); });
     if (args->list=="regions")
       return map(Map.Earth()->regions(),
-		 lambda(string c) { return (["name":c]); });
+                 lambda(string c) { return (["name":c]); });
     RXML.parse_error("No valid list argument given\n");
   }
 }
@@ -92,19 +92,19 @@ class TagAtlas {
       inherit RXML.Frame;
 
       array do_enter(RequestID id) {
-	string name;
+        string name;
 
-	if(args->domain)
-	  name = Map.domain_to_country[lower_case(args->domain)];
-	else if(args->name)
-	  name = Map.aliases[lower_case(args->name)] || args->name;
+        if(args->domain)
+          name = Map.domain_to_country[lower_case(args->domain)];
+        else if(args->name)
+          name = Map.aliases[lower_case(args->name)] || args->name;
 
-	if(!name)
-	  parse_error("No domain or name attribute given.\n");
+        if(!name)
+          parse_error("No domain or name attribute given.\n");
 
-	id->misc->atlas_state->color[lower_case(name)] =
-	  parse_color(args->color || "#e0c080");
-	return 0;
+        id->misc->atlas_state->color[lower_case(name)] =
+          parse_color(args->color || "#e0c080");
+        return 0;
       }
     }
   }
@@ -118,34 +118,34 @@ class TagAtlas {
       inherit RXML.Frame;
 
       array do_enter(RequestID id) {
-	if(args->x[-1]=='%')
-	  args->x = (float)args->x/100.0 * args->width;
-	args->x = (int)args->x;
-	if(args->y[-1]=='%')
-	  args->y = (float)args->y/100.0 * args->height;
-	args->y = (int)args->y;
+        if(args->x[-1]=='%')
+          args->x = (float)args->x/100.0 * args->width;
+        args->x = (int)args->x;
+        if(args->y[-1]=='%')
+          args->y = (float)args->y/100.0 * args->height;
+        args->y = (int)args->y;
 
-	if(args->x<0 || args->y<0 ||
-	   args->x>=id->misc->atlas_state->width ||
-	   args->y>=id->misc->atlas_state->height)
-	  return 0;
+        if(args->x<0 || args->y<0 ||
+           args->x>=id->misc->atlas_state->width ||
+           args->y>=id->misc->atlas_state->height)
+          return 0;
 
-	args->size = (int)args->size || 4;
-	if(args->color)
-	  args->color = parse_color(args->color);
-	else
-	  args->color = ({ 255, 0, 0 });
+        args->size = (int)args->size || 4;
+        if(args->color)
+          args->color = parse_color(args->color);
+        else
+          args->color = ({ 255, 0, 0 });
 
-	id->misc->atlas_state->markers += ({ args });
-	return 0;
+        id->misc->atlas_state->markers += ({ args });
+        return 0;
       }
     }
   }
 
   // This tag set can probably be shared, but I don't know for sure. /mast
   RXML.TagSet internal = RXML.TagSet(this_module(), "atlas",
-				     ({ TagCountry(),
-					TagMarker() }) );
+                                     ({ TagCountry(),
+                                        TagMarker() }) );
 
   class Frame {
     inherit RXML.Frame;
@@ -155,18 +155,18 @@ class TagAtlas {
       // Construct a state which will be used
       // in order to draw the image later on.
       mapping state = ([ "color":([]),
-			 "markers":({}) ]);
+                         "markers":({}) ]);
 
       // Calculate size of image.  Preserve
       // image aspect ratio if possible.
       int w, h;
       if(args->width) {
-	sscanf(args->width, "%d", w);
-	h = (int)(w*3.0/5.0);
-	sscanf(args->height||"", "%d", h);
+        sscanf(args->width, "%d", w);
+        h = (int)(w*3.0/5.0);
+        sscanf(args->height||"", "%d", h);
       } else {
-	sscanf(args->height||"300", "%d", h);
-	w = (int)(h*5.0/3.0);
+        sscanf(args->height||"300", "%d", h);
+        w = (int)(h*5.0/3.0);
       }
       state->width = w;
       state->height = h;
@@ -175,8 +175,8 @@ class TagAtlas {
       args->height = (string)h;
 
       foreach( imgargs, string arg)
-	if(args[arg])
-	  state[arg]=m_delete(args, arg);
+        if(args[arg])
+          state[arg]=m_delete(args, arg);
 
       id->misc->atlas_state = state;
     }
@@ -187,12 +187,12 @@ class TagAtlas {
       int timeout = Roxen.timeout_dequantifier(args);
 
       args->src = query_absolute_internal_location(id) +
-	the_cache->store(state, id, timeout);
+        the_cache->store(state, id, timeout);
       if(do_ext)
-	args->src += ".gif";
+        args->src += ".gif";
 
       if(!args->alt)
-	args->alt = state->region || "The World";
+        args->alt = state->region || "The World";
 
       result = RXML.t_xml->format_tag("img", args);
       return 0;
@@ -208,9 +208,9 @@ Image.Image generate_image(mapping state, RequestID id)
   state->fgcolor = parse_color(state->fgcolor || "#ffffff");
 
   mapping opt = ([ "color_fu":
-		   lambda(string name) {
-		     return state->color[name] || state->fgcolor;
-		   } ]);
+                   lambda(string name) {
+                     return state->color[name] || state->fgcolor;
+                   } ]);
 
 
   if(state->bgcolor)
@@ -384,7 +384,7 @@ Add this number of seconds to the time this entry is valid.</p>
 <attr name='size' value='number' default='4'><p>
   The size of the marker.</p>
 </attr>"
-	       ])
+               ])
   }),
 ]);
 #endif

@@ -25,11 +25,11 @@ string normalize_path( string path )
     int ss = (<'/','\\'>)[ path[0] ];
     path = combine_path_unix( "/",
 #if defined(__NT__) || defined(STRIP_BSLASH)
-			      replace(path,"\\","/")
+                              replace(path,"\\","/")
 #else
-			      path
+                              path
 #endif
-			    );
+                            );
     if( !ss )
       return path[1..];
   }
@@ -38,9 +38,9 @@ string normalize_path( string path )
 
 
 string|array(int|string) read( string file,
-			       RequestID id,
-			       int|void cache,
-			       int last_mtime )
+                               RequestID id,
+                               int|void cache,
+                               int last_mtime )
 //! Read the contents of the specified file, if it exists. If it does
 //! not exist, 0 is returned.
 //!
@@ -61,7 +61,7 @@ string|array(int|string) read( string file,
     {
       Stat s = stat( file, id );
       if( s && ((mtime=s[ST_MTIME])<=last_mtime) )
-	return ({ mtime, res });
+        return ({ mtime, res });
       res=0;
     }
   }
@@ -86,10 +86,10 @@ protected cache.CacheManagerPrefs extend_entries_cache_prefs =
   cache.CacheManagerPrefs(1);
 
 array(string) find_above_read( string above,
-			       string name,
-			       RequestID id,
-			       string|void cache,
-			       int|void do_mtime )
+                               string name,
+                               RequestID id,
+                               string|void cache,
+                               int|void do_mtime )
 //! Operates more or less like a combination of find_above and read. 
 //! The major difference from calling read( find_above( above, name,
 //! id, cache ), id, cache, last_mtime ) is that this function does
@@ -124,9 +124,9 @@ array(string) find_above_read( string above,
     {
       if( arrayp( data ) )
       {
-	if (do_mtime)
-	  cache_set( ck, above, data[0]||-1 );
-	return ({ above, data[1], data[0] });
+        if (do_mtime)
+          cache_set( ck, above, data[0]||-1 );
+        return ({ above, data[1], data[0] });
       }
       return ({ above, data, 0 });
     }
@@ -149,7 +149,7 @@ string find_above_dir(string above, RequestID id, string|void cache)
 
   if (cache) {
     res = cache_lookup((ck = cache + "-dir:" +
-			id->conf->name + ":" + id->misc->host), above);
+                        id->conf->name + ":" + id->misc->host), above);
     if (res) return res;
   }
 
@@ -161,10 +161,10 @@ string find_above_dir(string above, RequestID id, string|void cache)
     string dir = "/" + segments[..m] * "/";
     if (Stat st = stat(dir, id)) {
       if (st->isdir) {
-	l = m;
+        l = m;
       } else {
-	l = m-1;
-	break;
+        l = m-1;
+        break;
       }
     } else {
       h = m;
@@ -178,9 +178,9 @@ string find_above_dir(string above, RequestID id, string|void cache)
 }
 
 string find_above( string above,
-		   string name,
-		   RequestID id,
-		   string|void cache )
+                   string name,
+                   RequestID id,
+                   string|void cache )
 //! Return the filename of the first file named @[name] _above_ the
 //! specified path. As an example, if @[name] is .htaccess, and above
 //! is /a/b/c/d/foo.html, this function will search for
@@ -204,7 +204,7 @@ string find_above( string above,
   above = find_above_dir(above, id, cache);
 
   if( cache )  res = cache_lookup( (ck=cache+":"+
-				    id->conf->name+":"+id->misc->host), above );
+                                    id->conf->name+":"+id->misc->host), above );
 
   if (res) return stringp (res) ? res : 0;
 

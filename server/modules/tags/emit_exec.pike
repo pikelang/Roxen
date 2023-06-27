@@ -28,16 +28,16 @@ constant thread_safe = 1;
 constant module_type = MODULE_PARSER;
 LocaleString module_name = DLOCALE(0, "Tags: Exec emit plugin");
 LocaleString module_doc  = DLOCALE(0, "This module calls an external application and "
-				   "returns the result.");
+                                   "returns the result.");
 
 void create()
 {
   defvar("applications",
-	 Variable.Mapping( ([]), 0,
-			   "Available Applications",
-			   "This list specifies which applications are available "
-			   "for the emit#exec plugin. Specify a short name for "
-			   "each application and the search path in the Value column."));
+         Variable.Mapping( ([]), 0,
+                           "Available Applications",
+                           "This list specifies which applications are available "
+                           "for the emit#exec plugin. Specify a short name for "
+                           "each application and the search path in the Value column."));
 }
 
 class TagEmitExec {
@@ -84,8 +84,8 @@ class TagEmitExec {
     void timeout_cb()
     {
       report_warning("emit#exec: Timeout (%O s), "
-		     "killing application [\"%s\"]\n",
-		     timeout, command_args*"\", \"");
+                     "killing application [\"%s\"]\n",
+                     timeout, command_args*"\", \"");
       p->kill(9);
       done = 1;
     }
@@ -94,14 +94,14 @@ class TagEmitExec {
     {
       Stdio.File stdout = Stdio.File();
       mixed err = catch {
-	  dwerror("emit#exec: Starting application [\"%s\"]\n",
-		  command_args*"\", \"");
-	  p = Process.Process(command_args, ([
-				"stdout": stdout->pipe(),
-			      ]));
-	};
+          dwerror("emit#exec: Starting application [\"%s\"]\n",
+                  command_args*"\", \"");
+          p = Process.Process(command_args, ([
+                                "stdout": stdout->pipe(),
+                              ]));
+        };
       if(err)
-	RXML.run_error(describe_error(err));
+        RXML.run_error(describe_error(err));
 
       Pike.Backend backend = backends->get();
       if (!backend) backends->set (backend = Pike.Backend());
@@ -111,9 +111,9 @@ class TagEmitExec {
       stdout->set_nonblocking(got_data, 0, con_closed);
 
       while (!done) {
-	dwerror("emit#exec: Running Backend\n");
-	float runtime = backend(0);
-	dwerror("emit#exec: Backend run %O seconds\n", runtime);
+        dwerror("emit#exec: Running Backend\n");
+        float runtime = backend(0);
+        dwerror("emit#exec: Backend run %O seconds\n", runtime);
       };
 
       ret_value = p->wait();
@@ -124,7 +124,7 @@ class TagEmitExec {
     protected string _sprintf (int flag)
     {
       return flag == 'O' &&
-	sprintf ("TagEmitExec.ExecProcess(%{%s %})", command_args);
+        sprintf ("TagEmitExec.ExecProcess(%{%s %})", command_args);
     }
   }
 
@@ -136,9 +136,9 @@ class TagEmitExec {
       mapping variables = ([]);
       foreach(s/(args["entity-split"] || "\n"), string entity)
       {
-	array a = entity/value_split;
-	if(sizeof(a) > 1)
-	  variables[a[0]] = a[1..] * value_split;
+        array a = entity/value_split;
+        if(sizeof(a) > 1)
+          variables[a[0]] = a[1..] * value_split;
       }
       return variables;
     };
@@ -160,7 +160,7 @@ class TagEmitExec {
     string loop_split = args["loop-split"];
     if(loop_split)
       foreach(ep->res/loop_split, string row)
-	rows += ({ get_entities(row) });
+        rows += ({ get_entities(row) });
     else
       rows += ({ get_entities(ep->res) });
       

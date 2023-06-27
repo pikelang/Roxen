@@ -53,7 +53,7 @@ mapping(string:RXML.Type) req_arg_types = ([]);
 mapping(string:RXML.Type) opt_arg_types = ([]);
 
 mapping(string:mixed) decode_args (mapping(string:array(string)) real_vars,
-				   void|Roxen.OnError on_error)
+                                   void|Roxen.OnError on_error)
 //! Decodes and type checks the arguments according to
 //! @[req_arg_types] and @[opt_arg_types]. The @[real_vars] mapping
 //! contains the unparsed @[RequestID.real_variables] style arguments
@@ -68,7 +68,7 @@ mapping(string:mixed) decode_args (mapping(string:array(string)) real_vars,
       //  Non-AFS variables may still be present in multiple copies, e.g.
       //  when posting a form state.
       if (req_arg_types[var] || opt_arg_types[var])
-	return Roxen.raise_err(on_error, "Multiple %O variables found.\n", var);
+        return Roxen.raise_err(on_error, "Multiple %O variables found.\n", var);
     }
     args[var] = val[0];
   }
@@ -77,10 +77,10 @@ mapping(string:mixed) decode_args (mapping(string:array(string)) real_vars,
     mapping(string:mixed) decoded;
     if (mixed err = catch (decoded = Standards.JSON.decode (json_arg)))
       return Roxen.raise_err (on_error, "Format error in __afs value: %s",
-			      describe_error (err));
+                              describe_error (err));
     if (!mappingp (decoded))
       return Roxen.raise_err (on_error, "Format error in __afs value: "
-			      "Contains a %t, expected mapping.\n", args);
+                              "Contains a %t, expected mapping.\n", args);
     // Let unencoded variables override, although there shouldn't be
     // any overlap.
     args = decoded + args;
@@ -90,9 +90,9 @@ mapping(string:mixed) decode_args (mapping(string:array(string)) real_vars,
   if (sizeof (req_types) < sizeof (req_arg_types)) {
     array(string) missing = sort (indices (req_arg_types - req_types));
     string err_msg = sprintf("Required " +
-			     (sizeof (missing) > 1 ?
-			      "arguments " + String.implode_nicely (missing) + " are" :
-			      "argument " + missing[0] + " is") + " missing.\n");
+                             (sizeof (missing) > 1 ?
+                              "arguments " + String.implode_nicely (missing) + " are" :
+                              "argument " + missing[0] + " is") + " missing.\n");
 #ifdef DEBUG_FS_ACTIONS
     werror(err_msg);
 #endif
@@ -103,11 +103,11 @@ mapping(string:mixed) decode_args (mapping(string:array(string)) real_vars,
   foreach (args; string arg; mixed val)
     if (RXML.Type type = req_types[arg] || opt_arg_types[arg])
       if (mixed err = catch (type->type_check (val))) {
-	if (objectp(err) && err->is_RXML_Backtrace) {
-	  return Roxen.raise_err(on_error, "Invalid type for %O: %s",
-				 arg, err->msg);
-	}
-	throw (err);
+        if (objectp(err) && err->is_RXML_Backtrace) {
+          return Roxen.raise_err(on_error, "Invalid type for %O: %s",
+                                 arg, err->msg);
+        }
+        throw (err);
       }
 
   return args;
@@ -160,9 +160,9 @@ int(0..1) register() {
 //! @seealso
 //!   @[exec()]
 int(0..1) access_perm(RequestID id,
-		      AFS.ClientSession cs,
-		      mapping(string:mixed) args,
-		      void|string tag)
+                      AFS.ClientSession cs,
+                      mapping(string:mixed) args,
+                      void|string tag)
 {
   return 1;
 }
@@ -194,9 +194,9 @@ int(0..1) access_perm(RequestID id,
 //!   and appends an application level error response to the
 //!   @[ClientSession] response queue.
 int(0..0)|mapping exec(RequestID id,
-		       AFS.ClientSession cs,
-		       mapping(string:mixed) args,
-		       void|string tag) {
+                       AFS.ClientSession cs,
+                       mapping(string:mixed) args,
+                       void|string tag) {
   return Roxen.http_low_answer(501, "Operation not implemented");
 }
 
@@ -231,10 +231,10 @@ int(0..0)|mapping exec(RequestID id,
 //! @note
 //!   The client session is destructed asynchronously when it times out.
 void push (AFS.Types.ClientMessage cmt,
-	   AFS.ClientSession.SubscriptionID subscription_id,
-	   AFS.ClientSession cs,
-	   mapping(string:mixed) args,
-	   mixed ... push_args)
+           AFS.ClientSession.SubscriptionID subscription_id,
+           AFS.ClientSession cs,
+           mapping(string:mixed) args,
+           mixed ... push_args)
 {
   error ("Broadcast not implemented.\n");
 }

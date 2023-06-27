@@ -18,7 +18,7 @@ constant RIS_OID = INTERNET_OID + ({ 4, 1, 8614 });
 constant RIS_OID_WEBSERVER = RIS_OID + ({ 1, 1 });
 
 class Documentation(string name,
-		    string doc)
+                    string doc)
 {
 }
 
@@ -29,9 +29,9 @@ class Updateable(function(:mixed) fun)
     if (fun) {
       mixed val = fun();
       if (undefinedp (val)) {
-	// Value not available at this time.
-	// Keep the stale value.
-	return 0;
+        // Value not available at this time.
+        // Keep the stale value.
+        return 0;
       }
       this_object()->init (val);
       this_object()->der = UNDEFINED;
@@ -58,7 +58,7 @@ class app_integer
   int cls = 1;
   int tag = 0;
   protected void create(int|function(:int) val, string|void name,
-			string|void doc_string)
+                        string|void doc_string)
   {
     if (intp(val)) {
       update::create(UNDEFINED);
@@ -88,7 +88,7 @@ class app_octet_string
   int cls = 1;
   int tag = 0;
   protected void create(string|function(:string) val, string|void name,
-			string|void doc_string)
+                        string|void doc_string)
   {
     if (stringp(val)) {
       update::create(UNDEFINED);
@@ -115,7 +115,7 @@ class OID
   inherit OwnerInfo : owner_info;
   constant type_name = "OID";
   protected void create(array(int) oid, string|void name,
-			string|void doc_string)
+                        string|void doc_string)
   {
     identifier::create(@oid);
     doc::create(name, doc_string);
@@ -125,8 +125,8 @@ class OID
     switch(t) {
     case 's': return ((array(string))id) * ".";
     default: return sprintf("%s[%d][%d](%O)",
-			    type_name, cls, tag,
-			    ((array(string))id) * ".");
+                            type_name, cls, tag,
+                            ((array(string))id) * ".");
     }
   }
 }
@@ -139,7 +139,7 @@ class Integer
   inherit OwnerInfo : owner_info;
   constant type_name = "INTEGER";
   protected void create(int|function(:int) val, string|void name,
-			string|void doc_string)
+                        string|void doc_string)
   {
     if (intp(val)) {
       update::create(UNDEFINED);
@@ -168,7 +168,7 @@ class String
   inherit OwnerInfo : owner_info;
   constant type_name = "STRING";
   protected void create(string|function(:string) val, string|void name,
-			string|void doc_string)
+                        string|void doc_string)
   {
     if (stringp(val)) {
       update::create(UNDEFINED);
@@ -184,7 +184,7 @@ class String
     switch(t) {
     case 's': return (string)value;
     default: return sprintf("%s[%d][%d](%O)",
-			    type_name, cls, tag, (string)value);
+                            type_name, cls, tag, (string)value);
     }
   }
 }
@@ -271,7 +271,7 @@ class TruthValue
   inherit Integer;
 
   protected void create(int|function(:int) val, string|void name,
-			string|void doc_string)
+                        string|void doc_string)
   {
     // NB: true == 1, false == 2.
     if (intp(val)) {
@@ -308,28 +308,28 @@ class SimpleMIB
   inherit ADT.Trie;
 
   protected void init(array(int) oid,
-		      array(int) oid_suffix,
-		      array(Standards.ASN1.Types.Object|
-			    function|array|mapping)|
-		      mapping(int:Standards.ASN1.Types.Object|
-			      function|array|mapping) values)
+                      array(int) oid_suffix,
+                      array(Standards.ASN1.Types.Object|
+                            function|array|mapping)|
+                      mapping(int:Standards.ASN1.Types.Object|
+                              function|array|mapping) values)
   {
     foreach(values; int i;
-	    function|Standards.ASN1.Types.Object|array|mapping val) {
+            function|Standards.ASN1.Types.Object|array|mapping val) {
       if (arrayp(val) || mappingp(val)) {
-	init(oid + ({ i }), oid_suffix, val);
+        init(oid + ({ i }), oid_suffix, val);
       } else if (!zero_type(val)) {
-	insert(oid + ({ i }) + oid_suffix + ({ 0 }), val);
+        insert(oid + ({ i }) + oid_suffix + ({ 0 }), val);
       }
     }
   }
 
   protected void create(array(int) oid,
-			array(int) oid_suffix,
-			array(Standards.ASN1.Types.Object|
-			      function|array|mapping)|
-			mapping(int:Standards.ASN1.Types.Object|
-				function|array|mapping) values)
+                        array(int) oid_suffix,
+                        array(Standards.ASN1.Types.Object|
+                              function|array|mapping)|
+                        mapping(int:Standards.ASN1.Types.Object|
+                                function|array|mapping) values)
   {
     ::create(oid);
     init(oid, oid_suffix, values);
@@ -352,7 +352,7 @@ void set_owner(ADT.Trie mib, Configuration conf, RoxenModule|void module)
     catch {
       o->conf = conf;
       if (module) {
-	o->module = module;
+        o->module = module;
       }
     };
     oid = mib->next(oid);
@@ -365,7 +365,7 @@ void remove_owned(ADT.Trie mib, Configuration conf, RoxenModule|void module)
   while(oid) {
     Standards.ASN1.Types.Object o = mib->lookup(oid);
     if (objectp(o) && (o->conf == conf) &&
-	(!module || (o->module == module))) {
+        (!module || (o->module == module))) {
       mib->remove(oid);
     }
     oid = mib->next(oid);
@@ -411,10 +411,10 @@ void add_oid_path(array(int) oid, string symbolic_oid)
     if (i >= sizeof(oid)) return;
     if (sizeof(symbol)) {
       if (symbol[0] == '"') {
-	OID_ParseInfo->insert(oid[..i], StringDescriber(symbol));
-	i += oid[i];
+        OID_ParseInfo->insert(oid[..i], StringDescriber(symbol));
+        i += oid[i];
       } else {
-	OID_ParseInfo->insert(oid[..i], Describer(symbol));
+        OID_ParseInfo->insert(oid[..i], Describer(symbol));
       }
     }
     i++;
@@ -432,8 +432,8 @@ string format_oid(array(int) oid)
     int j = i;
     while(i < parse_info->offset) {
       if (oid[i] != parse_info->path[i]) {
-	i = j;
-	break;
+        i = j;
+        break;
       }
       i++;
     }
@@ -442,16 +442,16 @@ string format_oid(array(int) oid)
     switch(desc && desc->is_index) {
     case "string":
       if (i + oid[i] < sizeof(oid)) {
-	res += ({ sprintf("%O", (string)oid[i+1..i+oid[i]]) });
-	i += oid[i];
-	break;
+        res += ({ sprintf("%O", (string)oid[i+1..i+oid[i]]) });
+        i += oid[i];
+        break;
       }
       res += ({ (string)oid[i] });
       break;
     case 0:
       if (desc->symbol) {
-	res += desc->symbol;
-	break;
+        res += desc->symbol;
+        break;
       }
     case "int":
     default:
@@ -471,8 +471,8 @@ string format_oid(array(int) oid)
 protected void create()
 {
   add_oid_path(RIS_OID_WEBSERVER,
-	       "iso.organizations.dod.internet.private."
-	       "enterprises.roxenis.app.webserver");
+               "iso.organizations.dod.internet.private."
+               "enterprises.roxenis.app.webserver");
 }
 
 #endif /* 0 */

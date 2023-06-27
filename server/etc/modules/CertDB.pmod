@@ -25,8 +25,8 @@ array(sql_row) list_keys()
 {
   Sql.Sql db = DBManager.cached_get("roxen");
   return db->typed_query("SELECT * "
-			 "  FROM cert_keys "
-			 " ORDER BY id ASC");
+                         "  FROM cert_keys "
+                         " ORDER BY id ASC");
 }
 
 //!
@@ -34,8 +34,8 @@ array(sql_row) list_keypairs()
 {
   Sql.Sql db = DBManager.cached_get("roxen");
   return db->typed_query("SELECT * "
-			 "  FROM cert_keypairs "
-			 " ORDER BY cert_id ASC, key_id ASC");
+                         "  FROM cert_keypairs "
+                         " ORDER BY cert_id ASC, key_id ASC");
 }
 
 //!
@@ -44,9 +44,9 @@ sql_row get_cert(int cert_id)
   Sql.Sql db = DBManager.cached_get("roxen");
   array(mapping(string:int|string)) res =
     db->typed_query("SELECT * "
-		    "  FROM certs "
-		    " WHERE id = %d",
-		    cert_id);
+                    "  FROM certs "
+                    " WHERE id = %d",
+                    cert_id);
   if (!sizeof(res)) return 0;
   return res[0];
 }
@@ -69,14 +69,14 @@ protected string format_dn(Sequence dn)
   string res;
   // NB: Loop backwards to join oun and on before cn.
   foreach(({ Standards.PKCS.Identifiers.at_ids.organizationUnitName,
-	     Standards.PKCS.Identifiers.at_ids.organizationName,
-	     Standards.PKCS.Identifiers.at_ids.commonName,
-	  }); int i; Identifier id) {
+             Standards.PKCS.Identifiers.at_ids.organizationName,
+             Standards.PKCS.Identifiers.at_ids.commonName,
+          }); int i; Identifier id) {
     string val = ids[id];
     if (!val) continue;
     if (res) {
       if (i == 2) {
-	res = "(" + res + ")";
+        res = "(" + res + ")";
       }
       res = val + " " + res;
     } else {
@@ -108,39 +108,39 @@ protected void refresh_cert(Sql.Sql db, int pem_id, int msg_no, string data)
 
   array(sql_row) tmp =
     db->typed_query("SELECT * "
-		    "  FROM certs "
-		    " WHERE keyhash = %s "
-		    "   AND subject = %s "
-		    "   AND issuer = %s",
-		    keyhash,
-		    subject,
-		    issuer);
+                    "  FROM certs "
+                    " WHERE keyhash = %s "
+                    "   AND subject = %s "
+                    "   AND issuer = %s",
+                    keyhash,
+                    subject,
+                    issuer);
   int cert_id = -1;
   if (!sizeof(tmp)) {
     db->query("INSERT INTO certs "
-	      "    (pem_id, msg_no, subject, issuer, expires, keyhash, data) "
-	      "VALUES (%d, %d, %s, %s, %d, %s, %s)",
-	      pem_id, msg_no, subject, issuer, expires, keyhash, data);
+              "    (pem_id, msg_no, subject, issuer, expires, keyhash, data) "
+              "VALUES (%d, %d, %s, %s, %d, %s, %s)",
+              pem_id, msg_no, subject, issuer, expires, keyhash, data);
     cert_id = db->master_sql->insert_id();
 
     // Check if we have a matching private key.
     tmp = db->typed_query("SELECT * "
-			  "  FROM cert_keys "
-			  " WHERE keyhash = %s "
-			  " ORDER BY id ASC",
-			  keyhash);
+                          "  FROM cert_keys "
+                          " WHERE keyhash = %s "
+                          " ORDER BY id ASC",
+                          keyhash);
     if (sizeof(tmp)) {
       // FIXME: Key selection policy.
       string name = format_dn(subject);
       if (issuer == subject) {
-	name += " (self-signed)";
+        name += " (self-signed)";
       } else {
-	name += " " + format_dn(issuer);
+        name += " " + format_dn(issuer);
       }
       db->query("INSERT INTO cert_keypairs "
-		"       (cert_id, key_id, name) "
-		"VALUES (%d, %d, %s)",
-		cert_id, tmp[0]->id, name);
+                "       (cert_id, key_id, name) "
+                "VALUES (%d, %d, %s)",
+                cert_id, tmp[0]->id, name);
     }
 
     if (subject != issuer) {
@@ -150,16 +150,16 @@ protected void refresh_cert(Sql.Sql db, int pem_id, int msg_no, string data)
       // and select the one that has the longest remaining
       // time to expire.
       tmp = db->typed_query("SELECT * "
-			    "  FROM certs "
-			    " WHERE subject = %s"
-			    " ORDER BY expires DESC",
-			    issuer);
+                            "  FROM certs "
+                            " WHERE subject = %s"
+                            " ORDER BY expires DESC",
+                            issuer);
       if (sizeof(tmp)) {
-	db->query("UPDATE certs "
-		  "   SET parent = %d "
-		  " WHERE id = %d",
-		  tmp[0]->id,
-		  cert_id);
+        db->query("UPDATE certs "
+                  "   SET parent = %d "
+                  " WHERE id = %d",
+                  tmp[0]->id,
+                  cert_id);
       }
     }
   } else if (tmp[0]->expires <= expires) {
@@ -167,39 +167,39 @@ protected void refresh_cert(Sql.Sql db, int pem_id, int msg_no, string data)
     // NB: keyhash, subject and issuer are unmodified (cf above).
     SSL3_WERR("Updating cert #%d.\n", tmp[0]->id);
     db->query("UPDATE certs "
-	      "   SET pem_id = %d, "
-	      "       msg_no = %d, "
-	      "       expires = %d, "
-	      "       data = %s "
-	      " WHERE id = %d",
-	      pem_id, msg_no, expires, data,
-	      tmp[0]->id);
+              "   SET pem_id = %d, "
+              "       msg_no = %d, "
+              "       expires = %d, "
+              "       data = %s "
+              " WHERE id = %d",
+              pem_id, msg_no, expires, data,
+              tmp[0]->id);
     cert_id = tmp[0]->id;
   } else {
     SSL3_WERR("Got certificate older than that in db: %d < %d\n",
-	      expires, tmp[0]->expires);
+              expires, tmp[0]->expires);
     return;
   }
 
   // Check if we have the most recent certificate for subject.
   tmp = db->typed_query("SELECT * "
-			"  FROM certs "
-			" WHERE subject = %s"
-			" ORDER BY expires DESC",
-			subject);
+                        "  FROM certs "
+                        " WHERE subject = %s"
+                        " ORDER BY expires DESC",
+                        subject);
   if (tmp[0]->id == cert_id) {
     // Update all certs that are signed by us.
     tmp = db->typed_query("UPDATE certs "
-			  "   SET parent = %d "
-			  " WHERE issuer = %s "
-			  "   AND subject != issuer",
-			  cert_id,
-			  subject);
+                          "   SET parent = %d "
+                          " WHERE issuer = %s "
+                          "   AND subject != issuer",
+                          cert_id,
+                          subject);
   }
 }
 
 protected void refresh_private_key(Sql.Sql db, int pem_id, int msg_no,
-				   string raw)
+                                   string raw)
 {
   Crypto.Sign.State private_key = Standards.X509.parse_private_key(raw);
 
@@ -210,47 +210,47 @@ protected void refresh_private_key(Sql.Sql db, int pem_id, int msg_no,
   // NB: Using the server salt as a straight encryption key
   //     is a BAD idea as CCM is a stream crypto.
   ccm->set_encrypt_key(Crypto.SHA256.hash(roxenp()->query("server_salt") +
-					  "\0" + keyhash));
+                                          "\0" + keyhash));
   string(8bit) data = ccm->crypt(raw) + ccm->digest();
 
   array(sql_row) tmp =
     db->typed_query("SELECT * "
-		    "  FROM cert_keys "
-		    " WHERE keyhash = %s",
-		    keyhash);
+                    "  FROM cert_keys "
+                    " WHERE keyhash = %s",
+                    keyhash);
   if (!sizeof(tmp)) {
     db->query("INSERT INTO cert_keys "
-	      "       (pem_id, msg_no, keyhash, data) "
-	      "VALUES (%d, %d, %s, %s)",
-	      pem_id, msg_no, keyhash, data);
+              "       (pem_id, msg_no, keyhash, data) "
+              "VALUES (%d, %d, %s, %s)",
+              pem_id, msg_no, keyhash, data);
     int key_id = db->master_sql->insert_id();
     SSL3_WERR("Added cert key #%d.\n", key_id);
 
     // Check if we have any matching certificates that currently lack keys,
     // and add corresponding keypairs.
     foreach(db->typed_query("SELECT * "
-			    "  FROM certs "
-			    " WHERE keyhash = %s "
-			    " ORDER BY id ASC",
-			    keyhash),
-	    sql_row cert_info) {
+                            "  FROM certs "
+                            " WHERE keyhash = %s "
+                            " ORDER BY id ASC",
+                            keyhash),
+            sql_row cert_info) {
       if (sizeof(db->query("SELECT * "
-			   "  FROM cert_keypairs "
-			   " WHERE cert_id = %d",
-			   cert_info->id))) {
-	// Keypair already exists.
-	continue;
+                           "  FROM cert_keypairs "
+                           " WHERE cert_id = %d",
+                           cert_info->id))) {
+        // Keypair already exists.
+        continue;
       }
       string name = format_dn(cert_info->subject);
       if (cert_info->issuer == cert_info->subject) {
-	name += " (self-signed)";
+        name += " (self-signed)";
       } else {
-	name += " " + format_dn(cert_info->issuer);
+        name += " " + format_dn(cert_info->issuer);
       }
       db->query("INSERT INTO cert_keypairs "
-		"       (cert_id, key_id, name) "
-		"VALUES (%d, %d, %s)",
-		cert_info->id, key_id, name);
+                "       (cert_id, key_id, name) "
+                "VALUES (%d, %d, %s)",
+                cert_info->id, key_id, name);
     }
   } else {
     // Zap any stale or update in progress marker for the key.
@@ -259,21 +259,21 @@ protected void refresh_private_key(Sql.Sql db, int pem_id, int msg_no,
       // to the server salt having been changed, or due to the
       // old value having been created with an old proken Pike.
       SSL3_WERR("Updating cert key #%d. Has the server salt changed?\n",
-		tmp[0]->id);
+                tmp[0]->id);
       db->query("UPDATE cert_keys "
-		"   SET pem_id = %d, "
-		"       msg_no = %d, "
-		"       data = %s "
-		" WHERE id = %d",
-		pem_id, msg_no, data,
-		tmp[0]->id);
+                "   SET pem_id = %d, "
+                "       msg_no = %d, "
+                "       data = %s "
+                " WHERE id = %d",
+                pem_id, msg_no, data,
+                tmp[0]->id);
     } else {
       db->query("UPDATE cert_keys "
-		"   SET pem_id = %d, "
-		"       msg_no = %d "
-		" WHERE id = %d",
-		pem_id, msg_no,
-		tmp[0]->id);
+                "   SET pem_id = %d, "
+                "       msg_no = %d "
+                " WHERE id = %d",
+                pem_id, msg_no,
+                tmp[0]->id);
     }
   }
 }
@@ -284,9 +284,9 @@ protected int low_refresh_pem(int pem_id, int|void force)
 
   array(sql_row) tmp =
     db->typed_query("SELECT * "
-		    "  FROM cert_pem_files "
-		    " WHERE id = %d",
-		    pem_id);
+                    "  FROM cert_pem_files "
+                    " WHERE id = %d",
+                    pem_id);
   if (!sizeof(tmp)) return 0;
 
   sql_row pem_info = tmp[0];
@@ -306,13 +306,13 @@ protected int low_refresh_pem(int pem_id, int|void force)
     if( catch{ raw_pem = lopen(pem_file, "r")->read(); } )
     {
       SSL3_WERR("Reading PEM file %O failed: %s\n",
-		pem_file, strerror(errno()));
+                pem_file, strerror(errno()));
     } else {
       pem_hash = Crypto.SHA256.hash(raw_pem);
       if ((pem_info->hash == pem_hash) && !force) {
-	// No change.
-	SSL3_WERR("PEM file not modified since last import.\n");
-	return 0;
+        // No change.
+        SSL3_WERR("PEM file not modified since last import.\n");
+        return 0;
       }
     }
   }
@@ -320,69 +320,69 @@ protected int low_refresh_pem(int pem_id, int|void force)
   if (!raw_pem) {
     // Mark any old certs and keys as stale.
     db->query("UPDATE certs "
-	      "   SET pem_id = NULL, "
-	      "       msg_no = NULL "
-	      " WHERE pem_id = %d",
-	      pem_id);
+              "   SET pem_id = NULL, "
+              "       msg_no = NULL "
+              " WHERE pem_id = %d",
+              pem_id);
     db->query("UPDATE cert_keys "
-	      "   SET pem_id = NULL, "
-	      "       msg_no = NULL "
-	      " WHERE pem_id = %d",
-	      pem_id);
+              "   SET pem_id = NULL, "
+              "       msg_no = NULL "
+              " WHERE pem_id = %d",
+              pem_id);
     return 0;
   }
 
   // Mark any old certs and keys as update in progress.
   db->query("UPDATE certs "
-	    "   SET msg_no = NULL "
-	    " WHERE pem_id = %d",
-	    pem_id);
+            "   SET msg_no = NULL "
+            " WHERE pem_id = %d",
+            pem_id);
   db->query("UPDATE cert_keys "
-	    "   SET msg_no = NULL "
-	    " WHERE pem_id = %d",
-	    pem_id);
+            "   SET msg_no = NULL "
+            " WHERE pem_id = %d",
+            pem_id);
 
   mixed err =
     catch {
       Standards.PEM.Messages messages = Standards.PEM.Messages(raw_pem);
       foreach(messages->fragments; int msg_no; string|Standards.PEM.Message msg) {
-	if (stringp(msg)) continue;
+        if (stringp(msg)) continue;
 
-	string body = msg->body;
+        string body = msg->body;
 
-	if (msg->headers["dek-info"] && pem_info->pass) {
-	  mixed err = catch {
-	      body = Standards.PEM.decrypt_body(msg->headers["dek-info"],
-						body, pem_info->pass);
-	    };
-	  if (err) {
-	    SSL3_WERR("Invalid decryption password for %O.\n", pem_file);
-	  }
-	}
+        if (msg->headers["dek-info"] && pem_info->pass) {
+          mixed err = catch {
+              body = Standards.PEM.decrypt_body(msg->headers["dek-info"],
+                                                body, pem_info->pass);
+            };
+          if (err) {
+            SSL3_WERR("Invalid decryption password for %O.\n", pem_file);
+          }
+        }
 
-	SSL3_WERR("Got %s.\n", msg->pre);
+        SSL3_WERR("Got %s.\n", msg->pre);
 
-	switch(msg->pre) {
-	case "CERTIFICATE":
-	case "X509 CERTIFICATE":
-	  refresh_cert(db, pem_id, msg_no, body);
-	  break;
+        switch(msg->pre) {
+        case "CERTIFICATE":
+        case "X509 CERTIFICATE":
+          refresh_cert(db, pem_id, msg_no, body);
+          break;
 
-	case "PRIVATE KEY":
-	case "RSA PRIVATE KEY":
-	case "DSA PRIVATE KEY":
-	case "ECDSA PRIVATE KEY":
-	  refresh_private_key(db, pem_id, msg_no, body);
-	  break;
+        case "PRIVATE KEY":
+        case "RSA PRIVATE KEY":
+        case "DSA PRIVATE KEY":
+        case "ECDSA PRIVATE KEY":
+          refresh_private_key(db, pem_id, msg_no, body);
+          break;
 
-	case "CERTIFICATE REQUEST":
-	  // Ignore CSRs for now.
-	  break;
+        case "CERTIFICATE REQUEST":
+          // Ignore CSRs for now.
+          break;
 
-	default:
-	  SSL3_WERR("Unsupported PEM message: %O\n", msg->pre);
-	  break;
-	}
+        default:
+          SSL3_WERR("Unsupported PEM message: %O\n", msg->pre);
+          break;
+        }
       }
     };
   if (err) {
@@ -394,24 +394,24 @@ protected int low_refresh_pem(int pem_id, int|void force)
 
   // Mark any old certs and keys that are still update in progress as stale.
   db->query("UPDATE certs "
-	    "   SET pem_id = NULL "
-	    " WHERE pem_id = %d "
-	    "   AND msg_no IS NULL",
-	    pem_id);
+            "   SET pem_id = NULL "
+            " WHERE pem_id = %d "
+            "   AND msg_no IS NULL",
+            pem_id);
   db->query("UPDATE cert_keys "
-	    "   SET pem_id = NULL "
-	    " WHERE pem_id = %d "
-	    "   AND msg_no IS NULL",
-	    pem_id);
+            "   SET pem_id = NULL "
+            " WHERE pem_id = %d "
+            "   AND msg_no IS NULL",
+            pem_id);
 
   // Update metadata about the imported PEM file.
   db->query("UPDATE cert_pem_files "
-	    "   SET hash = %s, "
-	    "       mtime = %d, "
-	    "       itime = %d "
-	    " WHERE id = %d",
-	    pem_hash, st->mtime, time(1),
-	    pem_id);
+            "   SET hash = %s, "
+            "       mtime = %d, "
+            "       itime = %d "
+            " WHERE id = %d",
+            pem_hash, st->mtime, time(1),
+            pem_id);
 
   return 1;
 }
@@ -458,22 +458,22 @@ protected int low_register_pem_file(string pem_file, string|void password)
 
   array(sql_row) row =
     db->typed_query("SELECT * "
-		    "  FROM cert_pem_files "
-		    " WHERE path = %s",
-		    pem_file);
+                    "  FROM cert_pem_files "
+                    " WHERE path = %s",
+                    pem_file);
   int pem_id;
   if (sizeof(row)) {
     pem_id = row[0]->id;
     if (password && (row[0]->pass != password)) {
       db->query("UPDATE cert_pem_files "
-		"   SET pass = %s "
-		  " WHERE id = %d",
-		password, pem_id);
+                "   SET pass = %s "
+                  " WHERE id = %d",
+                password, pem_id);
     }
   } else {
     db->query("INSERT INTO cert_pem_files "
-	      "       (path, pass) VALUES (%s, %s)",
-	      pem_file, password);
+              "       (path, pass) VALUES (%s, %s)",
+              pem_file, password);
     pem_id = db->master_sql->insert_id();
   }
 
@@ -536,10 +536,10 @@ array(string) register_pem_files(array(string) pem_files, string|void password)
   foreach(Array.uniq(pem_ids), int pem_id) {
     keypair_names +=
       db->typed_query("SELECT cert_keypairs.name AS name"
-		      "  FROM cert_keys, cert_keypairs "
-		      " WHERE pem_id = %d "
-		      "   AND cert_keypairs.key_id = cert_keys.id",
-		      pem_id)->name;
+                      "  FROM cert_keys, cert_keypairs "
+                      " WHERE pem_id = %d "
+                      "   AND cert_keypairs.key_id = cert_keys.id",
+                      pem_id)->name;
   }
   return Array.uniq(sort(keypair_names));
 }
@@ -553,29 +553,29 @@ array(Crypto.Sign.State|array(string)) get_keypair(int keypair_id)
 
   array(sql_row) tmp =
     db->typed_query("SELECT * "
-		    "  FROM cert_keypairs "
-		    " WHERE id = %d",
-		    keypair_id);
+                    "  FROM cert_keypairs "
+                    " WHERE id = %d",
+                    keypair_id);
   if (!sizeof(tmp)) return 0;
 
   int key_id = tmp[0]->key_id;
   int cert_id = tmp[0]->cert_id;
 
   tmp = db->typed_query("SELECT * "
-			"  FROM cert_keys "
-			" WHERE id = %d",
-			key_id);
+                        "  FROM cert_keys "
+                        " WHERE id = %d",
+                        key_id);
   if (!sizeof(tmp)) return 0;
 
   if (sizeof(tmp[0]->data) < Crypto.AES.CCM.digest_size()) return 0;
   Crypto.AES.CCM.State ccm = Crypto.AES.CCM();
   ccm->set_decrypt_key(Crypto.SHA256.hash(roxenp()->query("server_salt") +
-					  "\0" + tmp[0]->keyhash));
+                                          "\0" + tmp[0]->keyhash));
   string digest = tmp[0]->data[<Crypto.AES.CCM.digest_size()-1..];
   string raw = ccm->crypt(tmp[0]->data[..<Crypto.AES.CCM.digest_size()]);
   if (digest != ccm->digest()) {
     SSL3_WERR("Invalid key digest for key #%d. Has the server salt changed?\n",
-	      key_id);
+              key_id);
     return 0;
   }
   Crypto.Sign.State private_key = Standards.X509.parse_private_key(raw);
@@ -584,9 +584,9 @@ array(Crypto.Sign.State|array(string)) get_keypair(int keypair_id)
   array(string) certs = ({});
   while (cert_id) {
     tmp = db->typed_query("SELECT * "
-			  "  FROM certs "
-			  " WHERE id = %d",
-			  cert_id);
+                          "  FROM certs "
+                          " WHERE id = %d",
+                          cert_id);
     if (!sizeof(tmp)) break;
     certs += ({ tmp[0]->data });
     cert_id = tmp[0]->parent;
@@ -606,9 +606,9 @@ mapping(string:string|sql_row|array(sql_row)) get_keypair_metadata(int keypair_i
 
   array(sql_row) tmp =
     db->typed_query("SELECT * "
-		    "  FROM cert_keypairs "
-		    " WHERE id = %d",
-		    keypair_id);
+                    "  FROM cert_keypairs "
+                    " WHERE id = %d",
+                    keypair_id);
   if (!sizeof(tmp)) return 0;
 
   int key_id = tmp[0]->key_id;
@@ -619,31 +619,31 @@ mapping(string:string|sql_row|array(sql_row)) get_keypair_metadata(int keypair_i
   ]);
 
   tmp = db->typed_query("SELECT id, pem_id, msg_no, HEX(keyhash) AS keyhash "
-			"  FROM cert_keys "
-			" WHERE id = %d",
-			key_id);
+                        "  FROM cert_keys "
+                        " WHERE id = %d",
+                        key_id);
   if (sizeof(tmp)) {
     res->key = tmp[0];
 
     if (tmp[0]->pem_id) {
       tmp = db->typed_query("SELECT path "
-			    "  FROM cert_pem_files "
-			    " WHERE id = %d",
-			    tmp[0]->pem_id);
+                            "  FROM cert_pem_files "
+                            " WHERE id = %d",
+                            tmp[0]->pem_id);
       if (sizeof(tmp)) {
-	res->key->pem_path = tmp[0]->path;
+        res->key->pem_path = tmp[0]->path;
       }
     }
   }
 
   while(cert_id) {
     tmp = db->typed_query("SELECT id, HEX(subject) AS subject, "
-			  "       HEX(issuer) AS issuer, parent, "
-			  "       pem_id, msg_no, expires, "
-			  "       HEX(keyhash) AS keyhash "
-			  "  FROM certs "
-			  " WHERE id = %d",
-			  cert_id);
+                          "       HEX(issuer) AS issuer, parent, "
+                          "       pem_id, msg_no, expires, "
+                          "       HEX(keyhash) AS keyhash "
+                          "  FROM certs "
+                          " WHERE id = %d",
+                          cert_id);
     if (!sizeof(tmp)) break;
 
     res->certs += tmp;
@@ -651,11 +651,11 @@ mapping(string:string|sql_row|array(sql_row)) get_keypair_metadata(int keypair_i
 
     if (tmp[0]->pem_id) {
       tmp = db->typed_query("SELECT path "
-			    "  FROM cert_pem_files "
-			    " WHERE id = %d",
-			    tmp[0]->pem_id);
+                            "  FROM cert_pem_files "
+                            " WHERE id = %d",
+                            tmp[0]->pem_id);
       if (sizeof(tmp)) {
-	res->certs[-1]->pem_path = tmp[0]->path;
+        res->certs[-1]->pem_path = tmp[0]->path;
       }
     }
   }
@@ -669,19 +669,19 @@ array(int) get_keypairs_by_name(string name)
 
   array(int) res =
     db->typed_query("SELECT cert_keypairs.id AS id "
-		    "  FROM cert_keypairs, certs "
-		    " WHERE name = %s "
-		    "   AND cert_id = certs.id "
-		    "   AND pem_id IS NOT NULL "
-		    " ORDER BY expires ASC", name)->id;
+                    "  FROM cert_keypairs, certs "
+                    " WHERE name = %s "
+                    "   AND cert_id = certs.id "
+                    "   AND pem_id IS NOT NULL "
+                    " ORDER BY expires ASC", name)->id;
   if (!sizeof(res)) {
     res =
       db->typed_query("SELECT cert_keypairs.id AS id "
-		      "  FROM cert_keypairs, certs "
-		      " WHERE name = %s "
-		      "   AND cert_id = certs.id "
-		      " ORDER BY expires DESC "
-		      " LIMIT 1", name)->id;
+                      "  FROM cert_keypairs, certs "
+                      " WHERE name = %s "
+                      "   AND cert_id = certs.id "
+                      " ORDER BY expires DESC "
+                      " LIMIT 1", name)->id;
   }
   return res;
 }

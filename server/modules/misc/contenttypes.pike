@@ -62,8 +62,8 @@ void parse_ext_string(string exts)
       string file;
       if(sscanf(line, "#include <%s>", file))
       {
-	string s;
-	if(catch(s=lopen(file,"r")->read()))
+        string s;
+        if(catch(s=lopen(file,"r")->read()))
           report_warning( "Failed to include "+file+"\n");
         else
           parse_ext_string(s);
@@ -72,8 +72,8 @@ void parse_ext_string(string exts)
       f = (replace(line, "\t", " ")/" "-({""}));
       if(sizeof(f) >= 2)
       {
-	if(sizeof(f) > 2) encodings[lower_case(f[0])] = lower_case(f[2]);
-	extensions[lower_case(f[0])] = lower_case(f[1]);
+        if(sizeof(f) > 2) encodings[lower_case(f[0])] = lower_case(f[2]);
+        extensions[lower_case(f[0])] = lower_case(f[1]);
       }
     }
   }

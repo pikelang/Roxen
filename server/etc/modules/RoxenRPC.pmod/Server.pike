@@ -56,14 +56,14 @@ class Connection
       int r = --refs[cmd->subtract_refs];
       if(r<=0)
       {
-	object q;
-	string r = cmd->subtract_refs;
+        object q;
+        string r = cmd->subtract_refs;
 
-	q = (classes[r] || search(my_identifiers, r));
-	m_delete(classes, r);
-	m_delete(refs, r);
-	m_delete(my_identifiers, q);
-	master->remove_identifier(r,q);
+        q = (classes[r] || search(my_identifiers, r));
+        m_delete(classes, r);
+        m_delete(refs, r);
+        m_delete(my_identifiers, q);
+        master->remove_identifier(r,q);
       }
     }
 #endif
@@ -99,33 +99,33 @@ class Connection
       if(strlen(buffer) >= expected_len)
       {
 //	werror("got enough data.\n");
-	d = buffer[..expected_len-1];
-	buffer = buffer[expected_len..];
-	array err, res;
-	if(err = catch {
-	  mixed val = decode_value(d);
-	  if(arrayp(val))
-	    res = ({ 1, master->do_call(this_object(),@val) });
-	  else
-	  {
-	    handle_cmd( val ); // Do not return anything....
-	    mode=WAITING;
-	    expected_len=0;
-	    sending+="!"; write_data();
-	    got_data(c,"");
-	    return;
-	  }
-	})
-	  res = ({ 0, describe_backtrace(err) });
-	return_res(res);
-	mode=WAITING;
-	expected_len = 0;
-	got_data(c,"");
-	return;
+        d = buffer[..expected_len-1];
+        buffer = buffer[expected_len..];
+        array err, res;
+        if(err = catch {
+          mixed val = decode_value(d);
+          if(arrayp(val))
+            res = ({ 1, master->do_call(this_object(),@val) });
+          else
+          {
+            handle_cmd( val ); // Do not return anything....
+            mode=WAITING;
+            expected_len=0;
+            sending+="!"; write_data();
+            got_data(c,"");
+            return;
+          }
+        })
+          res = ({ 0, describe_backtrace(err) });
+        return_res(res);
+        mode=WAITING;
+        expected_len = 0;
+        got_data(c,"");
+        return;
       }
       return;
     } else if((strlen(buffer)>=4) &&
-	      (sscanf(buffer, "%4c%s", expected_len, buffer) == 2)) {
+              (sscanf(buffer, "%4c%s", expected_len, buffer) == 2)) {
 //      werror("waiting for "+expected_len+" bytes.\n");
       mode=MORE_TO_COME;
       got_data(0,"");
@@ -142,32 +142,32 @@ class Connection
     {
       while(strlen(data) < 8)
       {
-	data += client->read(4000,1);
-	CHECK_IO_ERROR (client, "reading");
-	if(!strlen(data))
-	{
-	  destruct();
-	  return;
-	}
+        data += client->read(4000,1);
+        CHECK_IO_ERROR (client, "reading");
+        if(!strlen(data))
+        {
+          destruct();
+          return;
+        }
       }
       sscanf(data, "%4c%s", len,data);
       if(strlen(data) < len) {
-	data += client->read(len-strlen(data));
-	CHECK_IO_ERROR (client, "reading");
+        data += client->read(len-strlen(data));
+        CHECK_IO_ERROR (client, "reading");
       }
       if(err = catch {
-	mixed val = decode_value(data);
-	if(arrayp(val))
-	  res = ({ 1, master->do_call(this_object(),@val) });
-	else
-	{
-	  handle_cmd( val );
-	  sending+="!";
-	  write_data();
-	  continue;
-	}
+        mixed val = decode_value(data);
+        if(arrayp(val))
+          res = ({ 1, master->do_call(this_object(),@val) });
+        else
+        {
+          handle_cmd( val );
+          sending+="!";
+          write_data();
+          continue;
+        }
       })
-	res = ({ 0, describe_backtrace(err) });
+        res = ({ 0, describe_backtrace(err) });
       return_res(res);
     }
   }
@@ -292,12 +292,12 @@ int low_got_connection(object c)
     if (c) {
       werror(sprintf("Connection from:%s\n", c->query_address()));
       if (ip_security) {
-	werror(sprintf("IP-security enabled:%O\n",
-		       ip_security(c->query_address())));
+        werror(sprintf("IP-security enabled:%O\n",
+                       ip_security(c->query_address())));
       }
       if (security) {
-	werror(sprintf("Security enabled:%O\n",
-		       security(c)));
+        werror(sprintf("Security enabled:%O\n",
+                       security(c)));
       }
     } else {
       werror("No connection!\n");
@@ -350,7 +350,7 @@ void got_connection(object on)
   if (!c) {
     int err = on->errno();
     error ("Failed to accept connection on %s: %s\n",
-	   on->query_address() || "unknown port", strerror (err));
+           on->query_address() || "unknown port", strerror (err));
   }
 
   if(low_got_connection(c)) {
@@ -391,11 +391,11 @@ void create(string|object host, int|string|void p, string|void key)
     if(host) 
     {
        if(!port->bind(p, got_connection, host))
-	 error("Failed to bind to port %s:%d: %s\n",
-	       host, p, strerror (port->errno()));
+         error("Failed to bind to port %s:%d: %s\n",
+               host, p, strerror (port->errno()));
     } 
     else if(!port->bind(p, got_connection))
       error("Failed to bind to port %d: %s\n",
-	    p, strerror (port->errno()));
+            p, strerror (port->errno()));
   }
 }

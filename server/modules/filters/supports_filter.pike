@@ -85,25 +85,25 @@ mapping filter(mapping res, RequestID id) {
 
   if(filtered->javascript && !id->supports->javascript)
     conts->script=lambda(object p, mapping m, string c) {
-		    if(m->language && has_value(lower_case(m->language), "javascript"))
-		      return "";
-		    if(m->src && m->src[..sizeof(m->src)-4]==".js")
-		      return "";
-		    return 0;
-		  };
+                    if(m->language && has_value(lower_case(m->language), "javascript"))
+                      return "";
+                    if(m->src && m->src[..sizeof(m->src)-4]==".js")
+                      return "";
+                    return 0;
+                  };
 
   if(filtered->mailto && !id->supports->mailto)
     conts->a=lambda(object p, mapping m, string c) {
-	       if(m->href && m->href[..5]=="mailto") return c;
-	       return 0;
-	     };
+               if(m->href && m->href[..5]=="mailto") return c;
+               return 0;
+             };
 
   if(filtered->stylesheets && !id->supports->stylesheets) {
     conts->style="";
     tags->link=lambda(object p, mapping m, string c) {
-		 if(m->type && lower_case(m->type)=="text/css") return "";
-		 return 0;
-	       };
+                 if(m->type && lower_case(m->type)=="text/css") return "";
+                 return 0;
+               };
   }
 
   if(!sizeof(conts) && !sizeof(tags)) return 0;

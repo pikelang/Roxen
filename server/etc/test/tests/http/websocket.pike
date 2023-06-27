@@ -94,10 +94,10 @@ void main(int argc, array argv)
 
   string websocket_accept =
     MIME.encode_base64(Crypto.SHA1.hash(headers["Sec-WebSocket-Key"] +
-					Protocols.WebSocket.websocket_id), 1);
+                                        Protocols.WebSocket.websocket_id), 1);
 
   string tosend = sprintf("GET %s HTTP/%s\r\n",
-			  http_path, http_version);
+                          http_path, http_version);
   foreach(sort(indices(headers)), string header) {
     tosend += sprintf("%s: %s\r\n", header, headers[header]);
   }
@@ -131,11 +131,11 @@ void main(int argc, array argv)
         value = value && lower_case(value);
       }
       if (value != expected_headers[header]) {
-	werror("Bad headers (%O):\n"
-	       "Got: %O\n"
-	       "Expected: %O\n",
-	       header, ret_headers, expected_headers);
-	exit(BADHEADERS);
+        werror("Bad headers (%O):\n"
+               "Got: %O\n"
+               "Expected: %O\n",
+               header, ret_headers, expected_headers);
+        exit(BADHEADERS);
       }
     }
   }

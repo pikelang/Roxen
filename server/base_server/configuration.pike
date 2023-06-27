@@ -81,8 +81,8 @@ class ProfStack
 
       if( i > 0 ) // Do not count child time in parent.
       {
-	current_stack[i-1][1]+=tt+gethrtime()-t0;
-	current_stack[i-1][2]+=ttv+gethrvtime()-t1;
+        current_stack[i-1][1]+=tt+gethrtime()-t0;
+        current_stack[i-1][2]+=ttv+gethrvtime()-t1;
       }
       current_stack = current_stack[..i-1];
       add_prof_entry( id, k, tt, ttv );
@@ -91,7 +91,7 @@ class ProfStack
     if( i != sizeof( current_stack )-1 )
     {
       for( int j = sizeof( current_stack )-1; j>=i; j-- )
-	low_leave( j );
+        low_leave( j );
       return;
     }
     low_leave( i );
@@ -119,11 +119,11 @@ class ProfInfo( string url )
     int n, t, v;
     foreach( indices( data ), string k  )
       table += ({ ({ k,
-		     sprintf( "%d", (n=data[k][2]) ),
-		     sprintf("%5.2f",(t=data[k][0])/1000000.0),
-		     sprintf("%5.2f", (v=data[k][1])/1000000.0),
-		     sprintf("%8.2f", t/n/1000.0),
-		     sprintf("%8.2f",v/n/1000.0), }) });
+                     sprintf( "%d", (n=data[k][2]) ),
+                     sprintf("%5.2f",(t=data[k][0])/1000000.0),
+                     sprintf("%5.2f", (v=data[k][1])/1000000.0),
+                     sprintf("%8.2f", t/n/1000.0),
+                     sprintf("%8.2f",v/n/1000.0), }) });
     sort( (array(float))column(table,2), table );
     return reverse(table);
   }
@@ -132,9 +132,9 @@ class ProfInfo( string url )
   {
     write( "\n"+url+": \n" );
     ADT.Table.table t = ADT.Table.table( summarize_table(),
-					 ({ "What", "Calls",
-					    "Time", "CPU",
-					    "t/call(ms)", "cpu/call(ms)" }));
+                                         ({ "What", "Calls",
+                                            "Time", "CPU",
+                                            "t/call(ms)", "cpu/call(ms)" }));
 
     write( ADT.Table.ASCII.encode( t )+"\n" );
 
@@ -224,7 +224,7 @@ string name = roxen->bootstrap_info->get();
 class DataCacheImpl
 {
   protected typedef array(string|mapping(string:mixed))|string|
-		    function(string, RequestID:string|int) EntryType;
+                    function(string, RequestID:string|int) EntryType;
 
   protected mapping(string:EntryType) cache = ([]);
 
@@ -237,11 +237,11 @@ class DataCacheImpl
   mapping get_cache_stats()
   {
     return ([ "current_size"  : current_size,
-	      "max_size"      : max_size,
-	      "max_file_size" : max_file_size,
-	      "entries"       : sizeof(cache),
-	      "hits"          : hits,
-	      "misses"        : misses ]);
+              "max_size"      : max_size,
+              "max_file_size" : max_file_size,
+              "entries"       : sizeof(cache),
+              "hits"          : hits,
+              "misses"        : misses ]);
   }
     
   void flush()
@@ -267,10 +267,10 @@ class DataCacheImpl
     if (arrayp(e)) {
       current_size -= CALC_ENTRY_SIZE (key, e[0]);
       if (e[1]->co_handle) {
-	remove_call_out(e[1]->co_handle);
+        remove_call_out(e[1]->co_handle);
       }
       if (CacheKey cachekey = e[1]->key) {
-	destruct (cachekey);
+        destruct (cachekey);
       }
     } else if (!zero_type(e)) {
       current_size -= CALC_VARY_CB_SIZE(key);
@@ -291,8 +291,8 @@ class DataCacheImpl
     foreach(indices(cache); int ind; string key) {
       if (!key) continue;
       if (has_prefix(key, key_prefix)) {
-	really_low_expire_entry(key);
-	res++;
+        really_low_expire_entry(key);
+        res++;
       }
     }
     return res;
@@ -309,25 +309,25 @@ class DataCacheImpl
     while(1) {
       EntryType val;
       if (arrayp(val = cache[key_prefix])) {
-	current_size -= CALC_ENTRY_SIZE (key_prefix, val[0]);
-	m_delete(cache, key_prefix);
-	return;
+        current_size -= CALC_ENTRY_SIZE (key_prefix, val[0]);
+        m_delete(cache, key_prefix);
+        return;
       } else if (!zero_type(val)) {
-	current_size -= CALC_VARY_CB_SIZE(key_prefix);
+        current_size -= CALC_VARY_CB_SIZE(key_prefix);
       }
       if (!val) {
-	return;
+        return;
       }
 
       string|array(string) key_frag;
       if (stringp(val)) {
-	key_frag = id->request_headers[val];
+        key_frag = id->request_headers[val];
       } else {
-	key_frag = val(url, id);
+        key_frag = val(url, id);
       }
       if (key_frag)
-	// Avoid spoofing if key_frag happens to contain "\0\0".
-	key_frag = replace (key_frag, "\0", "\0\1");
+        // Avoid spoofing if key_frag happens to contain "\0\0".
+        key_frag = replace (key_frag, "\0", "\0\1");
       else key_frag = "";
       key_prefix += "\0\0" + key_frag;
     }
@@ -351,10 +351,10 @@ class DataCacheImpl
       string key_prefix = q[r = random(sizeof(q))];
       if (!key_prefix) continue;
       for(;r < sizeof(q); r++,i++) {
-	if (!q[r]) continue;
-	if (!has_prefix(q[r], key_prefix)) break;
-	really_low_expire_entry(q[r]);
-	q[r] = 0;
+        if (!q[r]) continue;
+        if (!has_prefix(q[r], key_prefix)) break;
+        really_low_expire_entry(q[r]);
+        q[r] = 0;
       }
     }
   }
@@ -367,58 +367,58 @@ class DataCacheImpl
       // NOTE: There's a possibility of a stale entry remaining in the
       //       cache until it expires, rather than being replaced here.
       SIMPLE_TRACE_ENTER (this, "Result of size %d is too large "
-			  "to store in the protocol cache (limit %d)",
-			  entry_size, max_file_size);
+                          "to store in the protocol cache (limit %d)",
+                          entry_size, max_file_size);
       SIMPLE_TRACE_LEAVE ("");
       return;
     }
 
     SIMPLE_TRACE_ENTER (this, "Storing result of size %d in the protocol cache "
-			"using key %O (expire in %ds)",
-			entry_size, url, expire);
+                        "using key %O (expire in %ds)",
+                        entry_size, url, expire);
     string key = url;
 
     foreach(id->misc->vary_cb_order || ({}),
-	    string|function(string, RequestID: string|int) vary_cb) {
+            string|function(string, RequestID: string|int) vary_cb) {
       array(string|mapping(string:mixed))|string|
-	function(string, RequestID:string|int) old = cache[key];
+        function(string, RequestID:string|int) old = cache[key];
       if (old && (old != vary_cb)) {
-	SIMPLE_TRACE_ENTER (this, "Registering vary cb %O - conflicts with "
-			    "existing entry %s, old entry expired",
-			    vary_cb,
-			    (arrayp (old) ? "of size " + sizeof (old[0]) :
-			     sprintf ("%O", old)));
-	low_expire_entry(key);
-	old = UNDEFINED; // Ensure that current size is updated below.
-	SIMPLE_TRACE_LEAVE ("");
+        SIMPLE_TRACE_ENTER (this, "Registering vary cb %O - conflicts with "
+                            "existing entry %s, old entry expired",
+                            vary_cb,
+                            (arrayp (old) ? "of size " + sizeof (old[0]) :
+                             sprintf ("%O", old)));
+        low_expire_entry(key);
+        old = UNDEFINED; // Ensure that current size is updated below.
+        SIMPLE_TRACE_LEAVE ("");
       }
       cache[key] = vary_cb;
       if(!old) {
-	current_size += CALC_VARY_CB_SIZE(key);
+        current_size += CALC_VARY_CB_SIZE(key);
       }
 
       SIMPLE_TRACE_ENTER (this, "Registering vary cb %O", vary_cb);
 
       string key_frag;
       if (stringp(vary_cb)) {
-	string|array(string) header = id->request_headers[vary_cb];
-	if (arrayp(header)) key_frag = header * ",";
-	else key_frag = header;
+        string|array(string) header = id->request_headers[vary_cb];
+        if (arrayp(header)) key_frag = header * ",";
+        else key_frag = header;
       } else {
-	int|string frag = vary_cb(url, id);
-	if (intp(frag) && frag) {
-	  key_frag = frag->digits(256);
-	} else {
-	  key_frag = frag;
-	}
+        int|string frag = vary_cb(url, id);
+        if (intp(frag) && frag) {
+          key_frag = frag->digits(256);
+        } else {
+          key_frag = frag;
+        }
       }
 
       SIMPLE_TRACE_LEAVE ("Vary cb resolved to key fragment %O",
-			  key_frag || "");
+                          key_frag || "");
 
       if (key_frag)
-	// Avoid spoofing if key_frag happens to contain "\0\0".
-	key_frag = replace (key_frag, "\0", "\0\1");
+        // Avoid spoofing if key_frag happens to contain "\0\0".
+        key_frag = replace (key_frag, "\0", "\0\1");
       else key_frag = "";
       key += "\0\0" + key_frag;
       entry_size += 2 + sizeof(key_frag);
@@ -428,9 +428,9 @@ class DataCacheImpl
       function(string, RequestID:string) old = cache[key];
     if (old) {
       SIMPLE_TRACE_LEAVE ("Entry conflicts with existing entry %s, "
-			  "old entry expired",
-			  (arrayp (old) ? "of size " + sizeof (old[0]) :
-			   sprintf ("%O", old)));
+                          "old entry expired",
+                          (arrayp (old) ? "of size " + sizeof (old[0]) :
+                           sprintf ("%O", old)));
       low_expire_entry(key);
     }
     else
@@ -452,7 +452,7 @@ class DataCacheImpl
   array(string|mapping(string:mixed)) get(string url, RequestID id)
   {
     SIMPLE_TRACE_ENTER (this, "Looking up entry for %O in the protocol cache",
-			url);
+                        url);
 
     array(string|mapping(string:mixed))|string|
       function(string, RequestID:string|int) res;
@@ -460,38 +460,38 @@ class DataCacheImpl
     while(1) {
       id->misc->protcache_cost++;
       if (arrayp(res = cache[key])) {
-	hits++;
-	SIMPLE_TRACE_LEAVE ("Found entry of size %d", sizeof (res[0]));
-	return [array(string|mapping(string:mixed))]res;
+        hits++;
+        SIMPLE_TRACE_LEAVE ("Found entry of size %d", sizeof (res[0]));
+        return [array(string|mapping(string:mixed))]res;
       }
       if (!res) {
-	misses++;
-	SIMPLE_TRACE_LEAVE ("Found no entry");
-	return UNDEFINED;
+        misses++;
+        SIMPLE_TRACE_LEAVE ("Found no entry");
+        return UNDEFINED;
       }
 
       SIMPLE_TRACE_ENTER (this, "Found vary cb %O", res);
 
       string key_frag;
       if (stringp(res)) {
-	string|array(string) header = id->request_headers[res];
-	if (arrayp(header)) key_frag = header * ",";
-	else key_frag = header;
+        string|array(string) header = id->request_headers[res];
+        if (arrayp(header)) key_frag = header * ",";
+        else key_frag = header;
       } else {
-	int|string frag = res(url, id);
-	if (intp(frag) && frag) {
-	  key_frag = frag->digits(256);
-	} else {
-	  key_frag = frag;
-	}
+        int|string frag = res(url, id);
+        if (intp(frag) && frag) {
+          key_frag = frag->digits(256);
+        } else {
+          key_frag = frag;
+        }
       }
 
       SIMPLE_TRACE_LEAVE ("Vary cb resolved to key fragment %O",
-			  key_frag || "");
+                          key_frag || "");
 
       if (key_frag)
-	// Avoid spoofing if key_frag happens to contain "\0\0".
-	key_frag = replace (key_frag, "\0", "\0\1");
+        // Avoid spoofing if key_frag happens to contain "\0\0".
+        key_frag = replace (key_frag, "\0", "\0\1");
       else key_frag = "";
       key += "\0\0" + key_frag;
     };
@@ -558,7 +558,7 @@ class DataCache {
     if (!id->rawauth) {
       res = ::get(PUBL_ONLY + url, id);
       if (!res)
-	misses--;
+        misses--;
     }
     
     //  Anyone can search the AUTH_PUBL compartment
@@ -654,24 +654,24 @@ array(int) generate_module_oid_segment(RoxenModule me)
 }
 
 ADT.Trie generate_module_mib(array(int) oid,
-			     array(int) oid_suffix,
-			     RoxenModule me,
-			     ModuleInfo moduleinfo,
-			     ModuleCopies module)
+                             array(int) oid_suffix,
+                             RoxenModule me,
+                             ModuleInfo moduleinfo,
+                             ModuleCopies module)
 {
   array(int) segment = generate_module_oid_segment(me);
   return SNMP.SimpleMIB(oid,
-			oid_suffix + segment,
-			({
-			  UNDEFINED,
-			  SNMP.Integer(segment[-1], "moduleCopy"),
-			  SNMP.String(otomod[me],
-				      "moduleIdentifier"),
-			  SNMP.Integer(moduleinfo->type,
-				       "moduleType"),
-			  SNMP.String(me->cvs_version || "",
-				      "moduleVersion"),
-			}));
+                        oid_suffix + segment,
+                        ({
+                          UNDEFINED,
+                          SNMP.Integer(segment[-1], "moduleCopy"),
+                          SNMP.String(otomod[me],
+                                      "moduleIdentifier"),
+                          SNMP.Integer(moduleinfo->type,
+                                       "moduleType"),
+                          SNMP.String(me->cvs_version || "",
+                                      "moduleVersion"),
+                        }));
 }
 
 // Cache some configuration variables.
@@ -743,11 +743,11 @@ private void sort_modules()
 
 // Generic lookup function for the various module caches.
 private array(function|RoxenModule) low_module_lookup(int module_type_mask,
-						      string|void symbol)
+                                                      string|void symbol)
 {
   array(RoxenModule) modules =
     reverse(filter(sorted_modules,
-		   map(sorted_module_types, `&, module_type_mask)));
+                   map(sorted_module_types, `&, module_type_mask)));
   if (!symbol) return modules;
   return modules[symbol] - ({ 0 });
 }
@@ -853,7 +853,7 @@ void unregister_module_hot_reload(RoxenModule mod){}
 private void safe_stop_module (RoxenModule mod, string desc)
 {
   if (mixed err = catch (mod && mod->stop &&
-			 call_module_func_with_cbs (mod, "stop", 0)))
+                         call_module_func_with_cbs (mod, "stop", 0)))
     report_error ("While stopping " + desc + ": " + describe_backtrace (err));
 
   unregister_module_hot_reload(mod);
@@ -904,7 +904,7 @@ void stop (void|int asynch)
 }
 
 string|array(string) type_from_filename( string file, int|void to,
-					 string|void myext )
+                                         string|void myext )
 {
   array(string)|string tmp;
   if(!types_fun)
@@ -920,9 +920,9 @@ string|array(string) type_from_filename( string file, int|void to,
       array(string) tmp2 = file/".";
       string nx;
       if (sizeof(tmp2) > 2)
-	nx = lower_case(tmp2[-2]);
+        nx = lower_case(tmp2[-2]);
       tmp[0] = (nx && types_fun(nx)) || types_fun("default") ||
-	"application/octet-stream";
+        "application/octet-stream";
     }
   } else if (!(tmp = types_fun("default"))) {
     tmp = ({ "application/octet-stream", 0 });
@@ -953,21 +953,21 @@ array (RoxenModule) get_providers(string provides)
       if (!me->query_provides) continue;
       int pri = me->query("_priority");
       if (pri != prev_pri) {
-	sort(modules->module_identifier(), modules);
-	foreach(modules, RoxenModule p) {
-	  mixed provs = p->query_provides();
-	  if (stringp(provs)) {
-	    provs = (< provs >);
-	  } else if (arrayp(provs)) {
-	    provs = mkmultiset(provs);
-	  }
-	  if (provs) {
-	    foreach(provs; string provides;) {
-	      new_provider_module_cache[provides] += ({ p });
-	    }
-	  }
-	}
-	modules = ({});
+        sort(modules->module_identifier(), modules);
+        foreach(modules, RoxenModule p) {
+          mixed provs = p->query_provides();
+          if (stringp(provs)) {
+            provs = (< provs >);
+          } else if (arrayp(provs)) {
+            provs = mkmultiset(provs);
+          }
+          if (provs) {
+            foreach(provs; string provides;) {
+              new_provider_module_cache[provides] += ({ p });
+            }
+          }
+        }
+        modules = ({});
       }
       prev_pri = pri;
       modules += ({ me });
@@ -976,14 +976,14 @@ array (RoxenModule) get_providers(string provides)
     foreach(modules, RoxenModule p) {
       mixed provs = p->query_provides();
       if (stringp(provs)) {
-	provs = (< provs >);
+        provs = (< provs >);
       } else if (arrayp(provs)) {
-	provs = mkmultiset(provs);
+        provs = mkmultiset(provs);
       }
       if (provs) {
-	foreach(provs; string provides;) {
-	  new_provider_module_cache[provides] += ({ p });
-	}
+        foreach(provs; string provides;) {
+          new_provider_module_cache[provides] += ({ p });
+        }
       }
     }
 
@@ -1036,7 +1036,7 @@ mixed call_provider(string provides, string fun, mixed ... args)
     if(objectp(mod) && functionp(f = mod[fun])) {
       mixed ret;
       if (ret = f(@args)) {
-	return ret;
+        return ret;
       }
     }
   }
@@ -1056,7 +1056,7 @@ array(function) file_extension_modules(string ext)
       if (!me->handle_file_extension) continue;
       array(string) arr = me->query_file_extensions();
       foreach(arr, string e) {
-	new_file_extension_module_cache[e] += ({ me->handle_file_extension });
+        new_file_extension_module_cache[e] += ({ me->handle_file_extension });
       }
     }
 
@@ -1119,7 +1119,7 @@ protected mixed strip_fork_information(RequestID id)
     //    foo.txt/..namedfork/rsrc     (resource fork of foo.txt)
     //    foo.txt/rsrc                 (resource fork of foo.txt)
     if (has_value(id->not_query, "..namedfork/") ||
-	has_suffix(id->not_query, "/rsrc"))
+        has_suffix(id->not_query, "/rsrc"))
       //  Skip elaborate error page since we get these e.g. for WebDAV
       //  mounts in OS X Finder.
       return Roxen.http_status(404, "No such file.");
@@ -1144,11 +1144,11 @@ array (function) first_modules()
     //  Add special fork handlers on Windows and Mac OS X
     if (
 #ifdef __NT__
-	1 ||
+        1 ||
 #endif
-	uname()->sysname == "Darwin") {
+        uname()->sysname == "Darwin") {
       new_first_module_cache += ({
-	strip_fork_information,	// Always first!
+        strip_fork_information,	// Always first!
       });
     }
 
@@ -1206,15 +1206,15 @@ array location_modules()
     foreach(low_module_lookup(MODULE_LOCATION), RoxenModule me) {
       int pri = me->query("_priority");
       if (pri != prev_pri) {
-	//  Order after longest prefix length
-	sort(map(level_locations,
-		 lambda(string loc) { return -sizeof(loc); }),
-	     level_locations, level_find_files);
-	foreach(level_locations; int i; string path) {
-	  new_location_module_cache += ({ ({ path, level_find_files[i] }) });
-	}
-	level_locations = ({});
-	level_find_files = ({});
+        //  Order after longest prefix length
+        sort(map(level_locations,
+                 lambda(string loc) { return -sizeof(loc); }),
+             level_locations, level_find_files);
+        foreach(level_locations; int i; string path) {
+          new_location_module_cache += ({ ({ path, level_find_files[i] }) });
+        }
+        level_locations = ({});
+        level_find_files = ({});
       }
       prev_pri = pri;
       // FIXME: Should there be a catch() here?
@@ -1225,8 +1225,8 @@ array location_modules()
     }
 
     sort(map(level_locations,
-	     lambda(string loc) { return -sizeof(loc); }),
-	 level_locations, level_find_files);
+             lambda(string loc) { return -sizeof(loc); }),
+         level_locations, level_find_files);
     foreach(level_locations; int i; string path) {
       new_location_module_cache += ({ ({ path, level_find_files[i] }) });
     }
@@ -1254,8 +1254,8 @@ void end_logger()
 {
   if (mixed err = catch {
       if (roxen.LogFile logger =
-	  log_function && function_object (log_function)) {
-	logger->close();
+          log_function && function_object (log_function)) {
+        logger->close();
       }
     }) report_error ("While stopping the logger: " + describe_backtrace (err));
   log_function = 0;
@@ -1282,17 +1282,17 @@ private void parse_log_formats()
   foreach(foo; int i; string b)
     if(strlen(b) && b[0] != '#') {
       if (sscanf (b, "%d:%*[\t ]%s", int status, b))
-	log_format[status] = b;
+        log_format[status] = b;
       else if (sscanf (b, "*:%*[\t ]%s", b))
-	log_format[0] = b;
+        log_format[0] = b;
       else if (sscanf (b, "%[-_.#a-zA-Z0-9*]/%[-_.#a-zA-Z0-9*]:%*[\t ]%s",
-		       string facility, string action, b) >= 2)
-	log_format[facility + "/" + action] = b;
+                       string facility, string action, b) >= 2)
+        log_format[facility + "/" + action] = b;
       else
-	// Ought to be an error when the variable is set, but that's
-	// not entirely backward compatible.
-	report_warning ("Unrecognized format on line %d "
-			"in log format setting: %O\n", i + 1, b);
+        // Ought to be an error when the variable is set, but that's
+        // not entirely backward compatible.
+        report_warning ("Unrecognized format on line %d "
+                        "in log format setting: %O\n", i + 1, b);
     }
 }
 
@@ -1304,7 +1304,7 @@ void log(mapping file, RequestID request_id)
     request_id->init_cookies(1);
     foreach(log_funs, function f)
       if( f( request_id, file ) )
-	return;
+        return;
   }
 
   if( !log_function ) 
@@ -1323,7 +1323,7 @@ void log(mapping file, RequestID request_id)
 }
 
 void log_event (string facility, string action, string resource,
-		void|mapping(string:mixed) info)
+                void|mapping(string:mixed) info)
 //! Log an event.
 //!
 //! This function is primarily intended for logging arbitrary internal
@@ -1402,10 +1402,10 @@ void log_event (string facility, string action, string resource,
       // Also try without the module copy number if the facility
       // appears to be a module identifier.
       modname != "" && (log_format[modname + "/" + action] ||
-			log_format[modname + "/*"]) ||
+                        log_format[modname + "/*"]) ||
       log_format["*/*"])
     roxen.run_log_event_format (format, log_function,
-				facility, action, resource || "-", info);
+                                facility, action, resource || "-", info);
 }
 
 array(string) userinfo(string u, RequestID|void id)
@@ -1495,7 +1495,7 @@ User authenticate( RequestID id, UserDB|void database)
 }
 
 mapping authenticate_throw( RequestID id, string realm,
-			    UserDB|void database)
+                            UserDB|void database)
 //! Returns a reply mapping, similar to @[Roxen.http_rxml_reply] with
 //! friends. If no @[database] is specified, all databases in the
 //! current configuration are searched in priority order.
@@ -1616,7 +1616,7 @@ private mapping internal_gopher_image(string from)
 private mapping(RoxenModule:array) security_level_cache = set_weak_flag (([]), 1);
 
 int|mapping check_security(function|RoxenModule a, RequestID id,
-			   void|int slevel)
+                           void|int slevel)
 {
   array seclevels;
   // NOTE:
@@ -1631,12 +1631,12 @@ int|mapping check_security(function|RoxenModule a, RequestID id,
     // since it can be (in) an object that is very short lived.
     if (!(seclevels = security_level_cache[mod])) {
       if(mod->query_seclevels)
-	seclevels = ({
-	  mod->query_seclevels(),
-	  mod->query("_seclvl"),
-	});
+        seclevels = ({
+          mod->query_seclevels(),
+          mod->query("_seclvl"),
+        });
       else
-	seclevels = ({0,0});
+        seclevels = ({0,0});
       security_level_cache[mod] = seclevels;
     }
   }
@@ -1661,8 +1661,8 @@ int|mapping check_security(function|RoxenModule a, RequestID id,
     return 0; // Ok if there are no patterns.
 
   report_error("check_security(): %s:\n%s\n",
-	       LOC_M(39, "Error during module security check"),
-	       describe_backtrace(err));
+               LOC_M(39, "Error during module security check"),
+               describe_backtrace(err));
 
   return 1;
 }
@@ -1696,14 +1696,14 @@ void clear_memory_caches()
   foreach(indices(otomod), RoxenModule m)
     if (m && m->clear_memory_caches)
       if (mixed err = catch( m->clear_memory_caches() ))
-	report_error("clear_memory_caches() "+
-		     LOC_M(40, "failed for module %O:\n%s\n"),
-		     otomod[m], describe_backtrace(err));
+        report_error("clear_memory_caches() "+
+                     LOC_M(40, "failed for module %O:\n%s\n"),
+                     otomod[m], describe_backtrace(err));
 }
 
 //  Returns tuple < image, mime-type >
 protected array(string) draw_saturation_bar(int hue,int brightness, int where,
-					    int small_version)
+                                            int small_version)
 {
   Image.Image bar =
     small_version ? Image.Image(16, 128) : Image.Image(30, 256);
@@ -1796,8 +1796,8 @@ private mapping internal_roxen_image( string from, RequestID id )
   if (has_prefix(from, "spinner-")) {
     array(string) spinner = draw_spinner(from[8..]);
     return ([ "data" : spinner[0],
-	      "type" : spinner[1],
-	      "stat" : ({ 0, 0, 0, 900000000, 0, 0, 0 }) ]);
+              "type" : spinner[1],
+              "stat" : ({ 0, 0, 0, 900000000, 0, 0, 0 }) ]);
   }
 #endif
 
@@ -1806,7 +1806,7 @@ private mapping internal_roxen_image( string from, RequestID id )
   string colorbar;
   if(sscanf(from, "%s:%d,%d,%d", colorbar, hue, bright,w)==4) {
     array bar = draw_saturation_bar(hue, bright, w,
-				    colorbar == "colorbar-small");
+                                    colorbar == "colorbar-small");
     return Roxen.http_string_answer(bar[0], bar[1]);
   }
 
@@ -1853,9 +1853,9 @@ mixed _lock(object|function f)
     {
       // Allow recursive locks.
       catch{
-	// report_debug("lock %O\n", f);
-	locked[f]++;
-	key = l();
+        // report_debug("lock %O\n", f);
+        locked[f]++;
+        key = l();
       };
     } else
       thread_safe[f]++;
@@ -1868,7 +1868,7 @@ mixed _lock(object|function f)
       // Needed to avoid race-condition.
       l = Thread.Mutex()->lock;
       if (!locks[f]) {
-	locks[f]=l;
+        locks[f]=l;
       }
     }
     // report_debug("lock %O\n", f);
@@ -1892,55 +1892,55 @@ string examine_return_mapping(mapping m)
 
    if (m->extra_heads)
       m->extra_heads=mkmapping(Array.map(indices(m->extra_heads),
-					 lower_case),
-			       values(m->extra_heads));
+                                         lower_case),
+                               values(m->extra_heads));
    else
       m->extra_heads=([]);
 
    switch (m->error||200)
    {
       case 302: // redirect
-	 if (m->extra_heads &&
-	     (m->extra_heads->location))
-	   res = sprintf("Returned redirect to %O ", m->extra_heads->location);
-	 else
-	   res = "Returned redirect, but no location header. ";
-	 break;
+         if (m->extra_heads &&
+             (m->extra_heads->location))
+           res = sprintf("Returned redirect to %O ", m->extra_heads->location);
+         else
+           res = "Returned redirect, but no location header. ";
+         break;
 
       case 401:
-	 if (m->extra_heads["www-authenticate"])
-	   res = sprintf("Returned authentication failed: %O ",
-			 m->extra_heads["www-authenticate"]);
-	 else
-	   res = "Returned authentication failed. ";
-	 break;
+         if (m->extra_heads["www-authenticate"])
+           res = sprintf("Returned authentication failed: %O ",
+                         m->extra_heads["www-authenticate"]);
+         else
+           res = "Returned authentication failed. ";
+         break;
 
       case 200:
-	 // NB: Note the setting of extra_heads above.
-	 if (sizeof(m) <= 1) {
-	   res = "Returned multi status. ";
-	   break;
-	 }
-	 res = "Returned ok. ";
-	 break;
+         // NB: Note the setting of extra_heads above.
+         if (sizeof(m) <= 1) {
+           res = "Returned multi status. ";
+           break;
+         }
+         res = "Returned ok. ";
+         break;
 
       default:
-	 res = sprintf("Returned %O. ", m->error);
+         res = sprintf("Returned %O. ", m->error);
    }
 
    if (!zero_type(m->len))
       if (m->len<0)
-	 res += "No data ";
+         res += "No data ";
       else
-	 res += sprintf("%O bytes ", m->len);
+         res += sprintf("%O bytes ", m->len);
    else if (stringp(m->data))
      res += sprintf("%d bytes ", strlen(m->data));
    else if (objectp(m->file))
       if (catch {
-	 Stat a=m->file->stat();
-	 res += sprintf("%O bytes ", a[1]-m->file->tell());
+         Stat a=m->file->stat();
+         res += sprintf("%O bytes ", a[1]-m->file->tell());
       })
-	res += "? bytes ";
+        res += "? bytes ";
 
    if (m->data) res += "(static)";
    else if (m->file) res += "(open file)";
@@ -1956,17 +1956,17 @@ string examine_return_mapping(mapping m)
 
 //! Find all applicable locks for this user on @[path].
 mapping(string:DAVLock) find_locks(string path, int(-1..1) recursive,
-				   int(0..1) exclude_shared, RequestID id)
+                                   int(0..1) exclude_shared, RequestID id)
 {
   SIMPLE_TRACE_ENTER(0, "find_locks(%O, %O, %O, X)",
-		     path, recursive, exclude_shared);
+                     path, recursive, exclude_shared);
   mapping(string:DAVLock) locks = ([]);
 
   foreach(location_module_cache||location_modules(),
-	  [string loc, function func])
+          [string loc, function func])
   {
     SIMPLE_TRACE_ENTER(function_object(func),
-		       "Finding locks in %O.", loc);
+                       "Finding locks in %O.", loc);
     string subpath;
     if (has_prefix(path, loc)) {
       // path == loc + subpath.
@@ -1980,10 +1980,10 @@ mapping(string:DAVLock) find_locks(string path, int(-1..1) recursive,
       continue;
     }
     TRACE_ENTER(sprintf("subpath: %O", subpath),
-		function_object(func)->find_locks);
+                function_object(func)->find_locks);
     mapping(string:DAVLock) sub_locks =
       function_object(func)->find_locks(subpath, recursive,
-					exclude_shared, id);
+                                        exclude_shared, id);
     TRACE_LEAVE("");
     if (sub_locks) {
       SIMPLE_TRACE_LEAVE("Got some locks: %O", sub_locks);
@@ -2027,8 +2027,8 @@ mapping(string:DAVLock) find_locks(string path, int(-1..1) recursive,
 //! persistent storage of them. The default implementation does not
 //! store locks persistently.
 mapping(string:mixed)|int(-1..0) check_locks(string path,
-					     int(0..1) recursive,
-					     RequestID id)
+                                             int(0..1) recursive,
+                                             RequestID id)
 {
   TRACE_ENTER(sprintf("check_locks(%O, %d, X)", path, recursive), this);
 
@@ -2089,19 +2089,19 @@ mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID id)
   if (!has_suffix(path, "/")) path+="/";
 
   foreach(location_module_cache||location_modules(),
-	  [string loc, function func])
+          [string loc, function func])
   {
     if (has_prefix(path, loc)) {
       // path == loc + subpath.
       mapping(string:mixed) ret =
-	function_object(func)->unlock_file(path[sizeof(loc)..], lock, id);
+        function_object(func)->unlock_file(path[sizeof(loc)..], lock, id);
 
       // FIXME: Semantics for partial unlocking?
       if (ret) return ret;
     } else if (lock->recursive && has_prefix(loc, path)) {
       // loc == path + ignored.
       mapping(string:mixed) ret =
-	function_object(func)->unlock_file("/", lock, id);
+        function_object(func)->unlock_file("/", lock, id);
 
       // FIXME: Semantics for partial unlocking?
       if (ret) return ret;
@@ -2121,9 +2121,9 @@ int expire_locks(RequestID id)
   foreach(active_locks; DAVLock lock;) {
     if (lock->expiry_time) {
       if (lock->expiry_time < t) {
-	unlock_file(lock->path, lock, id);
+        unlock_file(lock->path, lock, id);
       } else if (lock->expiry_time < min_time) {
-	min_time = lock->expiry_time;
+        min_time = lock->expiry_time;
       }
     }
   }
@@ -2180,16 +2180,16 @@ void refresh_lock(DAVLock lock)
 //!   Returns a result mapping on failure,
 //!   and the resulting @[DAVLock] on success.
 mapping(string:mixed)|DAVLock lock_file(string path,
-					int(0..1) recursive,
-					string lockscope,
-					string locktype,
-					int(0..) expiry_delta,
-					array(Parser.XML.Tree.Node) owner,
-					RequestID id)
+                                        int(0..1) recursive,
+                                        string lockscope,
+                                        string locktype,
+                                        int(0..) expiry_delta,
+                                        array(Parser.XML.Tree.Node) owner,
+                                        RequestID id)
 {
   TRACE_ENTER(sprintf("%O(%O, %O, %O, %O, %O, %O, %O)",
-		      this_function, path, recursive, lockscope,
-		      locktype, expiry_delta, owner, id), 0);
+                      this_function, path, recursive, lockscope,
+                      locktype, expiry_delta, owner, id), 0);
 
   int is_file;
 
@@ -2210,7 +2210,7 @@ mapping(string:mixed)|DAVLock lock_file(string path,
   foreach(locks; string lock_token; DAVLock lock) {
     TRACE_ENTER(sprintf("Checking lock %O...\n", lock), 0);
     if ((lock->lockscope == "DAV:exclusive") ||
-	(lockscope == "DAV:exclusive")) {
+        (lockscope == "DAV:exclusive")) {
       TRACE_LEAVE("Locked.");
       id->set_status_for_path(lock->path, 423, "Locked");
       fail = 1;
@@ -2227,11 +2227,11 @@ mapping(string:mixed)|DAVLock lock_file(string path,
 
   string locktoken = "urn:uuid:" + roxen->new_uuid_string();
   DAVLock lock = DAVLock(locktoken, path, recursive, lockscope, locktype,
-			 expiry_delta, owner);
+                         expiry_delta, owner);
   lock->is_file = is_file;
   array(array(string|function)) successful_locks = ({});
   foreach(location_module_cache||location_modules(),
-	  [string loc, function func])
+          [string loc, function func])
   {
     string subpath;
     if (has_prefix(path, loc)) {
@@ -2246,7 +2246,7 @@ mapping(string:mixed)|DAVLock lock_file(string path,
     }
 
     TRACE_ENTER(sprintf("Calling %O->lock_file(%O, %O, %O)...",
-			function_object(func), subpath, lock, id), 0);
+                        function_object(func), subpath, lock, id), 0);
     mapping(string:mixed) lock_error =
       function_object(func)->lock_file(subpath, lock, id);
     if (lock_error) {
@@ -2254,16 +2254,16 @@ mapping(string:mixed)|DAVLock lock_file(string path,
       // registered successfully.
       foreach(reverse(successful_locks), [string loc2, function func2])
       {
-	if (has_prefix(path, loc2)) {
-	  // path == loc2 + subpath.
-	  mapping(string:mixed) ret =
-	    function_object(func2)->unlock_file(path[sizeof(loc2)..],
-						lock, id);
-	} else if (recursive && has_prefix(loc2, path)) {
-	  // loc2 == path + ignored.
-	  mapping(string:mixed) ret =
-	    function_object(func2)->unlock_file("/", lock, id);
-	}
+        if (has_prefix(path, loc2)) {
+          // path == loc2 + subpath.
+          mapping(string:mixed) ret =
+            function_object(func2)->unlock_file(path[sizeof(loc2)..],
+                                                lock, id);
+        } else if (recursive && has_prefix(loc2, path)) {
+          // loc2 == path + ignored.
+          mapping(string:mixed) ret =
+            function_object(func2)->unlock_file("/", lock, id);
+        }
       }
       // destruct(lock);
       TRACE_LEAVE(sprintf("Lock error: %O", lock_error));
@@ -2306,7 +2306,7 @@ string|array(Parser.XML.Tree.SimpleNode)|mapping(string:mixed)
   query_property(string path, string prop_name, RequestID id)
 {
   foreach(location_module_cache||location_modules(),
-	  [string loc, function func])
+          [string loc, function func])
   {
     if (!has_prefix(path, loc)) {
       // Does not apply to this location module.
@@ -2374,37 +2374,37 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
        ) {
       switch(type) {
        case "roxen":
-	//  Mark all /internal-roxen-* as cacheable even though the user might be
-	//  authenticated (which normally disables protocol-level caching).
+        //  Mark all /internal-roxen-* as cacheable even though the user might be
+        //  authenticated (which normally disables protocol-level caching).
         CACHE_INDEFINITELY();
-	PROTO_CACHE();
-	id->set_response_header("Cache-Control", "public, max-age=31536000");
-	
-	TRACE_LEAVE("Magic internal roxen image");
+        PROTO_CACHE();
+        id->set_response_header("Cache-Control", "public, max-age=31536000");
+        
+        TRACE_LEAVE("Magic internal roxen image");
         if(loc=="unit" || loc=="pixel-of-destiny")
-	{
-	  TIMER_END(internal_magic);
-	  return (["data":"GIF89a\1\0\1\0\200ÿ\0ÀÀÀ\0\0\0!ù\4\1\0\0\0\0,"
-		   "\0\0\0\0\1\0\1\0\0\1\1""2\0;",
-		   "type":"image/gif",
-		   "stat": ({0, 0, 0, 900000000, 0, 0, 0})]);
-	}
-	if(has_prefix(loc, "pixel-"))
-	{
-	  TIMER_END(internal_magic);
-	  return (["data":sprintf("GIF89a\1\0\1\0\200\0\0\0\0\0%c%c%c,\0\0\0"
-				  "\0\1\0\1\0\0\2\2L\1\0;",
-				  @parse_color(loc[6..])),
-		   "type":"image/gif",
-		   "stat": ({0, 0, 0, 900000000, 0, 0, 0})]);
-	}
-	TIMER_END(internal_magic);
-	return internal_roxen_image(loc, id);
+        {
+          TIMER_END(internal_magic);
+          return (["data":"GIF89a\1\0\1\0\200ÿ\0ÀÀÀ\0\0\0!ù\4\1\0\0\0\0,"
+                   "\0\0\0\0\1\0\1\0\0\1\1""2\0;",
+                   "type":"image/gif",
+                   "stat": ({0, 0, 0, 900000000, 0, 0, 0})]);
+        }
+        if(has_prefix(loc, "pixel-"))
+        {
+          TIMER_END(internal_magic);
+          return (["data":sprintf("GIF89a\1\0\1\0\200\0\0\0\0\0%c%c%c,\0\0\0"
+                                  "\0\1\0\1\0\0\2\2L\1\0;",
+                                  @parse_color(loc[6..])),
+                   "type":"image/gif",
+                   "stat": ({0, 0, 0, 900000000, 0, 0, 0})]);
+        }
+        TIMER_END(internal_magic);
+        return internal_roxen_image(loc, id);
 
        case "gopher":
-	TRACE_LEAVE("Magic internal gopher image");
-	TIMER_END(internal_magic);
-	return internal_gopher_image(loc);
+        TRACE_LEAVE("Magic internal gopher image");
+        TIMER_END(internal_magic);
+        return internal_gopher_image(loc);
       }
     }
 #endif
@@ -2417,73 +2417,73 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
       string name, rest;
       function find_internal;
       if(2==sscanf(file[strlen(internal_location)..], "%s/%s", name, rest) &&
-	 (module = find_module(replace(name, "!", "#"))) &&
-	 (find_internal = module->find_internal))
+         (module = find_module(replace(name, "!", "#"))) &&
+         (find_internal = module->find_internal))
       {
 #ifdef MODULE_LEVEL_SECURITY
-	if(tmp2 = check_security(find_internal, id, slevel))
-	  if(intp(tmp2))
-	  {
-	    TRACE_LEAVE("Permission to access module denied.");
-	    find_internal = 0;
-	  } else {
-	    TRACE_LEAVE("");
-	    TRACE_LEAVE("Request denied.");
-	    TIMER_END(internal_magic);
-	    return tmp2;
-	  }
+        if(tmp2 = check_security(find_internal, id, slevel))
+          if(intp(tmp2))
+          {
+            TRACE_LEAVE("Permission to access module denied.");
+            find_internal = 0;
+          } else {
+            TRACE_LEAVE("");
+            TRACE_LEAVE("Request denied.");
+            TIMER_END(internal_magic);
+            return tmp2;
+          }
 #endif
-	if(find_internal)
-	{
-	  TRACE_ENTER("Calling find_internal()...", find_internal);
-	  PROF_ENTER("find_internal","location");
-	  LOCK(find_internal);
-	  fid=find_internal( rest, id );
-	  UNLOCK();
-	  //TRACE_LEAVE(sprintf("find_internal has returned %O", fid));
-	  TRACE_LEAVE("");
-	  PROF_LEAVE("find_internal","location");
-	  if(fid)
-	  {
-	    if(mappingp(fid))
-	    {
-	      TRACE_LEAVE("");
-	      TRACE_LEAVE(examine_return_mapping(fid));
-	      TIMER_END(internal_magic);
-	      return fid;
-	    }
-	    else
-	    {
+        if(find_internal)
+        {
+          TRACE_ENTER("Calling find_internal()...", find_internal);
+          PROF_ENTER("find_internal","location");
+          LOCK(find_internal);
+          fid=find_internal( rest, id );
+          UNLOCK();
+          //TRACE_LEAVE(sprintf("find_internal has returned %O", fid));
+          TRACE_LEAVE("");
+          PROF_LEAVE("find_internal","location");
+          if(fid)
+          {
+            if(mappingp(fid))
+            {
+              TRACE_LEAVE("");
+              TRACE_LEAVE(examine_return_mapping(fid));
+              TIMER_END(internal_magic);
+              return fid;
+            }
+            else
+            {
 #ifdef MODULE_LEVEL_SECURITY
-	      int oslevel = slevel;
-	      array slca;
-	      if(slca = security_level_cache[ Roxen.get_owning_module (find_internal) ])
-		slevel = slca[1];
-	      // security_level_cache from
-	      // check_security
-	      id->misc->seclevel = slevel;
+              int oslevel = slevel;
+              array slca;
+              if(slca = security_level_cache[ Roxen.get_owning_module (find_internal) ])
+                slevel = slca[1];
+              // security_level_cache from
+              // check_security
+              id->misc->seclevel = slevel;
 #endif
-	      if(objectp(fid))
-		TRACE_LEAVE("Returned open filedescriptor. "
+              if(objectp(fid))
+                TRACE_LEAVE("Returned open filedescriptor. "
 #ifdef MODULE_LEVEL_SECURITY
-			    +(slevel != oslevel?
-			      sprintf(" The security level is now %d.", slevel):"")
+                            +(slevel != oslevel?
+                              sprintf(" The security level is now %d.", slevel):"")
 #endif
-			    );
-	      else
-		TRACE_LEAVE("Returned directory indicator."
+                            );
+              else
+                TRACE_LEAVE("Returned directory indicator."
 #ifdef MODULE_LEVEL_SECURITY
-			    +(oslevel != slevel?
-			      sprintf(" The security level is now %d.", slevel):"")
+                            +(oslevel != slevel?
+                              sprintf(" The security level is now %d.", slevel):"")
 #endif
-			    );
-	    }
-	  } else
-	    TRACE_LEAVE("");
-	} else
-	  TRACE_LEAVE("");
+                            );
+            }
+          } else
+            TRACE_LEAVE("");
+        } else
+          TRACE_LEAVE("");
       } else
-	TRACE_LEAVE("");
+        TRACE_LEAVE("");
     }
     TIMER_END(internal_magic);
   }
@@ -2506,32 +2506,32 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 
       if(mappingp(tmp))
       {
-	TRACE_LEAVE("");
-	TRACE_LEAVE("Returning data");
-	TIMER_END(url_modules);
-	return tmp;
+        TRACE_LEAVE("");
+        TRACE_LEAVE("Returning data");
+        TIMER_END(url_modules);
+        return tmp;
       }
       if(objectp( tmp ))
       {
-	mixed err;
+        mixed err;
 
-	id->misc->get_file_nest++;
-	err = catch {
-	  if( id->misc->get_file_nest < 20 )
-	    tmp = (id->conf || this_object())->low_get_file( tmp, no_magic );
-	  else
-	  {
-	    TRACE_LEAVE("Too deep recursion");
-	    error("Too deep recursion in roxen::get_file() while mapping "
-		  +file+".\n");
-	  }
-	};
-	id->misc->get_file_nest = 0;
-	if(err) throw(err);
-	TRACE_LEAVE("");
-	TRACE_LEAVE("Returning data");
-	TIMER_END(url_modules);
-	return tmp;
+        id->misc->get_file_nest++;
+        err = catch {
+          if( id->misc->get_file_nest < 20 )
+            tmp = (id->conf || this_object())->low_get_file( tmp, no_magic );
+          else
+          {
+            TRACE_LEAVE("Too deep recursion");
+            error("Too deep recursion in roxen::get_file() while mapping "
+                  +file+".\n");
+          }
+        };
+        id->misc->get_file_nest = 0;
+        if(err) throw(err);
+        TRACE_LEAVE("");
+        TRACE_LEAVE("Returning data");
+        TIMER_END(url_modules);
+        return tmp;
       }
       TRACE_LEAVE("");
       TIMER_END(url_modules);
@@ -2544,85 +2544,85 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
       loc = tmp[0];
       if(has_prefix(file, loc))
       {
-	TRACE_ENTER(sprintf("Location module [%s] ", loc), tmp[1]);
+        TRACE_ENTER(sprintf("Location module [%s] ", loc), tmp[1]);
 #ifdef MODULE_LEVEL_SECURITY
-	if(tmp2 = check_security(tmp[1], id, slevel))
-	  if(intp(tmp2))
-	  {
-	    TRACE_LEAVE("Permission to access module denied.");
-	    continue;
-	  } else {
-	    TRACE_LEAVE("");
-	    TRACE_LEAVE("Request denied.");
-	    TIMER_END(location_modules);
-	    return tmp2;
-	  }
+        if(tmp2 = check_security(tmp[1], id, slevel))
+          if(intp(tmp2))
+          {
+            TRACE_LEAVE("Permission to access module denied.");
+            continue;
+          } else {
+            TRACE_LEAVE("");
+            TRACE_LEAVE("Request denied.");
+            TIMER_END(location_modules);
+            return tmp2;
+          }
 #endif
-	PROF_ENTER(Roxen.get_owning_module(tmp[1])->module_name,"location");
-	TRACE_ENTER("Calling find_file()...", 0);
-	LOCK(tmp[1]);
-	fid=tmp[1]( file[ strlen(loc) .. ] + id->extra_extension, id);
-	UNLOCK();
-	TRACE_LEAVE("");
-	PROF_LEAVE(Roxen.get_owning_module(tmp[1])->module_name,"location");
-	if(fid)
-	{
-	  if (id)
-	    id->virtfile = loc;
+        PROF_ENTER(Roxen.get_owning_module(tmp[1])->module_name,"location");
+        TRACE_ENTER("Calling find_file()...", 0);
+        LOCK(tmp[1]);
+        fid=tmp[1]( file[ strlen(loc) .. ] + id->extra_extension, id);
+        UNLOCK();
+        TRACE_LEAVE("");
+        PROF_LEAVE(Roxen.get_owning_module(tmp[1])->module_name,"location");
+        if(fid)
+        {
+          if (id)
+            id->virtfile = loc;
 
-	  if(mappingp(fid))
-	  {
-	    TRACE_LEAVE(""); // Location module [...]
-	    TRACE_LEAVE(examine_return_mapping(fid));
-	    TIMER_END(location_modules);
-	    return fid;
-	  }
-	  else
-	  {
+          if(mappingp(fid))
+          {
+            TRACE_LEAVE(""); // Location module [...]
+            TRACE_LEAVE(examine_return_mapping(fid));
+            TIMER_END(location_modules);
+            return fid;
+          }
+          else
+          {
 #ifdef MODULE_LEVEL_SECURITY
-	    int oslevel = slevel;
-	    array slca;
-	    if(slca = security_level_cache[ Roxen.get_owning_module (tmp[1]) ])
-	      slevel = slca[1];
-	    // security_level_cache from
-	    // check_security
-	    id->misc->seclevel = slevel;
+            int oslevel = slevel;
+            array slca;
+            if(slca = security_level_cache[ Roxen.get_owning_module (tmp[1]) ])
+              slevel = slca[1];
+            // security_level_cache from
+            // check_security
+            id->misc->seclevel = slevel;
 #endif
-	    if(objectp(fid))
-	      TRACE_LEAVE("Returned open filedescriptor."
+            if(objectp(fid))
+              TRACE_LEAVE("Returned open filedescriptor."
 #ifdef MODULE_LEVEL_SECURITY
-			  +(slevel != oslevel?
-			    sprintf(" The security level is now %d.", slevel):"")
+                          +(slevel != oslevel?
+                            sprintf(" The security level is now %d.", slevel):"")
 #endif
 
-			  );
-	    else
-	      TRACE_LEAVE("Returned directory indicator."
+                          );
+            else
+              TRACE_LEAVE("Returned directory indicator."
 #ifdef MODULE_LEVEL_SECURITY
-			  +(oslevel != slevel?
-			    sprintf(" The security level is now %d.", slevel):"")
+                          +(oslevel != slevel?
+                            sprintf(" The security level is now %d.", slevel):"")
 #endif
-			  );
-	    break;
-	  }
-	} else
-	  TRACE_LEAVE("");
+                          );
+            break;
+          }
+        } else
+          TRACE_LEAVE("");
       } else if(strlen(loc)-1==strlen(file) && file+"/" == loc) {
-	// This one is here to allow accesses to /local, even if
-	// the mountpoint is /local/. It will slow things down, but...
+        // This one is here to allow accesses to /local, even if
+        // the mountpoint is /local/. It will slow things down, but...
 
-	TRACE_ENTER("Automatic redirect to location_module.", tmp[1]);
-	TRACE_LEAVE("");
-	TRACE_LEAVE("Returning data");
+        TRACE_ENTER("Automatic redirect to location_module.", tmp[1]);
+        TRACE_LEAVE("");
+        TRACE_LEAVE("Returning data");
 
-	// Keep query (if any).
-	// FIXME: Should probably keep config <foo>
-	string new_query = Roxen.http_encode_invalids(id->not_query) + "/" +
-	  (id->query?("?"+id->query):"");
-	new_query=Roxen.add_pre_state(new_query, id->prestate);
+        // Keep query (if any).
+        // FIXME: Should probably keep config <foo>
+        string new_query = Roxen.http_encode_invalids(id->not_query) + "/" +
+          (id->query?("?"+id->query):"");
+        new_query=Roxen.add_pre_state(new_query, id->prestate);
 
-	TIMER_END(location_modules);
-	return Roxen.http_redirect(new_query, id);
+        TIMER_END(location_modules);
+        return Roxen.http_redirect(new_query, id);
       }
     }
     TIMER_END(location_modules);
@@ -2668,26 +2668,26 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
   TIMER_START(extension_module);
   if(objectp(fid) &&
      (tmp = file_extension_modules(loc =
-				   lower_case(Roxen.extension(id->not_query,
-							      id)))))
+                                   lower_case(Roxen.extension(id->not_query,
+                                                              id)))))
   {
     foreach(tmp, funp)
     {
       TRACE_ENTER(sprintf("Extension module [%s] ", loc), funp);
 #ifdef MODULE_LEVEL_SECURITY
       if(tmp=check_security(funp, id, slevel))
-	if(intp(tmp))
-	{
-	  TRACE_LEAVE("Permission to access module denied.");
-	  continue;
-	}
-	else
-	{
-	  TRACE_LEAVE("");
-	  TRACE_LEAVE("Permission denied");
-	  TIMER_END(extension_module);
-	  return tmp;
-	}
+        if(intp(tmp))
+        {
+          TRACE_LEAVE("Permission to access module denied.");
+          continue;
+        }
+        else
+        {
+          TRACE_LEAVE("");
+          TRACE_LEAVE("Permission denied");
+          TIMER_END(extension_module);
+          return tmp;
+        }
 #endif
       PROF_ENTER(Roxen.get_owning_module(funp)->module_name,"ext");
       LOCK(funp);
@@ -2696,20 +2696,20 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
       PROF_LEAVE(Roxen.get_owning_module(funp)->module_name,"ext");
       if(tmp)
       {
-	if(!objectp(tmp))
-	{
-	  TRACE_LEAVE("");
-	  TRACE_LEAVE("Returning data");
-	  TIMER_END(extension_module);
-	  return tmp;
-	}
-	if(fid && tmp != fid)
-	  destruct(fid);
-	TRACE_LEAVE("Returned new open file");
-	fid = tmp;
-	break;
+        if(!objectp(tmp))
+        {
+          TRACE_LEAVE("");
+          TRACE_LEAVE("Returning data");
+          TIMER_END(extension_module);
+          return tmp;
+        }
+        if(fid && tmp != fid)
+          destruct(fid);
+        TRACE_LEAVE("Returned new open file");
+        fid = tmp;
+        break;
       } else
-	TRACE_LEAVE("");
+        TRACE_LEAVE("");
     }
   }
   TIMER_END(extension_module);
@@ -2724,7 +2724,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     TRACE_ENTER("Content-type mapping module", types_module);
     tmp=type_from_filename(id->not_query, 1, loc);
     TRACE_LEAVE(tmp?sprintf("Returned type %O %s.", tmp[0], tmp[1]||"")
-		: "Missing type.");
+                : "Missing type.");
     if(tmp)
     {
       TRACE_LEAVE("");
@@ -2749,17 +2749,17 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     {									\
       TRACE_ENTER ("First try module", funp);				\
       if(FILE = funp( id )) {						\
-	TRACE_LEAVE ("Got response");					\
-	break;								\
+        TRACE_LEAVE ("Got response");					\
+        break;								\
       }									\
       TRACE_LEAVE ("No response");					\
       if(id->conf != this_object()) {					\
-	TRACE_ENTER (sprintf ("Configuration changed to %O - "		\
-			      "redirecting", id->conf), 0);		\
-	TRACE_LEAVE ("");						\
-	TIMER_END (first_modules);					\
-	TIMER_END (handle_request);					\
-	return id->conf->RECURSE_CALL;					\
+        TRACE_ENTER (sprintf ("Configuration changed to %O - "		\
+                              "redirecting", id->conf), 0);		\
+        TRACE_LEAVE ("");						\
+        TIMER_END (first_modules);					\
+        TIMER_END (handle_request);					\
+        return id->conf->RECURSE_CALL;					\
       }									\
     }									\
     TIMER_END(first_modules);						\
@@ -2771,14 +2771,14 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     foreach(last_module_cache||last_modules(), function funp) {		\
       TRACE_ENTER ("Last try module", funp);				\
       if(ret = funp(id)) {						\
-	if (ret == 1) {							\
-	  TRACE_LEAVE ("Request rewritten - try again");		\
-	  TIMER_END(last_modules);					\
-	  TIMER_END(handle_request);					\
-	  return RECURSE_CALL;						\
-	}								\
-	TRACE_LEAVE ("Got response");					\
-	break;								\
+        if (ret == 1) {							\
+          TRACE_LEAVE ("Request rewritten - try again");		\
+          TIMER_END(last_modules);					\
+          TIMER_END(handle_request);					\
+          return RECURSE_CALL;						\
+        }								\
+        TRACE_LEAVE ("Got response");					\
+        break;								\
       }									\
       TRACE_LEAVE ("No response");					\
     }									\
@@ -2793,7 +2793,7 @@ mixed handle_request( RequestID id, void|int recurse_count)
 
   if (recurse_count > 50) {
     TRACE_ENTER ("Looped " + recurse_count +
-		 " times in internal redirects - giving up", 0);
+                 " times in internal redirects - giving up", 0);
     TRACE_LEAVE ("");
     return 0;
   }
@@ -2844,12 +2844,12 @@ mapping|int get_file(RequestID id, int|void no_magic, int|void internal_get)
       PROF_ENTER(Roxen.get_owning_module(tmp)->module_name,"filter");
       if(res2=tmp(res,id))
       {
-	if(mappingp(res) && res->file && (res2->file != res->file))
-	  destruct(res->file);
-	TRACE_LEAVE("Rewrote result.");
-	res=res2;
+        if(mappingp(res) && res->file && (res2->file != res->file))
+          destruct(res->file);
+        TRACE_LEAVE("Rewrote result.");
+        res=res2;
       } else
-	TRACE_LEAVE("");
+        TRACE_LEAVE("");
       PROF_LEAVE(Roxen.get_owning_module(tmp)->module_name,"filter");
     }
     TIMER_END(filter_modules);
@@ -2923,19 +2923,19 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
       TRACE_LEAVE("Recursing");
       file = id->not_query;
       err = catch {
-	if( id->misc->find_dir_nest < 20 )
-	  dir = (id->conf || this_object())->find_dir( file, id );
-	else
-	  error("Too deep recursion in roxen::find_dir() while mapping "
-		+file+".\n");
+        if( id->misc->find_dir_nest < 20 )
+          dir = (id->conf || this_object())->find_dir( file, id );
+        else
+          error("Too deep recursion in roxen::find_dir() while mapping "
+                +file+".\n");
       };
       id->misc->find_dir_nest = 0;
       TRACE_LEAVE("");
       if(err)
-	throw(err);
+        throw(err);
 
       if (arrayp(dir)) {
-	return map(dir, combine_combiners);
+        return map(dir, combine_combiners);
       }
       return dir;
     }
@@ -2956,35 +2956,35 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
       TRACE_ENTER(sprintf("Location module [%s] ", loc), tmp[1]);
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(tmp[1], id)) {
-	TRACE_LEAVE("Permission denied");
-	continue;
+        TRACE_LEAVE("Permission denied");
+        continue;
       }
 #endif
       mod=function_object(tmp[1]);
       if(d=mod->find_dir(file[strlen(loc)..], id))
       {
-	if(mappingp(d))
-	{
-	  if(d->files) {
-	    TRACE_LEAVE("Got exclusive directory.");
-	    TRACE_LEAVE(sprintf("Returning list of %d files.", sizeof(d->files)));
-	    return map(d->files, combine_combiners);
-	  } else
-	    TRACE_LEAVE("");
-	} else {
-	  TRACE_LEAVE("Got files.");
-	  if(!dir) dir=({ });
-	  dir |= d;
-	}
+        if(mappingp(d))
+        {
+          if(d->files) {
+            TRACE_LEAVE("Got exclusive directory.");
+            TRACE_LEAVE(sprintf("Returning list of %d files.", sizeof(d->files)));
+            return map(d->files, combine_combiners);
+          } else
+            TRACE_LEAVE("");
+        } else {
+          TRACE_LEAVE("Got files.");
+          if(!dir) dir=({ });
+          dir |= d;
+        }
       }
       else {
-	if(verbose && mod->list_lock_files)
-	  locks |= mod->list_lock_files();
-	TRACE_LEAVE("");
+        if(verbose && mod->list_lock_files)
+          locks |= mod->list_lock_files();
+        TRACE_LEAVE("");
       }
     } else if((search(loc, file)==0) && (loc[strlen(file)-1]=='/') &&
-	      (loc[0]==loc[-1]) && (loc[-1]=='/') &&
-	      (function_object(tmp[1])->stat_file(".", id))) {
+              (loc[0]==loc[-1]) && (loc[-1]=='/') &&
+              (function_object(tmp[1])->stat_file(".", id))) {
       /* loc == file + "/" + subpath + "/"
        * and stat_file(".") returns non-zero.
        */
@@ -2992,9 +2992,9 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
       loc=loc[strlen(file)..];
       sscanf(loc, "%s/", loc);
       if (dir) {
-	dir |= ({ loc });
+        dir |= ({ loc });
       } else {
-	dir = ({ loc });
+        dir = ({ loc });
       }
       TRACE_LEAVE("Added module mountpoint.");
     }
@@ -3042,30 +3042,30 @@ array(int)|Stat stat_file(string file, RequestID id)
 
     if (tmp) {
       if(mappingp( tmp )) {
-	id->not_query = of;
-	TRACE_LEAVE("");
-	TRACE_LEAVE("Returned 'No thanks'.");
-	return 0;
+        id->not_query = of;
+        TRACE_LEAVE("");
+        TRACE_LEAVE("Returned 'No thanks'.");
+        return 0;
       }
       if(objectp( tmp ))
       {
-	mixed err;
-	id->misc->stat_file_nest++;
-	TRACE_LEAVE("Recursing");
-	err = catch {
-	    if( id->misc->stat_file_nest < 20 )
-	      tmp = (id->conf || this_object())->stat_file(id->not_query, id );
-	    else
-	      error("Too deep recursion in roxen::stat_file() while mapping "
-		    +file+".\n");
-	  };
-	id->not_query = of;
-	id->misc->stat_file_nest = 0;
-	if(err)
-	  throw(err);
-	TRACE_LEAVE("");
-	TRACE_LEAVE("Returning data");
-	return tmp;
+        mixed err;
+        id->misc->stat_file_nest++;
+        TRACE_LEAVE("Recursing");
+        err = catch {
+            if( id->misc->stat_file_nest < 20 )
+              tmp = (id->conf || this_object())->stat_file(id->not_query, id );
+            else
+              error("Too deep recursion in roxen::stat_file() while mapping "
+                    +file+".\n");
+          };
+        id->not_query = of;
+        id->misc->stat_file_nest = 0;
+        if(err)
+          throw(err);
+        TRACE_LEAVE("");
+        TRACE_LEAVE("Returning data");
+        return tmp;
       }
     }
     TRACE_LEAVE("");
@@ -3075,7 +3075,7 @@ array(int)|Stat stat_file(string file, RequestID id)
 
   // Map location-modules.
   foreach(location_module_cache||location_modules(),
-	  [string loc, function fun]) {
+          [string loc, function fun]) {
     if((file == loc) || ((file+"/")==loc))
     {
       TRACE_ENTER(sprintf("Location module [%s] ", loc), fun);
@@ -3088,16 +3088,16 @@ array(int)|Stat stat_file(string file, RequestID id)
       TRACE_ENTER(sprintf("Location module [%s] ", loc), fun);
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(fun, id)) {
-	TRACE_LEAVE("");
-	TRACE_LEAVE("Permission denied");
-	continue;
+        TRACE_LEAVE("");
+        TRACE_LEAVE("Permission denied");
+        continue;
       }
 #endif
       if(s=function_object(fun)->stat_file(file[strlen(loc)..], id))
       {
-	TRACE_LEAVE("");
-	TRACE_LEAVE("Stat ok.");
-	return s;
+        TRACE_LEAVE("");
+        TRACE_LEAVE("Stat ok.");
+        return s;
       }
       TRACE_LEAVE("");
     }
@@ -3119,7 +3119,7 @@ mapping error_file( RequestID id )
     string data = "<return code='404' />" + query("ZNoSuchFile");
 #if ROXEN_COMPAT <= 2.1
     data = replace(data,({"$File", "$Me"}),
-		   ({"&page.virtfile;", "&roxen.server;"}));
+                   ({"&page.virtfile;", "&roxen.server;"}));
 #endif
     res = Roxen.http_rxml_answer( data, id, 0, "text/html" );
     id->root_id->misc->generate_file_not_found = 0;
@@ -3136,7 +3136,7 @@ mapping auth_failed_file( RequestID id, string message )
   // messages used files that also cause access denied.
   if(id->root_id->misc->generate_auth_failed)
     return Roxen.http_low_answer(401, "<title>Access Denied</title>"
-				 "<h2 align=center>Access Denied</h2>");
+                                 "<h2 align=center>Access Denied</h2>");
   id->root_id->misc->generate_auth_failed = 1;
   
   string data = "<return code='401' />" + query("ZAuthFailed");
@@ -3147,7 +3147,7 @@ mapping auth_failed_file( RequestID id, string message )
 
 // this is not as trivial as it sounds. Consider gtext. :-)
 array open_file(string fname, string mode, RequestID id, void|int internal_get,
-		void|int recurse_count)
+                void|int recurse_count)
 {
   mapping|int(0..1) file;
   string oq = id->not_query;
@@ -3157,7 +3157,7 @@ array open_file(string fname, string mode, RequestID id, void|int internal_get,
 
   if (recurse_count > 50) {
     TRACE_ENTER ("Looped " + recurse_count +
-		 " times in internal redirects - giving up", 0);
+                 " times in internal redirects - giving up", 0);
     TRACE_LEAVE ("");
   }
 
@@ -3172,7 +3172,7 @@ array open_file(string fname, string mode, RequestID id, void|int internal_get,
     m_delete(id->misc, "error_code");
 
     TRY_FIRST_MODULES (file, open_file (fname, mode, id,
-					internal_get, recurse_count + 1));
+                                        internal_get, recurse_count + 1));
     fname = id->not_query;
 
     if(search(mode, "R")!=-1) //  raw (as in not parsed..)
@@ -3181,8 +3181,8 @@ array open_file(string fname, string mode, RequestID id, void|int internal_get,
       mode -= "R";
       if(f = real_file(fname, id))
       {
-	// report_debug("opening "+fname+" in raw mode.\n");
-	return ({ open(f, mode), ([]) });
+        // report_debug("opening "+fname+" in raw mode.\n");
+        return ({ open(f, mode), ([]) });
       }
       // return ({ 0, (["error":302]) });
     }
@@ -3196,8 +3196,8 @@ array open_file(string fname, string mode, RequestID id, void|int internal_get,
     {
       file = get_file( id, 0, internal_get );
       if(!file)
-	TRY_LAST_MODULES (file, open_file (id->not_query, mode, id,
-					   internal_get, recurse_count + 1));
+        TRY_LAST_MODULES (file, open_file (id->not_query, mode, id,
+                                           internal_get, recurse_count + 1));
     }
   }
 
@@ -3260,7 +3260,7 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
       id->not_query=of;
 #ifdef MODULE_DEBUG
       report_debug("conf->find_dir_stat(\"%s\"): url_module returned mapping:%O\n",
-		  file, tmp);
+                  file, tmp);
 #endif /* MODULE_DEBUG */
       TRACE_LEAVE("Returned mapping.");
       TRACE_LEAVE("");
@@ -3273,20 +3273,20 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
 
       file = id->not_query;
       err = catch {
-	if( id->misc->find_dir_stat_nest < 20 )
-	  tmp = (id->conf || this_object())->find_dir_stat( file, id );
-	else {
-	  TRACE_LEAVE("Too deep recursion");
-	  error("Too deep recursion in roxen::find_dir_stat() while mapping "
-		+file+".\n");
-	}
+        if( id->misc->find_dir_stat_nest < 20 )
+          tmp = (id->conf || this_object())->find_dir_stat( file, id );
+        else {
+          TRACE_LEAVE("Too deep recursion");
+          error("Too deep recursion in roxen::find_dir_stat() while mapping "
+                +file+".\n");
+        }
       };
       id->misc->find_dir_stat_nest = 0;
       if(err)
-	throw(err);
+        throw(err);
 #ifdef MODULE_DEBUG
       report_debug("conf->find_dir_stat(\"%s\"): url_module returned object:\n",
-		  file);
+                  file);
 #endif /* MODULE_DEBUG */
       TRACE_LEAVE("Returned object.");
       TRACE_LEAVE("Returning it.");
@@ -3308,44 +3308,44 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
       /* file == loc + subpath */
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(tmp[1], id)) {
-	TRACE_LEAVE("Security check failed.");
-	continue;
+        TRACE_LEAVE("Security check failed.");
+        continue;
       }
 #endif
       RoxenModule c = function_object(tmp[1]);
       string f = file[strlen(loc)..];
       if (c->find_dir_stat) {
-	SIMPLE_TRACE_ENTER(c, "Calling find_dir_stat().");
-	if (d = c->find_dir_stat(f, id)) {
-	  SIMPLE_TRACE_LEAVE("Returned mapping with %d entries.", sizeof (d));
-	  dir = d | dir;
-	}
-	else
-	  SIMPLE_TRACE_LEAVE("Returned zero.");
+        SIMPLE_TRACE_ENTER(c, "Calling find_dir_stat().");
+        if (d = c->find_dir_stat(f, id)) {
+          SIMPLE_TRACE_LEAVE("Returned mapping with %d entries.", sizeof (d));
+          dir = d | dir;
+        }
+        else
+          SIMPLE_TRACE_LEAVE("Returned zero.");
       } else {
-	SIMPLE_TRACE_ENTER(c, "Calling find_dir().");
-	if(d = c->find_dir(f, id)) {
-	  SIMPLE_TRACE_LEAVE("Returned array with %d entries.", sizeof (d));
-	  dir = mkmapping(d, Array.map(d, lambda(string fn)
-					  {
-					    return c->stat_file(f + fn, id);
-					  })) | dir;
-	}
-	else
-	  SIMPLE_TRACE_LEAVE("Returned zero.");
+        SIMPLE_TRACE_ENTER(c, "Calling find_dir().");
+        if(d = c->find_dir(f, id)) {
+          SIMPLE_TRACE_LEAVE("Returned array with %d entries.", sizeof (d));
+          dir = mkmapping(d, Array.map(d, lambda(string fn)
+                                          {
+                                            return c->stat_file(f + fn, id);
+                                          })) | dir;
+        }
+        else
+          SIMPLE_TRACE_LEAVE("Returned zero.");
       }
     } else if(search(loc, file)==0 && loc[strlen(file)-1]=='/' &&
-	      (loc[0]==loc[-1]) && loc[-1]=='/' &&
-	      (function_object(tmp[1])->stat_file(".", id))) {
+              (loc[0]==loc[-1]) && loc[-1]=='/' &&
+              (function_object(tmp[1])->stat_file(".", id))) {
       /* loc == file + "/" + subpath + "/"
        * and stat_file(".") returns non-zero.
        */
       TRACE_ENTER(sprintf("The file %O is on the path to the mountpoint %O.",
-			  file, loc), 0);
+                          file, loc), 0);
       loc=loc[strlen(file)..];
       sscanf(loc, "%s/", loc);
       if (!dir[loc]) {
-	dir[loc] = ({ 0775, -3, 0, 0, 0, 0, 0 });
+        dir[loc] = ({ 0775, -3, 0, 0, 0, 0, 0 });
       }
       TRACE_LEAVE("");
     }
@@ -3374,13 +3374,13 @@ array access(string file, RequestID id)
       if(check_security(tmp[1], id)) continue;
 #endif
       if(s=function_object(tmp[1])->access("", id))
-	return s;
+        return s;
     } else if(!search(file, loc)) {
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(tmp[1], id)) continue;
 #endif
       if(s=function_object(tmp[1])->access(file[strlen(loc)..], id))
-	return s;
+        return s;
     }
   }
   return 0;
@@ -3406,7 +3406,7 @@ string real_file(string file, RequestID id)
       if(check_security(tmp[1], id)) continue;
 #endif
       if(s=function_object(tmp[1])->real_file(file[strlen(loc)..], id))
-	return s;
+        return s;
     }
   }
 }
@@ -3483,9 +3483,9 @@ protected RequestID make_fake_id (string s, RequestID id)
 }
 
 int|string try_get_file(string s, RequestID id,
-			int|void stat_only, int|void nocache,
-			int|void not_internal,
-			mapping|void result_mapping)
+                        int|void stat_only, int|void nocache,
+                        int|void not_internal,
+                        mapping|void result_mapping)
 //! Convenience function used in quite a lot of modules. Tries to read
 //! a file into memory, and then returns the resulting string.
 //!
@@ -3573,9 +3573,9 @@ int|string try_get_file(string s, RequestID id,
       // CR's in the whole body, regardless of content type(!), but we
       // don't have to be bug compatible with that at least.)
       sscanf (res, "%*s\r\n\r\n%s", res) ||
-	sscanf (res, "%*s\n\n%s", res) ||
-	sscanf (res, "%*s\r\n%s", res) ||
-	sscanf (res, "%*s\n%s", res);
+        sscanf (res, "%*s\n\n%s", res) ||
+        sscanf (res, "%*s\r\n%s", res) ||
+        sscanf (res, "%*s\n%s", res);
     }
   }
 
@@ -3585,7 +3585,7 @@ int|string try_get_file(string s, RequestID id,
 }
 
 mapping(string:string) try_get_headers(string s, RequestID id,
-				       int|void not_internal)
+                                       int|void not_internal)
 //! Like @[try_get_file] but performs a HEAD request and only returns
 //! the response headers. Note that the returned headers are as they
 //! would be in a formatted response by the http protocol module,
@@ -3623,8 +3623,8 @@ mapping(string:string) try_get_headers(string s, RequestID id,
     {
       hp->feed (m->file->read());
       if (m->file) {
-	// Some wrappers may destruct themselves in read()...
-	destruct(m->file);
+        // Some wrappers may destruct themselves in read()...
+        destruct(m->file);
       }
     }
 
@@ -3696,12 +3696,12 @@ int start(int num)
 
 #if 0
   report_debug(sprintf("configuration:start():\n"
-		       "  registered_urls: ({ %{%O, %}})\n"
-		       "  failed_urls:     ({ %{%O, %}})\n"
-		       "  URLs:            ({ %{%O, %}})\n",
-		       registered_urls,
-		       failed_urls,
-		       query("URLs")));
+                       "  registered_urls: ({ %{%O, %}})\n"
+                       "  failed_urls:     ({ %{%O, %}})\n"
+                       "  URLs:            ({ %{%O, %}})\n",
+                       registered_urls,
+                       failed_urls,
+                       query("URLs")));
 #endif /* 0 */
 
   // Note: This is run as root if roxen is started as root
@@ -3744,7 +3744,7 @@ int start(int num)
   {
     // This is done to give old connections more bandwidth.
     throttler->throttle( 1000000000, 1000000000, // 800Mbit.
-			 1024, 65536 );
+                         1024, 65536 );
     // and new connections does not even have to care.
     throttler = 0;
   }
@@ -3759,202 +3759,202 @@ int start(int num)
 
     foreach((port_info && port_info->ports) || ({}), Protocol prot) {
       if ((prot->prot_name != "snmp") || (!prot->mib)) {
-	continue;
+        continue;
       }
 
       string path = port_info->path || "";
       if (has_prefix(path, "/")) {
-	path = path[1..];
+        path = path[1..];
       }
       if (has_suffix(path, "/")) {
-	path = path[..sizeof(path)-2];
+        path = path[..sizeof(path)-2];
       }
     
       array(int) oid_suffix = ({ sizeof(path), @((array(int))path) });
 
       ADT.Trie mib =
-	SNMP.SimpleMIB(query_oid(), oid_suffix,
-		       ({
-			 UNDEFINED,
-			 UNDEFINED,
-			 SNMP.String(query_name, "siteName"),
-			 SNMP.String(comment, "siteComment"),
-			 SNMP.Counter64(lambda() { return sent; },
-					"sent"),
-			 SNMP.Counter64(lambda() { return received; },
-					"received"),
-			 SNMP.Counter64(lambda() { return hsent; },
-					"sentHeaders"),
-			 SNMP.Counter64(lambda() { return requests; },
-					"numRequests"),
-			 UNDEFINED,	// NOTE: Reserved for modules!
-			 ({
-			   UNDEFINED,
-			   ({
-			     UNDEFINED,
-			     ({
-			       UNDEFINED,
-			       SNMP.Tick(lambda()
-					    { return request_acc_time/10000; },
-				 "requestTime",
-				 "Accumulated total request time "
-				 "in centiseconds."),
-			     }),
-			     ({
-			       UNDEFINED,
-			       SNMP.Counter(lambda() { return requests; },
-					    "requestNumRuns",
-					    "Total number of request runs."),
-			       SNMP.Counter(lambda() { return request_num_runs_001s; },
-					    "requestNumRuns001s",
-					    "Number of request runs longer than 0.01 seconds."),
-			       SNMP.Counter(lambda() { return request_num_runs_005s; },
-					    "requestNumRuns005s",
-					    "Number of request runs longer than 0.05 seconds."),
-			       SNMP.Counter(lambda() { return request_num_runs_015s; },
-					    "requestNumRuns015s",
-					    "Number of request runs longer than 0.15 seconds."),
-			       SNMP.Counter(lambda() { return request_num_runs_05s; },
-					    "requestNumRuns05s",
-					    "Number of request runs longer than 0.5 seconds."),
-			       SNMP.Counter(lambda() { return request_num_runs_1s; },
-					    "requestNumRuns1s",
-					    "Number of request runs longer than 1 second."),
-			       SNMP.Counter(lambda() { return request_num_runs_5s; },
-					    "requestNumRuns5s",
-					    "Number of request runs longer than 5 seconds."),
-			       SNMP.Counter(lambda() { return request_num_runs_15s; },
-					    "requestNumRuns15s",
-					    "Number of request runs longer than 15 seconds."),
-			     }),
-			   }),
-			   ({
-			     UNDEFINED,
-			     ({
-			       UNDEFINED,
-			       SNMP.Tick(lambda()
-					    { return handle_acc_time/10000; },
-				 "handleTime",
-				 "Accumulated total handle time "
-			       "in centiseconds."),
-			     }),
-			     ({
-			       UNDEFINED,
-			       SNMP.Counter(lambda() { return requests; },
-					    "handleNumRuns",
-					    "Total number of handle runs."),
-			       SNMP.Counter(lambda() { return handle_num_runs_001s; },
-					    "handleNumRuns001s",
-					    "Number of handle runs longer than 0.01 seconds."),
-			       SNMP.Counter(lambda() { return handle_num_runs_005s; },
-					    "handleNumRuns005s",
-					    "Number of handle runs longer than 0.05 seconds."),
-			       SNMP.Counter(lambda() { return handle_num_runs_015s; },
-					    "handleNumRuns015s",
-					    "Number of handle runs longer than 0.15 seconds."),
-			       SNMP.Counter(lambda() { return handle_num_runs_05s; },
-					    "handleNumRuns05s",
-					    "Number of handle runs longer than 0.5 seconds."),
-			       SNMP.Counter(lambda() { return handle_num_runs_1s; },
-					    "handleNumRuns1s",
-					    "Number of handle runs longer than 1 second."),
-			       SNMP.Counter(lambda() { return handle_num_runs_5s; },
-					    "handleNumRuns5s",
-					    "Number of handle runs longer than 5 seconds."),
-			       SNMP.Counter(lambda() { return handle_num_runs_15s; },
-					    "handleNumRuns15s",
-					    "Number of handle runs longer than 15 seconds."),
-			     }),
-			   }),
-			   ({
-			     UNDEFINED,
-			     ({
-			       UNDEFINED,
-			       SNMP.Tick(lambda()
-					    { return queue_acc_time/10000; },
-				 "queueTime",
-				 "Accumulated total queue time "
-				 "in centiseconds."),
-			     }),
-			     ({
-			       UNDEFINED,
-			       SNMP.Counter(lambda() { return requests; },
-					    "queueNumRuns",
-					    "Total number of queue runs."),
-			       SNMP.Counter(lambda() { return queue_num_runs_001s; },
-					    "queueNumRuns001s",
-					    "Number of queue runs longer than 0.01 seconds."),
-			       SNMP.Counter(lambda() { return queue_num_runs_005s; },
-					    "queueNumRuns005s",
-					    "Number of queue runs longer than 0.05 seconds."),
-			       SNMP.Counter(lambda() { return queue_num_runs_015s; },
-					    "queueNumRuns015s",
-					    "Number of queue runs longer than 0.15 seconds."),
-			       SNMP.Counter(lambda() { return queue_num_runs_05s; },
-					    "queueNumRuns05s",
-					    "Number of queue runs longer than 0.5 seconds."),
-			       SNMP.Counter(lambda() { return queue_num_runs_1s; },
-					    "queueNumRuns1s",
-					    "Number of queue runs longer than 1 second."),
-			       SNMP.Counter(lambda() { return queue_num_runs_5s; },
-					    "queueNumRuns5s",
-					    "Number of queue runs longer than 5 seconds."),
-			       SNMP.Counter(lambda() { return queue_num_runs_15s; },
-					    "queueNumRuns15s",
-					    "Number of queue runs longer than 15 seconds."),
-			     }),
-			   })
-			 }),
-			 ({
-			   UNDEFINED,
-			   SNMP.Counter(lambda()
-					{
-					  mapping stats =
-					    datacache->get_cache_stats();
-					  return stats->hits + stats->misses;
-					},
-			     "protCacheLookups",
-			     "Number of protocol cache lookups."),
-			   SNMP.Counter(lambda()
-					{
-					  return
-					    datacache->get_cache_stats()->hits;
-					},
-			     "protCacheHits",
-			     "Number of protocol cache hits."),
-			   SNMP.Counter(lambda()
-					{
-					  return
-					    datacache->get_cache_stats()->
-					    misses;
-					},
-			     "protCacheMisses",
-			     "Number of protocol cache misses."),
-			   SNMP.Gauge(lambda()
-				      {
-					return
-					  datacache->get_cache_stats()->entries;
-				      },
-			     "protCacheEntries",
-			     "Number of protocol cache entries."),
-			   SNMP.Gauge(lambda()
-				      {
-					return
-					  datacache->get_cache_stats()->
-					  max_size / 1024;
-				      },
-			     "protCacheMaxSize",
-			     "Maximum size of protocol cache in KiB."),
-			   SNMP.Gauge(lambda()
-				      {
-					return
-					  datacache->get_cache_stats()->
-					  current_size / 1024;
-				      },
-			     "protCacheCurrSize",
-			     "Current size of protocol cache in KiB."),
-			 })
-		       }));
+        SNMP.SimpleMIB(query_oid(), oid_suffix,
+                       ({
+                         UNDEFINED,
+                         UNDEFINED,
+                         SNMP.String(query_name, "siteName"),
+                         SNMP.String(comment, "siteComment"),
+                         SNMP.Counter64(lambda() { return sent; },
+                                        "sent"),
+                         SNMP.Counter64(lambda() { return received; },
+                                        "received"),
+                         SNMP.Counter64(lambda() { return hsent; },
+                                        "sentHeaders"),
+                         SNMP.Counter64(lambda() { return requests; },
+                                        "numRequests"),
+                         UNDEFINED,	// NOTE: Reserved for modules!
+                         ({
+                           UNDEFINED,
+                           ({
+                             UNDEFINED,
+                             ({
+                               UNDEFINED,
+                               SNMP.Tick(lambda()
+                                            { return request_acc_time/10000; },
+                                 "requestTime",
+                                 "Accumulated total request time "
+                                 "in centiseconds."),
+                             }),
+                             ({
+                               UNDEFINED,
+                               SNMP.Counter(lambda() { return requests; },
+                                            "requestNumRuns",
+                                            "Total number of request runs."),
+                               SNMP.Counter(lambda() { return request_num_runs_001s; },
+                                            "requestNumRuns001s",
+                                            "Number of request runs longer than 0.01 seconds."),
+                               SNMP.Counter(lambda() { return request_num_runs_005s; },
+                                            "requestNumRuns005s",
+                                            "Number of request runs longer than 0.05 seconds."),
+                               SNMP.Counter(lambda() { return request_num_runs_015s; },
+                                            "requestNumRuns015s",
+                                            "Number of request runs longer than 0.15 seconds."),
+                               SNMP.Counter(lambda() { return request_num_runs_05s; },
+                                            "requestNumRuns05s",
+                                            "Number of request runs longer than 0.5 seconds."),
+                               SNMP.Counter(lambda() { return request_num_runs_1s; },
+                                            "requestNumRuns1s",
+                                            "Number of request runs longer than 1 second."),
+                               SNMP.Counter(lambda() { return request_num_runs_5s; },
+                                            "requestNumRuns5s",
+                                            "Number of request runs longer than 5 seconds."),
+                               SNMP.Counter(lambda() { return request_num_runs_15s; },
+                                            "requestNumRuns15s",
+                                            "Number of request runs longer than 15 seconds."),
+                             }),
+                           }),
+                           ({
+                             UNDEFINED,
+                             ({
+                               UNDEFINED,
+                               SNMP.Tick(lambda()
+                                            { return handle_acc_time/10000; },
+                                 "handleTime",
+                                 "Accumulated total handle time "
+                               "in centiseconds."),
+                             }),
+                             ({
+                               UNDEFINED,
+                               SNMP.Counter(lambda() { return requests; },
+                                            "handleNumRuns",
+                                            "Total number of handle runs."),
+                               SNMP.Counter(lambda() { return handle_num_runs_001s; },
+                                            "handleNumRuns001s",
+                                            "Number of handle runs longer than 0.01 seconds."),
+                               SNMP.Counter(lambda() { return handle_num_runs_005s; },
+                                            "handleNumRuns005s",
+                                            "Number of handle runs longer than 0.05 seconds."),
+                               SNMP.Counter(lambda() { return handle_num_runs_015s; },
+                                            "handleNumRuns015s",
+                                            "Number of handle runs longer than 0.15 seconds."),
+                               SNMP.Counter(lambda() { return handle_num_runs_05s; },
+                                            "handleNumRuns05s",
+                                            "Number of handle runs longer than 0.5 seconds."),
+                               SNMP.Counter(lambda() { return handle_num_runs_1s; },
+                                            "handleNumRuns1s",
+                                            "Number of handle runs longer than 1 second."),
+                               SNMP.Counter(lambda() { return handle_num_runs_5s; },
+                                            "handleNumRuns5s",
+                                            "Number of handle runs longer than 5 seconds."),
+                               SNMP.Counter(lambda() { return handle_num_runs_15s; },
+                                            "handleNumRuns15s",
+                                            "Number of handle runs longer than 15 seconds."),
+                             }),
+                           }),
+                           ({
+                             UNDEFINED,
+                             ({
+                               UNDEFINED,
+                               SNMP.Tick(lambda()
+                                            { return queue_acc_time/10000; },
+                                 "queueTime",
+                                 "Accumulated total queue time "
+                                 "in centiseconds."),
+                             }),
+                             ({
+                               UNDEFINED,
+                               SNMP.Counter(lambda() { return requests; },
+                                            "queueNumRuns",
+                                            "Total number of queue runs."),
+                               SNMP.Counter(lambda() { return queue_num_runs_001s; },
+                                            "queueNumRuns001s",
+                                            "Number of queue runs longer than 0.01 seconds."),
+                               SNMP.Counter(lambda() { return queue_num_runs_005s; },
+                                            "queueNumRuns005s",
+                                            "Number of queue runs longer than 0.05 seconds."),
+                               SNMP.Counter(lambda() { return queue_num_runs_015s; },
+                                            "queueNumRuns015s",
+                                            "Number of queue runs longer than 0.15 seconds."),
+                               SNMP.Counter(lambda() { return queue_num_runs_05s; },
+                                            "queueNumRuns05s",
+                                            "Number of queue runs longer than 0.5 seconds."),
+                               SNMP.Counter(lambda() { return queue_num_runs_1s; },
+                                            "queueNumRuns1s",
+                                            "Number of queue runs longer than 1 second."),
+                               SNMP.Counter(lambda() { return queue_num_runs_5s; },
+                                            "queueNumRuns5s",
+                                            "Number of queue runs longer than 5 seconds."),
+                               SNMP.Counter(lambda() { return queue_num_runs_15s; },
+                                            "queueNumRuns15s",
+                                            "Number of queue runs longer than 15 seconds."),
+                             }),
+                           })
+                         }),
+                         ({
+                           UNDEFINED,
+                           SNMP.Counter(lambda()
+                                        {
+                                          mapping stats =
+                                            datacache->get_cache_stats();
+                                          return stats->hits + stats->misses;
+                                        },
+                             "protCacheLookups",
+                             "Number of protocol cache lookups."),
+                           SNMP.Counter(lambda()
+                                        {
+                                          return
+                                            datacache->get_cache_stats()->hits;
+                                        },
+                             "protCacheHits",
+                             "Number of protocol cache hits."),
+                           SNMP.Counter(lambda()
+                                        {
+                                          return
+                                            datacache->get_cache_stats()->
+                                            misses;
+                                        },
+                             "protCacheMisses",
+                             "Number of protocol cache misses."),
+                           SNMP.Gauge(lambda()
+                                      {
+                                        return
+                                          datacache->get_cache_stats()->entries;
+                                      },
+                             "protCacheEntries",
+                             "Number of protocol cache entries."),
+                           SNMP.Gauge(lambda()
+                                      {
+                                        return
+                                          datacache->get_cache_stats()->
+                                          max_size / 1024;
+                                      },
+                             "protCacheMaxSize",
+                             "Maximum size of protocol cache in KiB."),
+                           SNMP.Gauge(lambda()
+                                      {
+                                        return
+                                          datacache->get_cache_stats()->
+                                          current_size / 1024;
+                                      },
+                             "protCacheCurrSize",
+                             "Current size of protocol cache in KiB."),
+                         })
+                       }));
       SNMP.set_owner(mib, this_object());
       prot->mib->merge(mib);
     }
@@ -3967,12 +3967,12 @@ int start(int num)
 
 // ([func: ([mod_name: ({cb, cb, ...})])])
 protected mapping(string:
-		  mapping(string:
-			  array(function(RoxenModule,mixed...:void))))
+                  mapping(string:
+                          array(function(RoxenModule,mixed...:void))))
   module_pre_callbacks = ([]), module_post_callbacks = ([]);
 
 void add_module_pre_callback (string mod_name, string func,
-			      function(RoxenModule,mixed...:void) cb)
+                              function(RoxenModule,mixed...:void) cb)
 {
   ASSERT_IF_DEBUG ((<"start", "stop">)[func]);
   mapping(string:array(function(RoxenModule,mixed...:void))) func_cbs =
@@ -3983,7 +3983,7 @@ void add_module_pre_callback (string mod_name, string func,
 }
 
 void delete_module_pre_callback (string mod_name, string func,
-				 function(RoxenModule,mixed...:void) cb)
+                                 function(RoxenModule,mixed...:void) cb)
 {
   if (mapping(string:array(function(RoxenModule,mixed...:void))) func_cbs =
       module_pre_callbacks[func])
@@ -3992,7 +3992,7 @@ void delete_module_pre_callback (string mod_name, string func,
 }
 
 void add_module_post_callback (string mod_name, string func,
-			       function(RoxenModule,mixed...:void) cb)
+                               function(RoxenModule,mixed...:void) cb)
 {
   ASSERT_IF_DEBUG ((<"start", "stop">)[func]);
   mapping(string:array(function(RoxenModule,mixed...:void))) func_cbs =
@@ -4003,7 +4003,7 @@ void add_module_post_callback (string mod_name, string func,
 }
 
 void delete_module_post_callback (string mod_name, string func,
-				  function(RoxenModule,mixed...:void) cb)
+                                  function(RoxenModule,mixed...:void) cb)
 {
   if (mapping(string:array(function(RoxenModule,mixed...:void))) func_cbs =
       module_post_callbacks[func])
@@ -4030,11 +4030,11 @@ void call_module_func_with_cbs (RoxenModule mod, string func, mixed... args)
     if (cbs) {
       foreach (cbs, function(RoxenModule,mixed...:void) cb) {
 #ifdef MODULE_CB_DEBUG
-	werror ("Calling callback before %O->%s: %O\n", mod, func, cb);
+        werror ("Calling callback before %O->%s: %O\n", mod, func, cb);
 #endif
-	if (mixed err = catch (cb (mod, @args)))
-	  report_error ("Error calling callback %O before %O->%s:\n%s\n",
-			cb, mod, func, describe_backtrace (err));
+        if (mixed err = catch (cb (mod, @args)))
+          report_error ("Error calling callback %O before %O->%s:\n%s\n",
+                        cb, mod, func, describe_backtrace (err));
       }
     }
   }
@@ -4042,8 +4042,8 @@ void call_module_func_with_cbs (RoxenModule mod, string func, mixed... args)
   // Exceptions thrown here are the responsibility of the caller.
 #ifdef MODULE_CB_DEBUG
   werror ("Calling %O->%s (%s)\n", mod, func,
-	  map (args, lambda (mixed arg)
-		       {return sprintf ("%O", arg);}) * ", ");
+          map (args, lambda (mixed arg)
+                       {return sprintf ("%O", arg);}) * ", ");
 #endif
   mod[func] (@args);
 
@@ -4063,11 +4063,11 @@ void call_module_func_with_cbs (RoxenModule mod, string func, mixed... args)
     if (cbs) {
       foreach (cbs, function(RoxenModule,mixed...:void) cb) {
 #ifdef MODULE_CB_DEBUG
-	werror ("Calling callback after %O->%s: %O\n", mod, func, cb);
+        werror ("Calling callback after %O->%s: %O\n", mod, func, cb);
 #endif
-	if (mixed err = catch (cb (mod, @args)))
-	  report_error ("Error calling callback %O after %O->%s:\n%s\n",
-			cb, mod, func, describe_backtrace (err));
+        if (mixed err = catch (cb (mod, @args)))
+          report_error ("Error calling callback %O after %O->%s:\n%s\n",
+                        cb, mod, func, describe_backtrace (err));
       }
     }
   }
@@ -4096,10 +4096,10 @@ void save(int|void all)
       RoxenModule mod = modules[modname]->copies[i];
       store(modname+"#"+i, mod->query(), 0, this);
       if (mixed err = mod->start && catch {
-	  call_module_func_with_cbs (mod, "start", 2, this, 0);
-	})
-	report_error("Error calling start in module.\n%s",
-		     describe_backtrace (err));
+          call_module_func_with_cbs (mod, "start", 2, this, 0);
+        })
+        report_error("Error calling start in module.\n%s",
+                     describe_backtrace (err));
     }
   }
   invalidate_cache();
@@ -4130,8 +4130,8 @@ int save_one( RoxenModule o )
     {
       int i;
       for( i = 0; i<sizeof( error[1] ); i++ )
-	if( error[1][i][2] == save_one )
-	  break;
+        if( error[1][i][2] == save_one )
+          break;
       error[1] = error[1][i+1..];
     }
     if( o->report_error )
@@ -4175,9 +4175,9 @@ RoxenModule reload_module( string modname )
 
       if( !old_module->not_a_module )
       {
-	save_one( old_module );
-	master()->refresh_inherit( object_program( old_module ) );
-	master()->refresh( object_program( old_module ), 1 );
+        save_one( old_module );
+        master()->refresh_inherit( object_program( old_module ) );
+        master()->refresh( object_program( old_module ), 1 );
       }
 
       array old_error_log = (array) old_module->error_log;
@@ -4188,37 +4188,37 @@ RoxenModule reload_module( string modname )
       nm = mi->instance( this_object(), 0, mod_copy);
       // If this is a faked module, let's call it a failure.
       if (nm->module_is_disabled)
-	report_notice (LOC_C(1047, "Module is disabled") + "\n");
+        report_notice (LOC_C(1047, "Module is disabled") + "\n");
       else if( nm->not_a_module )
       {
-	old_module->report_error(LOC_C(385,"Reload failed")+"\n");
-	RXML.set_context (old_ctx);
-	return old_module;
+        old_module->report_error(LOC_C(385,"Reload failed")+"\n");
+        RXML.set_context (old_ctx);
+        return old_module;
       }
 
       disable_module( modname, nm );
       destruct( old_module ); 
 
       mixed err = catch {
-	  mi->update_with( nm,0 ); // This is sort of nessesary...
-	};
+          mi->update_with( nm,0 ); // This is sort of nessesary...
+        };
       if (err)
-	if (stringp (err)) {
-	  // Error from the register_module call. We can't enable the old
-	  // module now, and I don't dare changing the order so that
-	  // register_module starts to get called before the old module is
-	  // destructed. /mast
-	  report_error (err);
-	  report_error(LOC_C(385,"Reload failed")+"\n");
-	  RXML.set_context (old_ctx);
-	  return 0;			// Use a placeholder module instead?
-	}
-	else
-	  throw (err);
+        if (stringp (err)) {
+          // Error from the register_module call. We can't enable the old
+          // module now, and I don't dare changing the order so that
+          // register_module starts to get called before the old module is
+          // destructed. /mast
+          report_error (err);
+          report_error(LOC_C(385,"Reload failed")+"\n");
+          RXML.set_context (old_ctx);
+          return 0;			// Use a placeholder module instead?
+        }
+        else
+          throw (err);
       enable_module( modname, nm, mi );
 
       foreach (old_error_log, [string msg, array(int) times])
-	nm->error_log[msg] += times;
+        nm->error_log[msg] += times;
 
       nm->report_notice(LOC_C(11, "Reloaded %s.")+"\n", mi->get_name());
       RXML.set_context (old_ctx);
@@ -4272,7 +4272,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if (mixed init_info = roxen->bootstrap_info->get())
     if (arrayp (init_info))
       error ("Invalid recursive call to enable_module while enabling %O/%s.\n",
-	     init_info[0], init_info[1]);
+             init_info[0], init_info[1]);
 #endif
 
 #ifdef MODULE_DEBUG
@@ -4315,10 +4315,10 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
       if (enable_module_batch_msgs) report_debug("\bERROR\n");
       if (err != "") {
 #endif
-	string bt=describe_backtrace(err);
-	report_error("enable_module(): " +
-		     LOC_M(41, "Error while initiating module copy of %s%s"),
-		     moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
+        string bt=describe_backtrace(err);
+        report_error("enable_module(): " +
+                     LOC_M(41, "Error while initiating module copy of %s%s"),
+                     moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
 #ifdef MODULE_DEBUG
       }
 #endif
@@ -4333,10 +4333,10 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     // called disable_module on the old instance.
     if( module[id]->stop ) {
       if (err = catch( call_module_func_with_cbs (module[id], "stop", me) )) {
-	string bt=describe_backtrace(err);
-	report_error("disable_module(): " +
-		     LOC_M(44, "Error while disabling module %s%s"),
-		     descr, (bt ? ":\n"+bt : "\n"));
+        string bt=describe_backtrace(err);
+        report_error("disable_module(): " +
+                     LOC_M(44, "Error while disabling module %s%s"),
+                     descr, (bt ? ":\n"+bt : "\n"));
       }
     }
   }
@@ -4357,15 +4357,15 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     if(!(module_type & MODULE_CONFIG))
     {
       if (err = catch {
-	  me->defvar("_priority", Variable.
-		     Priority(5, 0, DLOCALE(12, "Priority"),
-			      DLOCALE(13, "<p>The priority of the module.</p>\n"
-				      "<p>Modules with the same priority "
-				      "can be assumed to be "
-				      "called in random order.</p>\n")))->
-	    set_range(0, query("max_priority"));
-	}) {
-	throw(err);
+          me->defvar("_priority", Variable.
+                     Priority(5, 0, DLOCALE(12, "Priority"),
+                              DLOCALE(13, "<p>The priority of the module.</p>\n"
+                                      "<p>Modules with the same priority "
+                                      "can be assumed to be "
+                                      "called in random order.</p>\n")))->
+            set_range(0, query("max_priority"));
+        }) {
+        throw(err);
       }
     }
 
@@ -4379,96 +4379,96 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 // 			 "user."));
       
       me->defvar("_seclevels", "", DLOCALE(16, "Security: Patterns"), 
-		 TYPE_TEXT_FIELD,
-		 DLOCALE(245,
-			 "The syntax is:\n"
-			 " \n<dl>"
-			 "  <dt><b>userdb</b> <i>userdatabase module</i></dt>\n"
-			 "  <dd> Select a non-default userdatabase module. The default is to "
-			 " search all modules. The userdatabase module config_userdb is always "
-			 " present, and contains the configuration users</dd>\n"
-			 "<dt><b>authmethod</b> <i>authentication module</i></dt>\n"
-			 "<dd>Select a non-default authentication method.</dd>"
-			 "<dt><b>realm</b> <i>realm name</i></dt>\n"
-			 "<dd>The realm is used when user authentication info is requested</dd>"
-			 "</dl>\n"
-			 "  Below, CMD is one of 'allow' and 'deny'\n"
-			 " <dl>\n"
-			 "  <dt>CMD <b>ip</b>=<i>ip/bits</i>  [return]<br />\n"
-			 "  CMD <b>ip</b>=<i>ip:mask</i>  [return] <br />\n"
-			 "  CMD <b>ip</b>=<i>pattern[,pattern,...]</i>  [return] <br /></dt>\n"
-			 "  <dd>Match the remote IP-address.</dd>\n"
-			 " \n"
-			 "  <dt>CMD <b>user</b>=<i>name[,name,...]</i>  [return]</dt>\n"
-			 "  <dd>Requires an authenticated user. If the user name 'any' is used, any "
-			 "valid user will be OK; if the user name 'ANY' is used, "
-			 "a valid user is preferred, but not required. "
-			 "Otherwise, one of the listed users is required.</dd>"
-			 "  <dt>CMD <b>group</b>=<i>name[,name,...]</i> [return]</dt>\n"
-			 "<dd>Requires an authenticated user with a group. If the group name "
-			 " 'any' is used, any valid group will be OK. Otherwise, one of the "
-			 "listed groups are required.</dd>\n"
-			 " \n"
-			 "<dt>CMD <b>dns</b>=<i>pattern[,pattern,...]</i>           [return]</dt>\n"
-			 "<dd>Require one of the specified DNS domain-names</dd>"
-			 " \n"
-			 "<dt>CMD <b>time</b>=<i>HH:mm-HH:mm</i>   [return]</dt>\n"
-			 "<dd>Only allow access to the module from the first time to the "
-			 " second each day. Both times should be specified in 24-hour "
-			 " HH:mm format.</dd>\n"
-			 "<dt>CMD <b>day</b>=<i>day[,day,...]</i> [return]</dt>\n"
-			 "<dd>Only allow access during certain days. Day is either a numerical "
-			 "    value (Monday=1, Sunday=7) or a string (monday, tuesday etc)</dd>"
-			 "</dl><p>\n"
-			 "  pattern is always a glob pattern (* = any characters, ? = any character).\n"
-			 "</p><p>\n"
-			 "  return means that reaching this command results in immediate\n"
-			 "  return, only useful for 'allow'.</p>\n"
-			 " \n"
-			 " <p>'deny' always implies a return, no futher testing is done if a\n"
-			 " 'deny' match.</p>\n"));
+                 TYPE_TEXT_FIELD,
+                 DLOCALE(245,
+                         "The syntax is:\n"
+                         " \n<dl>"
+                         "  <dt><b>userdb</b> <i>userdatabase module</i></dt>\n"
+                         "  <dd> Select a non-default userdatabase module. The default is to "
+                         " search all modules. The userdatabase module config_userdb is always "
+                         " present, and contains the configuration users</dd>\n"
+                         "<dt><b>authmethod</b> <i>authentication module</i></dt>\n"
+                         "<dd>Select a non-default authentication method.</dd>"
+                         "<dt><b>realm</b> <i>realm name</i></dt>\n"
+                         "<dd>The realm is used when user authentication info is requested</dd>"
+                         "</dl>\n"
+                         "  Below, CMD is one of 'allow' and 'deny'\n"
+                         " <dl>\n"
+                         "  <dt>CMD <b>ip</b>=<i>ip/bits</i>  [return]<br />\n"
+                         "  CMD <b>ip</b>=<i>ip:mask</i>  [return] <br />\n"
+                         "  CMD <b>ip</b>=<i>pattern[,pattern,...]</i>  [return] <br /></dt>\n"
+                         "  <dd>Match the remote IP-address.</dd>\n"
+                         " \n"
+                         "  <dt>CMD <b>user</b>=<i>name[,name,...]</i>  [return]</dt>\n"
+                         "  <dd>Requires an authenticated user. If the user name 'any' is used, any "
+                         "valid user will be OK; if the user name 'ANY' is used, "
+                         "a valid user is preferred, but not required. "
+                         "Otherwise, one of the listed users is required.</dd>"
+                         "  <dt>CMD <b>group</b>=<i>name[,name,...]</i> [return]</dt>\n"
+                         "<dd>Requires an authenticated user with a group. If the group name "
+                         " 'any' is used, any valid group will be OK. Otherwise, one of the "
+                         "listed groups are required.</dd>\n"
+                         " \n"
+                         "<dt>CMD <b>dns</b>=<i>pattern[,pattern,...]</i>           [return]</dt>\n"
+                         "<dd>Require one of the specified DNS domain-names</dd>"
+                         " \n"
+                         "<dt>CMD <b>time</b>=<i>HH:mm-HH:mm</i>   [return]</dt>\n"
+                         "<dd>Only allow access to the module from the first time to the "
+                         " second each day. Both times should be specified in 24-hour "
+                         " HH:mm format.</dd>\n"
+                         "<dt>CMD <b>day</b>=<i>day[,day,...]</i> [return]</dt>\n"
+                         "<dd>Only allow access during certain days. Day is either a numerical "
+                         "    value (Monday=1, Sunday=7) or a string (monday, tuesday etc)</dd>"
+                         "</dl><p>\n"
+                         "  pattern is always a glob pattern (* = any characters, ? = any character).\n"
+                         "</p><p>\n"
+                         "  return means that reaching this command results in immediate\n"
+                         "  return, only useful for 'allow'.</p>\n"
+                         " \n"
+                         " <p>'deny' always implies a return, no futher testing is done if a\n"
+                         " 'deny' match.</p>\n"));
 
       if(!(module_type & MODULE_PROXY))
       {
-	me->defvar("_seclvl",  0, DLOCALE(18, "Security: Security level"), 
-		   TYPE_INT,
-		   DLOCALE(305, "The modules security level is used to determine if a "
-		   " request should be handled by the module."
-		   "\n<p><h2>Security level vs Trust level</h2>"
-		   " Each module has a configurable <i>security level</i>."
-		   " Each request has an assigned trust level. Higher"
-		   " <i>trust levels</i> grants access to modules with higher"
-		   " <i>security levels</i>."
-		   "\n<p><h2>Definitions</h2><ul>"
-		   " <li>A requests initial trust level is infinitely high.</li>"
-		   " <li> A request will only be handled by a module if its"
-		   "     <i>trust level</i> is higher or equal to the"
-		   "     <i>security level</i> of the module.</li>"
-		   " <li> Each time the request is handled by a module the"
-		   "     <i>trust level</i> of the request will be set to the"
-		   "      lower of its <i>trust level</i> and the modules"
-	           "     <i>security level</i>, <i>unless</i> the security "
-	           "        level of the module is 0, which is a special "
-	           "        case and means that no change should be made.</li>"
-		   " </ul></p>"
-		   "\n<p><h2>Example</h2>"
-		   " Modules:<ul>"
-		   " <li>  User filesystem, <i>security level</i> 1</li>"
-		   " <li>  Filesystem module, <i>security level</i> 3</li>"
-		   " <li>  CGI module, <i>security level</i> 2</li>"
-		   " </ul></p>"
-		   "\n<p>A request handled by \"User filesystem\" is assigned"
-		   " a <i>trust level</i> of one after the <i>security"
-		   " level</i> of that module. That request can then not be"
-		   " handled by the \"CGI module\" since that module has a"
-		   " higher <i>security level</i> than the requests trust"
-		   " level.</p>"
-		   "\n<p>On the other hand, a request handled by the the"
-		   " \"Filesystem module\" could later be handled by the"
-		   " \"CGI module\".</p>"));
+        me->defvar("_seclvl",  0, DLOCALE(18, "Security: Security level"), 
+                   TYPE_INT,
+                   DLOCALE(305, "The modules security level is used to determine if a "
+                   " request should be handled by the module."
+                   "\n<p><h2>Security level vs Trust level</h2>"
+                   " Each module has a configurable <i>security level</i>."
+                   " Each request has an assigned trust level. Higher"
+                   " <i>trust levels</i> grants access to modules with higher"
+                   " <i>security levels</i>."
+                   "\n<p><h2>Definitions</h2><ul>"
+                   " <li>A requests initial trust level is infinitely high.</li>"
+                   " <li> A request will only be handled by a module if its"
+                   "     <i>trust level</i> is higher or equal to the"
+                   "     <i>security level</i> of the module.</li>"
+                   " <li> Each time the request is handled by a module the"
+                   "     <i>trust level</i> of the request will be set to the"
+                   "      lower of its <i>trust level</i> and the modules"
+                   "     <i>security level</i>, <i>unless</i> the security "
+                   "        level of the module is 0, which is a special "
+                   "        case and means that no change should be made.</li>"
+                   " </ul></p>"
+                   "\n<p><h2>Example</h2>"
+                   " Modules:<ul>"
+                   " <li>  User filesystem, <i>security level</i> 1</li>"
+                   " <li>  Filesystem module, <i>security level</i> 3</li>"
+                   " <li>  CGI module, <i>security level</i> 2</li>"
+                   " </ul></p>"
+                   "\n<p>A request handled by \"User filesystem\" is assigned"
+                   " a <i>trust level</i> of one after the <i>security"
+                   " level</i> of that module. That request can then not be"
+                   " handled by the \"CGI module\" since that module has a"
+                   " higher <i>security level</i> than the requests trust"
+                   " level.</p>"
+                   "\n<p>On the other hand, a request handled by the the"
+                   " \"Filesystem module\" could later be handled by the"
+                   " \"CGI module\".</p>"));
 
       } else {
-	me->definvisvar("_seclvl", -10, TYPE_INT); /* A very low one */
+        me->definvisvar("_seclvl", -10, TYPE_INT); /* A very low one */
       }
     }
 #endif
@@ -4507,7 +4507,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 #else
   if(moduleinfo->config_locked[this_object()])
     report_error("   Error: \"%s\" not loaded (license restriction).\n",
-		 moduleinfo->get_name());
+                 moduleinfo->get_name());
   else if (me->not_a_module)
     report_debug("   Note: \"%s\" not available.\n", moduleinfo->get_name());
 #endif
@@ -4529,16 +4529,16 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 
 void call_start_callbacks( RoxenModule me, 
                            ModuleInfo moduleinfo, 
-			   ModuleCopies module,
-			   void|int newly_added)
+                           ModuleCopies module,
+                           void|int newly_added)
 {
   call_low_start_callbacks(  me, moduleinfo, module );
   call_high_start_callbacks (me, moduleinfo, newly_added);
 }
 
 void call_low_start_callbacks( RoxenModule me, 
-			       ModuleInfo moduleinfo, 
-			       ModuleCopies module )
+                               ModuleInfo moduleinfo, 
+                               ModuleCopies module )
 {
   if(!me) return;
   if(!moduleinfo) return;
@@ -4553,7 +4553,7 @@ void call_low_start_callbacks( RoxenModule me,
 #endif
     string bt=describe_backtrace(err);
     report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
-			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
+                        moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
     pr = 3;
   }
 
@@ -4565,9 +4565,9 @@ void call_low_start_callbacks( RoxenModule me,
   if(module_type & MODULE_EXTENSION)
   {
     report_error("%s is an MODULE_EXTENSION, that type is no "
-		 "longer available.\nPlease notify the modules writer.\n"
-		 "Suitable replacement types include MODULE_FIRST and "
-		 " MODULE_LAST.\n", moduleinfo->get_name());
+                 "longer available.\nPlease notify the modules writer.\n"
+                 "Suitable replacement types include MODULE_FIRST and "
+                 " MODULE_LAST.\n", moduleinfo->get_name());
   }
 
   if(module_type & MODULE_TYPES)
@@ -4590,39 +4590,39 @@ void call_low_start_callbacks( RoxenModule me,
 
     foreach((port_info && port_info->ports) || ({}), Protocol prot) {
       if ((prot->prot_name != "snmp") || (!prot->mib)) {
-	continue;
+        continue;
       }
 
       string path = port_info->path || "";
       if (has_prefix(path, "/")) {
-	path = path[1..];
+        path = path[1..];
       }
       if (has_suffix(path, "/")) {
-	path = path[..sizeof(path)-2];
+        path = path[..sizeof(path)-2];
       }
     
       array(int) oid_suffix = ({ sizeof(path), @((array(int))path) });
 
       ADT.Trie sub_mib = generate_module_mib(query_oid() + ({ 8, 1 }),
-					     oid_suffix, me, moduleinfo, module);
+                                             oid_suffix, me, moduleinfo, module);
       SNMP.set_owner(sub_mib, this_object(), me);
 
       prot->mib->merge(sub_mib);
 
       if (me->query_snmp_mib) {
-	array(int) segment = generate_module_oid_segment(me);
-	sub_mib = me->query_snmp_mib(query_oid() + ({ 8, 2 }) +
-				     segment[..sizeof(segment)-2],
-				     oid_suffix + ({ segment[-1] }));
-	SNMP.set_owner(sub_mib, this_object(), me);
-	prot->mib->merge(sub_mib);
+        array(int) segment = generate_module_oid_segment(me);
+        sub_mib = me->query_snmp_mib(query_oid() + ({ 8, 2 }) +
+                                     segment[..sizeof(segment)-2],
+                                     oid_suffix + ({ segment[-1] }));
+        SNMP.set_owner(sub_mib, this_object(), me);
+        prot->mib->merge(sub_mib);
       }
     }
   }
 }
 
 void call_high_start_callbacks (RoxenModule me, ModuleInfo moduleinfo,
-				void|int newly_added)
+                                void|int newly_added)
 {
   // This is icky, but I don't know if it's safe to remove. /mast
   if(!me) return;
@@ -4631,7 +4631,7 @@ void call_high_start_callbacks (RoxenModule me, ModuleInfo moduleinfo,
   mixed err;
   if((me->start) &&
      (err = catch( call_module_func_with_cbs (me, "start",
-					      0, this, newly_added) ) ) )
+                                              0, this, newly_added) ) ) )
   {
 #ifdef MODULE_DEBUG
     if (enable_module_batch_msgs) 
@@ -4639,7 +4639,7 @@ void call_high_start_callbacks (RoxenModule me, ModuleInfo moduleinfo,
 #endif
     string bt=describe_backtrace(err);
     report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
-			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
+                        moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
     got_no_delayed_load = -1;
   }
   if( inited && me->ready_to_receive_requests )
@@ -4649,7 +4649,7 @@ void call_high_start_callbacks (RoxenModule me, ModuleInfo moduleinfo,
       if (enable_module_batch_msgs) report_debug("\bERROR\n");
 #endif
       report_error( "While calling ready_to_receive_requests:\n"+
-		    describe_backtrace( q ) );
+                    describe_backtrace( q ) );
       got_no_delayed_load = -1;
     }
 }
@@ -4689,21 +4689,21 @@ string check_variable(string name, mixed value)
 }
 
 void module_changed( ModuleInfo moduleinfo,
-		     RoxenModule me  )
+                     RoxenModule me  )
 {
   clean_up_for_module( moduleinfo, me );
   call_low_start_callbacks( me,
-			    moduleinfo,
-			    modules[ moduleinfo->sname ] );
+                            moduleinfo,
+                            modules[ moduleinfo->sname ] );
 }
 
 void clean_up_for_module( ModuleInfo moduleinfo,
-			  RoxenModule me )
+                          RoxenModule me )
 {
   int i = 0;
   // Loop for paranoia reasons.
   while((i < sizeof(sorted_modules)) &&
-	(i = search(sorted_modules, me, i)) >= 0) {
+        (i = search(sorted_modules, me, i)) >= 0) {
     sorted_modules = sorted_modules[..i-1] + sorted_modules[i+1..];
     sorted_module_types = sorted_module_types[..i-1] +
       sorted_module_types[i+1..];
@@ -4727,7 +4727,7 @@ void clean_up_for_module( ModuleInfo moduleinfo,
     mapping(string:string|Configuration|Protocol) port_info = roxen.urls[url];
     foreach((port_info && port_info->ports) || ({}), Protocol prot) {
       if ((prot->prot_name != "snmp") || (!prot->mib)) {
-	continue;
+        continue;
       }
 
       SNMP.remove_owned(prot->mib, this_object(), me);
@@ -4753,8 +4753,8 @@ int disable_module( string modname, void|RoxenModule new_instance )
   if(!module)
   {
     report_error("disable_module(): " +
-		 LOC_M(42, "Failed to disable module:\n"
-			"No module by that name: \"%s\".\n"), modname);
+                 LOC_M(42, "Failed to disable module:\n"
+                        "No module by that name: \"%s\".\n"), modname);
     return 0;
   }
 
@@ -4774,19 +4774,19 @@ int disable_module( string modname, void|RoxenModule new_instance )
   if(!me)
   {
     report_error("disable_module(): " +
-		 LOC_M(43, "Failed to disable module \"%s\".\n"),
-		 descr);
+                 LOC_M(43, "Failed to disable module \"%s\".\n"),
+                 descr);
     return 0;
   }
 
   if(me->stop)
     if (mixed err = catch (
-	  call_module_func_with_cbs (me, "stop", new_instance)
-	)) {
+          call_module_func_with_cbs (me, "stop", new_instance)
+        )) {
       string bt=describe_backtrace(err);
       report_error("disable_module(): " +
-		   LOC_M(44, "Error while disabling module %s%s"),
-		   descr, (bt ? ":\n"+bt : "\n"));
+                   LOC_M(44, "Error while disabling module %s%s"),
+                   descr, (bt ? ":\n"+bt : "\n"));
     }
 
 #ifdef MODULE_DEBUG
@@ -4834,10 +4834,10 @@ int add_modules( array(string) mods, int|void now )
     {
 #ifdef MODULE_DEBUG
       if( !wr++ )
-	if (enable_module_batch_msgs)
-	  report_debug("\b[ adding req module" + (sizeof (mods) > 1 ? "s" : "") + "\n");
-	else
-	  report_debug("Adding required module" + (sizeof (mods) > 1 ? "s" : "") + "\n");
+        if (enable_module_batch_msgs)
+          report_debug("\b[ adding req module" + (sizeof (mods) > 1 ? "s" : "") + "\n");
+        else
+          report_debug("Adding required module" + (sizeof (mods) > 1 ? "s" : "") + "\n");
 #endif
       forcibly_added[ mod+"#0" ] = 1;
       enable_module( mod+"#0" );
@@ -4965,13 +4965,13 @@ void low_init(void|int modules_already_enabled)
     foreach( modules_to_process, tmp_string )
     {
       if( !forcibly_added[ tmp_string ] )
-	if(err = catch( enable_module( tmp_string, UNDEFINED, UNDEFINED,
-				       UNDEFINED, 1)))
-	{
-	  report_error(LOC_M(45, "Failed to enable the module %s. Skipping.")
-		       +"\n%s\n", tmp_string, describe_backtrace(err));
-	  got_no_delayed_load = -1;
-	}
+        if(err = catch( enable_module( tmp_string, UNDEFINED, UNDEFINED,
+                                       UNDEFINED, 1)))
+        {
+          report_error(LOC_M(45, "Failed to enable the module %s. Skipping.")
+                       +"\n%s\n", tmp_string, describe_backtrace(err));
+          got_no_delayed_load = -1;
+        }
     }
     enable_module_batch_msgs = 0;
 //      roxenloader.pop_compile_error_handler();
@@ -4989,7 +4989,7 @@ void low_init(void|int modules_already_enabled)
         report_error( "While calling ready_to_receive_requests in "+
                       otomod[mod]+":\n"+
                       describe_backtrace( q ) );
-	got_no_delayed_load = -1;
+        got_no_delayed_load = -1;
       }
     }
 
@@ -5018,7 +5018,7 @@ void low_init(void|int modules_already_enabled)
   inited = 1;
   if (!modules_already_enabled)
     report_notice(LOC_S(4, "All modules for %s enabled in %3.1f seconds") +
-		  "\n\n", query_name(), (gethrtime()-start_time)/1000000.0);
+                  "\n\n", query_name(), (gethrtime()-start_time)/1000000.0);
 
 #ifdef SNMP_AGENT
   // Start trap after real virt.serv. loading
@@ -5089,31 +5089,31 @@ protected void create()
   defvar( "data_cache_file_max_size", 256, DLOCALE(276, "Cache:Max file size"),
           TYPE_INT | VAR_PUBLIC,
           DLOCALE(277, "The maximum size of a file that is to be considered for "
-		  "the cache, in KBytes."));
+                  "the cache, in KBytes."));
 
 
   defvar("default_server", 0, DLOCALE(20, "Ports: Default site"),
-	 TYPE_FLAG| VAR_PUBLIC,
-	 DLOCALE(21, "If true, this site will be selected in preference of "
-	 "other sites when virtual hosting is used and no host "
-	 "header is supplied, or the supplied host header does not "
-	 "match the address of any of the other servers.") );
+         TYPE_FLAG| VAR_PUBLIC,
+         DLOCALE(21, "If true, this site will be selected in preference of "
+         "other sites when virtual hosting is used and no host "
+         "header is supplied, or the supplied host header does not "
+         "match the address of any of the other servers.") );
 
   defvar("comment", "", DLOCALE(22, "Site comment"),
-	 TYPE_TEXT_FIELD|VAR_MORE,
-	 DLOCALE(23, "This text will be visible in the administration "
-		 "interface, it can be quite useful to use as a memory helper."));
+         TYPE_TEXT_FIELD|VAR_MORE,
+         DLOCALE(23, "This text will be visible in the administration "
+                 "interface, it can be quite useful to use as a memory helper."));
 
   defvar("name", "", DLOCALE(24, "Site name"),
-	 TYPE_STRING|VAR_MORE| VAR_PUBLIC|VAR_NO_DEFAULT,
-	 DLOCALE(25, "This is the name that will be used in the administration "
-	 "interface. If this is left empty, the actual name of the "
-	 "site will be used."));
+         TYPE_STRING|VAR_MORE| VAR_PUBLIC|VAR_NO_DEFAULT,
+         DLOCALE(25, "This is the name that will be used in the administration "
+         "interface. If this is left empty, the actual name of the "
+         "site will be used."));
 
   defvar("compat_level", Variable.StringChoice (
-	   "", roxen.compat_levels, VAR_NO_DEFAULT,
-	   DLOCALE(246, "Compatibility level"),
-	   DLOCALE(386, #"\
+           "", roxen.compat_levels, VAR_NO_DEFAULT,
+           DLOCALE(246, "Compatibility level"),
+           DLOCALE(386, #"\
 <p>The compatibility level is used by different modules to select the
 right behavior to remain compatible with earlier Roxen versions. When
 a server configuration is created, this variable is set to the current
@@ -5152,22 +5152,22 @@ modules.</p>
   // of the setting.
 
   defvar("max_priority",
-	 Variable.IntChoice(9, ({ 9, 99, 999, 9999 }), 0,
-			    DLOCALE(1074, "Maximum priority"),
-			    DLOCALE(1075, "<p>The maximum priority value "
-				    "for modules.</p>\n"
-				    "<p>In most cases the default (9) "
-				    "is fine, but in some configurations "
-				    "there may be more than 10 modules "
-				    "of the same type that would otherwise "
-				    "conflict with each other.</p>\n"
-				    "<p>Note that existing module priorities "
-				    "will be scaled accordingly when this "
-				    "value is changed.</p>")))->
+         Variable.IntChoice(9, ({ 9, 99, 999, 9999 }), 0,
+                            DLOCALE(1074, "Maximum priority"),
+                            DLOCALE(1075, "<p>The maximum priority value "
+                                    "for modules.</p>\n"
+                                    "<p>In most cases the default (9) "
+                                    "is fine, but in some configurations "
+                                    "there may be more than 10 modules "
+                                    "of the same type that would otherwise "
+                                    "conflict with each other.</p>\n"
+                                    "<p>Note that existing module priorities "
+                                    "will be scaled accordingly when this "
+                                    "value is changed.</p>")))->
     set_changed_callback(set_module_max_priority);
 
   defvar("Log", 1, DLOCALE(28, "Logging: Enabled"), 
-	 TYPE_FLAG, DLOCALE(29, "Log requests"));
+         TYPE_FLAG, DLOCALE(29, "Log requests"));
 
   defvar("LogFormat", #"\
 # The default format follows the Combined Log Format, a slight
@@ -5191,21 +5191,21 @@ modules.</p>
 
 # Catch-all for internal log messages.
 #*/*: 0.0.0.0 - - [$cern-date] \"$action $resource $facility\" - -",
-	 DLOCALE(26, "Logging: Format"),
-	 TYPE_TEXT_FIELD|VAR_MORE,
-	 // FIXME: Undocumented: $cs-uri-stem, $cs-uri-query,
-	 // $real-resource, $real-full-resource, $real-cs-uri-stem,
+         DLOCALE(26, "Logging: Format"),
+         TYPE_TEXT_FIELD|VAR_MORE,
+         // FIXME: Undocumented: $cs-uri-stem, $cs-uri-query,
+         // $real-resource, $real-full-resource, $real-cs-uri-stem,
 
-	 /* Removed doc for would-be $request-vtime.
+         /* Removed doc for would-be $request-vtime.
 <tr><td>$request-vtime</td>
     <td>The virtual time the request took (seconds). This measures the
     virtual time spent by the Roxen process. Note however that the
     accuracy is comparably low on many OS:es, typically much lower
     than $request-time. Also note that this isn't supported on all
     platforms.</td></tr>
-	 */
+         */
 
-	 DLOCALE(27, #"\
+         DLOCALE(27, #"\
 Describes the format to use for access logging. The log file can also
 receive messages for various internal activities.
 
@@ -5419,42 +5419,42 @@ hyphens ('-') occur in the specifier names.</p>
 
     <table class='hilite-1stcol'><tbody valign='top'>
     <tr><td>protcache</td>
-	<td>The page is served from the HTTP protocol cache.</td></tr>
+        <td>The page is served from the HTTP protocol cache.</td></tr>
     <tr><td>protstore</td>
-	<td>The page is stored in the HTTP protocol cache.</td></tr>
+        <td>The page is stored in the HTTP protocol cache.</td></tr>
     <tr><td>stale</td>
-	<td>There is a stale entry in the HTTP protocol cache. A
-	refresh is underway in the background and the stale entry is
-	sent in the meantime to avoid a long response time and server
-	congestion.</td></tr>
+        <td>There is a stale entry in the HTTP protocol cache. A
+        refresh is underway in the background and the stale entry is
+        sent in the meantime to avoid a long response time and server
+        congestion.</td></tr>
     <tr><td>refresh</td>
-	<td>This is the finishing of the background refresh request
-	for the entry in the HTTP protocol cache.</td></tr>
+        <td>This is the finishing of the background refresh request
+        for the entry in the HTTP protocol cache.</td></tr>
     <tr><td>icachedraw</td>
-	<td>A server-generated image had to be rendered from scratch.</td></tr>
+        <td>A server-generated image had to be rendered from scratch.</td></tr>
     <tr><td>icacheram</td>
-	<td>A server-generated image was found in the RAM cache.</td></tr>
+        <td>A server-generated image was found in the RAM cache.</td></tr>
     <tr><td>icachedisk</td>
-	<td>A server-generated image was found in the disk cache (i.e. in
+        <td>A server-generated image was found in the disk cache (i.e. in
             the server's MySQL database).</td></tr>
     <tr><td>pcoderam</td>
-	<td>A hit in the RXML p-code RAM cache.</td></tr>
+        <td>A hit in the RXML p-code RAM cache.</td></tr>
     <tr><td>pcodedisk</td>
-	<td>A hit in the RXML p-code persistent cache.</td></tr>
+        <td>A hit in the RXML p-code persistent cache.</td></tr>
     <tr><td>pcodestore</td>
-	<td>P-code is added to or updated in the persistent cache.</td></tr>
+        <td>P-code is added to or updated in the persistent cache.</td></tr>
     <tr><td>pcodestorefailed</td>
-	<td>An attempt to add or update p-code in the persistent cache
+        <td>An attempt to add or update p-code in the persistent cache
         failed (e.g. due to a race with another request).</td></tr>
     <tr><td>cachetag</td>
-	<td>RXML was evaluated without any cache miss in any RXML
-	&lt;cache&gt; tag. The &lt;nocache&gt; tag does not count as a
-	miss.</td></tr>
+        <td>RXML was evaluated without any cache miss in any RXML
+        &lt;cache&gt; tag. The &lt;nocache&gt; tag does not count as a
+        miss.</td></tr>
     <tr><td>xsltcache</td>
-	<td>There is a hit XSLT cache.</td></tr>
+        <td>There is a hit XSLT cache.</td></tr>
     <tr><td>nocache</td>
-	<td>No hit in any known cache, and not added to the HTTP
-	protocol cache.</td></tr>
+        <td>No hit in any known cache, and not added to the HTTP
+        protocol cache.</td></tr>
     </tbody></table></td></tr>
 
 <tr><td>$eval-status</td>
@@ -5465,11 +5465,11 @@ hyphens ('-') occur in the specifier names.</p>
     <tr><td>bad-charset</td>
         <td>Detected invalid charset in declared content-type.</td></tr>
     <tr><td>xslt</td>
-	<td>XSL transform.</td></tr>
+        <td>XSL transform.</td></tr>
     <tr><td>rxmlsrc</td>
-	<td>RXML evaluated from source.</td></tr>
+        <td>RXML evaluated from source.</td></tr>
     <tr><td>rxmlpcode</td>
-	<td>RXML evaluated from compiled p-code.</td></tr>
+        <td>RXML evaluated from compiled p-code.</td></tr>
     </tbody></table></td></tr>
 
 <tr><td>$protcache-cost</td>
@@ -5491,13 +5491,13 @@ below.</p>
 
     <table class='hilite-1stcol'><tbody valign='top'>
     <tr><td>ram-cache-gc</td>
-	<td>Logged after the RAM cache GC has run. $handle-time and
-	$handle-cputime are set to the time the GC took (see
-	descriptions above for details).</td></tr>
+        <td>Logged after the RAM cache GC has run. $handle-time and
+        $handle-cputime are set to the time the GC took (see
+        descriptions above for details).</td></tr>
     <tr><td>ram-cache-rebase</td>
-	<td>Logged when the RAM cache has performed a rebias of the
-	priority queue values. Is a problem only if it starts to
-	happen too often.</td></tr>
+        <td>Logged when the RAM cache has performed a rebias of the
+        priority queue values. Is a problem only if it starts to
+        happen too often.</td></tr>
     </tbody></table></dd>
 
 <dt>Facility: sbfs</dt>
@@ -5519,26 +5519,26 @@ below.</p>
 
     <table class='hilite-1stcol'><tbody valign='top'>
     <tr><td>$ac-userid</td>
-	<td>The ID number of the AC identity whose edit area was used.
-	Zero for the common view area.</td></tr>
+        <td>The ID number of the AC identity whose edit area was used.
+        Zero for the common view area.</td></tr>
     <tr><td>$workarea</td>
-	<td>The unique tag for the work area. Empty for the main work
-	area.</td></tr>
+        <td>The unique tag for the work area. Empty for the main work
+        area.</td></tr>
     <tr><td>$commit-type</td>
-	<td>The type of file commit, one of <code>create</code>,
-	<code>edit</code>, <code>delete</code>, and
-	<code>undelete</code>.</td></tr>
+        <td>The type of file commit, one of <code>create</code>,
+        <code>edit</code>, <code>delete</code>, and
+        <code>undelete</code>.</td></tr>
     <tr><td>$revision</td>
-	<td>The committed revision number, a dotted decimal.</td></tr>
+        <td>The committed revision number, a dotted decimal.</td></tr>
     <tr><td>$comment</td>
-	<td>The commit message.</td></tr>
+        <td>The commit message.</td></tr>
     <tr><td>$request-time</td>
-	<td>This is set for the action <code>crawl-file</code>. It's
-	similar to <code>$request-time</code> for normal requests,
-	except that it measures the whole time it took for the
-	persistent cache crawler to process the page. That includes
-	all crawled variants and the saving of the entry to the
-	database.</td></tr>
+        <td>This is set for the action <code>crawl-file</code>. It's
+        similar to <code>$request-time</code> for normal requests,
+        except that it measures the whole time it took for the
+        persistent cache crawler to process the page. That includes
+        all crawled variants and the saving of the entry to the
+        database.</td></tr>
     </tbody></table></dd>
 </dl>"), 0, lambda(){ return !query("Log");});
 
@@ -5550,39 +5550,39 @@ below.</p>
   string log_suffix = ".%y-%m-%d";
   if (name == "Administration Interface") log_suffix = ".%y-%m";
   defvar("LogFile", "$LOGDIR/"+Roxen.short_name(name)+"/Log" + log_suffix,
-	 DLOCALE(30, "Logging: Log file"), TYPE_FILE,
-	 DLOCALE(31, "The log file. "
-	 "A file name. Some substitutions will be done:"
-	 "<pre>"
-	 "%y    Year  (e.g. '1997')\n"
-	 "%m    Month (e.g. '08')\n"
-	 "%d    Date  (e.g. '10' for the tenth)\n"
-	 "%h    Hour  (e.g. '00')\n"
-	 "%H    Hostname\n"
-	 "</pre>")
-	 ,0, lambda(){ return !query("Log");});
+         DLOCALE(30, "Logging: Log file"), TYPE_FILE,
+         DLOCALE(31, "The log file. "
+         "A file name. Some substitutions will be done:"
+         "<pre>"
+         "%y    Year  (e.g. '1997')\n"
+         "%m    Month (e.g. '08')\n"
+         "%d    Date  (e.g. '10' for the tenth)\n"
+         "%h    Hour  (e.g. '00')\n"
+         "%H    Hostname\n"
+         "</pre>")
+         ,0, lambda(){ return !query("Log");});
 
   string default_compressor = "";
   foreach(({ "/bin/bzip2", "/usr/bin/bzip2", "/bin/gzip", "/usr/bin/gzip", }),
-	  string bin) {
+          string bin) {
     if (Stdio.is_file(bin)) {
       default_compressor = bin;
       break;
     }
   }
   defvar("LogFileCompressor", default_compressor,
-	 DLOCALE(258, "Logging: Compress log file"), TYPE_STRING,
-	 DLOCALE(259, "Path to a program to compress log files, "
-		 "e.g. <tt>/usr/bin/bzip2</tt> or <tt>/usr/bin/gzip</tt>. "
-		 "<b>Note&nbsp;1:</b> The active log file is never compressed. "
-		 "Log rotation needs to be used using the \"Log file\" "
-		 "filename substitutions "
-		 "(e.g. <tt>$LOGDIR/mysite/Log.%y-%m-%d</tt>). "
-		 "<b>Note&nbsp;2:</b> Compression is limited to scanning files "
-		 "with filename substitutions within a fixed directory (e.g. "
-		 "<tt>$LOGDIR/mysite/Log.%y-%m-%d</tt>, "
-		 "not <tt>$LOGDIR/mysite/%y/Log.%m-%d</tt>)."),
-	 0, lambda(){ return !query("Log");});
+         DLOCALE(258, "Logging: Compress log file"), TYPE_STRING,
+         DLOCALE(259, "Path to a program to compress log files, "
+                 "e.g. <tt>/usr/bin/bzip2</tt> or <tt>/usr/bin/gzip</tt>. "
+                 "<b>Note&nbsp;1:</b> The active log file is never compressed. "
+                 "Log rotation needs to be used using the \"Log file\" "
+                 "filename substitutions "
+                 "(e.g. <tt>$LOGDIR/mysite/Log.%y-%m-%d</tt>). "
+                 "<b>Note&nbsp;2:</b> Compression is limited to scanning files "
+                 "with filename substitutions within a fixed directory (e.g. "
+                 "<tt>$LOGDIR/mysite/Log.%y-%m-%d</tt>, "
+                 "not <tt>$LOGDIR/mysite/%y/Log.%m-%d</tt>)."),
+         0, lambda(){ return !query("Log");});
 
   defvar("DaysToKeepLogFiles", 0,
     DLOCALE(1150, "Logging: Number of days to keep log files"), TYPE_INT,
@@ -5594,26 +5594,26 @@ below.</p>
     ->set_range(0, Variable.no_limit);;
   
   defvar("NoLog", ({ }),
-	 DLOCALE(32, "Logging: No Logging for"), TYPE_STRING_LIST|VAR_MORE,
+         DLOCALE(32, "Logging: No Logging for"), TYPE_STRING_LIST|VAR_MORE,
          DLOCALE(33, "Don't log requests from hosts with an IP number which "
-		 "matches any of the patterns in this list. This also affects "
-		 "the access counter log."), 
-	 0, lambda(){ return !query("Log");});
+                 "matches any of the patterns in this list. This also affects "
+                 "the access counter log."), 
+         0, lambda(){ return !query("Log");});
 
   defvar("JSONLogEndpoints", ({ "$JSONLOGDIR/" + Roxen.short_name(name) + ".jsonlog" }),
-	 DLOCALE(1076, "Logging: JSON Logging endpoints"), TYPE_STRING_LIST,
-	 DLOCALE(1077, "Socket paths and/or IP:ports to bind for log output from this configuration. "
-		 "$JSONLOGDIR will expand to &lt;configuration directory&gt;/_jsonlog where sockets should be reasonably secure."))
+         DLOCALE(1076, "Logging: JSON Logging endpoints"), TYPE_STRING_LIST,
+         DLOCALE(1077, "Socket paths and/or IP:ports to bind for log output from this configuration. "
+                 "$JSONLOGDIR will expand to &lt;configuration directory&gt;/_jsonlog where sockets should be reasonably secure."))
     ->add_changed_callback(json_log_endpoint_cb);
 
   defvar("Domain", roxen.get_domain(), DLOCALE(34, "Domain"),
-	 TYPE_STRING|VAR_PUBLIC|VAR_NO_DEFAULT,
-	 DLOCALE(35, "The domain name of the server. The domain name is used "
-	 "to generate default URLs, and to generate email addresses."));
+         TYPE_STRING|VAR_PUBLIC|VAR_NO_DEFAULT,
+         DLOCALE(35, "The domain name of the server. The domain name is used "
+         "to generate default URLs, and to generate email addresses."));
 
   defvar("MyWorldLocation", "",
          DLOCALE(36, "Ports: Primary Server URL"), TYPE_URL|VAR_PUBLIC,
-	 DLOCALE(37, #"\
+         DLOCALE(37, #"\
 This is the main server URL, where your start page is located. This
 setting is for instance used as fallback to generate absolute URLs to
 the server, but in most circumstances the URLs sent by the clients are
@@ -5626,133 +5626,133 @@ also set 'URLs'."));
   defvar("URLs", 
          Variable.PortList( ({"http://*/#ip=;nobind=0;"}), VAR_INITIAL|VAR_NO_DEFAULT,
            DLOCALE(38, "Ports: URLs"),
-	   DLOCALE(373, "Bind to these URLs. You can use '*' and '?' to perform"
-		   " globbing (using any of these will default to binding to "
-		   "all IP-numbers on your machine).  If you specify a IP# in "
-		   "the field it will take precedence over the hostname.")));
+           DLOCALE(373, "Bind to these URLs. You can use '*' and '?' to perform"
+                   " globbing (using any of these will default to binding to "
+                   "all IP-numbers on your machine).  If you specify a IP# in "
+                   "the field it will take precedence over the hostname.")));
 
   defvar("InternalLoc", internal_location,
-	 DLOCALE(40, "Internal module resource mountpoint"),
-	 TYPE_LOCATION|VAR_MORE,
+         DLOCALE(40, "Internal module resource mountpoint"),
+         TYPE_LOCATION|VAR_MORE,
          DLOCALE(41, "Some modules may want to create links to internal "
-		 "resources. This setting configures an internally handled "
-		 "location that can be used for such purposes.  Simply select "
-		 "a location that you are not likely to use for regular "
-		 "resources."))
+                 "resources. This setting configures an internally handled "
+                 "location that can be used for such purposes.  Simply select "
+                 "a location that you are not likely to use for regular "
+                 "resources."))
     ->add_changed_callback(lambda(object v) { internal_location = v->query(); });
   
   defvar("SubRequestLimit", sub_req_limit,
-	 "Subrequest depth limit",
-	 TYPE_INT | VAR_MORE,
-	 "A limit for the number of nested sub requests for each request. "
-	 "This is intented to catch unintended infinite loops when for "
-	 "example inserting files in RXML. 0 for no limit." )
+         "Subrequest depth limit",
+         TYPE_INT | VAR_MORE,
+         "A limit for the number of nested sub requests for each request. "
+         "This is intented to catch unintended infinite loops when for "
+         "example inserting files in RXML. 0 for no limit." )
     ->add_changed_callback(lambda(object v) { sub_req_limit = v->query(); });
 
   // Throttling-related variables
 
   defvar("throttle", 0,
          DLOCALE(42, "Throttling: Server; Enabled"),TYPE_FLAG,
-	 DLOCALE(43, "If set, per-server bandwidth throttling will be enabled. "
-		 "It will allow you to limit the total available bandwidth for "
-		"this site.<br />Bandwidth is assigned using a Token Bucket. "
-		"The principle under which it works is: for each byte we send we use a token. "
-		"Tokens are added to a repository at a constant rate. When there's not enough, "
-		"we can't transmit. When there's too many, they \"spill\" and are lost."));
+         DLOCALE(43, "If set, per-server bandwidth throttling will be enabled. "
+                 "It will allow you to limit the total available bandwidth for "
+                "this site.<br />Bandwidth is assigned using a Token Bucket. "
+                "The principle under which it works is: for each byte we send we use a token. "
+                "Tokens are added to a repository at a constant rate. When there's not enough, "
+                "we can't transmit. When there's too many, they \"spill\" and are lost."));
   //TODO: move this explanation somewhere on the website and just put a link.
 
   defvar("throttle_fill_rate", 102400,
          DLOCALE(44, "Throttling: Server; Average available bandwidth"),
          TYPE_INT,
-	 DLOCALE(45, "This is the average bandwidth available to this site in "
-		"bytes/sec (the bucket \"fill rate\")."),
+         DLOCALE(45, "This is the average bandwidth available to this site in "
+                "bytes/sec (the bucket \"fill rate\")."),
          0, arent_we_throttling_server);
 
   defvar("throttle_bucket_depth", 1024000,
          DLOCALE(46, "Throttling: Server; Bucket Depth"), TYPE_INT,
-	 DLOCALE(47, "This is the maximum depth of the bucket. After a long enough period "
-		"of inactivity, a request will get this many unthrottled bytes of data, before "
-		"throttling kicks back in.<br>Set equal to the Fill Rate in order not to allow "
-		"any data bursts. This value determines the length of the time over which the "
-		"bandwidth is averaged."), 0, arent_we_throttling_server);
+         DLOCALE(47, "This is the maximum depth of the bucket. After a long enough period "
+                "of inactivity, a request will get this many unthrottled bytes of data, before "
+                "throttling kicks back in.<br>Set equal to the Fill Rate in order not to allow "
+                "any data bursts. This value determines the length of the time over which the "
+                "bandwidth is averaged."), 0, arent_we_throttling_server);
 
   defvar("throttle_min_grant", 1300,
          DLOCALE(48, "Throttling: Server; Minimum Grant"), TYPE_INT,
-	 DLOCALE(49, "When the bandwidth availability is below this value, connections will "
-		"be delayed rather than granted minimal amounts of bandwidth. The purpose "
-		"is to avoid sending too small packets (which would increase the IP overhead)."),
+         DLOCALE(49, "When the bandwidth availability is below this value, connections will "
+                "be delayed rather than granted minimal amounts of bandwidth. The purpose "
+                "is to avoid sending too small packets (which would increase the IP overhead)."),
          0, arent_we_throttling_server);
 
   defvar("throttle_max_grant", 14900,
          DLOCALE(50, "Throttling: Server; Maximum Grant"), TYPE_INT,
-	 DLOCALE(51, "This is the maximum number of bytes assigned in a single request "
-		"to a connection. Keeping this number low will share bandwidth more evenly "
-		"among the pending connections, but keeping it too low will increase IP "
-		"overhead and (marginally) CPU usage. You'll want to set it just a tiny "
-		"bit lower than any integer multiple of your network's MTU (typically 1500 "
-		"for ethernet)."), 0, arent_we_throttling_server);
+         DLOCALE(51, "This is the maximum number of bytes assigned in a single request "
+                "to a connection. Keeping this number low will share bandwidth more evenly "
+                "among the pending connections, but keeping it too low will increase IP "
+                "overhead and (marginally) CPU usage. You'll want to set it just a tiny "
+                "bit lower than any integer multiple of your network's MTU (typically 1500 "
+                "for ethernet)."), 0, arent_we_throttling_server);
 
   defvar("req_throttle", 0,
          DLOCALE(52, "Throttling: Request; Enabled"), TYPE_FLAG,
-	 DLOCALE(53, "If set, per-request bandwidth throttling will be enabled.")
+         DLOCALE(53, "If set, per-request bandwidth throttling will be enabled.")
          );
 
   defvar("req_throttle_min", 1024,
          DLOCALE(54, "Throttling: Request; Minimum guarranteed bandwidth"),
          TYPE_INT,
-	 DLOCALE(55, "The maximum bandwidth each connection (in bytes/sec) can use is determined "
-		"combining a number of modules. But doing so can lead to too small "
-		"or even negative bandwidths for particularly unlucky requests. This variable "
-		"guarantees a minimum bandwidth for each request."),
+         DLOCALE(55, "The maximum bandwidth each connection (in bytes/sec) can use is determined "
+                "combining a number of modules. But doing so can lead to too small "
+                "or even negative bandwidths for particularly unlucky requests. This variable "
+                "guarantees a minimum bandwidth for each request."),
          0, arent_we_throttling_request);
 
   defvar("req_throttle_depth_mult", 60.0,
          DLOCALE(56, "Throttling: Request; Bucket Depth Multiplier"),
          TYPE_FLOAT,
-	 DLOCALE(57, "The average bandwidth available for each request will be determined by "
-		"the modules combination. The bucket depth will be determined multiplying "
-		"the rate by this factor."),
+         DLOCALE(57, "The average bandwidth available for each request will be determined by "
+                "the modules combination. The bucket depth will be determined multiplying "
+                "the rate by this factor."),
          0, arent_we_throttling_request);
 
 
   defvar("404-files", ({ "404.inc" }),
-	 DLOCALE(307, "No such file message override files"),
-	 TYPE_STRING_LIST|VAR_PUBLIC,
-	 DLOCALE(308,
-		 "If no file match a given resource all directories above the"
-		 " wanted file is searched for one of the files in this list."
-		 "<p>\n"
-		 "As an example, if the file /foo/bar/not_there.html is "
-		 "wanted, and this list contains the default value of 404.inc,"
-		 " these files will be searched for, in this order:</p><br /> "
-		 " /foo/bar/404.inc, /foo/404.inc and /404.inc."
-		 "<p>\n"
-		 "The inclusion file can access the form variables "
-		 "form.orig-file and form.orig-url to identify the original "
-		 "page that was requested.") );
+         DLOCALE(307, "No such file message override files"),
+         TYPE_STRING_LIST|VAR_PUBLIC,
+         DLOCALE(308,
+                 "If no file match a given resource all directories above the"
+                 " wanted file is searched for one of the files in this list."
+                 "<p>\n"
+                 "As an example, if the file /foo/bar/not_there.html is "
+                 "wanted, and this list contains the default value of 404.inc,"
+                 " these files will be searched for, in this order:</p><br /> "
+                 " /foo/bar/404.inc, /foo/404.inc and /404.inc."
+                 "<p>\n"
+                 "The inclusion file can access the form variables "
+                 "form.orig-file and form.orig-url to identify the original "
+                 "page that was requested.") );
 
   defvar("401-files", ({ }),
-	 DLOCALE(411, "Authentication failed message override files"),
-	 TYPE_STRING_LIST|VAR_PUBLIC,
-	 DLOCALE(412,
-		 "With each authentication required response this file is "
-		 "sent and displayed if the authentication fails or the user "
-		 "choose not to authenticate at all.<p>\n"
-		 "The file is searched for in parent directories in the same "
-		 "manner as the no such file message override files.") );
+         DLOCALE(411, "Authentication failed message override files"),
+         TYPE_STRING_LIST|VAR_PUBLIC,
+         DLOCALE(412,
+                 "With each authentication required response this file is "
+                 "sent and displayed if the authentication fails or the user "
+                 "choose not to authenticate at all.<p>\n"
+                 "The file is searched for in parent directories in the same "
+                 "manner as the no such file message override files.") );
 
   defvar("license",
-	 License.
-	 LicenseVariable(getenv("ROXEN_LICENSEDIR") || "../license/", 
-			 VAR_NO_DEFAULT, DLOCALE(39, "License file"),
-			 DLOCALE(336, "The license file for this configuration."),
-			 this_object()));
+         License.
+         LicenseVariable(getenv("ROXEN_LICENSEDIR") || "../license/", 
+                         VAR_NO_DEFAULT, DLOCALE(39, "License file"),
+                         DLOCALE(336, "The license file for this configuration."),
+                         this_object()));
 
 #ifdef HTTP_COMPRESSION
   defvar("http_compression_enabled", 1,
-	 DLOCALE(1000, "Compression: Enable HTTP compression"),
-	 TYPE_FLAG,
-	 DLOCALE(1001,
+         DLOCALE(1000, "Compression: Enable HTTP compression"),
+         TYPE_FLAG,
+         DLOCALE(1001,
 #"Whether to enable HTTP protocol compression. Many types of text
 content (HTML, CSS, JavaScript etc.) can be compressed quite a lot, so
 enabling HTTP compression may improve the visitors' perception of the
@@ -5761,7 +5761,7 @@ power and bandwidth. Requests that end up in the protocol cache will
 be served in the compressed form directly from the protocol cache, so
 for such requests the processing power overhead can be held relatively
 low."))->add_changed_callback(lambda(object v) 
-			      { http_compr_enabled = v->query(); });
+                              { http_compr_enabled = v->query(); });
   http_compr_enabled = query("http_compression_enabled");
 
   void set_mimetypes(array(string) mimetypes)
@@ -5771,79 +5771,79 @@ low."))->add_changed_callback(lambda(object v)
 
     foreach(mimetypes, string m) {
       if(has_suffix(m, "/*"))
-	main_mimes += ({ m[..sizeof(m)-3] });
+        main_mimes += ({ m[..sizeof(m)-3] });
       else if(!has_value(m, "*"))
-	exact_mimes += ({ m });
+        exact_mimes += ({ m });
     }
 
     http_compr_exact_mimes = mkmapping(exact_mimes, 
-				       ({ 1 }) * sizeof(exact_mimes));
+                                       ({ 1 }) * sizeof(exact_mimes));
     http_compr_main_mimes = mkmapping(main_mimes,
-				      ({ 1 }) * sizeof(main_mimes));
+                                      ({ 1 }) * sizeof(main_mimes));
   };
   defvar("http_compression_mimetypes", 
-	 ({ "text/*", 
-	    "application/javascript",
-	    "application/x-javascript",
-	    "application/json",
-	    "application/xhtml+xml",
-	    "image/x-icon",
-	    "image/svg+xml" }),
-	 DLOCALE(1002, "Compression: Enabled MIME-types"),
-	 TYPE_STRING_LIST,
-	 DLOCALE(1003, "The MIME types for which to enable compression. The "
-		 "forms \"maintype/*\" and \"maintype/subtype\" are allowed, "
-		 "but globbing on the general form (such as "
-		 "\"maintype/*subtype\" or \"maintype/sub*\") is not allowed "
-		 "and such globs will be silently ignored."))
+         ({ "text/*", 
+            "application/javascript",
+            "application/x-javascript",
+            "application/json",
+            "application/xhtml+xml",
+            "image/x-icon",
+            "image/svg+xml" }),
+         DLOCALE(1002, "Compression: Enabled MIME-types"),
+         TYPE_STRING_LIST,
+         DLOCALE(1003, "The MIME types for which to enable compression. The "
+                 "forms \"maintype/*\" and \"maintype/subtype\" are allowed, "
+                 "but globbing on the general form (such as "
+                 "\"maintype/*subtype\" or \"maintype/sub*\") is not allowed "
+                 "and such globs will be silently ignored."))
     ->add_changed_callback(lambda(object v) 
-			   { set_mimetypes(v->query()); 
-			   });
+                           { set_mimetypes(v->query()); 
+                           });
   set_mimetypes(query("http_compression_mimetypes"));
 
   defvar("http_compression_min_size", 1024,
-	 DLOCALE(1004, "Compression: Minimum content size"),
-	 TYPE_INT,
-	 DLOCALE(1005, "The minimum file size for which to enable compression. "
-		 "(It might not be worth it to compress a request if it can "
-		 "fit into a single TCP/IP packet anyways.)"))
+         DLOCALE(1004, "Compression: Minimum content size"),
+         TYPE_INT,
+         DLOCALE(1005, "The minimum file size for which to enable compression. "
+                 "(It might not be worth it to compress a request if it can "
+                 "fit into a single TCP/IP packet anyways.)"))
     ->add_changed_callback(lambda(object v) 
-			   { http_compr_minlen = v->query(); });
+                           { http_compr_minlen = v->query(); });
   http_compr_minlen = query("http_compression_min_size");
 
   defvar("http_compression_max_size", 1048576,
-	 DLOCALE(1006, "Compression: Maximum content size"),
-	 TYPE_INT,
-	 DLOCALE(1007, "The maximum file size for which to enable compression. "
-		 "Note that the general protocol cache entry size limit "
-		 "applies, so if the compression of dynamic requests is "
-		 "disabled, files larger than the protocol cache maximum "
-		 "file size setting will never be served compressed "
-		 "regardless of this setting."))
+         DLOCALE(1006, "Compression: Maximum content size"),
+         TYPE_INT,
+         DLOCALE(1007, "The maximum file size for which to enable compression. "
+                 "Note that the general protocol cache entry size limit "
+                 "applies, so if the compression of dynamic requests is "
+                 "disabled, files larger than the protocol cache maximum "
+                 "file size setting will never be served compressed "
+                 "regardless of this setting."))
     ->add_changed_callback(lambda(object v) 
-			   { http_compr_maxlen = v->query(); });
+                           { http_compr_maxlen = v->query(); });
   http_compr_maxlen = query("http_compression_max_size");
 
   Variable.Int comp_level = 
     Variable.Int(1, 0, DLOCALE(1008, "Compression: Compression level"),
-		 DLOCALE(1009, "The compression level to use (integer between 1 "
-			 "and 9). Higher number means more compression at the"
-			 " cost of processing power and vice versa. You may "
-			 "need to restart the server for this setting to "
-			 "take effect."));
+                 DLOCALE(1009, "The compression level to use (integer between 1 "
+                         "and 9). Higher number means more compression at the"
+                         " cost of processing power and vice versa. You may "
+                         "need to restart the server for this setting to "
+                         "take effect."));
   comp_level->set_range(1, 9);
   defvar("http_compression_level", comp_level);
-		 
+                 
   defvar("http_compression_dynamic_reqs", 1,
-	 DLOCALE(1010, "Compression: Compress dynamic requests"),
-	 TYPE_FLAG,
-	 DLOCALE(1011, "If enabled, even requests that aren't cacheable in the "
-		 "protocol cache will be compressed. If the site has many "
-		 "lightweight requests that are not protocol cacheable, the "
-		 "processing overhead may become relatively large with this "
-		 "setting turned on."))
+         DLOCALE(1010, "Compression: Compress dynamic requests"),
+         TYPE_FLAG,
+         DLOCALE(1011, "If enabled, even requests that aren't cacheable in the "
+                 "protocol cache will be compressed. If the site has many "
+                 "lightweight requests that are not protocol cacheable, the "
+                 "processing overhead may become relatively large with this "
+                 "setting turned on."))
     ->add_changed_callback(lambda(object v) 
-			   { http_compr_dynamic_reqs = v->query(); });
+                           { http_compr_dynamic_reqs = v->query(); });
   http_compr_dynamic_reqs = query("http_compression_dynamic_reqs");
 #endif  
   
@@ -5854,8 +5854,8 @@ low."))->add_changed_callback(lambda(object v)
     inherit Variable.Variable;
 
     int check_visibility( RequestID id, int more_mode,
-			  int expert_mode, int devel_mode,
-			  int initial, int|void variable_in_cfif )
+                          int expert_mode, int devel_mode,
+                          int initial, int|void variable_in_cfif )
     {
       return 0;
     }
@@ -5863,7 +5863,7 @@ low."))->add_changed_callback(lambda(object v)
     void set( string newval )
     {
       if( search(newval,"emit source=values") == -1 )
-	variables[ "404-message" ]->set( newval );
+        variables[ "404-message" ]->set( newval );
     }
 
     void create()
@@ -5939,10 +5939,10 @@ low."))->add_changed_callback(lambda(object v)
   </body>
 </html>
 ",
-	 DLOCALE(58, "No such file message"),
-	 TYPE_TEXT_FIELD|VAR_PUBLIC,
-	 DLOCALE(59, "What to return when there is no resource or file "
-		 "available at a certain location."));
+         DLOCALE(58, "No such file message"),
+         TYPE_TEXT_FIELD|VAR_PUBLIC,
+         DLOCALE(59, "What to return when there is no resource or file "
+                 "available at a certain location."));
 
 
   class AuthFailedOverride
@@ -5951,8 +5951,8 @@ low."))->add_changed_callback(lambda(object v)
     inherit Variable.Variable;
 
     int check_visibility( RequestID id, int more_mode,
-			  int expert_mode, int devel_mode,
-			  int initial, int|void variable_in_cfif )
+                          int expert_mode, int devel_mode,
+                          int initial, int|void variable_in_cfif )
     {
       return 0;
     }
@@ -5960,7 +5960,7 @@ low."))->add_changed_callback(lambda(object v)
     void set( string newval )
     {
       if( search(newval,"emit source=values") == -1 )
-	variables[ "401-message" ]->set( newval );
+        variables[ "401-message" ]->set( newval );
     }
 
     void create()
@@ -6036,9 +6036,9 @@ low."))->add_changed_callback(lambda(object v)
   </body>
 </html>
 ",
-	 DLOCALE(413, "Authentication failed message"),
-	 TYPE_TEXT_FIELD|VAR_PUBLIC,
-	 DLOCALE(420, "What to return when an authentication attempt failed."));
+         DLOCALE(413, "Authentication failed message"),
+         TYPE_TEXT_FIELD|VAR_PUBLIC,
+         DLOCALE(420, "What to return when an authentication attempt failed."));
 
   if (!retrieve ("EnabledModules", this)["config_filesystem#0"]) {
     // Do not use a handler queue timeout of the administration
@@ -6086,20 +6086,20 @@ low."))->add_changed_callback(lambda(object v)
   </body>
 </html>
 ",
-	   DLOCALE(1048, "Server too busy message"),
-	   TYPE_TEXT_FIELD|VAR_PUBLIC,
-	   DLOCALE(1049, "What to return if the server is too busy. See also "
-		   "\"Handler queue timeout\"."));
+           DLOCALE(1048, "Server too busy message"),
+           TYPE_TEXT_FIELD|VAR_PUBLIC,
+           DLOCALE(1049, "What to return if the server is too busy. See also "
+                   "\"Handler queue timeout\"."));
 
     defvar("handler_queue_timeout", 30,
-	   DLOCALE(1050, "Handler queue timeout"),
-	   TYPE_INT,
-	   DLOCALE(1051, #"Requests that have been waiting this many seconds on
+           DLOCALE(1050, "Handler queue timeout"),
+           TYPE_INT,
+           DLOCALE(1051, #"Requests that have been waiting this many seconds on
 the handler queue will not be processed. Instead, a 503 error code and the
 \"Server too busy message\" will be returned to the client. This may help the
 server to cut down the queue length after spikes of heavy load."))
       ->add_changed_callback(lambda(object v)
-			     { handler_queue_timeout = v->query(); });
+                             { handler_queue_timeout = v->query(); });
     handler_queue_timeout = query("handler_queue_timeout");
   }
 
@@ -6117,10 +6117,10 @@ server to cut down the queue length after spikes of heavy load."))
   defvar("snmp_traphosts", ({ }),
                  "SNMP: Trap host URLs", TYPE_STRING_LIST,
          "The remote nodes, where should be sent traps."
-	 "<p>\n"
-	 "The URL syntax is: snmptrap://community@hostname:portnumber"
-	 "</p><br/>",
-	 0, snmp_disabled);
+         "<p>\n"
+         "The URL syntax is: snmptrap://community@hostname:portnumber"
+         "</p><br/>",
+         0, snmp_disabled);
 #endif
 
   definvisvar( "no_delayed_load", 0, TYPE_FLAG|VAR_PUBLIC );

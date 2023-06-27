@@ -14,7 +14,7 @@ constant cvs_version =
 
 LocaleString module_name = _(1,"Authentication: SQL user database");
 LocaleString module_doc  = _(2,"This module implements a user database via "
-			     "a SQL server.\n");
+                             "a SQL server.\n");
 
 class SqlUser
 {
@@ -40,18 +40,18 @@ class SqlUser
   {
     switch(query("passwd_type")) {
       case "password":
-	return (int)sql_query("SELECT PASSWORD(%s) = %s as pswmatch",
-			      password, crypted_password())[0]->pswmatch;
+        return (int)sql_query("SELECT PASSWORD(%s) = %s as pswmatch",
+                              password, crypted_password())[0]->pswmatch;
       case "old-password":
-	return (int)sql_query("SELECT OLD_PASSWORD(%s) = %s as pswmatch",
-			      password, crypted_password())[0]->pswmatch;
+        return (int)sql_query("SELECT OLD_PASSWORD(%s) = %s as pswmatch",
+                              password, crypted_password())[0]->pswmatch;
       case "crypt":
-	return (verify_password(password, crypted_password()));
+        return (verify_password(password, crypted_password()));
       case "clear text":
-	return (password == crypted_password());
+        return (password == crypted_password());
       case "md5 crypt":
-	catch {return Crypto.verify_crypt_md5 (password, crypted_password());};
-	return 0;
+        catch {return Crypto.verify_crypt_md5 (password, crypted_password());};
+        return 0;
     }
   }
 
@@ -111,11 +111,11 @@ array(string) get_user_groups( int user )
   if(!inited) return ({});
   return 
     sql_query( "SELECT "
-	       "  groups.name as name FROM groups,group_members "
-	       "WHERE "
-	       "  group_members.uid=%d AND groups.gid=group_members.gid "
-	       "GROUP BY "
-	       "  groups.name", user )
+               "  groups.name as name FROM groups,group_members "
+               "WHERE "
+               "  group_members.uid=%d AND groups.gid=group_members.gid "
+               "GROUP BY "
+               "  groups.name", user )
     ->name;
 }
 
@@ -124,11 +124,11 @@ array(string) get_group_users( int group )
   if(!inited) return ({});
   return 
     sql_query( "SELECT "
-	       "  users.name as name FROM users,group_members "
-	       "WHERE "
-	       "  group_members.gid=%d AND users.uid=group_members.uid "
-	       "GROUP BY "
-	       "  users.name", group )
+               "  users.name as name FROM users,group_members "
+               "WHERE "
+               "  group_members.gid=%d AND users.uid=group_members.uid "
+               "GROUP BY "
+               "  users.name", group )
     ->name;
 }
 
@@ -185,12 +185,12 @@ void start()
     {
       inited = 0;
       report_error( query("db")+
-		    " exists, but cannot be written to from this module" );
+                    " exists, but cannot be written to from this module" );
       return;
     }
     DBManager.create_db( query("db"), 0, 1 );
     DBManager.is_module_db( this_module(), query("db"),
-			    "This datbase contains the user database" );
+                            "This datbase contains the user database" );
     DBManager.set_permission( query("db"), my_configuration(), DBManager.WRITE );
   }
   set_my_db( query("db") );
@@ -213,25 +213,25 @@ void create()
           DatabaseVar( "sql_users",({}),0,
                        _(3,"Database"),
                        _(4,"This is the database that this module will "
-			      "store it's users in.") ) );
+                              "store it's users in.") ) );
 
   defvar( "passwd_type",
           Variable.StringChoice("password",
-				([
-				  "password":_(5,"MySQL Password"),
-				  "old-password":_(11,"MySQL OLD_PASSWORD() "
-						   "(4.0 Compat Mode)"),
-				  "crypt":_(6,"Unix crypt"),
-				  "clear text":_(7,"Clear text"),
-				  "md5 crypt":_(8,"MD5 crypt"),
-				]), 0,
-				_(9,"Password type"),
-				_(10,"Password hashing method. "
-				  "By changing this variable you can "
-				  "select the meaning of password field. "
-				  "By default the passwords are supposed "
-				  "to be hashed by internal MySQL PASSWORD() "
-				  "function.")
-				));
+                                ([
+                                  "password":_(5,"MySQL Password"),
+                                  "old-password":_(11,"MySQL OLD_PASSWORD() "
+                                                   "(4.0 Compat Mode)"),
+                                  "crypt":_(6,"Unix crypt"),
+                                  "clear text":_(7,"Clear text"),
+                                  "md5 crypt":_(8,"MD5 crypt"),
+                                ]), 0,
+                                _(9,"Password type"),
+                                _(10,"Password hashing method. "
+                                  "By changing this variable you can "
+                                  "select the meaning of password field. "
+                                  "By default the passwords are supposed "
+                                  "to be hashed by internal MySQL PASSWORD() "
+                                  "function.")
+                                ));
 
 }

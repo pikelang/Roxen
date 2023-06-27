@@ -53,8 +53,8 @@ string parse( RequestID id )
     if (connections[c]) {
       array(string) t = c/":";
       res += "<tr><td>"+Roxen.html_encode_string(replace(t[0],";",":"))+"</td><td>"+
-	Roxen.html_encode_string(t[1])+"</td><td align=right>"+
-	connections[c]+"</td></tr>\n";
+        Roxen.html_encode_string(t[1])+"</td><td align=right>"+
+        connections[c]+"</td></tr>\n";
       total += connections[c];
     }
   }
@@ -86,10 +86,10 @@ string parse( RequestID id )
 
 #ifdef DB_DEBUG
   res += sprintf("<h2>Live connections</h2>"
-		 "<pre>\n"
-		 "%{%s\n\n\n%}"
-		 "</pre>\n",
-		 values(roxenloader->my_mysql_last_user));
+                 "<pre>\n"
+                 "%{%s\n\n\n%}"
+                 "</pre>\n",
+                 values(roxenloader->my_mysql_last_user));
 #endif /* DB_DEBUG */
 
   return res;

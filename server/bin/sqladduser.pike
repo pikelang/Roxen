@@ -21,10 +21,10 @@
 #include <sql.h>
 
 string readline_until_got (string query) {
-	string retval;
-	while (!retval || !sizeof(retval))
-		retval=readline("(mandatory) "+query);
-	return retval;
+        string retval;
+        while (!retval || !sizeof(retval))
+                retval=readline("(mandatory) "+query);
+        return retval;
 }
 
 int main()
@@ -51,14 +51,14 @@ int main()
     data->gid=(int)data->gid;
 
   query="insert into passwd (" + (indices(data)*",") +
-		") values (";
+                ") values (";
   foreach (values(data),tmp) {
     if (stringp(tmp))
       query += sprintf ("'%s',",sql->quote(tmp));
     else
       query += tmp+",";
   }
-	
+        
   query=query[..sizeof(query)-2];
   query += ")";
 

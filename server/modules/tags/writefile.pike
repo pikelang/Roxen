@@ -33,11 +33,11 @@ LocaleString module_doc  = _(2,
 void create() {
   set_module_creator("Stephen R. van den Berg <srb@cuci.nl>");
   defvar ("onlysubdirs", 1,
-	_(3,"Within tree only"), TYPE_FLAG,
+        _(3,"Within tree only"), TYPE_FLAG,
         _(4,"Setting this will force all specified chroots and filenames "
-	    "to be relative to the directory this tag is located in.  "
-	    "It functions as an enforced dynamic chroot to constrain users in "
-	    "e.g. a user filesystem.")
+            "to be relative to the directory this tag is located in.  "
+            "It functions as an enforced dynamic chroot to constrain users in "
+            "e.g. a user filesystem.")
         );
 }
 
@@ -82,8 +82,8 @@ class TagWritefile {
       CACHE(0);
       _ok = 1;
       if(!sizeof(args->filename)) {
-	_ok = 0;
-	return 0;
+        _ok = 0;
+        return 0;
       }
 
       string real_filename,rootpath,path,schroot=args->chroot||"";
@@ -92,167 +92,167 @@ class TagWritefile {
       path=dirname(path)+"/";
 
       if (QUERY(onlysubdirs))
-	rootpath = path;
+        rootpath = path;
       else
-	rootpath = "/";
+        rootpath = "/";
 
       string filename = 
-	Stdio.append_path(((schroot+args->filename)[0]=='/'?
-			   rootpath:path),
-			  Stdio.append_path(schroot, args->filename));
+        Stdio.append_path(((schroot+args->filename)[0]=='/'?
+                           rootpath:path),
+                          Stdio.append_path(schroot, args->filename));
       // Search for an existing real directory
       string d = dirname(filename);
       string real_dirname = id->conf->real_file(d+"/",id);
       string new_dir = "";
       while (!real_dirname && sizeof(d)) {
-	new_dir = Stdio.append_path(basename(d), new_dir);
-	d = dirname(d);
-	if (d == "/") d = "";
-	real_dirname = id->conf->real_file(d+"/",id);
+        new_dir = Stdio.append_path(basename(d), new_dir);
+        d = dirname(d);
+        if (d == "/") d = "";
+        real_dirname = id->conf->real_file(d+"/",id);
       }
       if (!real_dirname)
-	parse_error ("There is no file system for %O that supports this tag "
-		     "(i.e. implements real_file).\n", dirname(filename));
+        parse_error ("There is no file system for %O that supports this tag "
+                     "(i.e. implements real_file).\n", dirname(filename));
 
       real_filename = Stdio.append_path(real_dirname, new_dir,
-					basename(filename));
+                                        basename(filename));
 
       if(args->remove) {
         if(!rm(real_filename))
-	  _ok = 0;
+          _ok = 0;
       }
       else 
-	if(IS(args->moveto)) {
-	  string filename = 
-	    Stdio.append_path(((schroot+args->moveto)[0]=='/'?
-			       rootpath:path),
-			      Stdio.append_path(schroot, args->moveto));
-	  string real_dirname = id->conf->real_file(dirname(filename)+"/",id);
-	  if (!real_dirname)
-	    parse_error ("There is no file system for %O that supports this "
-			 "tag (i.e. implements real_file).\n", 
-			 dirname(filename));
-	  string real_moveto = 
-	    Stdio.append_path(real_dirname, basename(filename));
+        if(IS(args->moveto)) {
+          string filename = 
+            Stdio.append_path(((schroot+args->moveto)[0]=='/'?
+                               rootpath:path),
+                              Stdio.append_path(schroot, args->moveto));
+          string real_dirname = id->conf->real_file(dirname(filename)+"/",id);
+          if (!real_dirname)
+            parse_error ("There is no file system for %O that supports this "
+                         "tag (i.e. implements real_file).\n", 
+                         dirname(filename));
+          string real_moveto = 
+            Stdio.append_path(real_dirname, basename(filename));
 
-	  if(!mv(real_filename, real_moveto))
-	    _ok = 0;
-	} 
-	else {
-	  string towrite;
-	  if(args->from) {
-	    towrite=RXML.user_get_var(args->from, "form");
-	    if(!towrite ||
-	       IS(args["max-size"]) && sizeof(towrite)>(int)args["max-size"]) {
-	      _ok = 0;
-	      return 0;
-	    }
-	  }
-	  else
-	    towrite=content||"";
+          if(!mv(real_filename, real_moveto))
+            _ok = 0;
+        } 
+        else {
+          string towrite;
+          if(args->from) {
+            towrite=RXML.user_get_var(args->from, "form");
+            if(!towrite ||
+               IS(args["max-size"]) && sizeof(towrite)>(int)args["max-size"]) {
+              _ok = 0;
+              return 0;
+            }
+          }
+          else
+            towrite=content||"";
 
-	  {
-	    string charset = args->charset;
+          {
+            string charset = args->charset;
 
 #ifdef WRITEFILE_UTF8_ENCODE
-	    // Handle this define for 4.0 compat.
-	    if (!charset) charset = "utf8";
+            // Handle this define for 4.0 compat.
+            if (!charset) charset = "utf8";
 #endif
 
-	    if (charset ||
-		(String.width (towrite) > 8 && args["encode-with-entities"])) {
-	      charset = charset ? lower_case (charset - "-") : "iso88591";
+            if (charset ||
+                (String.width (towrite) > 8 && args["encode-with-entities"])) {
+              charset = charset ? lower_case (charset - "-") : "iso88591";
 
-	      // Optimize some special cases first.
-	      if (charset == "utf8")
-		towrite = string_to_utf8 (towrite);
-	      else if (charset == "iso106461")
-		towrite = string_to_unicode (towrite);
-	      else if (charset == "iso88591" && String.width (towrite) == 8) {
-		// Nothing to do.
-	      }
+              // Optimize some special cases first.
+              if (charset == "utf8")
+                towrite = string_to_utf8 (towrite);
+              else if (charset == "iso106461")
+                towrite = string_to_unicode (towrite);
+              else if (charset == "iso88591" && String.width (towrite) == 8) {
+                // Nothing to do.
+              }
 
-	      else {
-		string charset = args->charset || "iso-8859-1";
-		Charset.Encoder enc;
-		if (mixed err = catch (enc = Charset.encoder (charset)))
-		  if (has_prefix (describe_error (err), "Unknown character encoding"))
-		    parse_error ("Unknown charset %O.\n", charset);
-		  else
-		    throw (err);
-		enc->set_replacement_callback (
-		  args["encode-with-entities"] ?
-		  lambda (string chr) {
-		    return sprintf ("&#x%x;", chr[0]);
-		  } :
-		  lambda (string chr) {
-		    run_error ("Encountered unencodable character %x (hex).\n", chr[0]);
-		  });
-		towrite = enc->feed (towrite)->drain();
-	      }
-	    }
+              else {
+                string charset = args->charset || "iso-8859-1";
+                Charset.Encoder enc;
+                if (mixed err = catch (enc = Charset.encoder (charset)))
+                  if (has_prefix (describe_error (err), "Unknown character encoding"))
+                    parse_error ("Unknown charset %O.\n", charset);
+                  else
+                    throw (err);
+                enc->set_replacement_callback (
+                  args["encode-with-entities"] ?
+                  lambda (string chr) {
+                    return sprintf ("&#x%x;", chr[0]);
+                  } :
+                  lambda (string chr) {
+                    run_error ("Encountered unencodable character %x (hex).\n", chr[0]);
+                  });
+                towrite = enc->feed (towrite)->drain();
+              }
+            }
 
-	    else if (String.width (towrite) > 8) {
-	      foreach (towrite; int pos; int chr)
-		if (chr >= 256)
-		  run_error ("Encountered wide character %x (hex) at position %d.\n",
-			     chr, pos);
-	    }
-	  }
+            else if (String.width (towrite) > 8) {
+              foreach (towrite; int pos; int chr)
+                if (chr >= 256)
+                  run_error ("Encountered wide character %x (hex) at position %d.\n",
+                             chr, pos);
+            }
+          }
 
-	  object privs;
-	  ;{ Stat st;
-	  string diro,dirn;
-	  int domkdir=0;
-	  for(dirn=real_filename;
-	      diro=dirn, diro!=(dirn=dirname(dirn)) && !(st = file_stat(dirn));
-	      domkdir=1);
-	  if(st) {
-	    privs = Privs("Writefile", st->uid, st->gid);
-	    if(domkdir && args->mkdirhier)
-	      Stdio.mkdirhier(dirname(real_filename));
-	  }
-	  }
-	  _ok = 0;
-	  object file=Stdio.File();
-	  if(file->open(lastfile=real_filename, args->append?"wrca":"wrct")) {
-	    _ok = 1;
+          object privs;
+          ;{ Stat st;
+          string diro,dirn;
+          int domkdir=0;
+          for(dirn=real_filename;
+              diro=dirn, diro!=(dirn=dirname(dirn)) && !(st = file_stat(dirn));
+              domkdir=1);
+          if(st) {
+            privs = Privs("Writefile", st->uid, st->gid);
+            if(domkdir && args->mkdirhier)
+              Stdio.mkdirhier(dirname(real_filename));
+          }
+          }
+          _ok = 0;
+          object file=Stdio.File();
+          if(file->open(lastfile=real_filename, args->append?"wrca":"wrct")) {
+            _ok = 1;
 #ifdef WRITEFILE_UTF8_ENCODE
-	    towrite = string_to_utf8(towrite);
+            towrite = string_to_utf8(towrite);
 #endif
-	    file->write(towrite);
-	    object dims;
-	    if (IS(args["min-height"])|| IS(args["max-height"])||
-		IS(args["min-width"]) || IS(args["max-width"])) {
-	      file->seek(0);
-	      dims = Dims.dims();
-	      array xy = dims->get(file);
-	      if(xy && 
-		 (IS(args["min-height"])&& xy[1] < (int)args["min-height"]||
-		  IS(args["max-height"])&& xy[1] > (int)args["max-height"]||
-		  IS(args["min-width"]) && xy[0] < (int)args["min-width"]||
-		  IS(args["max-width"]) && xy[0] > (int)args["max-width"]))
-		_ok = 0;
-	    }
-	    if (_ok && args["accept-type"]) {
-	      file->seek(0);
-	      array(string) types = args["accept-type"]/",";
-	      _ok = 0;
-	      catch {
-		if (!dims) {
-		  dims = Dims.dims();
-		  dims->f = file;
-		}
-		if (0<=search(types, "jpeg") && dims->get_JPEG() ||
-		    0<=search(types, "png") && (file->seek(0),dims->get_PNG()) ||
-		    0<=search(types, "gif") && (file->seek(0),dims->get_GIF()))
-		  _ok = 1;
-	      };
-	    }
-	    file->close();
-	  }
-	  privs = 0;
-	}
+            file->write(towrite);
+            object dims;
+            if (IS(args["min-height"])|| IS(args["max-height"])||
+                IS(args["min-width"]) || IS(args["max-width"])) {
+              file->seek(0);
+              dims = Dims.dims();
+              array xy = dims->get(file);
+              if(xy && 
+                 (IS(args["min-height"])&& xy[1] < (int)args["min-height"]||
+                  IS(args["max-height"])&& xy[1] > (int)args["max-height"]||
+                  IS(args["min-width"]) && xy[0] < (int)args["min-width"]||
+                  IS(args["max-width"]) && xy[0] > (int)args["max-width"]))
+                _ok = 0;
+            }
+            if (_ok && args["accept-type"]) {
+              file->seek(0);
+              array(string) types = args["accept-type"]/",";
+              _ok = 0;
+              catch {
+                if (!dims) {
+                  dims = Dims.dims();
+                  dims->f = file;
+                }
+                if (0<=search(types, "jpeg") && dims->get_JPEG() ||
+                    0<=search(types, "png") && (file->seek(0),dims->get_PNG()) ||
+                    0<=search(types, "gif") && (file->seek(0),dims->get_GIF()))
+                  _ok = 1;
+              };
+            }
+            file->close();
+          }
+          privs = 0;
+        }
       return 0;
     }
   }

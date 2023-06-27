@@ -22,7 +22,7 @@ string versions(string font)
   mapping m = mkmapping(b,a);
   foreach(sort(indices(m)), string t)
     res += ({ //"<input type='hidden' name='"+(font+"/"+t)+"'/>"+
-	      Roxen.html_encode_string(m[t]) });
+              Roxen.html_encode_string(m[t]) });
   return String.implode_nicely(res);
 }
 
@@ -70,17 +70,17 @@ string page_0(RequestID id)
   string res=("<input type='hidden' name='action' value='listfonts.pike'/>"
               "<input type='hidden' name='doit' value='indeed'/>\n"
               "<font size='+1'><b>" +
-	      LOCALE(58,"Available font loaders") + "</b></font><p>"+
+              LOCALE(58,"Available font loaders") + "</b></font><p>"+
               font_loaders()+"<font size='+1'><b>" +
-	      "<br />" + LOCALE("dI","All available fonts") + "</b></font><p>");
+              "<br />" + LOCALE("dI","All available fonts") + "</b></font><p>");
   foreach(sort(fonts), string font)
     res+=list_font(font);
   res += ("</p><p>" + LOCALE(236,"Example text") + " "
-	  "<font size=-1><input name=text size=46 value='" +
-	  LOCALE(237,"Jackdaws love my big sphinx of quartz.") +
-	  "'></p><p><table width='70%'><tr><td align='left'>"
+          "<font size=-1><input name=text size=46 value='" +
+          LOCALE(237,"Jackdaws love my big sphinx of quartz.") +
+          "'></p><p><table width='70%'><tr><td align='left'>"
           "<cf-cancel href='?class=status&amp;&usr.set-wiz-id;'/></td><td align='right'>"
-	  "<cf-next/></td></tr></table></p>");
+          "<cf-next/></td></tr></table></p>");
   return res;
 }
 

@@ -306,7 +306,7 @@ protected string get_restricted_rw_user()
   if (!restricted_rw_user || !DBManager.is_valid_db_user (restricted_rw_user)) {
     restricted_rw_user =
       DBManager.get_restricted_db_user (mkmultiset (indices (allowed_dbs)),
-					my_configuration(), 0);
+                                        my_configuration(), 0);
 #if 0
     werror ("Got restricted_rw_user %O\n", restricted_rw_user);
 #endif
@@ -322,7 +322,7 @@ protected string get_restricted_ro_user()
   if (!restricted_ro_user || !DBManager.is_valid_db_user (restricted_ro_user)) {
     restricted_ro_user =
       DBManager.get_restricted_db_user (mkmultiset (indices (allowed_dbs)),
-					my_configuration(), 1);
+                                        my_configuration(), 1);
 #if 0
     werror ("Got restricted_ro_user %O\n", restricted_ro_user);
 #endif
@@ -335,8 +335,8 @@ protected string get_restricted_ro_user()
 
 
 Sql.Sql get_rxml_sql_con (string db, void|string host, void|RequestID id,
-			  void|int read_only, void|int reuse_in_thread,
-			  void|string charset)
+                          void|int read_only, void|int reuse_in_thread,
+                          void|string charset)
 //! This function is useful from other modules via the
 //! @tt{"rxml_sql"@} provider interface: It applies the security
 //! settings configured in this module to check whether the requested
@@ -383,14 +383,14 @@ Sql.Sql get_rxml_sql_con (string db, void|string host, void|RequestID id,
     string h = real_host || compat_default_host;
     if (h && has_prefix (h, "mysql://")) {
       if (real_host && !allow_sql_urls) {
-	report_warning ("Connection to %O attempted from %O.\n",
-			real_host, id && id->raw_url);
-	RXML.parse_error ("Database access through SQL URLs not allowed.\n");
+        report_warning ("Connection to %O attempted from %O.\n",
+                        real_host, id && id->raw_url);
+        RXML.parse_error ("Database access through SQL URLs not allowed.\n");
       }
 
       error = catch {
-	  con = my_configuration()->sql_connect(h, charset);
-	};
+          con = my_configuration()->sql_connect(h, charset);
+        };
     }
   }
 
@@ -400,19 +400,19 @@ Sql.Sql get_rxml_sql_con (string db, void|string host, void|RequestID id,
     if (!db) db = real_host;
     if (db && allowed_dbs && !allowed_dbs[db]) {
       report_warning ("Connection to database %O attempted from %O.\n",
-		      db, id && id->raw_url);
+                      db, id && id->raw_url);
       RXML.parse_error ("Database %O is not in the list "
-			"of allowed databases.\n", db);
+                        "of allowed databases.\n", db);
     }
 
     if (!db) {
       if (default_db != " none") db = default_db;
       else if (compat_default_host &&
-	       !has_prefix (compat_default_host, "mysql://"))
-	db = compat_default_host;
+               !has_prefix (compat_default_host, "mysql://"))
+        db = compat_default_host;
       else
-	RXML.parse_error ("No database specified and no default database "
-			  "configured.\n");
+        RXML.parse_error ("No database specified and no default database "
+                          "configured.\n");
     }
 
     string db_user = read_only ?
@@ -423,9 +423,9 @@ Sql.Sql get_rxml_sql_con (string db, void|string host, void|RequestID id,
 
     if (!db_user) {
       report_warning ("Connection to database %O attempted from %O.\n",
-		      db, id && id->raw_url);
+                      db, id && id->raw_url);
       RXML.parse_error ("Database %O is not accessible "
-			"from this configuration.\n", db);
+                        "from this configuration.\n", db);
     }
 
 #ifdef RUN_SELF_TEST
@@ -433,7 +433,7 @@ Sql.Sql get_rxml_sql_con (string db, void|string host, void|RequestID id,
 #endif
 
     error = catch {
-	con = DBManager.low_get (db_user, db, reuse_in_thread, charset);
+        con = DBManager.low_get (db_user, db, reuse_in_thread, charset);
       };
   }
 
@@ -442,15 +442,15 @@ Sql.Sql get_rxml_sql_con (string db, void|string host, void|RequestID id,
     werror (describe_backtrace (error));
 #endif
     RXML.run_error(error ? describe_error (error) :
-		   (LOCALE(3,"Couldn't connect to SQL server") + "\n"));
+                   (LOCALE(3,"Couldn't connect to SQL server") + "\n"));
   }
 
   return con;
 }
 
 array|Sql.sql_result do_sql_query(mapping args, RequestID id,
-				  void|int(0..1) big_query,
-				  void|int(0..1) ret_con)
+                                  void|int(0..1) big_query,
+                                  void|int(0..1) ret_con)
 {
   string host;
   if (args->host)
@@ -475,8 +475,8 @@ array|Sql.sql_result do_sql_query(mapping args, RequestID id,
     foreach(args->bindings / ",", string tmp) {
       string tmp2,tmp3;
       if(sscanf(tmp, "%s=%s", tmp2, tmp3) == 2) {
-	bindings[String.trim_all_whites(tmp2)] =
-	  RXML.user_get_var( String.trim_all_whites(tmp3) );
+        bindings[String.trim_all_whites(tmp2)] =
+          RXML.user_get_var( String.trim_all_whites(tmp3) );
       }
     }
   }
@@ -492,36 +492,36 @@ array|Sql.sql_result do_sql_query(mapping args, RequestID id,
   {
     if (!allow_module_dbs) {
       report_warning ("Connection to module database for %O "
-		      "attempted from %O.\n", args->module, id->raw_url);
+                      "attempted from %O.\n", args->module, id->raw_url);
       RXML.parse_error ("Invalid \"module\" attribute - "
-			"database access through modules not allowed.\n");
+                        "database access through modules not allowed.\n");
     }
 
     RoxenModule module=id->conf->find_module(replace(args->module,"!","#"));
     if( !module )
       RXML.run_error( (string)LOCALE(9,"Cannot find the module %s"),
-		      args->module );
+                      args->module );
 
     if( error = catch {
-	con = module->get_my_sql (ro, conn_charset != "none" && conn_charset);
+        con = module->get_my_sql (ro, conn_charset != "none" && conn_charset);
       } ) {
 #if 0
       werror (describe_backtrace (error));
 #endif
       RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
-		     ": "+ describe_error (error) +"\n");
+                     ": "+ describe_error (error) +"\n");
     }
       
     if( error = catch
     {
       string f=(big_query?"big_query":"query")+(ro?"_ro":"");
       result = bindings ?  
-	module["sql_"+f]( args->query, bindings ) :
-	module["sql_"+f]( args->query );
+        module["sql_"+f]( args->query, bindings ) :
+        module["sql_"+f]( args->query );
     } )
     {
       error = sprintf("Query failed: %s\n",
-		      con->error() || describe_error(error));
+                      con->error() || describe_error(error));
       RXML.run_error(error);
     }
   }
@@ -532,7 +532,7 @@ array|Sql.sql_result do_sql_query(mapping args, RequestID id,
     function query_fn = (big_query ? con->big_query : con->query); 
     if( error = catch( result = (bindings ? query_fn(args->query, bindings) : query_fn(args->query))) ) {
       error = sprintf("Query failed: %s\n",
-		      con->error() || describe_error(error));
+                      con->error() || describe_error(error));
       RXML.run_error(error);
     }
   }
@@ -573,16 +573,16 @@ class TagSQLOutput {
       array res= [array] do_sql_query(args, id);
 
       if (res) {
-	result = do_output_tag(args, res, content, id);
-	id->misc->defines[" _ok"] = 1; // The effect of <true>, since res isn't parsed.
+        result = do_output_tag(args, res, content, id);
+        id->misc->defines[" _ok"] = 1; // The effect of <true>, since res isn't parsed.
 
-	return 0;
+        return 0;
       }
 
       if (args["do-once"]) {
-	result = do_output_tag( args, ({([])}), content, id );
-	id->misc->defines[" _ok"] = 1;
-	return 0;
+        result = do_output_tag( args, ({([])}), content, id );
+        id->misc->defines[" _ok"] = 1;
+        return 0;
       }
 
       id->misc->defines[" _ok"] = 0;
@@ -606,12 +606,12 @@ class SqlEmitResponse {
     array val;
     while (sqlres) {
       if (val = sqlres->fetch_row()) {
-	fetched++;
-	break;
+        fetched++;
+        break;
       }
       // Try the next set of results.
       sqlres = (!inhibit_next_result && sqlres->next_result &&
-		sqlres->next_result());
+                sqlres->next_result());
       // FIXME: Add result set counter.
     }
     if (!sqlres)
@@ -619,57 +619,57 @@ class SqlEmitResponse {
 
     if (compat_level > 4.5) {
       if (!decoder) {
-	foreach (val; int i; string v) {
-	  // Change in >= 5.0: Don't abuse RXML.nil for SQL NULL. RXML.nil
-	  // means UNDEFINED in this context, i.e. that the variable
-	  // doesn't exist at all. An SQL NULL otoh is just a special
-	  // value in an existing variable, at least on the RXML level.
+        foreach (val; int i; string v) {
+          // Change in >= 5.0: Don't abuse RXML.nil for SQL NULL. RXML.nil
+          // means UNDEFINED in this context, i.e. that the variable
+          // doesn't exist at all. An SQL NULL otoh is just a special
+          // value in an existing variable, at least on the RXML level.
 
 #if 0
-	  // Afaics the following isn't of any use since the big_query
-	  // wrapper in Sql.oracle handles the dbnull objects when it
-	  // converts all types to strings. /mast
+          // Afaics the following isn't of any use since the big_query
+          // wrapper in Sql.oracle handles the dbnull objects when it
+          // converts all types to strings. /mast
 
-	  // Might be a dbnull object which considers
-	  // itself false (e.g. in the oracle glue).
-	  if ((x != 0) && stringp(x->type))
-	    // Transform NULLString to "".
-	    return x->type;
+          // Might be a dbnull object which considers
+          // itself false (e.g. in the oracle glue).
+          if ((x != 0) && stringp(x->type))
+            // Transform NULLString to "".
+            return x->type;
 #endif
 
-	  if (!v) val[i] = null_obj;
-	}
+          if (!v) val[i] = null_obj;
+        }
       }
 
       else {
-	// Same null handling as above, but also decode charsets.
-	foreach (val; int i; string v) {
-	  if (!v) val[i] = null_obj;
-	  else if (charset_decode_col[i]) {
-	    if (mixed err = catch (val[i] = decoder->feed (v)->drain()))
-	      if (objectp (err) && err->is_charset_decode_error)
-		RXML.run_error (err->message());
-	      else
-		throw (err);
-	  }
-	}
+        // Same null handling as above, but also decode charsets.
+        foreach (val; int i; string v) {
+          if (!v) val[i] = null_obj;
+          else if (charset_decode_col[i]) {
+            if (mixed err = catch (val[i] = decoder->feed (v)->drain()))
+              if (objectp (err) && err->is_charset_decode_error)
+                RXML.run_error (err->message());
+              else
+                throw (err);
+          }
+        }
       }
     }
 
     else
       val = map(val, lambda(mixed x) {
-		       if (x) return x;
-		       // Might be a dbnull object which considers
-		       // itself false (e.g. in the oracle glue).
-		       if ((x != 0) && stringp(x->type))
-			 // Transform NULLString to "".
-			 return x->type;
-		       // It's 0 or a null object. Treat it as the value
-		       // doesn't exist at all (ideally there should be
-		       // some sort of dbnull value at the rxml level
-		       // too to tell these cases apart).
-		       return RXML.nil;
-		     });
+                       if (x) return x;
+                       // Might be a dbnull object which considers
+                       // itself false (e.g. in the oracle glue).
+                       if ((x != 0) && stringp(x->type))
+                         // Transform NULLString to "".
+                         return x->type;
+                       // It's 0 or a null object. Treat it as the value
+                       // doesn't exist at all (ideally there should be
+                       // some sort of dbnull value at the rxml level
+                       // too to tell these cases apart).
+                       return RXML.nil;
+                     });
 
     return mkmapping(cols, val);
   }
@@ -685,25 +685,25 @@ class SqlEmitResponse {
       cols = sqlres->fetch_fields()->name;
 
       if (charset) {
-	if (mixed err = catch (decoder = Charset.decoder (charset))) {
+        if (mixed err = catch (decoder = Charset.decoder (charset))) {
 #if defined (DEBUG) || defined (MODULE_DEBUG)
-	  werror ("Error getting decoder for charset %O: %s",
-		  charset, describe_error (err));
+          werror ("Error getting decoder for charset %O: %s",
+                  charset, describe_error (err));
 #endif
-	  RXML.parse_error ("Unknown charset %O for decode.\n", charset);
-	}
+          RXML.parse_error ("Unknown charset %O for decode.\n", charset);
+        }
 
-	if (binary_cols) {
-	  charset_decode_col = allocate (sizeof (cols), 0);
-	  multiset(string) bin_col_names =
-	    mkmultiset (map (binary_cols / ",",
-			     String.trim_all_whites) - ({""}));
-	  if (sizeof (bin_col_names))
-	    foreach (cols; int i; string name)
-	      charset_decode_col[i] = !bin_col_names[name];
-	}
-	else
-	  charset_decode_col = allocate (sizeof (cols), 1);
+        if (binary_cols) {
+          charset_decode_col = allocate (sizeof (cols), 0);
+          multiset(string) bin_col_names =
+            mkmultiset (map (binary_cols / ",",
+                             String.trim_all_whites) - ({""}));
+          if (sizeof (bin_col_names))
+            foreach (cols; int i; string name)
+              charset_decode_col[i] = !bin_col_names[name];
+        }
+        else
+          charset_decode_col = allocate (sizeof (cols), 1);
       }
     }
   }
@@ -714,20 +714,20 @@ class SqlEmitResponse {
     if (!(<0, "none", "unicode", "broken-unicode">)[recode_charset]) {	\
       Charset.Encoder encoder;					\
       if (mixed err = catch {						\
-	  encoder = Charset.encoder (recode_charset);		\
-	}) {								\
-	DO_IF_DEBUG (							\
-	  werror ("Error getting encoder for charset %O: %s",		\
-		  recode_charset, describe_error (err)));		\
-	RXML.parse_error ("Unknown charset %O for encode.\n", recode_charset); \
+          encoder = Charset.encoder (recode_charset);		\
+        }) {								\
+        DO_IF_DEBUG (							\
+          werror ("Error getting encoder for charset %O: %s",		\
+                  recode_charset, describe_error (err)));		\
+        RXML.parse_error ("Unknown charset %O for encode.\n", recode_charset); \
       }									\
       if (mixed err = catch {						\
-	  args->query = encoder->feed (args->query)->drain();		\
-	})								\
-	if (objectp (err) && err->is_charset_encode_error)		\
-	  RXML.run_error (err->message());				\
-	else								\
-	  throw (err);							\
+          args->query = encoder->feed (args->query)->drain();		\
+        })								\
+        if (objectp (err) && err->is_charset_encode_error)		\
+          RXML.run_error (err->message());				\
+        else								\
+          throw (err);							\
     }									\
     else								\
       recode_charset = 0;							\
@@ -753,14 +753,14 @@ class TagSqlplugin {
     string recode_charset;
     if (string|array(string) cs = m->charset) {
       if (stringp (cs))
-	cs = m->charset = array_sscanf (cs, "%[^ \t,]%*[ \t],%*[ \t]%s");
+        cs = m->charset = array_sscanf (cs, "%[^ \t,]%*[ \t],%*[ \t]%s");
       recode_charset = cs[0];
     }
     GET_CHARSET_AND_ENCODE_QUERY (m, recode_charset);
 
     return SqlEmitResponse([object(Sql.sql_result)] do_sql_query(m, id, 1),
-			   recode_charset,
-			   recode_charset && m["binary-result"]);
+                           recode_charset,
+                           recode_charset && m["binary-result"]);
   }
 }
 
@@ -783,9 +783,9 @@ class TagSQLQuery {
 
       string recode_charset;
       if (string|array(string) cs = args->charset) {
-	if (stringp (cs))
-	  cs = args->charset = array_sscanf (cs, "%[^ \t,]%*[ \t],%*[ \t]%s");
-	recode_charset = cs[0];
+        if (stringp (cs))
+          cs = args->charset = array_sscanf (cs, "%[^ \t,]%*[ \t],%*[ \t]%s");
+        recode_charset = cs[0];
       }
       GET_CHARSET_AND_ENCODE_QUERY (args, recode_charset);
 
@@ -794,11 +794,11 @@ class TagSQLQuery {
       Sql.Sql con = m_delete(args, "dbobj");
 
       if(args["mysql-insert-id"]) {
-	if(con && con->master_sql)
-	  RXML.user_set_var(args["mysql-insert-id"],
-			    con->master_sql->insert_id());
-	else
-	  RXML.run_error("No insert_id present.\n");
+        if(con && con->master_sql)
+          RXML.user_set_var(args["mysql-insert-id"],
+                            con->master_sql->insert_id());
+        else
+          RXML.run_error("No insert_id present.\n");
       }
       id->misc->defines[" _ok"] = 1;
       return 0;
@@ -826,9 +826,9 @@ class TagSQLTable {
 
       string recode_charset;
       if (string|array(string) cs = args->charset) {
-	if (stringp (cs))
-	  cs = args->charset = array_sscanf (cs, "%[^ \t,]%*[ \t],%*[ \t]%s");
-	recode_charset = cs[0];
+        if (stringp (cs))
+          cs = args->charset = array_sscanf (cs, "%[^ \t,]%*[ \t],%*[ \t]%s");
+        recode_charset = cs[0];
       }
       GET_CHARSET_AND_ENCODE_QUERY (args, recode_charset);
 
@@ -837,58 +837,58 @@ class TagSQLTable {
       int ascii=!!args->ascii;
 
       if (!res) {
-	id->misc->defines[" _ok"] = 0;
-	return 0;
+        id->misc->defines[" _ok"] = 0;
+        return 0;
       }
 
       res = SqlEmitResponse (res, recode_charset, 0);
 
       do {
-	string ret="";
-	string nullvalue=args->nullvalue||"";
+        string ret="";
+        string nullvalue=args->nullvalue||"";
 
-	array(string) cols = res->sqlres->fetch_fields()->name;
+        array(string) cols = res->sqlres->fetch_fields()->name;
 
-	if (!ascii) {
-	  ret="<tr>";
-	  foreach (cols, string colname)
-	    ret += "<th>" + Roxen.html_encode_string (colname) + "</th>";
-	  ret += "</tr>\n";
-	}
+        if (!ascii) {
+          ret="<tr>";
+          foreach (cols, string colname)
+            ret += "<th>" + Roxen.html_encode_string (colname) + "</th>";
+          ret += "</tr>\n";
+        }
 
-	while (mapping(string:mixed) entry = res->really_get_row(1)) {
-	  array row = rows (entry, cols);
-	  if (ascii)
-	    ret += map(row, lambda(mixed in) {
-			      if(!in) return nullvalue;
-			      return (string)in;
-			    }) * "\t" + "\n";
-	  else {
-	    ret += "<tr>";
-	    foreach(row, string|Roxen.SqlNull value)
-	      // FIXME: Missing quoting here.
-	      ret += "<td>" + (objectp (value) && value->is_val_null ?
-			       nullvalue : value) + "</td>";
-	    ret += "</tr>\n";
-	  }
-	}
+        while (mapping(string:mixed) entry = res->really_get_row(1)) {
+          array row = rows (entry, cols);
+          if (ascii)
+            ret += map(row, lambda(mixed in) {
+                              if(!in) return nullvalue;
+                              return (string)in;
+                            }) * "\t" + "\n";
+          else {
+            ret += "<tr>";
+            foreach(row, string|Roxen.SqlNull value)
+              // FIXME: Missing quoting here.
+              ret += "<td>" + (objectp (value) && value->is_val_null ?
+                               nullvalue : value) + "</td>";
+            ret += "</tr>\n";
+          }
+        }
 
-	if (!ascii)
-	  ret=Roxen.make_container("table",
-				   args-(["host":"","database":"","user":"",
-					  "password":"","query":"","db":"",
-					  "nullvalue":"","dbobj":"",
-					  "charset": ""]), ret);
+        if (!ascii)
+          ret=Roxen.make_container("table",
+                                   args-(["host":"","database":"","user":"",
+                                          "password":"","query":"","db":"",
+                                          "nullvalue":"","dbobj":"",
+                                          "charset": ""]), ret);
 
-	id->misc->defines[" _ok"] = 1;
-	if (result)
-	  result += ret;
-	else
-	  result = ret;
+        id->misc->defines[" _ok"] = 1;
+        if (result)
+          result += ret;
+        else
+          result = ret;
 
-	// Check if there where any more results.
+        // Check if there where any more results.
       } while (res->sqlres && res->sqlres->next_result &&
-	       res->sqlres->next_result());
+               res->sqlres->next_result());
     }
   }
 }
@@ -911,8 +911,8 @@ void create()
 #if ROXEN_COMPAT <= 1.3
   defvar("hostname", "mysql://localhost/",
          LOCALE(4,"Default database"),
-	 TYPE_STRING | VAR_INVISIBLE,
-	 LOCALE(5, #"
+         TYPE_STRING | VAR_INVISIBLE,
+         LOCALE(5, #"
 <p>The default database that will be used if no \"host\" attribute
 is given to the tags. The value is a database URL on this format:</p>
 
@@ -929,7 +929,7 @@ setting instead.</p>"));
   defvar( "db",
           DatabaseVar( " none",({}),0,
                        LOCALE(4,"Default database"),
-		       LOCALE(8, #"\
+                       LOCALE(8, #"\
 <p>If this is set, it is the default database to connect to.</p>
 
 <p>If both \"Allow SQL URLs\" and \"Allowed databases\" are disabled
@@ -937,9 +937,9 @@ then this is the only database that the tags will use, and the
 \"host\" and \"db\" attributes are effectively disabled.</p>") ) );
 
   defvar ("allow_sql_urls", 0,
-	  LOCALE(10, "Allow SQL URLs"),
-	  TYPE_FLAG,
-	  LOCALE(11, #"\
+          LOCALE(10, "Allow SQL URLs"),
+          TYPE_FLAG,
+          LOCALE(11, #"\
 <p>Allow generic SQL URLs in the \"host\" attribute to the tags. This
 can be a security hazard if users are allowed to write RXML - the
 server will make the connection as the user it is configured to run
@@ -953,9 +953,9 @@ configure all database connections through the \"DBs\" tab and
 the \"Allowed databases\" setting.</p>"));
 
   defvar ("allowed_dbs", "",
-	  LOCALE(12, "Allowed databases"),
-	  TYPE_STRING,
-	  LOCALE(13, #"\
+          LOCALE(12, "Allowed databases"),
+          TYPE_STRING,
+          LOCALE(13, #"\
 <p>A comma-separated list of the databases under the \"DBs\" tab that
 are allowed in the \"db\" attribute to the tags. The database in the
 \"Default database\" setting is also implicitly allowed. Set to \"*\"
@@ -971,15 +971,15 @@ to those databases under the \"DBs\" tab since that would make them
 inaccessible to the internal modules too.</p>"));
 
   defvar ("allow_module_dbs", 0,
-	  LOCALE(14, "Support \"module\" attribute"),
-	  TYPE_FLAG,
-	  LOCALE(15, #"\
+          LOCALE(14, "Support \"module\" attribute"),
+          TYPE_FLAG,
+          LOCALE(15, #"\
 <p>Support the deprecated \"module\" attribute to the tags.</p>"));
 
   defvar ("charset", "",
-	  LOCALE(16, "Default charset"),
-	  TYPE_STRING,
-	  LOCALE(17, #"\
+          LOCALE(16, "Default charset"),
+          TYPE_STRING,
+          LOCALE(17, #"\
 <p>The default value to use for the <i>charset</i> attribute to the
 SQL tags. See the description of the same attribute for the \"sql\"
 emit source for more details.</p>"));
@@ -1002,7 +1002,7 @@ void start()
 
   default_conn_charset = 0;
   sscanf (query ("charset"), "%[^ \t,]%*[ \t],%*[ \t]%s",
-	  default_recode_charset, default_conn_charset);
+          default_recode_charset, default_conn_charset);
   if (!default_conn_charset) default_conn_charset = default_recode_charset;
   if (default_recode_charset == "") default_recode_charset = 0;
   if (default_conn_charset == "") default_conn_charset = 0;
@@ -1036,20 +1036,20 @@ string status()
       if(!o)
         error("The database specified as default database does not exist");
       res += "<p>" +
-	sprintf(LOCALE(6,"The default database is connected to %s "
-		       "server on %s."),
-		Roxen.html_encode_string (o->server_info()),
-		Roxen.html_encode_string (o->host_info())) +
-	"</p>\n";
+        sprintf(LOCALE(6,"The default database is connected to %s "
+                       "server on %s."),
+                Roxen.html_encode_string (o->server_info()),
+                Roxen.html_encode_string (o->host_info())) +
+        "</p>\n";
     })
     {
       res +=
-	"<p><font color=\"red\">"+
+        "<p><font color=\"red\">"+
         LOCALE(7,"The default database is not connected")+
-	":</font><br />\n" +
+        ":</font><br />\n" +
         replace( Roxen.html_encode_string( describe_error(err) ),
                  "\n", "<br />\n") +
-	"</p>\n";
+        "</p>\n";
     }
   }
 
@@ -1061,21 +1061,21 @@ string status()
     res += "<p><font color=\"red\">" + LOCALE(18, "Security warning:") +
       "</font> " +
       LOCALE(19, "Connections to arbitrary databases allowed. See the "
-	     "\"Allow SQL URLs\" setting.") +
+             "\"Allow SQL URLs\" setting.") +
       "</p>\n";
 
   if (!allowed_dbs)
     res += "<p><font color=\"red\">" + LOCALE(18, "Security warning:") +
       "</font> " +
       LOCALE(20, "Connections to all configured database allowed. See the "
-	     "\"Allowed databases\" setting.") +
+             "\"Allowed databases\" setting.") +
       "</p>\n";
 
   if (allow_module_dbs)
     res += "<p><font color=\"red\">" + LOCALE(18, "Security warning:") +
       "</font> " +
       LOCALE(21, "Connections to module databases allowed. See the "
-	     "\"Support 'module' attribute\" setting.") +
+             "\"Support 'module' attribute\" setting.") +
       "</p>\n";
 #endif
 

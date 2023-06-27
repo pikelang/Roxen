@@ -21,7 +21,7 @@ protected int db_ok;
 protected void create (Configuration conf)
 {
   defvar ("enable-shared-db", 0, "Enabled shared storage",
-	  TYPE_FLAG, #"\
+          TYPE_FLAG, #"\
 <p>Whether to store sessions in a database that can be shared between
 servers.</p>
 
@@ -32,23 +32,23 @@ servers in e.g. a round-robin load balancer. The drawback is more
 expensive session handling.</p>");
 
   defvar ("shared-db", Variable.DatabaseChoice (
-	    "shared", 0, "Shared database", #"\
+            "shared", 0, "Shared database", #"\
 The database to store sessions in. A table called \"session_cache\"
 will be created in it."))
     ->set_invisibility_check_callback (lambda () {
-					 return !query ("enable-shared-db");
-				       });
+                                         return !query ("enable-shared-db");
+                                       });
   defvar ("use-prestate", 0,
-	  "Use prestate as fallback",
-	  TYPE_FLAG,
-	  #"If set to Yes, prestates will be used as fallback for users without
+          "Use prestate as fallback",
+          TYPE_FLAG,
+          #"If set to Yes, prestates will be used as fallback for users without
 cookie support. One or more redirects will then be issued by
 &lt;force-session-id&gt; to retain the session either in a cookie or
 in the prestate. See the documentation for &lt;force-session-id&gt;
 for details. Note that the prestates affect SEO due to the redirects
 that will serve the same pages through different url's. This setting
 is therefore deprecated, but exists for backward compatibility."
-	  );
+          );
 }
 
 void start() {
@@ -77,27 +77,27 @@ class EntityClientSession {
     c->id->misc->cacheable = 0;
     if( query("use-prestate") ) {
       multiset prestates = filter(c->id->prestate,
-				  lambda(string in) {
-				  return has_prefix(in, "RoxenUserID="); } );
+                                  lambda(string in) {
+                                  return has_prefix(in, "RoxenUserID="); } );
 
       // If there is both a cookie and a prestate, then we're in the process of
       // deciding session variable vehicle, and should thus return nothing.
       if(c->id->cookies->RoxenUserID && sizeof(prestates))
-	return RXML.nil;
+        return RXML.nil;
       // If there is a UserID cookie, use that as our session identifier.
       if(c->id->cookies->RoxenUserID)
-	return ENCODE_RXML_TEXT(c->id->cookies->RoxenUserID, type);
+        return ENCODE_RXML_TEXT(c->id->cookies->RoxenUserID, type);
 
       // If there is a RoxenUserID-prefixed prestate, use the first such
       // prestate as session identifier.
       if(sizeof(prestates)) {
-	string session = indices(prestates)[0][12..];
-	if(sizeof(session))
-	  return ENCODE_RXML_TEXT(session, type);
+        string session = indices(prestates)[0][12..];
+        if(sizeof(session))
+          return ENCODE_RXML_TEXT(session, type);
       }
     } else {
       if ( c->id->cookies->RoxenUserID ) {
-	return ENCODE_RXML_TEXT(c->id->cookies->RoxenUserID, type);
+        return ENCODE_RXML_TEXT(c->id->cookies->RoxenUserID, type);
       }
     }
     // Otherwise return nothing.
@@ -138,7 +138,7 @@ class TagSession {
       if (args->life) timeout = (int) args->life + time (1);
       else if (shared_db) timeout = 900 + time (1);
       cache.set_session_data(vars, args->id, timeout,
-			     shared_db || !!args["force-db"] );
+                             shared_db || !!args["force-db"] );
     }
   }
 }
@@ -175,65 +175,65 @@ class TagForceSessionID {
 
     array do_enter(RequestID id) {
       if( query("use-prestate") ) {
-	int prestate = sizeof(filter(id->prestate,
-				     lambda(string in) {
-				       return has_prefix(in, "RoxenUserID");
-				     } ));
+        int prestate = sizeof(filter(id->prestate,
+                                     lambda(string in) {
+                                       return has_prefix(in, "RoxenUserID");
+                                     } ));
 
-	string path_info = id->misc->path_info || "";
+        string path_info = id->misc->path_info || "";
 
-	// If there is no ID cooke nor prestate, redirect to the same page
-	// but with a session id prestate set.
-	if(!id->cookies->RoxenUserID && !prestate) {
-	  multiset orig_prestate = id->prestate;
-	  string session_id = roxen.create_unique_id();
-	  id->prestate += (< "RoxenUserID=" + session_id >);
+        // If there is no ID cooke nor prestate, redirect to the same page
+        // but with a session id prestate set.
+        if(!id->cookies->RoxenUserID && !prestate) {
+          multiset orig_prestate = id->prestate;
+          string session_id = roxen.create_unique_id();
+          id->prestate += (< "RoxenUserID=" + session_id >);
 
-	  mapping r = Roxen.http_redirect(id->not_query + path_info, id, 0,
-					  id->real_variables);
-	  if (r->error)
-	    RXML_CONTEXT->set_misc (" _error", r->error);
-	  if (r->extra_heads)
-	    RXML_CONTEXT->extend_scope ("header", r->extra_heads);
+          mapping r = Roxen.http_redirect(id->not_query + path_info, id, 0,
+                                          id->real_variables);
+          if (r->error)
+            RXML_CONTEXT->set_misc (" _error", r->error);
+          if (r->extra_heads)
+            RXML_CONTEXT->extend_scope ("header", r->extra_heads);
 
-	  // Don't trust that the user cookie setting is turned on. The effect
-	  // might be that the RoxenUserID cookie is set twice, but that is
-	  // not a problem for us.
-	  // NB: Inlined call of Roxen.http_roxen_id_cookie() below.
-	  Roxen.set_cookie(id, "RoxenUserID", session_id, 3600*24*365*2,
-			   UNDEFINED, "/", args->secure, args->httponly);
-	  id->prestate = orig_prestate;
-	  return 0;
-	}
+          // Don't trust that the user cookie setting is turned on. The effect
+          // might be that the RoxenUserID cookie is set twice, but that is
+          // not a problem for us.
+          // NB: Inlined call of Roxen.http_roxen_id_cookie() below.
+          Roxen.set_cookie(id, "RoxenUserID", session_id, 3600*24*365*2,
+                           UNDEFINED, "/", args->secure, args->httponly);
+          id->prestate = orig_prestate;
+          return 0;
+        }
 
-	// If there is both an ID cookie and a session prestate, then the
-	// user does accept cookies, and there is no need for the session
-	// prestate. Redirect back to the page, but without the session
-	// prestate. 
-	if(id->cookies->RoxenUserID && prestate) {
-	  multiset orig_prestate = id->prestate;
-	  id->prestate = filter(id->prestate,
-				lambda(string in) {
-				  return !has_prefix(in, "RoxenUserID");
-				} );
-	  mapping r = Roxen.http_redirect(id->not_query + path_info, id, 0,
-					  id->real_variables);
-	  id->prestate = orig_prestate;
-	  if (r->error)
-	    RXML_CONTEXT->set_misc (" _error", r->error);
-	  if (r->extra_heads)
-	    RXML_CONTEXT->extend_scope ("header", r->extra_heads);
-	  return 0;
-	}
+        // If there is both an ID cookie and a session prestate, then the
+        // user does accept cookies, and there is no need for the session
+        // prestate. Redirect back to the page, but without the session
+        // prestate. 
+        if(id->cookies->RoxenUserID && prestate) {
+          multiset orig_prestate = id->prestate;
+          id->prestate = filter(id->prestate,
+                                lambda(string in) {
+                                  return !has_prefix(in, "RoxenUserID");
+                                } );
+          mapping r = Roxen.http_redirect(id->not_query + path_info, id, 0,
+                                          id->real_variables);
+          id->prestate = orig_prestate;
+          if (r->error)
+            RXML_CONTEXT->set_misc (" _error", r->error);
+          if (r->extra_heads)
+            RXML_CONTEXT->extend_scope ("header", r->extra_heads);
+          return 0;
+        }
       } else {
-	if ( !id->cookies->RoxenUserID ) {
-	  string session_id = roxen->create_unique_id();
-	  // NB: Inlined call of Roxen.http_roxen_id_cookie() below.
-	  Roxen.set_cookie(id, "RoxenUserID", session_id, 3600*24*365*2,
-			   UNDEFINED, "/", args->secure, args->httponly);
-	  id->cookies->RoxenUserID = session_id;
-	  return 0;
-	}
+        if ( !id->cookies->RoxenUserID ) {
+          string session_id = roxen->create_unique_id();
+          // NB: Inlined call of Roxen.http_roxen_id_cookie() below.
+          Roxen.set_cookie(id, "RoxenUserID", session_id, 3600*24*365*2,
+                           UNDEFINED, "/", args->secure, args->httponly);
+          id->cookies->RoxenUserID = session_id;
+          return 0;
+        }
       }
     }
   }
@@ -282,8 +282,8 @@ tab).</p>
 
     <session id='client.session' scope='mysession'>
       <!--
-	  Inside this container, we now have access to all the
-	  variables from the mysession scope again
+          Inside this container, we now have access to all the
+          variables from the mysession scope again
       -->
 
       Variable 'message' in the scope 'mysession' in session id &client.session;:<br/>

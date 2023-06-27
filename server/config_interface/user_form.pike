@@ -16,7 +16,7 @@ mapping parse( RequestID id )
 
   if( !nid->misc->config_user->auth( "Edit Users" ) )
     return Roxen.http_string_answer(LOCALE(226, "Permission denied"),
-				    "text/html");
+                                    "text/html");
 
   foreach( sort( roxen.list_admin_users() ), string uid )
   {

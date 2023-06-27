@@ -5,7 +5,7 @@
 #pragma strict_types
 
 string input(string name, string value, void|int size,
-	     void|mapping(string:string) args, void|int xml)
+             void|mapping(string:string) args, void|int xml)
 {
   if(!args)
     args=([]);
@@ -36,7 +36,7 @@ string pre(string f)
 }
 
 string table(string|void t, int|void cellspacing, int|void cellpadding,
-	     int|void border, int|void width)
+             int|void border, int|void width)
 {
   string d="";
   int ds, dp;
@@ -81,7 +81,7 @@ string bf(string|void s, int|void i)
 }
 
 string th(string t, string|void align, int|void rows,
-	  int|void cols)
+          int|void cols)
 {
   string q="";
   if(align) q+=" align=\""+align+"\"";
@@ -106,19 +106,19 @@ string h3(string h)
 }
 
 string select(string name, array(string)|array(array(string)) choices,
-		  void|string selected) {
+                  void|string selected) {
   string ret = "<select name=\"" + name + "\">\n";
 
   if(sizeof(choices) && arrayp(choices[0])) {
     foreach([array(array(string))]choices, array(string) value)
       ret += "<option value=\"" + value[0] + "\"" +
-	(value[0]==selected?" selected=\"selected\"":"") +
-	">" + value[1] + "</option>\n";
+        (value[0]==selected?" selected=\"selected\"":"") +
+        ">" + value[1] + "</option>\n";
   } else {
     foreach([array(string)]choices, string value)
       ret += "<option value=\"" + value + "\"" +
-	(value==selected?" selected=\"selected\"":"") +
-	">" + value + "</option>\n";
+        (value==selected?" selected=\"selected\"":"") +
+        ">" + value + "</option>\n";
   }
 
   return ret + "</select>";

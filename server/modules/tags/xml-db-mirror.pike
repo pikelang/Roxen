@@ -85,24 +85,24 @@ Thread.Mutex import_mutex = Thread.Mutex();
 void create(Configuration conf)
 {
   defvar("db_name",
-	 Variable.DatabaseChoice("xml_db_" +
-				 (conf ? Roxen.short_name(conf->name) : ""),
-				 0,
-				 "Database",
-				 "")
-	 ->set_configuration_pointer(my_configuration));
+         Variable.DatabaseChoice("xml_db_" +
+                                 (conf ? Roxen.short_name(conf->name) : ""),
+                                 0,
+                                 "Database",
+                                 "")
+         ->set_configuration_pointer(my_configuration));
   
   defvar("source_files",
-	 ({ "/path/to/db.xml" }),
-	 "Source files",
-	 TYPE_STRING_LIST | VAR_INITIAL,
-	 "Paths to XML files to be monitored and imported when changed.");
+         ({ "/path/to/db.xml" }),
+         "Source files",
+         TYPE_STRING_LIST | VAR_INITIAL,
+         "Paths to XML files to be monitored and imported when changed.");
   
   defvar("poll_interval",
-	 120,
-	 "Poll interval",
-	 TYPE_INT,
-	 "Poll interval in seconds for checking for updates to source files.");
+         120,
+         "Poll interval",
+         TYPE_INT,
+         "Poll interval in seconds for checking for updates to source files.");
 }
 
 
@@ -124,13 +124,13 @@ string status()
       //  None of the info is reliable since this module instance hasn't
       //  successfully imported anything.
       res +=
-	"<tr>"
-	"<td>" + Roxen.html_encode_string(path) + "&nbsp;&nbsp;</td>"
-	"<td>n/a</td>"
-	"<td align='right'>&nbsp;&nbsp;n/a</td>"
-	"<td align='right'>&nbsp;&nbsp;n/a</td>"
-	"<td align='right'>&nbsp;&nbsp;n/a</td>"
-	"</tr>";
+        "<tr>"
+        "<td>" + Roxen.html_encode_string(path) + "&nbsp;&nbsp;</td>"
+        "<td>n/a</td>"
+        "<td align='right'>&nbsp;&nbsp;n/a</td>"
+        "<td align='right'>&nbsp;&nbsp;n/a</td>"
+        "<td align='right'>&nbsp;&nbsp;n/a</td>"
+        "</tr>";
       continue;
     }
     string mtime_str ="<date brief='yes' unix-time='" + info->mtime + "'/>";
@@ -160,17 +160,17 @@ int(0..1) init_db()
     mapping perms = DBManager.get_permission_map()[db_name];
     if (perms && perms[conf->name] == DBManager.NONE) {
       report_error("XML-DB Mirror: No permission to read database: %s\n",
-		   db_name);
+                   db_name);
       return 0;
     }
     
     report_notice("XML-DB Mirror: No database present. Creating \"%s\".\n",
-		  db_name);
+                  db_name);
     if (!DBManager.get_group("xml_db")) {
       DBManager.create_group("xml_db",
-			     "XML-DB Mirror",
-			     "Databases used by the XML-DB Mirror module",
-			     "");
+                             "XML-DB Mirror",
+                             "Databases used by the XML-DB Mirror module",
+                             "");
     }
     DBManager.create_db(db_name, 0, 1, "xml_db");
     DBManager.set_permission(db_name, conf, DBManager.WRITE);
@@ -190,11 +190,11 @@ mapping(string:string) fetch_rec(Sql.Sql db, string tbl_name, int id)
   //  Don't use UNION since it interferes with result charset
   array(mapping) fields1 =
     db->query("SELECT * "
-	      "  FROM " + tbl_name +
+              "  FROM " + tbl_name +
               " WHERE id = " + id);
   array(mapping) fields2 = 
     db->query("SELECT * "
-	      "  FROM " + tbl_name + "_html "
+              "  FROM " + tbl_name + "_html "
               " WHERE id = " + id);
   mapping res = ([ ]);
   foreach (fields1, mapping rec)
@@ -211,15 +211,15 @@ string wash_tbl_name(string s)
 {
   //  Borrowed from Sitebuilder.mangle_to_09_az
   s = replace(lower_case(s),
-	      ({ " ", "\n", "\r", "\t", ".", "," }),
-	      ({ "_", "_",  "_",  "_",  "_", "_" }) );
+              ({ " ", "\n", "\r", "\t", ".", "," }),
+              ({ "_", "_",  "_",  "_",  "_", "_" }) );
   s = filter(lower_case(Unicode.normalize(s, "NFKD")) / "",
-	     lambda(string char) {
-	       int c = sizeof(char) && char[0];
-	       return ('0' <= c && c <= '9') ||
-		      ('a' <= c && c <= 'z') ||
-		      ('_' == c);
-	     }) * "";
+             lambda(string char) {
+               int c = sizeof(char) && char[0];
+               return ('0' <= c && c <= '9') ||
+                      ('a' <= c && c <= 'z') ||
+                      ('_' == c);
+             }) * "";
   return ((s / "_") - ({ "" }) ) * "_";
 }
 
@@ -280,30 +280,30 @@ void periodic_import()
       //  FIXME: Let recently changed files stabilize before importing?
       array(string) paths = query("source_files");
       foreach (paths, string path) {
-	Stdio.File f = Stdio.File();
-	if (f->open(path, "r")) {
-	  Stdio.Stat st = f->stat();
-	  if (!import_info[path])
-	    import_info[path] = ([ ]);
-	  if (st && (st->mtime > import_info[path]->mtime)) {
-	    string xml = f->read();
-	    if (xml && sizeof(xml)) {
-	      if (int ok = import_xml(path, xml))
-		import_info[path]->mtime = st->mtime;
-	    } else {
-	      report_warning("XML-DB Mirror: Source file \"%s\" is empty -- "
-			     "skipping.\n", path);
-	    }
-	  }
-	} else {
-	  report_warning("XML-DB Mirror: Source file \"%s\" not found.\n",
-			 path);
-	}
+        Stdio.File f = Stdio.File();
+        if (f->open(path, "r")) {
+          Stdio.Stat st = f->stat();
+          if (!import_info[path])
+            import_info[path] = ([ ]);
+          if (st && (st->mtime > import_info[path]->mtime)) {
+            string xml = f->read();
+            if (xml && sizeof(xml)) {
+              if (int ok = import_xml(path, xml))
+                import_info[path]->mtime = st->mtime;
+            } else {
+              report_warning("XML-DB Mirror: Source file \"%s\" is empty -- "
+                             "skipping.\n", path);
+            }
+          }
+        } else {
+          report_warning("XML-DB Mirror: Source file \"%s\" not found.\n",
+                         path);
+        }
       }
     };
   if (err) {
     report_debug("XML-DB Mirror: Internal error during import:\n\n%s\n",
-		 describe_backtrace(err));
+                 describe_backtrace(err));
   }
 }
 
@@ -335,11 +335,11 @@ private array(SimpleNode) find_nodes(SimpleNode node, string|array path)
   
   if (sizeof(segments)) {
     res = filter(node->get_children(),
-		 lambda(SimpleNode n) {
-		   return
-		     (n->get_node_type() == XML_ELEMENT) &&
-		     (< n->get_tag_name(), "*" >)[segments[0]];
-		 });
+                 lambda(SimpleNode n) {
+                   return
+                     (n->get_node_type() == XML_ELEMENT) &&
+                     (< n->get_tag_name(), "*" >)[segments[0]];
+                 });
     
     //  If we've got any result and there are additional path segments
     //  left to process we run them all in parallel.
@@ -370,7 +370,7 @@ int(0..1) import_xml(string path, string xml)
   SimpleNode root;
   mixed err = catch {
       xml = Parser.XML.autoconvert(xml);
-	  // BOM handling...
+          // BOM handling...
       if (has_prefix(xml, "\xef\xbb\xbf")) {
         xml = utf8_to_string(xml)[1..];
       } else if (has_prefix(xml, "\xfeff")) {
@@ -393,28 +393,28 @@ int(0..1) import_xml(string path, string xml)
     mapping perms = DBManager.get_permission_map()[db_name];
     if (!perms || perms[conf->name] != DBManager.WRITE) {
       report_error("XML-DB Mirror: Needs write access to database \"%s\".\n",
-		   db_name);
+                   db_name);
       return 0;
     }
     
     db->query("CREATE TABLE IF NOT EXISTS " + tbl_name + " ("
-	      "  id INT,"
-	      "  field VARCHAR(255),"
-	      "  value VARCHAR(255),"
-	      "  KEY (id)"
-	      ") DEFAULT CHARACTER SET utf8");
+              "  id INT,"
+              "  field VARCHAR(255),"
+              "  value VARCHAR(255),"
+              "  KEY (id)"
+              ") DEFAULT CHARACTER SET utf8");
     db->query("CREATE TABLE IF NOT EXISTS " + tbl_name + "_html ("
-  	      "  id INT,"
-	      "  field VARCHAR(255),"
-	      "  value MEDIUMTEXT,"
-	      "  KEY (id)"
-	      ") DEFAULT CHARACTER SET utf8");
+              "  id INT,"
+              "  field VARCHAR(255),"
+              "  value MEDIUMTEXT,"
+              "  KEY (id)"
+              ") DEFAULT CHARACTER SET utf8");
     db->query("CREATE TABLE IF NOT EXISTS " + tbl_name + "_hash ("
-  	      "  md5 CHAR(32) BINARY,"
-	      "  id INT,"
-	      "  PRIMARY KEY (md5),"
-	      "  KEY (id)"
-	      ")");
+              "  md5 CHAR(32) BINARY,"
+              "  id INT,"
+              "  PRIMARY KEY (md5),"
+              "  KEY (id)"
+              ")");
     DBManager.is_module_table(this_object(), db_name, tbl_name);
     DBManager.is_module_table(this_object(), db_name, tbl_name + "_html");
     DBManager.is_module_table(this_object(), db_name, tbl_name + "_hash");
@@ -425,19 +425,19 @@ int(0..1) import_xml(string path, string xml)
     int next_id = 1;
     mapping(string:int) md5hashes = ([ ]);
     array(mapping) md5recs = db->query("SELECT md5, id "
-				       "  FROM " + tbl_name + "_hash");
+                                       "  FROM " + tbl_name + "_hash");
     foreach (md5recs, mapping rec) {
       int rec_id = (int) rec->id;
       md5hashes[rec->md5] = rec_id;
       if (rec_id >= next_id)
-	next_id = rec_id + 1;
+        next_id = rec_id + 1;
     }
     md5recs = 0;
     
     //  Process records
     mapping info = ([ "count_total"     : 0,
-		      "count_unchanged" : 0,
-		      "count_deleted"   : 0 ]);
+                      "count_unchanged" : 0,
+                      "count_deleted"   : 0 ]);
     foreach (find_nodes(db_node, "dbrecord"), SimpleNode rec_node) {
       info->count_total++;
       
@@ -446,42 +446,42 @@ int(0..1) import_xml(string path, string xml)
       string set_fields_html = "";
       string hashstr = "";
       foreach (find_nodes(rec_node, "*"), SimpleNode field_node) {
-	//  String or blob field?
-	string tag = field_node->get_tag_name();
-	string val;
-	if (has_suffix(tag, "_html")) {
-	  val = field_node->get_children()->html_of_node(0) * "";
-	  if (sizeof(set_fields_html))
-	    set_fields_html += ",";
-	  set_fields_html +=
-	    "(" + next_id + ", '" + tag + "', '" + db->quote(val) + "')";
-	} else {
-	  val = field_node->value_of_node();
-	  if (sizeof(set_fields))
-	    set_fields += ",";
-	  set_fields +=
-	    "(" + next_id + ", '" + tag + "', '" + db->quote(val) + "')";
-	}
-	hashstr += tag + "|" + val + "|";
+        //  String or blob field?
+        string tag = field_node->get_tag_name();
+        string val;
+        if (has_suffix(tag, "_html")) {
+          val = field_node->get_children()->html_of_node(0) * "";
+          if (sizeof(set_fields_html))
+            set_fields_html += ",";
+          set_fields_html +=
+            "(" + next_id + ", '" + tag + "', '" + db->quote(val) + "')";
+        } else {
+          val = field_node->value_of_node();
+          if (sizeof(set_fields))
+            set_fields += ",";
+          set_fields +=
+            "(" + next_id + ", '" + tag + "', '" + db->quote(val) + "')";
+        }
+        hashstr += tag + "|" + val + "|";
       }
       
       //  Hash the new record and see if already a duplicate
       string md5 =
-	lower_case(String.string2hex(Crypto.MD5.hash(string_to_utf8(hashstr))));
+        lower_case(String.string2hex(Crypto.MD5.hash(string_to_utf8(hashstr))));
       if (int existing_id = md5hashes[md5]) {
-	//  Don't change this record but flag it as valid
-	valid_ids[existing_id] = 1;
-	info->count_unchanged++;
-	continue;
+        //  Don't change this record but flag it as valid
+        valid_ids[existing_id] = 1;
+        info->count_unchanged++;
+        continue;
       }
       
       //  Write new or updated record
       if (sizeof(set_fields)) {
-	db->query("INSERT INTO " + tbl_name + " (id, field, value) "
+        db->query("INSERT INTO " + tbl_name + " (id, field, value) "
                   "     VALUES " + set_fields);
       }
       if (sizeof(set_fields_html)) {
-	db->query("INSERT INTO " + tbl_name + "_html (id, field, value) "
+        db->query("INSERT INTO " + tbl_name + "_html (id, field, value) "
                   "     VALUES " + set_fields_html);
       }
       db->query("INSERT INTO " + tbl_name + "_hash (md5, id) "
@@ -496,25 +496,25 @@ int(0..1) import_xml(string path, string xml)
     if (info->count_deleted) {
       sort(delete_ids);
       foreach (delete_ids / 100.0, array(int) delete_id_chunk) {
-	string id_chunk_str = (array(string)) delete_id_chunk * ",";
-	db->query("DELETE FROM " + tbl_name + " "
+        string id_chunk_str = (array(string)) delete_id_chunk * ",";
+        db->query("DELETE FROM " + tbl_name + " "
                   "      WHERE id IN (" + id_chunk_str + ")");
-	db->query("DELETE FROM " + tbl_name + "_html "
+        db->query("DELETE FROM " + tbl_name + "_html "
                   "      WHERE id IN (" + id_chunk_str + ")");
-	db->query("DELETE FROM " + tbl_name + "_hash "
+        db->query("DELETE FROM " + tbl_name + "_hash "
                   "      WHERE id IN (" + id_chunk_str + ")");
       }
     }
     
     //  Report stats
     report_notice("XML-DB Mirror: Import of \"%s\" done -- "
-		  "%d records found (%d new or updated, %d unchanged), "
-		  "%d old deleted.\n",
-		  path,
-		  info->count_total,
-		  info->count_total - info->count_unchanged,
-		  info->count_unchanged,
-		  info->count_deleted);
+                  "%d records found (%d new or updated, %d unchanged), "
+                  "%d old deleted.\n",
+                  path,
+                  info->count_total,
+                  info->count_total - info->count_unchanged,
+                  info->count_unchanged,
+                  info->count_deleted);
     if (!import_info[path])
       import_info[path] = ([ ]);
     import_info[path] += info;
@@ -540,17 +540,17 @@ class TagEmitXMLDB
   ]);
   
   private array(mapping) search_recs(Sql.Sql db, string tbl_name, string query,
-				     int(0..1) use_wildcards,
-				     void|array(string) in_fields)
+                                     int(0..1) use_wildcards,
+                                     void|array(string) in_fields)
   {
     string sql_where;
     if (use_wildcards) {
       string query_sql =
-	db->quote(replace(lower_case(query), ({ "*", "?" }), ({ "%", "_" }) ));
+        db->quote(replace(lower_case(query), ({ "*", "?" }), ({ "%", "_" }) ));
       if (!has_prefix(query_sql, "%"))
-	query_sql = "%" + query_sql;
+        query_sql = "%" + query_sql;
       if (!has_suffix(query_sql, "%"))
-	query_sql += "%";
+        query_sql += "%";
       sql_where = "LOWER(value) LIKE '" + query_sql + "'";
     } else {
       sql_where = "value = '" + db->quote(query) + "'";
@@ -558,24 +558,24 @@ class TagEmitXMLDB
     
     if (in_fields) {
       sql_where +=
-	" AND field IN ('" + map(in_fields, db->quote) * "','" + "') ";
+        " AND field IN ('" + map(in_fields, db->quote) * "','" + "') ";
     }
     
     //  Find record IDs
     array(mapping) hits =
       db->query("(SELECT DISTINCT id "
-		"   FROM " + tbl_name + 
+                "   FROM " + tbl_name + 
                 "  WHERE " + sql_where + ") "
-		"UNION "
-		"(SELECT DISTINCT id "
-		"   FROM " + tbl_name + "_html "
+                "UNION "
+                "(SELECT DISTINCT id "
+                "   FROM " + tbl_name + "_html "
                 "  WHERE " + sql_where + ")");
     
     //  Populate results
     array(mapping) res = map(sort((array(int)) hits->id),
-			     lambda(int id) {
-			       return fetch_rec(db, tbl_name, id);
-			     });
+                             lambda(int id) {
+                               return fetch_rec(db, tbl_name, id);
+                             });
     return res;
   }
   
@@ -585,8 +585,8 @@ class TagEmitXMLDB
     Sql.Sql db = get_db();
     string tbl_name = wash_tbl_name(args->db);
     if (mixed err = catch {
-	db->query("SELECT 1 "
-		  "  FROM " + tbl_name + " "
+        db->query("SELECT 1 "
+                  "  FROM " + tbl_name + " "
                   " LIMIT 1");
       }) {
       RXML.parse_error("Could not access database \"" + tbl_name + "\".\n");
@@ -601,7 +601,7 @@ class TagEmitXMLDB
       //  User can optionally limit search to named fields.
       array(string) in_fields = 0;
       if (string restr = args["search-fields"])
-	in_fields = map(restr / ",", String.trim_all_whites);
+        in_fields = map(restr / ",", String.trim_all_whites);
       int use_wildcards = lower_case(args["wildcards"] || "no") != "no";
       return search_recs(db, tbl_name, query, use_wildcards, in_fields);
     }
@@ -620,15 +620,15 @@ multiset(string) query_provides()
 }
 
 array(mapping(string:mixed)|string) read_article(string path,
-						 int|void edit,
-						 int|void discard_changes)
+                                                 int|void edit,
+                                                 int|void discard_changes)
 {
   return 0;
 }
 
 int(0..2) update_article(string path, string data, mapping md,
-			 mapping|void extra_md, int|void no_conflicts,
-			 void|function(string, mixed...:mixed) notify_cb)
+                         mapping|void extra_md, int|void no_conflicts,
+                         void|function(string, mixed...:mixed) notify_cb)
 {
   import_xml(path, data);
   return 1;

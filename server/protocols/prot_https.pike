@@ -46,7 +46,7 @@ class fallback_redirect_request
     else {
       out = out[written..];
       if (!strlen(out))
-	die();
+        die();
     }
   }
 
@@ -71,81 +71,81 @@ class fallback_redirect_request
       array(string) req = replace(lines[0], "\t", " ") / " ";
       if (sizeof(req) < 2)
       {
-	out = "HTTP/1.0 400 Bad Request\r\n\r\n";
+        out = "HTTP/1.0 400 Bad Request\r\n\r\n";
       }
       else
       {
-	if (sizeof(req) == 2)
-	{
-	  name = req[1];
-	}
-	else
-	{
-	  name = req[1..sizeof(req)-2] * " ";
-	  foreach(map(lines[1..], `/, ":"), array header)
-	  {
-	    if ( (sizeof(header) >= 2) &&
-		 (lower_case(header[0]) == "host") )
-	      prefix = "https://" + header[1] - " ";
-	  }
-	}
-	if (prefix) {
-	  if (prefix[-1] == '/')
-	    prefix = prefix[..strlen(prefix)-2];
-	  prefix = prefix + ":" + port;
-	} else {
-	  /* default_prefix (aka MyWorldLocation) already contains the
-	   * portnumber.
-	   */
-	  if (!(prefix = default_prefix)) {
-	    /* This case is most unlikely to occur,
-	     * but better safe than sorry...
-	     */
-	    string ip = (f->query_address(1)/" ")[0];
-	    /* RFC 3986 3.2.2. Host
-	     *
-	     * host       = IP-literal / IPv4address / reg-name
-	     * IP-literal = "[" ( IPv6address / IPvFuture  ) "]"
-	     * IPvFuture  = "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
-	     *
-	     * IPv6address is as in RFC3513.
-	     */
-	    if (has_value(ip, ":")) {
-	      // IPv6
-	      ip = "[" + ip + "]";
-	    }
-	    prefix = "https://" + ip + ":" + port;
-	  } else {
-	    mixed err = catch {
-		object uri = Standards.URI(prefix);
-		uri->scheme = "https";
-		uri->port = port;
-		prefix = (string)uri;
-	      };
-	    if(err)
-	      report_error("Malformed Primary Server URL : %O\n", prefix);
-	  }
-	}
-	out = sprintf("HTTP/1.0 301 Redirect to secure server\r\n"
-		      "Location: %s%s\r\n\r\n", prefix, name);
+        if (sizeof(req) == 2)
+        {
+          name = req[1];
+        }
+        else
+        {
+          name = req[1..sizeof(req)-2] * " ";
+          foreach(map(lines[1..], `/, ":"), array header)
+          {
+            if ( (sizeof(header) >= 2) &&
+                 (lower_case(header[0]) == "host") )
+              prefix = "https://" + header[1] - " ";
+          }
+        }
+        if (prefix) {
+          if (prefix[-1] == '/')
+            prefix = prefix[..strlen(prefix)-2];
+          prefix = prefix + ":" + port;
+        } else {
+          /* default_prefix (aka MyWorldLocation) already contains the
+           * portnumber.
+           */
+          if (!(prefix = default_prefix)) {
+            /* This case is most unlikely to occur,
+             * but better safe than sorry...
+             */
+            string ip = (f->query_address(1)/" ")[0];
+            /* RFC 3986 3.2.2. Host
+             *
+             * host       = IP-literal / IPv4address / reg-name
+             * IP-literal = "[" ( IPv6address / IPvFuture  ) "]"
+             * IPvFuture  = "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
+             *
+             * IPv6address is as in RFC3513.
+             */
+            if (has_value(ip, ":")) {
+              // IPv6
+              ip = "[" + ip + "]";
+            }
+            prefix = "https://" + ip + ":" + port;
+          } else {
+            mixed err = catch {
+                object uri = Standards.URI(prefix);
+                uri->scheme = "https";
+                uri->port = port;
+                prefix = (string)uri;
+              };
+            if(err)
+              report_error("Malformed Primary Server URL : %O\n", prefix);
+          }
+        }
+        out = sprintf("HTTP/1.0 301 Redirect to secure server\r\n"
+                      "Location: %s%s\r\n\r\n", prefix, name);
       }
       f->set_read_callback(0);
       f->set_write_callback(write_callback);
     } else {
       if (sizeof(in) > 5) {
-	string q = replace(upper_case(in[..10]), "\t", " ");
-	if (!(has_prefix(q, "GET ") ||
-	      has_prefix(q, "HEAD ") ||
-	      has_prefix(q, "OPTIONS ") ||
-	      has_prefix(q, "PUT ") ||
-	      has_prefix(q, "PROPFIND "))) {
-	  // Doesn't look like a HTTP request.
-	  // Bail out.
-	  SSL3_WERR(sprintf("fallback_redirect_request->read_callback():\n"
-			    "Doesn't look like HTTP (method: %O)\n", q));
-	  die();
-	  return;
-	}
+        string q = replace(upper_case(in[..10]), "\t", " ");
+        if (!(has_prefix(q, "GET ") ||
+              has_prefix(q, "HEAD ") ||
+              has_prefix(q, "OPTIONS ") ||
+              has_prefix(q, "PUT ") ||
+              has_prefix(q, "PROPFIND "))) {
+          // Doesn't look like a HTTP request.
+          // Bail out.
+          SSL3_WERR(sprintf("fallback_redirect_request->read_callback():\n"
+                            "Doesn't look like HTTP (method: %O)\n", q));
+          die();
+          return;
+        }
       }
       call_out(timeout, 30);
     }
@@ -176,39 +176,39 @@ class http_fallback
     SSL3_WERR(sprintf("http_fallback(X, %O, %O)", n, data));
     //  trace(1);
     if (((my_fd->current_write_state||
-	  my_fd->query_connection()->current_write_state)->seq_num == 0) &&
+          my_fd->query_connection()->current_write_state)->seq_num == 0) &&
       search(lower_case(data), "http"))
     {
       if (function close_cb = my_fd->query_close_callback())
-	// Pretend there was a close of the old fd. This is necessary
-	// to make the http RequestID cleanup and destruct itself
-	// properly.
-	close_cb (my_fd->query_id());
+        // Pretend there was a close of the old fd. This is necessary
+        // to make the http RequestID cleanup and destruct itself
+        // properly.
+        close_cb (my_fd->query_id());
       
       Stdio.File raw_fd;
       if (my_fd->shutdown) {
-	raw_fd = my_fd->shutdown();
+        raw_fd = my_fd->shutdown();
       } else {
-	raw_fd = my_fd->socket;
-	my_fd->socket = 0;
+        raw_fd = my_fd->socket;
+        my_fd->socket = 0;
       }
 
       /* Redirect to an https-url */
       Configuration conf;
       foreach(values(urls)->conf, conf) {
-	if (conf->query("default_server")) {
-	  // This configuration has been tagged as a default server.
-	  break;
-	}
+        if (conf->query("default_server")) {
+          // This configuration has been tagged as a default server.
+          break;
+        }
       }
       // FIXME: Consider the case where the port has been remapped.
       fallback_redirect_request(raw_fd, data,
-				conf && conf->query("MyWorldLocation"),
-				port);
+                                conf && conf->query("MyWorldLocation"),
+                                port);
 
       if (!my_fd->shutdown) {
-	// Old sslfile contains cyclic references.
-	destruct(my_fd);
+        // Old sslfile contains cyclic references.
+        destruct(my_fd);
       }
 
       // Break cyclic refs.

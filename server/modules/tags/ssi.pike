@@ -16,10 +16,10 @@ constant module_doc  =
 void create() {
 
   defvar("exec", 0, "Execute command",
-	 TYPE_FLAG,
-	 "If set, it will be possible to use the "
-	 "&lt;!--#exec cmd=\"XXX\" --&gt; tag to execute arbitrary commands "
-	 "from any web page." );
+         TYPE_FLAG,
+         "If set, it will be possible to use the "
+         "&lt;!--#exec cmd=\"XXX\" --&gt; tag to execute arbitrary commands "
+         "from any web page." );
 
 #if constant(getpwnam)
   array nobody = getpwnam("nobody") || ({ "nobody", "x", 65534, 65534 });
@@ -28,14 +28,14 @@ void create() {
 #endif /* constant(getpwnam) */
 
   defvar("execuid", nobody[2] || 65534, "Execute command uid",
-	 TYPE_INT,
-	 "UID to run the &lt;!--#exec cmd=\"XXX\" --&gt; "
-	 "commands as.");
+         TYPE_INT,
+         "UID to run the &lt;!--#exec cmd=\"XXX\" --&gt; "
+         "commands as.");
 
   defvar("execgid", nobody[3] || 65534, "Execute command gid",
-	 TYPE_INT,
-	 "GID to run the &lt;!--#exec cmd=\"XXX\" --&gt; "
-	 "commands as.");
+         TYPE_INT,
+         "GID to run the &lt;!--#exec cmd=\"XXX\" --&gt; "
+         "commands as.");
 }
 
 void start(int num, Configuration conf) {
@@ -57,10 +57,10 @@ class ScopeSSI {
 
   array(string) _indices(void|RXML.Context c) {
     array ind=({ "sizefmt", "errmsg", "timefmt", "date_local", "date_gmt",
-		 "document_name", "document_uri", "query_string_unescaped",
-		 "last_modified", "server_software", "server_name",
-		 "gateway_interface", "server_protocol", "auth_type",
-		 "http_cookie", "cookie" });
+                 "document_name", "document_uri", "query_string_unescaped",
+                 "last_modified", "server_software", "server_name",
+                 "gateway_interface", "server_protocol", "auth_type",
+                 "http_cookie", "cookie" });
 
     if(c->id) {
       ind += indices(Roxen.build_env_vars(0, c->id, 0));
@@ -405,11 +405,11 @@ array(string) simpletag_printenv(string t, mapping m, string c, RequestID id) {
       res+=var+" = "+id->misc->ssi_variables[var]+"\n";
 
   foreach(({"sizefmt","errmsg","timefmt","date_local","date_gmt",
-	    "document_name","document_uri","query_string_unescaped",
-	    "last_modified","server_software","server_name",
-	    "gateway_interface","server_protocol","request_method",
-	    "auth_type","http_cookie","cookie","http_accept",
-	    "http_user_agent","http_referer"}), string var)
+            "document_name","document_uri","query_string_unescaped",
+            "last_modified","server_software","server_name",
+            "gateway_interface","server_protocol","request_method",
+            "auth_type","http_cookie","cookie","http_accept",
+            "http_user_agent","http_referer"}), string var)
     res+=var+" = "+get_var(var,id)+"\n";
 
   mapping myenv =  Roxen.build_env_vars(0, id, 0);
@@ -517,14 +517,14 @@ string|array(string) simpletag_exec(string tag, mapping m, string c, RequestID i
     {
       string user="Unknown";
       if( User u = id->conf->authenticate( id ) )
-	user = u->name();
+        user = u->name();
       string addr=id->remoteaddr || "Internal";
       NOCACHE();
       return popen(fix_var(m->cmd, id),
-		   getenv()
-		   | Roxen.build_roxen_env_vars(id)
-		   | Roxen.build_env_vars(id->not_query, id, 0),
-		   QUERY(execuid) || -2, QUERY(execgid) || -2);
+                   getenv()
+                   | Roxen.build_roxen_env_vars(id)
+                   | Roxen.build_env_vars(id->not_query, id, 0),
+                   QUERY(execuid) || -2, QUERY(execgid) || -2);
     }
     else
       return ({ id->misc->ssi_errmsg||"Execute command support disabled." });

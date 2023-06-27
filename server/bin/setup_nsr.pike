@@ -40,7 +40,7 @@ void update_nsr_file(string directory)
     array(string) lines = old_content/"\n";
     string csum;
     if (sscanf(old_content, "# Roxen nsr-checksum: %s\n%s",
-	       csum, old_content) != 2) {
+               csum, old_content) != 2) {
       vwerror("No checksum.\n");
       return;
     }
@@ -50,7 +50,7 @@ void update_nsr_file(string directory)
     }
     int rev = -1;
     if (sscanf(old_content, "# Roxen nsr-revision: 1.%d\n%s",
-	       rev, old_content) != 2) {
+               rev, old_content) != 2) {
       vwerror("Bad revision.\n");
       return;
     }
@@ -76,10 +76,10 @@ void update_nsr_file(string directory)
 +logasm: Log
 ", this_rev);
   Stdio.write_file(nsr_file,
-		   sprintf("# Roxen nsr-checksum: %s\n"
-			   "%s",
-			   String.string2hex(Crypto.MD5.hash(new_content)),
-			   new_content));
+                   sprintf("# Roxen nsr-checksum: %s\n"
+                           "%s",
+                           String.string2hex(Crypto.MD5.hash(new_content)),
+                           new_content));
   write("Updated nsr file %O\n", nsr_file);
 }
 

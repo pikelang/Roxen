@@ -33,11 +33,11 @@ conf_loop:
       mapping(string:string|Configuration|Protocol) port_info = roxen.urls[url];
 
       foreach((port_info && port_info->ports) || ({}), Protocol prot) {
-	if ((prot->prot_name != "snmp") || (!prot->mib)) {
-	  continue;
-	}
-	mib->merge(prot->mib);
-	break conf_loop;
+        if ((prot->prot_name != "snmp") || (!prot->mib)) {
+          continue;
+        }
+        mib->merge(prot->mib);
+        break conf_loop;
       }
     }
   }
@@ -51,37 +51,37 @@ conf_loop:
     string doc = "";
     mixed val = "";
     mixed err = catch {
-	val = mib->lookup(oid);
-	if (zero_type(val)) continue;
-	if (objectp(val)) {
-	  if (val->update_value) {
-	    val->update_value();
-	  }
-	  name = val->name || "";
-	  doc = val->doc || "";
-	  val = sprintf("%s", val);
-	}
-	val = (string)val;
+        val = mib->lookup(oid);
+        if (zero_type(val)) continue;
+        if (objectp(val)) {
+          if (val->update_value) {
+            val->update_value();
+          }
+          name = val->name || "";
+          doc = val->doc || "";
+          val = sprintf("%s", val);
+        }
+        val = (string)val;
       };
     if (err) {
       name = "Error";
       val = "";
       doc = "<tt>" +
-	replace(Roxen.html_encode_string(describe_backtrace(err)),
-		"\n", "<br />\n") +
-	"</tt>";
+        replace(Roxen.html_encode_string(describe_backtrace(err)),
+                "\n", "<br />\n") +
+        "</tt>";
     }
     if (!sizeof(name)) continue;
     res += ({
-	sprintf("<td><b><a href=\"urn:oid:%s\">%s:</a></b></td>"
-		"<td>%s</td>",
-		oid_string,
-		Roxen.html_encode_string(name),
-		Roxen.html_encode_string(val)),
+        sprintf("<td><b><a href=\"urn:oid:%s\">%s:</a></b></td>"
+                "<td>%s</td>",
+                oid_string,
+                Roxen.html_encode_string(name),
+                Roxen.html_encode_string(val)),
     });
     if (sizeof(doc)) {
       res += ({
-	sprintf("<td></td><td><font size='-1'>%s</font></td>", doc),
+        sprintf("<td></td><td><font size='-1'>%s</font></td>", doc),
       });
     }
   }

@@ -55,10 +55,10 @@
     if (object _id_ = (ID)) {						\
       mapping _id_misc_ = _id_->misc;					\
       if (function(string,mixed,int:void) _trace_enter =		\
-	  ([function(string,mixed,int:void)] _id_misc_->trace_enter)) {	\
-	int _ts_ = HRTIME();						\
-	_trace_enter ((MSG), (OBJ), _ts_);				\
-	_id_->misc->trace_overhead += HRTIME() - _ts_;			\
+          ([function(string,mixed,int:void)] _id_misc_->trace_enter)) {	\
+        int _ts_ = HRTIME();						\
+        _trace_enter ((MSG), (OBJ), _ts_);				\
+        _id_->misc->trace_overhead += HRTIME() - _ts_;			\
       }									\
     }									\
   }while(0)
@@ -67,10 +67,10 @@
     if (object _id_ = (ID)) {						\
       mapping _id_misc_ = _id_->misc;					\
       if (function(string,int:void) _trace_leave =			\
-	  ([function(string,int:void)] _id_misc_->trace_leave)) {	\
-	int _ts_ = HRTIME();						\
-	_trace_leave ((MSG), _ts_);					\
-	_id_->misc->trace_overhead += HRTIME() - _ts_;			\
+          ([function(string,int:void)] _id_misc_->trace_leave)) {	\
+        int _ts_ = HRTIME();						\
+        _trace_leave ((MSG), _ts_);					\
+        _id_->misc->trace_overhead += HRTIME() - _ts_;			\
       }									\
     }									\
   }while(0)
@@ -88,18 +88,18 @@
 #define SIMPLE_ID_TRACE_ENTER(ID, OBJ, MSG...) do {			\
     array _msg_arr_;							\
     ID_TRACE_ENTER ((ID),						\
-		    (_msg_arr_ = ({MSG}),				\
-		    sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) :	\
-		    (sizeof (_msg_arr_) ? _msg_arr_[0] : "")),		\
-		 (OBJ));						\
+                    (_msg_arr_ = ({MSG}),				\
+                    sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) :	\
+                    (sizeof (_msg_arr_) ? _msg_arr_[0] : "")),		\
+                 (OBJ));						\
   } while (0)
 
 #define SIMPLE_ID_TRACE_LEAVE(ID, MSG...) do {				\
     array _msg_arr_;							\
     ID_TRACE_LEAVE ((ID),						\
-		    (_msg_arr_ = ({MSG}),				\
-		    sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) :	\
-		    (sizeof (_msg_arr_) ? _msg_arr_[0] : "")));		\
+                    (_msg_arr_ = ({MSG}),				\
+                    sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) :	\
+                    (sizeof (_msg_arr_) ? _msg_arr_[0] : "")));		\
   } while (0)
 
 #define SIMPLE_TRACE_ENTER(OBJ, MSG...) SIMPLE_ID_TRACE_ENTER (id, OBJ, MSG)
@@ -115,17 +115,17 @@
     array _msg_arr_;							\
     string _msg_;							\
     TRACE_ENTER ("tag <" + (tag && tag->name) + "> " +			\
-		   (_msg_arr_ = ({MSG}),				\
-		    _msg_ = sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) : \
-		    (sizeof (_msg_arr_) ? _msg_arr_[0] : "")),		\
-		 tag);							\
+                   (_msg_arr_ = ({MSG}),				\
+                    _msg_ = sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) : \
+                    (sizeof (_msg_arr_) ? _msg_arr_[0] : "")),		\
+                 tag);							\
     DO_IF_DEBUG (							\
       if (TAG_DEBUG_TEST (flags & RXML.FLAG_DEBUG))			\
-	tag_debug ("%O:   %s\n", this_object(),				\
-		   _msg_ ||						\
-		   (_msg_arr_ = ({MSG}),				\
-		    sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) :	\
-		    (sizeof (_msg_arr_) ? _msg_arr_[0] : "")));		\
+        tag_debug ("%O:   %s\n", this_object(),				\
+                   _msg_ ||						\
+                   (_msg_arr_ = ({MSG}),				\
+                    sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) :	\
+                    (sizeof (_msg_arr_) ? _msg_arr_[0] : "")));		\
     );									\
   } while (0)
 
@@ -133,17 +133,17 @@
     array _msg_arr_;							\
     string _msg_;							\
     TRACE_LEAVE ((_msg_arr_ = ({MSG}),					\
-		  _msg_ = sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) : \
-		  (sizeof (_msg_arr_) ? _msg_arr_[0] : "")));		\
+                  _msg_ = sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) : \
+                  (sizeof (_msg_arr_) ? _msg_arr_[0] : "")));		\
     DO_IF_DEBUG (							\
       if (TAG_DEBUG_TEST (flags & RXML.FLAG_DEBUG)) {			\
-	if (!_msg_) {							\
-	  _msg_arr_ = ({MSG});						\
-	  _msg_ =							\
-	    sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) :		\
-	    (sizeof (_msg_arr_) ? _msg_arr_[0] : "");			\
-	}								\
-	if (sizeof (_msg_)) tag_debug ("%O:   %s\n", this_object(), _msg_); \
+        if (!_msg_) {							\
+          _msg_arr_ = ({MSG});						\
+          _msg_ =							\
+            sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) :		\
+            (sizeof (_msg_arr_) ? _msg_arr_[0] : "");			\
+        }								\
+        if (sizeof (_msg_)) tag_debug ("%O:   %s\n", this_object(), _msg_); \
       }									\
     );									\
   } while (0)

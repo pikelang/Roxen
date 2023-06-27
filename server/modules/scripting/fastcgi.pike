@@ -129,9 +129,9 @@ class FCGIChannel
         {
           if( request_ids[p->requestid] ) {
             request_ids[p->requestid]( p );
-	  } else if( default_cb ) {
+          } else if( default_cb ) {
             default_cb( p );
-	  }
+          }
         }
       }
     }
@@ -172,14 +172,14 @@ class FCGIChannel
               wbuffer = wbuffer[written..];
             } else {
               ok=0;
-	      break;
-	    }
-	  }
-	  if(!ok) break;
-	  Thread.MutexKey lock = cond_mutex->lock();
-	  if (!sizeof (wbuffer))
-	    cond->wait (lock);
-	  lock = 0;
+              break;
+            }
+          }
+          if(!ok) break;
+          Thread.MutexKey lock = cond_mutex->lock();
+          if (!sizeof (wbuffer))
+            cond->wait (lock);
+          lock = 0;
         }
       };
       catch(fd->close());
@@ -194,10 +194,10 @@ class FCGIChannel
       fd->set_blocking();
       reader_thread = thread_create( read_thread );
       THREAD_DEBUG(sprintf("created read_thread, thread id %O for ch %O",
-			   reader_thread->id_number(),this));
+                           reader_thread->id_number(),this));
       writer_thread = thread_create( write_thread );
       THREAD_DEBUG(sprintf("created write_thread, thread id %O for ch %O",
-			   writer_thread->id_number(),this));
+                           writer_thread->id_number(),this));
     }
 
     void write( string what )
@@ -216,10 +216,10 @@ class FCGIChannel
       if( fd )
       {
         if( close_callback ) {
-	  PROCESS_DEBUG(sprintf("FCGIChannel close callback from end_cb(): %O, calling %O",
-				this_object(),close_callback));
+          PROCESS_DEBUG(sprintf("FCGIChannel close callback from end_cb(): %O, calling %O",
+                                this_object(),close_callback));
           close_callback( this_object() );
-	}
+        }
         catch(fd->close());
         foreach( values( stream )-({0}), mapping q )
           foreach( values( q ), mapping q )
@@ -435,19 +435,19 @@ class Stream
   {
     DTFUNC("Stream::do_close (level"+level+")");
     IO_DEBUG(sprintf("Stream::do_close(%O) with level %d, close_callback is %O, close_callback_2 is %O\n",
-		     this_object(),level,close_callback,close_callback_2));
+                     this_object(),level,close_callback,close_callback_2));
     if (level == 2) {
       if( close_callback_2 )
       {
         closed = 1;
-	// Delay 1 second to ensure that any data is cleared first.
+        // Delay 1 second to ensure that any data is cleared first.
         call_out(close_callback_2, 1, this_object());
       }
     } else {
       closed = 1;
       if (close_callback) {
-	// Delay 1 second to ensure that any data is cleared first.
-	call_out(close_callback, 1, fid);
+        // Delay 1 second to ensure that any data is cleared first.
+        call_out(close_callback, 1, fid);
       }
     }
   }
@@ -469,14 +469,14 @@ class Stream
     catch
     {
       IO_DEBUG(sprintf("FCGI::Stream(%s)::close() calling with fid %O, close_callback %O",
-		       name,fid,close_callback));
+                       name,fid,close_callback));
       if( close_callback )
         close_callback( fid );
     };
     catch
     {
       IO_DEBUG(sprintf("FCGI::Stream(%s)::close() calling with %O, close_callback_2 %O",
-		       name,this_object(),close_callback_2));
+                       name,this_object(),close_callback_2));
       if( close_callback_2 )
         close_callback_2( fid );
     };
@@ -492,10 +492,10 @@ class Stream
       if( noblock )
       {
         while( !closed && !strlen( buffer ) ) sleep(0.1);
-	mixed key = LOCK();
+        mixed key = LOCK();
         string b = buffer;
         buffer="";
-	UNLOCK(key);
+        UNLOCK(key);
         return b;
       }
       while( !closed ) sleep( 0.1 );
@@ -522,7 +522,7 @@ class Stream
   {
     DTFUNC("Stream::write");
     IO_DEBUG(sprintf("%O::write will write %d len string %O\n",
-		     this_object(),strlen(data),data));
+                     this_object(),strlen(data),data));
     if( closed )
       error("Stream closed\n");
     if( !strlen( data ) )
@@ -541,7 +541,7 @@ class Stream
     if( closed )
     {
       IO_DEBUG(sprintf("%O::got_data ***Got data for closed stream(%s)!***",
-		       this_object(),name));
+                       this_object(),name));
       return;
     }
     DWERR(sprintf("stream::got_data called with strlen %d",strlen(d)));
@@ -549,7 +549,7 @@ class Stream
     buffer += d;
     UNLOCK(key);
     IO_DEBUG(sprintf("%O::got_data arg %O, curbuffer %O. calling read_callback: %O",
-		     this_object(),d,buffer,read_callback));
+                     this_object(),d,buffer,read_callback));
 
     if( read_callback )
     {
@@ -557,15 +557,15 @@ class Stream
       if( !strlen( d ) )
       {
         /* EOS record. */
-	IO_DEBUG(sprintf("%O::got_data passed null string, so close this stream",
-			 this_object()));
-	do_close(1);
+        IO_DEBUG(sprintf("%O::got_data passed null string, so close this stream",
+                         this_object()));
+        do_close(1);
       }
       return;
     }
     if( !strlen( d ) ) {
       IO_DEBUG(sprintf("%O::got_data passed null string, read_callback not exist, so close2 this stream",
-		       this_object()));
+                       this_object()));
       do_close(2);
     }
   }
@@ -594,7 +594,7 @@ class Stream
   {
     DTFUNC(sprintf("%O::set_nonblocking",this_object()));
     IO_DEBUG(sprintf("%O::set_nonblocking:  a: %O   w: %O",
-		     this_object(),a,w));
+                     this_object(),a,w));
 
     /* It is already rather nonblocking.. */
     set_read_callback( a );
@@ -629,7 +629,7 @@ class Stream
   {
     DTFUNC(sprintf("%O::really_do_read_callback",this_object()));
     IO_DEBUG(sprintf("%O::really_do_read_callback called fid: %O, callback is %O\n  buffer: %d,",
-		     this_object(),fid,read_callback,strlen(buffer)));
+                     this_object(),fid,read_callback,strlen(buffer)));
     mixed key = LOCK();
     string data = buffer;
     buffer = "";
@@ -764,7 +764,7 @@ class FCGIRun
     {
       DTFUNC("FCGIRun::FakePID::status");
       PROCESS_DEBUG(sprintf("FCGIRun: Status check status is %d, parent %O and pid %d",
-			    is_done,parent,parent->attached_pid));
+                            is_done,parent,parent->attached_pid));
       return is_done;
     }
 
@@ -787,7 +787,7 @@ class FCGIRun
   {
     DTFUNC("FCGIRun::done");
     PROCESS_DEBUG(sprintf("FCGIRun: done for rid %d, parent:%O, calling %O",
-			  rid,parent,done_callback));
+                          rid,parent,done_callback));
     parent->free_requestid( rid );
     if( done_callback )
       done_callback( this_object() );
@@ -873,7 +873,7 @@ class FCGI
       IO_DEBUG(" Connecting...\n" );
       while( !fd->connect( "localhost",(int)(socket->query_address()/" ")[1]) )
       {
-	IO_DEBUG(" Connection failed...\n" );
+        IO_DEBUG(" Connection failed...\n" );
         sleep( 0.1 );
       }
       q();
@@ -895,7 +895,7 @@ class FCGI
       mixed th;
       th = thread_create( do_connect,  fd, ch->setup_channels );
       THREAD_DEBUG(sprintf("%O::new_channel created thread id %O for do_connect()",
-			   this,th->id_number()));
+                           this,th->id_number()));
       channels += ({ ch });
       ch->set_close_callback( lambda(object c)
                               {
@@ -916,10 +916,10 @@ class FCGI
     {
       // Suppress logging when no process managed.
       if (sizeof(all_pids)) {
-	DTFUNC("FCGI::reaperman");
+        DTFUNC("FCGI::reaperman");
       }
       if (! this_object()) {
-	PROCESS_DEBUG("*** reaperman, object is destructed already ***");
+        PROCESS_DEBUG("*** reaperman, object is destructed already ***");
       }
       PROCESS_DEBUG(sprintf("*** reaperman, current status is %O ***",all_pids));
 
@@ -935,7 +935,7 @@ class FCGI
       PROCESS_DEBUG(sprintf("FCGI::start_new_script, argv: %O\n  options: %O\n",argv,options));
 
       all_pids += ({ Process.Process( /*({ "/bin/truss"}) +*/ argv,
-				      options ) });
+                                      options ) });
     }
 
     string values_cache = "";
@@ -1150,7 +1150,7 @@ class CGIScript
     // And then read the output.
     //
     PROCESS_DEBUG(sprintf("fastcgi::CGIScript::get_fd and then read the output from %O, blocking status is %O",
-			  fcgi->show_request_origin(),blocking));
+                          fcgi->show_request_origin(),blocking));
     if(!blocking)
     {
 #ifdef FCGI_DEBUG
@@ -1172,7 +1172,7 @@ class CGIScript
   {
     DTFUNC("CGIScript::done");
     PROCESS_DEBUG(sprintf("fastcgi.pike::CGIScript::done close stderr %O for %O\n  stdin: %O\n  stdout: %O\n",
-			  stderr,fcgi,stdin,stdout));
+                          stderr,fcgi,stdin,stdout));
     stderr->close();
   }
 
@@ -1199,13 +1199,13 @@ void create(Configuration conf)
   set("location", "/fcgi-bin/" );
 
   defvar("ex", 1, "Handle *.fcgi", TYPE_FLAG,
-	 "Also handle all '.fcgi' files as FCGI-scripts, as well "
-	 " as files in the fcgi-bin directory.");
+         "Also handle all '.fcgi' files as FCGI-scripts, as well "
+         " as files in the fcgi-bin directory.");
 
   defvar("ext",
-	 ({"fcgi",}), "FCGI-script extensions", TYPE_STRING_LIST,
+         ({"fcgi",}), "FCGI-script extensions", TYPE_STRING_LIST,
          "All files ending with these extensions, will be parsed as "+
-	 "FCGI-scripts.");
+         "FCGI-scripts.");
 
   killvar("cgi_tag");
 }
@@ -1222,7 +1222,7 @@ string status()
       "<ul>\n";
     foreach (f->show_all_pids(),mixed p)
       statmessage += sprintf("<li>%d Pid: %d, status: %d</li>",
-			     ++count, p->pid(), p->status());
+                             ++count, p->pid(), p->status());
     statmessage +=
       "</ul>\n"
       "<h5>Channels</h5>\n"
@@ -1230,8 +1230,8 @@ string status()
     count = 0;
     foreach (f->show_channels(),FCGIChannel ch)
       statmessage +=
-	sprintf("<li>%d %O<br /><pre>%O</pre></li>",
-		++count, ch, ch->request_ids);
+        sprintf("<li>%d %O<br /><pre>%O</pre></li>",
+                ++count, ch, ch->request_ids);
     statmessage += "</ul>\n";
   }
   return statmessage;
@@ -1243,10 +1243,10 @@ string debug_output (string heading, int line, string body) {
   heading = sprintf(THIS_THREAD_ID+"%s(line:%4d):"+" "*sizeof(bt),heading,line);
   string sep = " ";
   string m = map(r,lambda(string t,string h) {
-		     string tmp = h + sep + t;
-		     sep = "    ";
-		     return tmp;
-		   },
-		 heading) * "\n" + "\n";
+                     string tmp = h + sep + t;
+                     sep = "    ";
+                     return tmp;
+                   },
+                 heading) * "\n" + "\n";
   return m;
 }

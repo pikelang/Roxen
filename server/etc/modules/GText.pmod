@@ -29,13 +29,13 @@ Image.Image blur(Image.Image img, int amnt)
 }
 
 Image.Image outline(Image.Image on, Image.Image with,
-		       array (int) color, int radie, int x, int y)
+                       array (int) color, int radie, int x, int y)
 {
   int steps=10;
   for(int j=0; j<=steps; j++)
     on->paste_alpha_color(with, @color,
-			  (int)(0.5+x-(sin((float)j/steps*3.145*2)*radie)),
-			  (int)(0.5+y-(cos((float)j/steps*3.145*2)*radie)));
+                          (int)(0.5+x-(sin((float)j/steps*3.145*2)*radie)),
+                          (int)(0.5+y-(cos((float)j/steps*3.145*2)*radie)));
   return on;
 }
 
@@ -55,7 +55,7 @@ Image.Image do_mirrortile(Image.Image source, int xsize, int ysize)
   quad->paste(source->mirrorx(),source->xsize(),0);
   quad->paste(source->mirrory(),0,source->ysize());
   quad->paste(source->mirrorx()->mirrory(),source->xsize(),
-	      source->ysize());
+              source->ysize());
   return do_tile(quad, xsize, ysize);
 }
 
@@ -96,7 +96,7 @@ Image.Image bevel(Image.Image in, int width, int|void invert)
 
   in->paste_mask(corner, corner->color(95,95,95), in->xsize()-width,-1);
   in->paste_mask(corner, corner->invert()->color(128,128,128),
-		 in->xsize()-width,-1);
+                 in->xsize()-width,-1);
   in->paste_mask(corner, corner->color(95,95,95), -1, in->ysize()-width);
   in->paste_mask(corner, corner->invert()->color(128,128,128),
                  -1, in->ysize()-width);
@@ -254,13 +254,13 @@ array(Image.Image)|mapping make_text_image(
       foreground = t;
       if(args->tile)
       {
-	foreground = do_tile(foreground, xsize, ysize);
+        foreground = do_tile(foreground, xsize, ysize);
       } else if(args->mirrortile) {
-	foreground = do_mirrortile(foreground, xsize, ysize);
+        foreground = do_mirrortile(foreground, xsize, ysize);
       }
     } else {
       if (err->error == Protocols.HTTP.HTTP_UNAUTH)
-	return err;
+        return err;
       werror("Failed to load image for "+args->texture+"\n");
     }
   }
@@ -275,26 +275,26 @@ array(Image.Image)|mapping make_text_image(
     background = bg_info->img;
   } else if (args->background && sizeof(args->background) > 1) {
     if (background =
-	Image.Image(xsize,ysize, @(parse_color(args->background[1..]))))
+        Image.Image(xsize,ysize, @(parse_color(args->background[1..]))))
       background_is_color = 1;
   }
   if (background) {
     extend_alpha = 1;
     if (args->alpha && background_is_color) {
       if (alpha = roxen.load_image(args->alpha, id, err)) {
-	xsize=max(xsize,alpha->xsize());
-	ysize=max(ysize,alpha->ysize());
-	if((float)args->scale)
-	  alpha=alpha->scale(1/(float)args->scale);
-	background=Image.Image(xsize,ysize, @(parse_color(args->background[1..])));
+        xsize=max(xsize,alpha->xsize());
+        ysize=max(ysize,alpha->ysize());
+        if((float)args->scale)
+          alpha=alpha->scale(1/(float)args->scale);
+        background=Image.Image(xsize,ysize, @(parse_color(args->background[1..])));
       } else {
-	if (err->error == Protocols.HTTP.HTTP_UNAUTH)
-	  return err;
+        if (err->error == Protocols.HTTP.HTTP_UNAUTH)
+          return err;
       }
     } else if (bg_info) {
       alpha = bg_info->alpha;
       if((float)args->scale >= 0.1 && alpha)
-	alpha = alpha->scale(1.0/(float)args->scale);
+        alpha = alpha->scale(1.0/(float)args->scale);
     }
 
     if((float)args->scale >= 0.1 && !alpha)
@@ -393,7 +393,7 @@ array(Image.Image)|mapping make_text_image(
     } else {
       background = background->scale(xs, ys);
       if(alpha)
-	alpha = alpha->scale(xs, ys);
+        alpha = alpha->scale(xs, ys);
     }
   }
 
@@ -424,8 +424,8 @@ array(Image.Image)|mapping make_text_image(
     sscanf(args->textbox, "%*[^,],%s", bg);
     sscanf(bg,"%s,%d", bg,border);
     background->paste_alpha(Image.Image(txsize+border*2,tysize+border*2,
-				  @parse_color(bg)),
-			    255-(alpha*255/100),xoffset-border,yoffset-border);
+                                  @parse_color(bg)),
+                            255-(alpha*255/100),xoffset-border,yoffset-border);
   }
 
   if(args->ghost)
@@ -441,9 +441,9 @@ array(Image.Image)|mapping make_text_image(
       int j;
       Image.Image ta = text_alpha->copy();
       for (j=0;j<bl;j++)
-	ta=ta->apply_matrix(({
-	  ({6,7,7,7,6}),({7,8,8,8,7}),({7,8,8,8,7}),({7,8,8,8,7}),({6,7,7,7,6})
-	}));
+        ta=ta->apply_matrix(({
+          ({6,7,7,7,6}),({7,8,8,8,7}),({7,8,8,8,7}),({7,8,8,8,7}),({6,7,7,7,6})
+        }));
       background->paste_alpha_color(ta,@clr,xoffset+sdist,yoffset+sdist);
       fgcolor=bgcolor;
     }
@@ -458,7 +458,7 @@ array(Image.Image)|mapping make_text_image(
     ta = ta->color(255-sd,255-sd,255-sd);
     array sc = parse_color(args->scolor||"black");
     background->paste_alpha_color(ta,sc[0],sc[1],sc[2],
-				  xoffset+sdist,yoffset+sdist);
+                                  xoffset+sdist,yoffset+sdist);
   }
 
   if(args->bshadow)
@@ -475,7 +475,7 @@ array(Image.Image)|mapping make_text_image(
     ta = ta->blur( min(sdist,1) );
 
     background->paste_alpha_color(ta,sc[0],sc[1],sc[2],
-				  xoffset+sdist,yoffset+sdist);
+                                  xoffset+sdist,yoffset+sdist);
   }
 
   if(args->glow)
@@ -484,15 +484,15 @@ array(Image.Image)|mapping make_text_image(
     int amnt = (int)(args->glow/",")[-1]+2;
     array (int) blurc = parse_color((args->glow/",")[0]);
     background->paste_alpha_color(blur(text_alpha, amnt),@blurc,
-				  xoffset-amnt, yoffset-amnt);
+                                  xoffset-amnt, yoffset-amnt);
   }
 
   if(args->chisel) {
     extend_alpha = 1;
     foreground=text_alpha->apply_matrix(({ ({8,1,0}),
-					   ({1,0,-1}),
-					   ({0,-1,-8}) }),
-					128,128,128, 15 )
+                                           ({1,0,-1}),
+                                           ({0,-1,-8}) }),
+                                        128,128,128, 15 )
       ->color(@fgcolor);
   }
 
@@ -503,13 +503,13 @@ array(Image.Image)|mapping make_text_image(
     string c1="black",c2="black",c3="black",c4="black";
     sscanf(args->textscale, "%s,%s,%s,%s", c1, c2, c3, c4);
     foreground->tuned_box(0,0, txsize,tysize,
-			  ({parse_color(c1),parse_color(c2),parse_color(c3),
-			      parse_color(c4)}));
+                          ({parse_color(c1),parse_color(c2),parse_color(c3),
+                              parse_color(c4)}));
   }
   if(args->outline) {
     extend_alpha = 1;
     outline(background, text_alpha, parse_color((args->outline/",")[0]),
-	    ((int)(args->outline/",")[-1])+1, xoffset, yoffset);
+            ((int)(args->outline/",")[-1])+1, xoffset, yoffset);
   }
 
   if(args->textbelow)
@@ -520,10 +520,10 @@ array(Image.Image)|mapping make_text_image(
     background->setcolor( @color );
     yoffset = background->ysize();
     background = background->copy(0,0,
-				  max(background->xsize()-1,
-				      foreground->xsize()-1),
-				  background->ysize()-1
-				  +foreground->ysize());
+                                  max(background->xsize()-1,
+                                      foreground->xsize()-1),
+                                  background->ysize()-1
+                                  +foreground->ysize());
     xoffset = (background->xsize()-foreground->xsize())/2;
   }
 
@@ -531,8 +531,8 @@ array(Image.Image)|mapping make_text_image(
   foreground = 0;
   text_alpha->setcolor (0, 0, 0);
   text_alpha = text_alpha->copy (-xoffset, -yoffset,
-				 background->xsize() - xoffset - 1,
-				 background->ysize() - yoffset - 1);
+                                 background->xsize() - xoffset - 1,
+                                 background->ysize() - yoffset - 1);
 
   if (extend_alpha && !args["no-auto-alpha"]) {
     Image.Image ext = background->distancesq( @bgcolor );

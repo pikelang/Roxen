@@ -59,21 +59,21 @@ void stop()
 void create()
 {
   defvar( "maxwidth", 3000, "Limits:Max width", TYPE_INT,
-	  "Maximal width of the generated image." );
+          "Maximal width of the generated image." );
   defvar( "maxheight", 1000, "Limits:Max height", TYPE_INT,
-	  "Maximal height of the generated image." );
+          "Maximal height of the generated image." );
   defvar( "maxstringlength", 60, "Limits:Max string length", TYPE_INT,
-	  "Maximal length of each text label used in the diagram." );
+          "Maximal length of each text label used in the diagram." );
   defvar( "ext", 1, "Append format to generated images",
-	  TYPE_FLAG|VAR_MORE, 
-	  "Append the image format (.gif, .png, .gif, etc) to the generated "
-	  "images. This is not necessary, but might seem nicer.");
+          TYPE_FLAG|VAR_MORE, 
+          "Append the image format (.gif, .png, .gif, etc) to the generated "
+          "images. This is not necessary, but might seem nicer.");
 }
 
 string status() {
   array s=image_cache->status();
   return sprintf("<b>Images in cache:</b> %d images<br />\n<b>Cache size:</b> %s",
-		 s[0], Roxen.sizetostring(s[1]));
+                 s[0], Roxen.sizetostring(s[1]));
 }
 
 mapping(string:function) query_action_buttons() {
@@ -96,7 +96,7 @@ string itag_xaxis(string tag, mapping m, mapping res, object id)
       m[attr] = Roxen.parse_rxml( m[attr], id );
 
   res->xaxisfont = verify_font( m->font || m->nfont || res->xaxisfont,
-				res->labelsize );
+                                res->labelsize );
 
   if(m->name) res->xname = m->name[..l];
   if(m->start)
@@ -126,7 +126,7 @@ string itag_yaxis(string tag, mapping m, mapping res, object id)
       m[attr] = Roxen.parse_rxml( m[attr], id );
 
   res->yaxisfont = verify_font( m->font || m->nfont || res->yaxisfont,
-				res->labelsize );
+                                res->labelsize );
 
   if(m->name) res->yname = m->name[..l];
   if(m->start)
@@ -146,7 +146,7 @@ string itag_yaxis(string tag, mapping m, mapping res, object id)
 
 /* Handle <xnames> and <ynames> */
 string itag_names(string tag, mapping m, string contents,
-		      mapping res, object id)
+                      mapping res, object id)
 {
 #ifdef BG_DEBUG
   bg_timers->names += gauge {
@@ -168,21 +168,21 @@ string itag_names(string tag, mapping m, string contents,
     if(tag=="xnames")
     {
       res->xnamesfont = verify_font( m->font || m->nfont || res->xnamesfont,
-				     res->fontsize );
+                                     res->fontsize );
 
       foo=res->xnames = contents/sep;
       if(m->orient)
-	if (m->orient[0..3] == "vert")
-	  res->orientation = "vert";
-	else
-	  res->orientation="hor";
+        if (m->orient[0..3] == "vert")
+          res->orientation = "vert";
+        else
+          res->orientation="hor";
     }
     else
     {
       foo=res->ynames = contents/sep;
 
       res->ynamesfont = verify_font( m->font || m->nfont || res->ynamesfont,
-				     res->fontsize );
+                                     res->fontsize );
     }
   }
   else
@@ -210,7 +210,7 @@ float|string floatify( string in , string voidsep )
 
 /* Handle <xvalues> and <yvalues> */
 string itag_values(string tag, mapping m, string contents,
-		   mapping res, object id)
+                   mapping res, object id)
 {
 #ifdef BG_DEBUG
   bg_timers->values += gauge {
@@ -239,7 +239,7 @@ string itag_values(string tag, mapping m, string contents,
 }
 
 string itag_data(mapping tag, mapping m, string contents,
-		 mapping res, object id)
+                 mapping res, object id)
 {
 #ifdef BG_DEBUG
   bg_timers->data += gauge {
@@ -306,14 +306,14 @@ string itag_data(mapping tag, mapping m, string contents,
   if (m->form)
     if (m->form[0..2] == "col")
       {
-	for(int i=0; i<sizeof(bar); i++)
-	  if (sizeof(bar[i])<maxsize)
-	    bar[i]+=allocate(maxsize-sizeof(bar[i]));
-	
-	array bar2=allocate(maxsize);
-	for(int i=0; i<maxsize; i++)
-	  bar2[i]=column(bar, i);
-	res->data=bar2;
+        for(int i=0; i<sizeof(bar); i++)
+          if (sizeof(bar[i])<maxsize)
+            bar[i]+=allocate(maxsize-sizeof(bar[i]));
+        
+        array bar2=allocate(maxsize);
+        for(int i=0; i<maxsize; i++)
+          bar2[i]=column(bar, i);
+        res->data=bar2;
       }
     else
       res->data=bar;
@@ -356,8 +356,8 @@ string itag_data(mapping tag, mapping m, string contents,
       c=bar[i];
       int k=sizeof(c);
       for(int j=0; j<k; j++)
-	if ((b=c[j])!=VOIDSYMBOL)
-	  c[j]=(float)(b);
+        if ((b=c[j])!=VOIDSYMBOL)
+          c[j]=(float)(b);
     }
   res->data=bar;
 #ifdef BG_DEBUG
@@ -371,7 +371,7 @@ string itag_data(mapping tag, mapping m, string contents,
 }
 
 string itag_colors(mapping tag, mapping m, string contents,
-		   mapping res, object id)
+                   mapping res, object id)
 {
   if(!m->noparse)
     contents = Roxen.parse_rxml( contents, id );
@@ -384,7 +384,7 @@ string itag_colors(mapping tag, mapping m, string contents,
 }
 
 string itag_legendtext(mapping tag, mapping m, string contents,
-		       mapping res, object id)
+                       mapping res, object id)
 {
   int maxlen = query("maxstringlength")-1;
 
@@ -397,7 +397,7 @@ string itag_legendtext(mapping tag, mapping m, string contents,
   string sep = m->separator || SEP;
 
   res->legendfont = verify_font( m->font || m->nfont || res->legendfont,
-				 res->legendfontsize );
+                                 res->legendfontsize );
 
   res->legend_texts = contents/sep;
 
@@ -432,7 +432,7 @@ int datacounter = 0;
   string data=encode_value(in);
   o->update(data);
   string out=replace(http_encode_string(MIME.encode_base64(o->digest(),1)),
-		     "/", "$");
+                     "/", "$");
 */
 
 constant _diagram_args =
@@ -455,7 +455,7 @@ constant _shuffle_args =
 mapping shuffle_args = mkmapping( _shuffle_args, _shuffle_args );
 
 string container_diagram(string tag, mapping m, string contents,
-		   object id, object f)
+                   object id, object f)
 {
   int l=query("maxstringlength")-1;
   contents=replace(contents, "\r\n", "\n");
@@ -476,13 +476,13 @@ string container_diagram(string tag, mapping m, string contents,
   if(m->colortable_cache) res->colortable_cache=m->colortable_cache;
   if(m->type) res->type = m->type;
   else return syntax("You must specify a type for your table.<br>"
-		     "Valid types are: "
-		     "<b>sumbars</b>, "
-		     "<b>normsumbars</b>, "
-		     "<b>linechart</b>, "
-		     "<b>barchart</b>, "
-		     "<b>piechart</b> and "
-		     "<b>graph</b>");
+                     "Valid types are: "
+                     "<b>sumbars</b>, "
+                     "<b>normsumbars</b>, "
+                     "<b>linechart</b>, "
+                     "<b>barchart</b>, "
+                     "<b>piechart</b> and "
+                     "<b>graph</b>");
 
   if(m->background)
     res->background =
@@ -561,23 +561,23 @@ string container_diagram(string tag, mapping m, string contents,
   {
     res->drawtype = "3D";
     if( (!m["3d"] || lower_case(m["3d"])!="3d") &&
-	(!m["do3d"] || lower_case(m["do3d"])!="do3d") )
+        (!m["do3d"] || lower_case(m["do3d"])!="do3d") )
       res->dimensionsdepth = (int)val;
     else
       res->dimensionsdepth = 20;
   }
 
   parse_html(contents,
-	     ([ "xaxis":itag_xaxis,
-	        "yaxis":itag_yaxis ]),
-	     ([ "data":itag_data,
-		"xnames":itag_names,
-		"ynames":itag_names,
-		"xvalues":itag_values,
-		"yvalues":itag_values,
-		"colors":itag_colors,
-		"legend":itag_legendtext ]),
-	     res, id );
+             ([ "xaxis":itag_xaxis,
+                "yaxis":itag_yaxis ]),
+             ([ "data":itag_data,
+                "xnames":itag_names,
+                "ynames":itag_names,
+                "xvalues":itag_values,
+                "yvalues":itag_values,
+                "colors":itag_colors,
+                "legend":itag_legendtext ]),
+             res, id );
 
   if ( !res->data || !sizeof(res->data))
     return syntax("No data for the diagram");
@@ -768,10 +768,10 @@ mixed draw_callback(mapping args, object id)
     {
       args->image=get_font(0, 24, 0, 0,"left", 0.0, 0.0);
       if (!(args->image))
-	throw(({"Missing font or similar error!\n", backtrace() }));
+        throw(({"Missing font or similar error!\n", backtrace() }));
       args->image=args->image->
-	write("The file was", "not found ",
-	      "or was not a","jpeg-, gif- or","pnm-picture.");
+        write("The file was", "not found ",
+              "or was not a","jpeg-, gif- or","pnm-picture.");
     }
   } else if(args->tonedbox) {
     m_delete( args, "bgcolor" );
@@ -786,7 +786,7 @@ mixed draw_callback(mapping args, object id)
   }
 
   foreach( ({ "font", "namefont", "legendfont", "xaxisfont", "yaxisfont",
-	      "xnamesfont", "ynamesfont" }), string font)
+              "xnamesfont", "ynamesfont" }), string font)
     if(args[font]) args[font] = get_font(args[font], 32, 0, 0, "left", 0.0, 0.0);
 
   Image.Image img;
@@ -822,7 +822,7 @@ mixed draw_callback(mapping args, object id)
 #endif
   if (args->turn)
     img=img->rotate_ccw();
-	
+        
 #ifdef BG_DEBUG
   if(id->prestate->debug)
     report_debug("Timers: %O\n", bg_timers);
@@ -832,15 +832,15 @@ mixed draw_callback(mapping args, object id)
     {
       Image.Image alpha;
       if (args->bgcolor)
-	{
-	  //Make an alpha-image with everything in
-	  //bgcolor black and the rest white.
-	  alpha=Image.Image(img->xsize(), img->ysize(), @args->bgcolor);
-	  alpha=((img-alpha)+(alpha-img));
-	  alpha=alpha->threshold(4);
-	  }
+        {
+          //Make an alpha-image with everything in
+          //bgcolor black and the rest white.
+          alpha=Image.Image(img->xsize(), img->ysize(), @args->bgcolor);
+          alpha=((img-alpha)+(alpha-img));
+          alpha=alpha->threshold(4);
+          }
       else
-	alpha=img->threshold(4);
+        alpha=img->threshold(4);
       return ([ "img":img, "alpha": alpha]);
 
     }
@@ -1027,7 +1027,7 @@ Add this number of seconds to the time this entry is valid.</p>
 
 //-------------------------------------------------------------------------
 
-	     ([
+             ([
 
 
 "data":#"<desc type='cont'><p><short>
@@ -1065,7 +1065,7 @@ Add this number of seconds to the time this entry is valid.</p>
 
 //-----------------------------------------------------------------------
 
-	       "colors":#"<desc type='cont'><p><short>
+               "colors":#"<desc type='cont'><p><short>
  This tag sets the colors for different pie slices, bars or
  lines.</short> The colors are presented to the tag in a tab separated
  list.</p>
@@ -1077,7 +1077,7 @@ Add this number of seconds to the time this entry is valid.</p>
 
 //------------------------------------------------------------------------
 
-	       "legend":#"<desc type='cont'><p><short>
+               "legend":#"<desc type='cont'><p><short>
  A separate legend with description of the different pie slices, bars
  or lines.</short>The titles are presented to the tag in a tab
  separated list.</p>
@@ -1089,7 +1089,7 @@ Add this number of seconds to the time this entry is valid.</p>
 
 //-------------------------------------------------------------------------
 
-	       "xaxis":#"<desc tag='tag'><p><short>
+               "xaxis":#"<desc tag='tag'><p><short>
  Used for specifying the quantity and unit of the x-axis, as well as
  its scale, in a graph.</short> The <tag>yaxis</tag> tag uses the same
  attributes.</p>
@@ -1114,7 +1114,7 @@ Add this number of seconds to the time this entry is valid.</p>
 
 //------------------------------------------------------------------------
 
-	       "yaxis":#"<desc tag='tag'><p><short>
+               "yaxis":#"<desc tag='tag'><p><short>
  Used for specifying the quantity and unit of the y-axis, as well as
  its scale, in a graph or line chart.</short>Se the <tag>xaxis</tag>
  tag for a complete list of attributes.</p>
@@ -1122,7 +1122,7 @@ Add this number of seconds to the time this entry is valid.</p>
 
 //------------------------------------------------------------------------
 
-	       "xnames":#"<desc type='cont'><p><short>
+               "xnames":#"<desc type='cont'><p><short>
  Separate tag that can be used to give names to put along the pie
  slices or under the bars.</short> The datanames are presented to the
  tag as a tab separated list. This tag is useful when the diagram is
@@ -1244,7 +1244,7 @@ Add this number of seconds to the time this entry is valid.</p>
  </diagram>
  </ex>
 </desc>"
-	     ])
+             ])
 
 }),
 

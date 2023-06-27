@@ -24,31 +24,31 @@ class RoxenSessionContext
     if (currentTime - lastGarbTime > (kGarbInterval * 1000)) {
       lastGarbTime = currentTime;
       for (Enumeration peek = sessions.keys(); peek.hasMoreElements();) {
-	String garbID = (String) peek.nextElement();
-	RoxenSession session = (RoxenSession) sessions.get(garbID);
+        String garbID = (String) peek.nextElement();
+        RoxenSession session = (RoxenSession) sessions.get(garbID);
 
-	//  Session may be marked as invalid already or simply expired. In
-	//  the second case we need to invalidate it as well in order to
-	//  notify HttpSession attribute listeners.
-	if (session != null && session.isInvalidOrExpired(currentTime)) {
-	  sessions.remove(garbID);
-	  if (!session.invalidated)
-	    session.invalidate();
-	}
+        //  Session may be marked as invalid already or simply expired. In
+        //  the second case we need to invalidate it as well in order to
+        //  notify HttpSession attribute listeners.
+        if (session != null && session.isInvalidOrExpired(currentTime)) {
+          sessions.remove(garbID);
+          if (!session.invalidated)
+            session.invalidate();
+        }
       }
     }
 
     if(id != null) {
       Object s = sessions.get(id);
       if(s != null) {
-	RoxenSession session = (RoxenSession)s;
-	if(session.access())
-	  return session;
-	else {
-	  sessions.remove(id);
+        RoxenSession session = (RoxenSession)s;
+        if(session.access())
+          return session;
+        else {
+          sessions.remove(id);
           if (!session.invalidated)
             session.invalidate();
-	}
+        }
       }
     }
     if(!create)

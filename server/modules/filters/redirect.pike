@@ -15,7 +15,7 @@ private int redirs = 0;
 void create()
 {
   defvar("fileredirect", "", "Redirect patterns", TYPE_TEXT_FIELD|VAR_INITIAL,
-	 #"\
+         #"\
 A list of patterns to redirect one URL to another. Each line is a
 pattern rule according to one of the following formats:
 
@@ -97,8 +97,8 @@ permanent exact /               %u/main/index.html
 absolute URL, either literally or by starting <i>target</i> with %u.");
 
   defvar("poll_interval", 60, "Poll interval", TYPE_INT,
-	 "Time in seconds between polls of the files <tt>#include</tt>d "
-	 "in the redirect pattern.");
+         "Time in seconds between polls of the files <tt>#include</tt>d "
+         "in the redirect pattern.");
 }
 
 array(string(0..255)) redirect_from = ({});
@@ -234,7 +234,7 @@ mapping(string(0..255):RedirectFile) dependencies = ([]);
 void parse_redirect_string(string what)
 {
   foreach(replace(what, "\t", " ")/"\n",
-	  string(0..255) s)
+          string(0..255) s)
   {
     if (sscanf (s, "#virtual-include%*[ ]<%s>", string file) == 2) {
       parse_virtual_include_file(file);
@@ -251,30 +251,30 @@ void parse_redirect_string(string what)
       int ret_code;
       array(string(0..255)) a = s/" " - ({""});
       if (sizeof (a) && a[0] == "permanent") {
-	a = a[1..];
-	ret_code = 301;
+        a = a[1..];
+        ret_code = 301;
       } else
-	ret_code = 302;
+        ret_code = 302;
       // FIXME: http_encode_invalids() generates upper-case hex-escapes, but
       //        there may be verbatim lower-case escapes in the patterns.
       if(sizeof(a)>=3 && a[0]=="exact") {
-	string(0..255) match_url = Roxen.http_encode_invalids(a[1]);
-	string(0..255) dest_url = Roxen.http_encode_invalids(a[2]);
-	if (exact_patterns[match_url])
-	  report_warning ("Duplicate redirect pattern %O.\n", s);
-	exact_patterns[match_url] = ({ dest_url, ret_code });
+        string(0..255) match_url = Roxen.http_encode_invalids(a[1]);
+        string(0..255) dest_url = Roxen.http_encode_invalids(a[2]);
+        if (exact_patterns[match_url])
+          report_warning ("Duplicate redirect pattern %O.\n", s);
+        exact_patterns[match_url] = ({ dest_url, ret_code });
       }
       else if (sizeof(a)==2) {
-	string(0..255) from_url = Roxen.http_encode_invalids(a[0]);
-	string(0..255) to_url = Roxen.http_encode_invalids(a[1]);
-	if (search (redirect_from, from_url) >= 0)
-	  report_warning ("Duplicate redirect pattern %O.\n", s);
-	redirect_from += ({ from_url });
-	redirect_to += ({ to_url });
-	redirect_code += ({ ret_code });
+        string(0..255) from_url = Roxen.http_encode_invalids(a[0]);
+        string(0..255) to_url = Roxen.http_encode_invalids(a[1]);
+        if (search (redirect_from, from_url) >= 0)
+          report_warning ("Duplicate redirect pattern %O.\n", s);
+        redirect_from += ({ from_url });
+        redirect_to += ({ to_url });
+        redirect_code += ({ ret_code });
       }
       else if (sizeof (a))
-	report_warning ("Invalid redirect pattern %O.\n", s);
+        report_warning ("Invalid redirect pattern %O.\n", s);
     }
   }
 }
@@ -305,7 +305,7 @@ void file_poller()
   foreach(dependencies; string fname; RedirectFile dependency) {
     Stdio.Stat stat = dependency->stat_file();
     if (!((!stat && !dependency->stat) ||
-	  (stat && dependency->stat && stat->mtime == dependency->stat->mtime))) {
+          (stat && dependency->stat && stat->mtime == dependency->stat->mtime))) {
       // mtime for the file has changed, or it has been created or deleted
       // since last poll.
       changed = 1;
@@ -340,11 +340,11 @@ constant module_unique = 0;
 string status()
 {
   return sprintf("Number of patterns: "
-		 "%d prefix/regexp + %d exact = %d total<br />\n"
-		 "Redirects so far: %d",
-		 sizeof(redirect_from),sizeof(exact_patterns),
-		 sizeof(redirect_from)+sizeof(exact_patterns),
-		 redirs);
+                 "%d prefix/regexp + %d exact = %d total<br />\n"
+                 "Redirects so far: %d",
+                 sizeof(redirect_from),sizeof(exact_patterns),
+                 sizeof(redirect_from)+sizeof(exact_patterns),
+                 redirs);
 }
 
 
@@ -372,35 +372,35 @@ mixed first_try(object id)
 
       if(has_prefix(from, f))
       {
-	to = redirect_to[i] + from[strlen(f)..];
-	ret_code = redirect_code[i];
-	//  Do not explicitly remove the query part of the URL.
-	// sscanf(to, "%s?", to);
-	break;
+        to = redirect_to[i] + from[strlen(f)..];
+        ret_code = redirect_code[i];
+        //  Do not explicitly remove the query part of the URL.
+        // sscanf(to, "%s?", to);
+        break;
       }
 
       else if( has_value(f, "*") || has_value( f, "(") ) {
-	function split;
-	if(f[0] != '^') f = "^" + f;
-	if(catch (split = Regexp(f)->split))
-	{
-	  report_error("REDIRECT: Compile error in regular expression. ("+f+")\n");
-	  continue;
-	}
+        function split;
+        if(f[0] != '^') f = "^" + f;
+        if(catch (split = Regexp(f)->split))
+        {
+          report_error("REDIRECT: Compile error in regular expression. ("+f+")\n");
+          continue;
+        }
 
-	if(array foo = split(from)) {
-	  array bar = Array.map(foo, lambda(string s, mapping f) {
-				       return "$"+(f->num++);
-				     }, ([ "num":1 ]));
-	  foo +=({(({""}) + (id->not_query/"/" - ({""})))[-1],
-		  id->not_query[1..] });
-	  bar +=({ "%f", "%p" });
+        if(array foo = split(from)) {
+          array bar = Array.map(foo, lambda(string s, mapping f) {
+                                       return "$"+(f->num++);
+                                     }, ([ "num":1 ]));
+          foo +=({(({""}) + (id->not_query/"/" - ({""})))[-1],
+                  id->not_query[1..] });
+          bar +=({ "%f", "%p" });
 
-	  string redir_to = redirect_to[i];
-	  to = replace(redir_to, (array(string)) bar, (array(string)) foo);
-	  ret_code = redirect_code[i];
-	  break;
-	}
+          string redir_to = redirect_to[i];
+          to = replace(redir_to, (array(string)) bar, (array(string)) foo);
+          ret_code = redirect_code[i];
+          break;
+        }
       }
     }
 

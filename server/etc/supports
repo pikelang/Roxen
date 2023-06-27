@@ -99,17 +99,17 @@
 #section mozilla {
 
 .*		basic, tables, jpeginline, font, imagealign,\
-		cookies, push, pull, backgrounds, ssl,\
-		java, frames, autogunzip, js_image_object, javascript,\
-		align, center, images
+                cookies, push, pull, backgrounds, ssl,\
+                java, frames, autogunzip, js_image_object, javascript,\
+                align, center, images
 
 ^mozilla/0\..*		-tables, -backgrounds, -ssl, -frames, -java, -javascript,\
-			-js_image_object, -align, -center, -font, -imagealign,\
-			-images
+                        -js_image_object, -align, -center, -font, -imagealign,\
+                        -images
 ^mozilla/1.[01].*	-tables, -backgrounds, -ssl, -frames, -java, -javascript,\
-			-js_image_object
+                        -js_image_object
 ^mozilla/1\..*		-ssl, -frames, -java, -javascript, -js_image_object,\
-			bigsmall, supsub
+                        bigsmall, supsub
 ^mozilla.[2-9].[0-9].*	some_html3, fontcolor, pjpeginline, fontcolor
 ^mozilla.2.0b[2-9].*	-java
 
@@ -135,8 +135,8 @@
 # Opera
 
 .*compatible.*opera.1.*		-align, -backgrounds, -bigsmall, -center, -div,\
-				-divisions, -font, -forms, -frames, -imagealign,\
-				-supsub
+                                -divisions, -font, -forms, -frames, -imagealign,\
+                                -supsub
 .*compatible.*opera.2.*		align, fontcolor, tablecolor
 .*compatible.*opera.[3-9].*	-java, javascript, fontcolor, tablecolor, *javascript=1.1
 .*compatible.*opera.[4-9].*	trade
@@ -148,7 +148,7 @@
 .*compatible.*msie		msie
 .*compatible.*msie.1		-javascript, -tables
 .*compatible.*msie.[1-2]	-java, -bigsmall, -div, -divisions, fontcolor,\
-				-frames, -supsub
+                                -frames, -supsub
 .*compatible.*msie.2		-noscript
 .*compatible.*msie.[1-3]	-js_image_object
 
@@ -161,19 +161,19 @@
 # }
 
 gecko				basic, some_html3, backgrounds, center, cookies,\
-				font, fontcolor, forms, frames, gifinline, imagealign,\
-				images, javascript, jpeginline, js_global_event,\
-				js_image_object, js_inner_html, pjpeginline,\
-				pnginline, stylesheets, tables, tablecolor, tableimages,\
-				*javascript=1.5
+                                font, fontcolor, forms, frames, gifinline, imagealign,\
+                                images, javascript, jpeginline, js_global_event,\
+                                js_image_object, js_inner_html, pjpeginline,\
+                                pnginline, stylesheets, tables, tablecolor, tableimages,\
+                                *javascript=1.5
 
 # section opera {
 .*		basic, tables, jpeginline, font, imagealign,\
-		cookies, push, pull, backgrounds, ssl,\
-		java, frames, autogunzip, js_image_object, javascript,\
-		align, center, images \
-		*javascript=1.5, js_global_event,\
-		js_inner_html, pnginline, trade, stylesheets
+                cookies, push, pull, backgrounds, ssl,\
+                java, frames, autogunzip, js_image_object, javascript,\
+                align, center, images \
+                *javascript=1.5, js_global_event,\
+                js_inner_html, pnginline, trade, stylesheets
 # }
 
 
@@ -183,7 +183,7 @@ gecko				basic, some_html3, backgrounds, center, cookies,\
 .*			basic, jpeginline, center
 ^netsurfer.1\.[1-9].*	backgrounds, fontcolor, pnginline, videoinline
 ^netsurfer.2\.[0-9].*	align, pjpeginline, tables, frames, java, font,\
-			bigsmall, supsub
+                        bigsmall, supsub
 # }
 
 #section omniweb {
@@ -191,8 +191,8 @@ gecko				basic, some_html3, backgrounds, center, cookies,\
 # for more info, contact info@omnigroup.com
 .*			basic, center, jpeginline
 ^omniweb.[2-9]\.[0-9].*	backgrounds, font, frames, tables, align, bigsmall,\
-			fontcolor, imagealign, pjpeginline, pnginline,\
-			supsub, ssl, cookies
+                        fontcolor, imagealign, pjpeginline, pnginline,\
+                        supsub, ssl, cookies
 # }
 
 #section arena {
@@ -222,7 +222,7 @@ gecko				basic, some_html3, backgrounds, center, cookies,\
 # Tested version: "Spyglass_Mosaic/2.11 Spyglass/11"
 #section spyglass {
 .*	basic, backgrounds, center, font, fontcolor, imagealign,\
-	jpeginline, pjpeginline, tables
+        jpeginline, pjpeginline, tables
 # }
 
 # Newer versions of lynx can handle tables and frames in a fashion, but
@@ -245,8 +245,8 @@ gecko				basic, some_html3, backgrounds, center, cookies,\
 # HotJava, SUNs little WWW browser with support for java aplets.
 .*			basic, java, center
 .*/1\.0/j.*1\.1\.[1-9]	frames, pjpeginline, supsub, fontcolor,\
-			backgrounds, bigsmall, divisions, div, font,\
-			imagealign, jpeginline, tables, tablecolor
+                        backgrounds, bigsmall, divisions, div, font,\
+                        imagealign, jpeginline, tables, tablecolor
 # }
 
 #section udiwww {
@@ -256,9 +256,9 @@ gecko				basic, some_html3, backgrounds, center, cookies,\
 #section ibrowse {
 # Amiga MUIbrowser
 .*			basic, center, pnginline, imageinline,\
-			backgrounds, bigsmall, center, divisions,\
-			div, font, fontcolor, imagealign, tables,\
-			jpeginline, pjpeginline, pnginline
+                        backgrounds, bigsmall, center, divisions,\
+                        div, font, fontcolor, imagealign, tables,\
+                        jpeginline, pjpeginline, pnginline
 
 .*1.1.*			frames, pull
 .*1.1[2-9].*		ssl
@@ -267,9 +267,9 @@ gecko				basic, some_html3, backgrounds, center, cookies,\
 #section amiga-aweb {
 # Amigabrowser <http://www.xs4all.nl/~yrozijn/aweb/>
 .*			basic, center, pnginline, imageinline,\
-			backgrounds, bigsmall, center, divisions,\
-			div, font, fontcolor, imagealign, supsub,\
-			jpeginline, pjpeginline, pnginline
+                        backgrounds, bigsmall, center, divisions,\
+                        div, font, fontcolor, imagealign, supsub,\
+                        jpeginline, pjpeginline, pnginline
 
 .*1\.[5-9].*		tables
 .*[2-9]\.[0-9].*	tables
@@ -283,7 +283,7 @@ gecko				basic, some_html3, backgrounds, center, cookies,\
 .*webexplorer.*1\.0[3-9]	tables, backgrounds, imagealign
 .*webexplorer.*1.1		tables, backgrounds, imagealign
 .*webexplorer.*9603.*beta	java, javascript, livescript, tables,\
-				backgrounds, imagealign
+                                backgrounds, imagealign
 # }
 
 #section micr {
@@ -446,7 +446,7 @@ gecko				basic, some_html3, backgrounds, center, cookies,\
 # Although not a browser I don't think you would call this a robot.
 #section w3c_validator {
 .*		basic, some_html3, backgrounds, center, fontcolor,\
-		forms, imagealign, tables, -robot
+                forms, imagealign, tables, -robot
 # }
 
 #

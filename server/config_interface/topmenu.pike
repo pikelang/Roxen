@@ -46,10 +46,10 @@ string parse( RequestID id )
       // if there are permissions for any site.
       int access_ok;
       foreach(id->misc->config_user->permissions; string perm;) {
-	if (has_prefix(perm, "Site:")) {
-	  access_ok = 1;
-	  break;
-	}
+        if (has_prefix(perm, "Site:")) {
+          access_ok = 1;
+          break;
+        }
       }
       if (!access_ok) continue;
     }
@@ -57,7 +57,7 @@ string parse( RequestID id )
       // Hide the docs tab if there are no docs.
       Sql.Sql docs = DBManager.get("docs", id->conf);
       if (!docs || !sizeof(docs->query("SHOW TABLES LIKE 'docs'"))) {
-	continue;
+        continue;
       }
       docs = UNDEFINED;
     }
@@ -78,16 +78,16 @@ string parse( RequestID id )
         while( id->misc->orig )
           id = id->misc->orig;
         a->selected = "selected";
-	if( id->method == "GET" ) {
-	  string url = id->raw_url;
-	  foreach(suppress_last_seen; Regexp pattern; string replacement) {
-	    if (pattern->match(url)) {
-	      url = pattern->replace(url, replacement);
-	      break;
-	    }
-	  }
-	  last_seen_on[t[1]] = url;
-	}
+        if( id->method == "GET" ) {
+          string url = id->raw_url;
+          foreach(suppress_last_seen; Regexp pattern; string replacement) {
+            if (pattern->match(url)) {
+              url = pattern->replace(url, replacement);
+              break;
+            }
+          }
+          last_seen_on[t[1]] = url;
+        }
         default_href();
       }
       if( !a->href )

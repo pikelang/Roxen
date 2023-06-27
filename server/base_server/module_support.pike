@@ -20,11 +20,11 @@ int got_java()
     if (mixed err = catch (jvm = master()->resolv ("Java.jvm")))
       report_error ("Failed to initialize Java JVM: %s\n",
 #ifdef DEBUG
-		    describe_backtrace (err)
+                    describe_backtrace (err)
 #else
-		    describe_error (err)
+                    describe_error (err)
 #endif
-		   );
+                   );
     got_java_flag = jvm ? 1 : -1;
   }
   return got_java_flag > 0;
@@ -109,9 +109,9 @@ protected int check_ambiguous_module (string name, array(string) files)
   foreach (files[1..], string file)
     if (master()->master_read_file (file) != module_code) {
       report_error ("Module %O occurs in several ambiguous places:\n"
-		    "%{  %s\n%}"
-		    "The content is different - "
-		    "the module is ignored.\n", name, files);
+                    "%{  %s\n%}"
+                    "The content is different - "
+                    "the module is ignored.\n", name, files);
       // NB: This can be a compat problem in really flaky installations
       // which just happen to load the right module consistently, or if
       // there are only insignificant differences between them.
@@ -119,9 +119,9 @@ protected int check_ambiguous_module (string name, array(string) files)
     }
 
   report_warning ("Module %O occurs in several ambiguous places:\n"
-		  "%{  %s\n%}"
-		  "The content is the same - "
-		  "one will be used at random.\n", name, files);
+                  "%{  %s\n%}"
+                  "The content is the same - "
+                  "one will be used at random.\n", name, files);
   return 0;
 }
 
@@ -158,8 +158,8 @@ class BasicModule
     lambda() {
       mixed init_info = roxenp()->bootstrap_info->get();
       if (arrayp (init_info)) {
-	[_my_configuration, _module_local_identifier] = init_info;
-	return _my_configuration->name + "/" + _module_local_identifier;
+        [_my_configuration, _module_local_identifier] = init_info;
+        return _my_configuration->name + "/" + _module_local_identifier;
       }
     }();
 
@@ -239,10 +239,10 @@ class FakeModuleInfo( string sname )
     array register_module()
     {
       return ({
-	0, // type
-	"Unknown module '"+sname+"'",
-	"The module "+sname+"  could not be found in the module path.",
-	0,1
+        0, // type
+        "Unknown module '"+sname+"'",
+        "The module "+sname+"  could not be found in the module path.",
+        0,1
       });
     }
     string query_location()
@@ -260,7 +260,7 @@ class FakeModuleInfo( string sname )
   }
 
   RoxenModule instance( Configuration conf, void|int silent,
-			void|int copy_num )
+                        void|int copy_num )
   {
     // conf is zero if we're making the dummy instance for the
     // ModuleInfo class. Find a fallback for bootstrap_info just to
@@ -271,7 +271,7 @@ class FakeModuleInfo( string sname )
       roxenp()->configurations[0];
 
     roxenp()->bootstrap_info->set (({bootstrap_conf,
-				     sname + "#" + copy_num}));
+                                     sname + "#" + copy_num}));
  
     RoxenModule ret = NotAModule();
 
@@ -330,9 +330,9 @@ class ModuleInfo( string sname, string filename )
     string get_compile_errors()
     {
       return ec?("<pre><font color='&usr.warncolor;'>"+
-		 Roxen.html_encode_string( ec->get()+"\n"+
-					   ec->get_warnings() ) +
-		 "</font></pre>"):"";
+                 Roxen.html_encode_string( ec->get()+"\n"+
+                                           ec->get_warnings() ) +
+                 "</font></pre>"):"";
     }
 
     array register_module()
@@ -340,35 +340,35 @@ class ModuleInfo( string sname, string filename )
       string locked_desc = "";
 
       if (sizeof(config_locked)) {
-	locked_desc = "<p>" +
-	  LOCALE(511," The module is locked and not part of the license. "
-		 "To enable this module please select a valid license "
-		 "and restart the server.") +
-	  "</p>\n";
-	locked_desc +=
-	  sprintf("<p>" +
-		  LOCALE(1092, "Required license feature: <tt>%s</tt>.") +
-		  "</p>\n", Roxen.html_encode_string(locked*":"));
+        locked_desc = "<p>" +
+          LOCALE(511," The module is locked and not part of the license. "
+                 "To enable this module please select a valid license "
+                 "and restart the server.") +
+          "</p>\n";
+        locked_desc +=
+          sprintf("<p>" +
+                  LOCALE(1092, "Required license feature: <tt>%s</tt>.") +
+                  "</p>\n", Roxen.html_encode_string(locked*":"));
       }
       if (filename) {
-	return ({
-	  0, // type
-	  sprintf(LOCALE(350,"Load of %s (%s) failed"),
-		  sname,filename),
-	  sprintf(LOCALE(351,"The module %s (%s) could not be loaded."),
-		  sname, get_name()||"unknown")+
-	  locked_desc +
-	  get_compile_errors(),0,0
-	});
+        return ({
+          0, // type
+          sprintf(LOCALE(350,"Load of %s (%s) failed"),
+                  sname,filename),
+          sprintf(LOCALE(351,"The module %s (%s) could not be loaded."),
+                  sname, get_name()||"unknown")+
+          locked_desc +
+          get_compile_errors(),0,0
+        });
       } else {
-	return ({
-	  0, // type
-	  sprintf(LOCALE(357, "Load of %s failed: Module not found."), sname),
-	  sprintf(LOCALE(351, "The module %s (%s) could not be loaded."),
-		  sname, get_name()||"unknown")+
-	  locked_desc +
-	  get_compile_errors(),0,0
-	});
+        return ({
+          0, // type
+          sprintf(LOCALE(357, "Load of %s failed: Module not found."), sname),
+          sprintf(LOCALE(351, "The module %s (%s) could not be loaded."),
+                  sname, get_name()||"unknown")+
+          locked_desc +
+          get_compile_errors(),0,0
+        });
       }
     }
     
@@ -386,10 +386,10 @@ class ModuleInfo( string sname, string filename )
     array register_module()
     {
       return ({
-	0, // type
-	"Disabled module '"+sname+"'",
-	"The module "+sname+" is disabled.",
-	0,1
+        0, // type
+        "Disabled module '"+sname+"'",
+        "The module "+sname+" is disabled.",
+        0,1
       });
     }
     string query_location()
@@ -407,7 +407,7 @@ class ModuleInfo( string sname, string filename )
   }
   
   RoxenModule instance( Configuration conf, void|int silent,
-			void|int copy_num)
+                        void|int copy_num)
   {
     // werror("Instance %O <%O,%O,%O,%O,%O,%O>\n", this_object(),
     //        time()-last_checked,type,multiple_copies,name,description,locked);
@@ -426,50 +426,50 @@ class ModuleInfo( string sname, string filename )
     {
       function|program prog;
       if (filename || find_module(sname)) {
-	if( (has_suffix (filename, ".class") ||
-	     has_suffix (filename, ".jar")) &&
-	    got_java()) {
-	  program java_wrapper = (program)"javamodule.pike";
-	  prog = lambda(Configuration conf) {
-		   return java_wrapper(conf, filename);
-		 };
-	} else {
-	  // Check if the module is locked.
-	  object key = conf && conf->getvar("license")->get_key();
-	  if(locked && !(key && unlocked(key, conf))) {
-	    config_locked[conf] = 1;
+        if( (has_suffix (filename, ".class") ||
+             has_suffix (filename, ".jar")) &&
+            got_java()) {
+          program java_wrapper = (program)"javamodule.pike";
+          prog = lambda(Configuration conf) {
+                   return java_wrapper(conf, filename);
+                 };
+        } else {
+          // Check if the module is locked.
+          object key = conf && conf->getvar("license")->get_key();
+          if(locked && !(key && unlocked(key, conf))) {
+            config_locked[conf] = 1;
 #ifdef RUN_SELF_TEST
-	    werror ("Locked module: %O lock: %O\n",
-		    (string) (name || sname), locked * ":");
+            werror ("Locked module: %O lock: %O\n",
+                    (string) (name || sname), locked * ":");
 #endif
-	  }
-	  else {
-	    m_delete(config_locked, conf);
-	    prog = load( filename, silent );
-	  }
-	}
+          }
+          else {
+            m_delete(config_locked, conf);
+            prog = load( filename, silent );
+          }
+        }
       }
 
       roxenp()->bootstrap_info->set (({bootstrap_conf,
-				       sname + "#" + copy_num}));
+                                       sname + "#" + copy_num}));
 
       if (!prog) {
-	throw(0);
+        throw(0);
       }
 
       RoxenModule ret = prog( conf );
 
       if (ret->module_is_disabled) {
-	destruct (ret);
-	ret = DisabledModule();
+        destruct (ret);
+        ret = DisabledModule();
       }
 
       roxenp()->bootstrap_info->set (0);
 
       if (conf && (type & MODULE_DEPRECATED)) {
-	report_warning("Adding deprecated module %s to configuration %s.\n",
-		       name?string_to_utf8((string)name):sname,
-		       string_to_utf8((string)conf->name));
+        report_warning("Adding deprecated module %s to configuration %s.\n",
+                       name?string_to_utf8((string)name):sname,
+                       string_to_utf8((string)conf->name));
       }
 
       return ret;
@@ -483,11 +483,11 @@ class ModuleInfo( string sname, string filename )
     if( err ) {
       if( stringp( err ) )
       {
-	if( sizeof( err ) )
-	  report_error(err+"\n");
+        if( sizeof( err ) )
+          report_error(err+"\n");
       }
       else
-	report_error( describe_backtrace( err ) );
+        report_error( describe_backtrace( err ) );
     }
 
     return ret;
@@ -519,15 +519,15 @@ class ModuleInfo( string sname, string filename )
     module_cache
       ->set( sname,
              ([
-	       "filename":filename,
-	       "sname":sname,
-	       "last_checked":last_checked,
-	       "type":type,
-	       "multiple_copies":multiple_copies,
-	       "name":encode_string(name),
-	       "description":encode_string(description),
-	       "locked":locked && locked * ":",
-	       "counter":counter,
+               "filename":filename,
+               "sname":sname,
+               "last_checked":last_checked,
+               "type":type,
+               "multiple_copies":multiple_copies,
+               "name":encode_string(name),
+               "description":encode_string(description),
+               "locked":locked && locked * ":",
+               "counter":counter,
              ]) );
   }
 
@@ -573,7 +573,7 @@ class ModuleInfo( string sname, string filename )
       if(!mod)
         throw(sprintf("Failed to instance %s (%s)\n", sname,what));
       if (mod->module_is_disabled)
-	return 0;
+        return 0;
       if(!mod->register_module)
         throw(sprintf("The module %s (%s) has no register_module function\n",
                       sname, what ));
@@ -583,58 +583,58 @@ class ModuleInfo( string sname, string filename )
     };
     if (q)
       if( stringp( q ) )
-	report_debug( q );
+        report_debug( q );
       else
-	report_debug(describe_backtrace(q));
+        report_debug(describe_backtrace(q));
     return 0;
   }
 
 
   protected constant nomods = (< "pike-modules", "CVS", ".svn", ".git",
-				 "node_modules" >);
+                                 "node_modules" >);
 
   protected void rec_find_module_files (string what, string dir,
-					multiset(string) files)
+                                        multiset(string) files)
   {
     if (r_file_stat(combine_path(dir, ".nomodules")) ||
-	r_file_stat(combine_path(dir, ".no_modules")))
+        r_file_stat(combine_path(dir, ".no_modules")))
       return;
     array dirlist = r_get_dir( dir );
     if (!dirlist)
       return;
 
     foreach( dirlist, string file ) {
-	Stdio.Stat s;
-	string fpath = combine_path(dir, file);
+        Stdio.Stat s;
+        string fpath = combine_path(dir, file);
         if( file[0] != '.' &&
-	    (s=file_stat( fpath )) && s->isdir
-	    && !nomods[file] ) {
-	  rec_find_module_files (what, fpath, files);
-	  continue;
-	}
+            (s=file_stat( fpath )) && s->isdir
+            && !nomods[file] ) {
+          rec_find_module_files (what, fpath, files);
+          continue;
+        }
 
         if( strlen( file ) < 3 )
-	  continue;
+          continue;
         if( (< '~','#' >)[file[-1]] )
           continue;
 
         if( strip_extention(file) == what )
         {
-	  
-	  if( (< "pike", "so" >)[ extension( file ) ] ||
-	      ( (< "class", "jar" >)[extension(file)] && got_java()))
+          
+          if( (< "pike", "so" >)[ extension( file ) ] ||
+              ( (< "class", "jar" >)[extension(file)] && got_java()))
           {
-	    //  Skip inner classes in Java
-	    if (has_value(file, "$") && has_suffix(file, ".class"))
-	      continue;
-	    
+            //  Skip inner classes in Java
+            if (has_value(file, "$") && has_suffix(file, ".class"))
+              continue;
+            
             Stdio.File f = Stdio.File();
-	    if( !f->open( fpath, "r" ) )
-	      report_error ("Failed to open %s: %s\n",
-			    fpath, strerror (f->errno()));
-	    else if( (f->read( 4 ) != "#!NO" ) )
-	      files[fpath] = 1;
-	  }
+            if( !f->open( fpath, "r" ) )
+              report_error ("Failed to open %s: %s\n",
+                            fpath, strerror (f->errno()));
+            else if( (f->read( 4 ) != "#!NO" ) )
+              files[fpath] = 1;
+          }
         }
     }
   }
@@ -647,11 +647,11 @@ class ModuleInfo( string sname, string filename )
       multiset(string) files = (<>);
       rec_find_module_files (sn, dir, files);
       if (sizeof (files)) {
-	if (sizeof (files) > 1 &&
-	    check_ambiguous_module (sn, indices (files)))
-	  return 0;
-	else
-	  return init_module (Multiset.Iterator (files)->index());
+        if (sizeof (files) > 1 &&
+            check_ambiguous_module (sn, indices (files)))
+          return 0;
+        else
+          return init_module (Multiset.Iterator (files)->index());
       }
     }
   }
@@ -663,7 +663,7 @@ class ModuleInfo( string sname, string filename )
       if( data->sname && data->sname != sname )
       {
         report_fatal( "Inconsistency in module cache. Ouch (%O != %O)\n",
-		      data->sname, sname);
+                      data->sname, sname);
         return find_module(sname);
       }
       if( filename && (data->filename != filename ))
@@ -682,8 +682,8 @@ class ModuleInfo( string sname, string filename )
             multiple_copies = data->multiple_copies;
             name = decode_string( data->name );
             description = decode_string( data->description );
-	    locked = data->locked && data->locked/":";
-	    counter = data->counter || sname;
+            locked = data->locked && data->locked/":";
+            counter = data->counter || sname;
             return 1;
           }
           else
@@ -706,20 +706,20 @@ class ModuleInfo( string sname, string filename )
       break;
     case 1:
       if (!key->is_module_unlocked(locked[0]))
-	return 0;
+        return 0;
       break;
     default:
     case 3:
       if (!sizeof(locked[1])) {
-	if (!key->is_module_unlocked(locked[0], locked[2]))
-	  return 0;
-	break;
+        if (!key->is_module_unlocked(locked[0], locked[2]))
+          return 0;
+        break;
       }
       // FALL_THROUGH
     case 2:
       int val;	// Note: Use of zero_type() to promote old licenses.
       if (!(val = key->get_module_feature(@locked)) && !zero_type(val))
-	return 0;
+        return 0;
       break;
     }
     if (!conf) return 1;
@@ -746,11 +746,11 @@ string extension( string from )
 
 mapping(string:ModuleInfo) modules;
 protected void rec_find_all_modules( string dir,
-				     mapping(string:string) modules )
+                                     mapping(string:string) modules )
 {
     Stdio.Stat s;
     if (r_file_stat(combine_path(dir, ".nomodules")) ||
-	r_file_stat(combine_path(dir, ".no_modules")))
+        r_file_stat(combine_path(dir, ".no_modules")))
       return;
     array(string) dirlist =
       (r_get_dir( dir ) || ({ }) ) - ({ "CVS", ".git", "node_modules" });
@@ -758,26 +758,26 @@ protected void rec_find_all_modules( string dir,
     foreach( dirlist, string file ) {
         if( file[0] == '.' ) continue;
         if( file[-1] == '~' ) continue;
-	string fpath = combine_path(dir, file);
-	if( (< "so", "pike">)[ extension( file ) ] ||
-	    (<"class", "jar">)[extension (file)] && got_java())
+        string fpath = combine_path(dir, file);
+        if( (< "so", "pike">)[ extension( file ) ] ||
+            (<"class", "jar">)[extension (file)] && got_java())
         {
-	  //  Skip inner classes in Java
-	  if (has_value(file, "$") && has_suffix(file, ".class"))
-	    continue;
-	  
-	  Stdio.File f = Stdio.File();
-	  if (!f->open( fpath, "r" ))
-	    report_warning ("Failed to open %s: %s\n",
-			    fpath, strerror (f->errno()));
-	  else if( (f->read( 4 ) != "#!NO" ) )
-	    modules[fpath] = strip_extention (file);
-	}
-	else if( (s = file_stat( fpath )) &&
-		 s->isdir &&
-		 (file != "pike-modules") &&
-		 (file != "CVS") )
-	  rec_find_all_modules( fpath, modules );
+          //  Skip inner classes in Java
+          if (has_value(file, "$") && has_suffix(file, ".class"))
+            continue;
+          
+          Stdio.File f = Stdio.File();
+          if (!f->open( fpath, "r" ))
+            report_warning ("Failed to open %s: %s\n",
+                            fpath, strerror (f->errno()));
+          else if( (f->read( 4 ) != "#!NO" ) )
+            modules[fpath] = strip_extention (file);
+        }
+        else if( (s = file_stat( fpath )) &&
+                 s->isdir &&
+                 (file != "pike-modules") &&
+                 (file != "CVS") )
+          rec_find_all_modules( fpath, modules );
     }
 }
 
@@ -825,10 +825,10 @@ array(ModuleInfo) all_modules()
     if (sizeof (module_names) < sizeof (module_files)) {
       mapping(string:array(string)) inv = ([]);
       foreach (module_files; string file; string name)
-	inv[name] += ({file});
+        inv[name] += ({file});
       foreach (inv; string name; array(string) files)
-	if (sizeof (files) > 1 && check_ambiguous_module (name, files))
-	  m_delete (inv, name);
+        if (sizeof (files) > 1 && check_ambiguous_module (name, files))
+          m_delete (inv, name);
       module_names = indices (inv);
     }
 
@@ -856,10 +856,10 @@ array(string) find_all_pike_module_directories()
     array res = ({});
     foreach( (get_dir( dir ) || ({}) ) - skip_module_dirs, string s )
       if( (st = file_stat( combine_path( dir, s ) )) && st->isdir )
-	if( s == "pike-modules" )
-	  res += ({ dir+"/pike-modules" });
-	else
-	  res += recurse( combine_path( dir, s ) );
+        if( s == "pike-modules" )
+          res += ({ dir+"/pike-modules" });
+        else
+          res += recurse( combine_path( dir, s ) );
     return res;
   };
 
@@ -909,7 +909,7 @@ ModuleInfo find_module( string name, int|void noforce )
     // Check for alias.
     if (module_aliases[name]) {
       report_notice("The module %s has been renamed %s.\n",
-		    name, module_aliases[name]);
+                    name, module_aliases[name]);
       return modules[ name ] = find_module(module_aliases[name], noforce);
     }
   }

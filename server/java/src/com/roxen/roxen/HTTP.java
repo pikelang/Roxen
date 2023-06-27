@@ -42,20 +42,20 @@ public class HTTP {
     while (tok.hasMoreTokens()) {
       String t = tok.nextToken();
       if(t.length()==1)
-	switch(t.charAt(0)) {
-	 case ' ': sb.append("%20"); break;
-	 case '\t': sb.append("%09"); break;
-	 case '\n': sb.append("%0a"); break;
-	 case '\r': sb.append("%0d"); break;
-	 case '%': sb.append("%25"); break;
-	 case '\'': sb.append("%27"); break;
-	 case '"': sb.append("%22"); break;
-	 case '\0': sb.append("%00"); break;
-	 default:
-	   sb.append(t);
-	}
+        switch(t.charAt(0)) {
+         case ' ': sb.append("%20"); break;
+         case '\t': sb.append("%09"); break;
+         case '\n': sb.append("%0a"); break;
+         case '\r': sb.append("%0d"); break;
+         case '%': sb.append("%25"); break;
+         case '\'': sb.append("%27"); break;
+         case '"': sb.append("%22"); break;
+         case '\0': sb.append("%00"); break;
+         default:
+           sb.append(t);
+        }
       else
-	sb.append(t);
+        sb.append(t);
     }
     return sb.toString();
   }
@@ -181,7 +181,7 @@ public class HTTP {
    * @return        a response object
    */
   public static RoxenResponse httpFileAnswer(InputStream text, String type,
-					     long len)
+                                             long len)
   {
     return httpFileAnswer(new InputStreamReader(text), type, len);
   }

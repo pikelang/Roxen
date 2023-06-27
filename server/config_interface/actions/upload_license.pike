@@ -27,29 +27,29 @@ mixed parse( RequestID id )
     <if variable='form.file = ?*'>
       <set variable='var.show-form' value='false'/>
       <set variable='var.filename'
-      	><get-post-filename filename='&form.file..filename;'
-      			    js-filename='&form.fixedfilename;'/></set>
+        ><get-post-filename filename='&form.file..filename;'
+                            js-filename='&form.fixedfilename;'/></set>
       <if variable='form.Overwrite..x'>
-      	<set variable='var.ok' value='ok'/>
+        <set variable='var.ok' value='ok'/>
       </if>
       <elseif license='&var.filename;'>
-      	<input type='hidden' name='action' value='&form.action;'/>
-      	<input type='hidden' name='file' value='&form.file;'/>
-      	<input type='hidden' name='file.filename' value='&var.filename;'/>
-      	<imgs src='&usr.err-2;' alt='#' />
-      	Warning: The license file <b>&var.filename;</b> does already exists.
-      	Do you want to overwrite the file?<br /><br />
-      	<submit-gbutton>Overwrite</submit-gbutton>
-	<cf-cancel href='./?class="+action+#"&amp;&usr.set-wiz-id;'/>
+        <input type='hidden' name='action' value='&form.action;'/>
+        <input type='hidden' name='file' value='&form.file;'/>
+        <input type='hidden' name='file.filename' value='&var.filename;'/>
+        <imgs src='&usr.err-2;' alt='#' />
+        Warning: The license file <b>&var.filename;</b> does already exists.
+        Do you want to overwrite the file?<br /><br />
+        <submit-gbutton>Overwrite</submit-gbutton>
+        <cf-cancel href='./?class="+action+#"&amp;&usr.set-wiz-id;'/>
       </elseif>
       <else>
-      	<set variable='var.ok' value='ok'/>
+        <set variable='var.ok' value='ok'/>
       </else>
       <if variable='var.ok'>
-      	<upload-license filename='&var.filename;' from='form.file'/>
-      	License uploaded successfully.
-      	<br /><br />
-      	<cf-ok/>
+        <upload-license filename='&var.filename;' from='form.file'/>
+        License uploaded successfully.
+        <br /><br />
+        <cf-ok/>
       </if>
     </if>
     <else>

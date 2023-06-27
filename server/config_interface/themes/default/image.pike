@@ -6,7 +6,7 @@ void init_images()
   images = ({});
   foreach( glob("*.jpg",get_dir( dir )), string img )
     images += ({ Image._decode(Stdio.read_file( dir+"/"+img ))
-		 ->img->scale( 160, 0) });
+                 ->img->scale( 160, 0) });
   images -= ({0});
 }
 

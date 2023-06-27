@@ -92,11 +92,11 @@ string find_complex_type(string post)
       string q;
       if(sscanf(post, "%s(", q))
       {
-	p+=q;
-	post = post[strlen(q)..];
+        p+=q;
+        post = post[strlen(q)..];
       } else if(sscanf(post, "%s%*[ \t\n\r]", post)>1) {
-	p+="|"+post;
-	return p;
+        p+="|"+post;
+        return p;
       }
       p+="|"+find_complex_type(post);
     }
@@ -117,7 +117,7 @@ array (string) find_type(string in)
       {
        default:
 //      report_debug("Invalid type thingie: '"+in[i..i]+"'\n");
-	continue;
+        continue;
        case ' ':
        case '\n':
        case '\r':
@@ -153,8 +153,8 @@ array (string) find_keyword(string in)
     if(!strlen(pre) || pre[-1]==' ' || pre[-1]=='\t' || pre[-1]==':' ||
       pre[-1]=='}' || pre[-1]==')' || pre[-1]==';' || pre[-1]=='\n')
       if(!strlen(post) || post[0]==' ' || post[0]=='\t' || post[0]=='(' ||
-	post[0]=='{'|| post[0]==';'||post[0]=='\n')
-	return ({ pre, s, post });
+        post[0]=='{'|| post[0]==';'||post[0]=='\n')
+        return ({ pre, s, post });
 }
 
 array (string) find_string(string in)
@@ -198,12 +198,12 @@ array (string) find_case(string in)
   if(sscanf(in, "%scase%s", pre, post)==2)
     if(!strlen(pre) || pre[-1]==' ' || pre[-1]=='\t' || pre[-1]==':')
       if(!strlen(post) || post[0]==' ' || post[0]=='\t')
-	return ({ pre, "case", post, "", "" });
+        return ({ pre, "case", post, "", "" });
 
   if(sscanf(in, "%sdefault%s", pre, post)==2)
     if(!strlen(pre) || pre[-1]==' ' || pre[-1]=='\t' || pre[-1]==':')
       if(!strlen(post) || post[0]==' ' || post[0]=='\t')
-	return ({ pre, "default", post, "", "" });
+        return ({ pre, "default", post, "", "" });
 }
 
 array (string) find_preparse(string in)
@@ -238,12 +238,12 @@ string highlight_line(string l, mapping m)
 //      report_debug("Match %O (%s, %s)\n", p[-1][-1],(r[..sizeof(p[1])-1]*""),
 //	     (r[sizeof(p[1])..]*""));
       for(int i=0; i<sizeof(p[1]) && i<sizeof(r); i++)
-	if(functionp(p[1][i]))
-	  push(p[1][i](r[i],m));
-	else
-	  push(highlight_line(r[i],m));
+        if(functionp(p[1][i]))
+          push(p[1][i](r[i],m));
+        else
+          push(highlight_line(r[i],m));
       for(int i=sizeof(p[1]); i<sizeof(r); i++)
-	push(highlight_line(r[i],m));
+        push(highlight_line(r[i],m));
       return res;
     }
   }

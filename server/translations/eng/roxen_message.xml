@@ -176,12 +176,12 @@ No module by that name: "%s".
 
 string setting_uid_gid_permanently(int uid, int gid, string uname, string gname) {
   return("Setting uid to "+uid+" ("+uname+")"+
-	 (gname ? " and gid to "+gid+" ("+gname+")" : "")+" permanently.\n");
+         (gname ? " and gid to "+gid+" ("+gname+")" : "")+" permanently.\n");
 }
 
 string setting_uid_gid(int uid, int gid, string uname, string gname) {
   return("Setting uid to "+uid+" ("+uname+")"+
-	 (gname ? " and gid to "+gid+" ("+gname+")" : "")+".\n");
+         (gname ? " and gid to "+gid+" ("+gname+")" : "")+".\n");
 }
 
 </pike>

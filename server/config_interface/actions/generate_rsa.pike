@@ -14,8 +14,8 @@ constant action = "SSL";
 
 string name = LOCALE(118, "Generate a new RSA key pair...");
 string doc = doc_string_start + doc_string_end_a +
-	      LOCALE(119, "Note that it is possible to have more than one "
-		     "certificate for the same key.");
+              LOCALE(119, "Note that it is possible to have more than one "
+                     "certificate for the same key.");
 
 
 /* In ssl_common.pike:
@@ -28,7 +28,7 @@ string doc = doc_string_start + doc_string_end_a +
 mixed wizard_done(object id, object mc)
 {
   return http_string_answer( sprintf( LOCALE(120,"Wrote %d-bit key in %s")+
-				      "<p><cf-ok/></p>",
+                                      "<p><cf-ok/></p>",
                                       (int)id->variables->key_size,
                                       combine_path(getcwd(),
                                                    id->variables->key_file)) );

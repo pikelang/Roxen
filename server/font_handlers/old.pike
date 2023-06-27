@@ -30,12 +30,12 @@ protected void build_font_cache()
         Stat a;
         if((a=r_file_stat(dir+f)) && (a[1]==-2)) 
         {
-	  array d=r_get_dir(dir+f);
-	  foreach( ({ "nn", "ni", "li", "ln", "Bi", "Bn", "bi", "bn" }),
-		   string style)
-	    if(has_value(d, style)) 
+          array d=r_get_dir(dir+f);
+          foreach( ({ "nn", "ni", "li", "ln", "Bi", "Bn", "bi", "bn" }),
+                   string style)
+            if(has_value(d, style)) 
             {
-	      res["32/" + f + "/" + style] = replace(f, "_", " ");
+              res["32/" + f + "/" + style] = replace(f, "_", " ");
             }
         }
       }
@@ -68,19 +68,19 @@ array(mapping) font_information( string fnt )
                string style)
         if(has_value(d, style)) 
         {
-	  mapping font_info = ([ "name":fnt,
-				 "family":ofnt,
-				 "path":dir+fnt,
+          mapping font_info = ([ "name":fnt,
+                                 "family":ofnt,
+                                 "path":dir+fnt,
                                  "style":"",
-				 "format":"bitmap dump" ]);
-	  switch(style[0]) {
-	  case 'l': font_info->style+="light"; break;
-	  case 'b': font_info->style+="bold"; break;
-	  case 'B': font_info->style+="black"; break;
-	  }
-	  if(style[1]=='i') font_info->style+="italic";
-	  if(style[1]=='I') font_info->style+="oblique";
-	  font_infos+=({ font_info });
+                                 "format":"bitmap dump" ]);
+          switch(style[0]) {
+          case 'l': font_info->style+="light"; break;
+          case 'b': font_info->style+="bold"; break;
+          case 'B': font_info->style+="black"; break;
+          }
+          if(style[1]=='i') font_info->style+="italic";
+          if(style[1]=='I') font_info->style+="oblique";
+          font_infos+=({ font_info });
         }
     }
   }
@@ -113,9 +113,9 @@ array has_font( string name, int size )
       string key = size + "/" + fix_name(name);
       base_dir = dir + key;
       if (available = r_get_dir(base_dir)) {
-	foreach(available - ({ "CVS" }), string style)
-	  font_cache[key + "/" + style] = name;
-	return available;
+        foreach(available - ({ "CVS" }), string style)
+          font_cache[key + "/" + style] = name;
+        return available;
       }
     }
     key = 0;

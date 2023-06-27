@@ -41,8 +41,8 @@ mapping|int last_resort(object id)
     int found_match = 0;
     foreach(pathlimit, string s) {
       if(glob(s, id->not_query)) {
-	found_match = 1;
-	break;
+        found_match = 1;
+        break;
       }
     }
     if(!found_match)
@@ -88,7 +88,7 @@ mapping|int last_resort(object id)
         id->misc->path_info = query[offsets[probe]..];
         id->not_query = file;
         PATHINFO_WERR(sprintf("Found: %O:%O",
-			      id->not_query, id->misc->path_info));
+                              id->not_query, id->misc->path_info));
         return 1;       // Go through id->handle_request() one more time...
       }
       PATHINFO_WERR(sprintf("Directory: %O", file));
@@ -113,7 +113,7 @@ mapping|int last_resort(object id)
     {
       id->not_query = query;
       PATHINFO_WERR(sprintf("Found: %O:%O",
-			    id->not_query, id->misc->path_info));
+                            id->not_query, id->misc->path_info));
       return 1;
     }
   }

@@ -74,8 +74,8 @@ string verify_locale(string lang) {
      )
     return lang;
   else if(sizeof(lang)==2 &&
-	  (set = Standards.ISO639_2.map_639_1(lang))
-	  )
+          (set = Standards.ISO639_2.map_639_1(lang))
+          )
     return set;
   else
     if(set = compat_languages[lang])
@@ -94,8 +94,8 @@ void set_default_locale(string def_loc)
     tmp = def_loc;
   }
   else if ((tmp = [string] (getenv("LC_ALL") ||
-			    getenv("LC_MESSAGES") ||
-			    getenv("LANG")))) {
+                            getenv("LC_MESSAGES") ||
+                            getenv("LANG")))) {
     // Try default locale from environment
     sscanf(tmp, "%s_%*s", tmp);   //Handle e.g. en_US
   }
@@ -130,9 +130,9 @@ void initiate_languages(string def_loc)
   // Atleast read the default_locale, to make sure that fallback is ok.
   if(!Locale.get_object(PROJECT, default_locale))
     report_fatal("\n* The default language %O is not available!\n"
-		 "* This is a serious error.\n"
-		 "* Several RXML tags might not work as expected!\n",
-		 default_locale);
+                 "* This is a serious error.\n"
+                 "* Several RXML tags might not work as expected!\n",
+                 default_locale);
 
   report_debug( "\bDone [%4.2fms]\n", (gethrtime()-start)/1000.0 );
 }
@@ -156,7 +156,7 @@ function language(string lang, string func, object|void id)
   report_debug("Function: '" + func + "' in "+ verify_locale(lang) +"\n");
 #endif
   return Locale.call(PROJECT, verify_locale(lang), 
-		     func, default_page_locale) || nil;  
+                     func, default_page_locale) || nil;  
 }
 
 array(string) list_languages() {

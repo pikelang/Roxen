@@ -72,12 +72,12 @@ string date(int timestamp, mapping m)
   }
   if(m["full"])
     return sprintf("%s, %s %s %d",
-		   ctime(timestamp)[11..15],
-		   ordered(t1["mday"]),
-		   numbered_month(t1["mon"]+1), t1["year"]+1900);
+                   ctime(timestamp)[11..15],
+                   ordered(t1["mday"]),
+                   numbered_month(t1["mon"]+1), t1["year"]+1900);
   if(m["date"])
     return sprintf("%s %s %d", ordered(t1["mday"]),
-		   numbered_month(t1["mon"]+1), t1["year"]+1900);
+                   numbered_month(t1["mon"]+1), t1["year"]+1900);
 
   if(m["time"])
     return ctime(timestamp)[11..15];
@@ -91,8 +91,8 @@ string _number_1(int num, string gender)
   {
    case 0:  return "";
    case 1:  return ([ "m" : "один",
-		      "f" : "одна",
-		      "n" : "одно" ])[gender];
+                      "f" : "одна",
+                      "n" : "одно" ])[gender];
    case 2:  return ("f" == gender) ? "двe" : "два";
    case 3:  return "три";
    case 4:  return "четыре";
@@ -184,15 +184,15 @@ string _number(int num, string gender)
 
   if (num < 20)
     return ([ 10: "десять",
-	      11: "одиннадцать",
-	      12: "двенадцать",
-	      13: "тринадцать",
-	      14: "четырнадцать",
-	      15: "пятнадцать",
-	      16: "шестнадцать",
-	      17: "семнадцать",
-	      18: "восемнадцать",
-	      19: "девятнадцать" ])[num];
+              11: "одиннадцать",
+              12: "двенадцать",
+              13: "тринадцать",
+              14: "четырнадцать",
+              15: "пятнадцать",
+              16: "шестнадцать",
+              17: "семнадцать",
+              18: "восемнадцать",
+              19: "девятнадцать" ])[num];
   if (num < 100)
     return _number_10(num/10) + " " + _number_1(num%10, gender);
 

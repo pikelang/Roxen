@@ -70,9 +70,9 @@ void create()
 {
   defvar("file", ".htaccess", "Htaccess file name", TYPE_STRING|VAR_MORE);
   defvar("denyhtlist", ({".htaccess", ".htpasswd", ".htgroup"}),
-	 "Deny file list", TYPE_STRING_LIST,
-	 "Always deny access to these files. This is useful to protect "
-	 "htaccess related files.");
+         "Deny file list", TYPE_STRING_LIST,
+         "Always deny access to these files. This is useful to protect "
+         "htaccess related files.");
 
 }
 
@@ -109,10 +109,10 @@ mapping|string|int htaccess(mapping access, RequestID id)
       string from, to;
 
       if(sscanf(r, "%s %s", from, to) < 2)
-	return Roxen.http_redirect(r, id);
+        return Roxen.http_redirect(r, id);
 
       if( has_value(id->not_query, from) )
-	return Roxen.http_redirect(to,id);
+        return Roxen.http_redirect(to,id);
     }
   
   HT_WERR(sprintf("Verifying access. method: %O", id->method));
@@ -124,35 +124,35 @@ mapping|string|int htaccess(mapping access, RequestID id)
     else switch(method)
     {
       case "list":   case "dir":
-	if (access->list) {
-	  method = "list";
-	  break;
-	} else if (access->dir) {
-	  method = "dir";
-	  break;
-	}
+        if (access->list) {
+          method = "list";
+          break;
+        } else if (access->dir) {
+          method = "dir";
+          break;
+        }
       case "stat":  case "head":
       case "cwd":   case "post":
-	if (access->head) {
-	  method = "head";
-	  break;
-	} else if (access->get) {
-	  method = "get";
-	  break;
-	}
+        if (access->head) {
+          method = "head";
+          break;
+        } else if (access->get) {
+          method = "get";
+          break;
+        }
       case "get":
-	if (access->head) {
-	  method = "head";
-	  break;
-	}
-	return 0;
+        if (access->head) {
+          method = "head";
+          break;
+        }
+        return 0;
 
       default:
-	if (access->put) {
-	  method = "put";
-	  break;
-	}
-	return 1;
+        if (access->put) {
+          method = "put";
+          break;
+        }
+        return 1;
     }
   }
 #ifdef HTACCESS_DEBUG
@@ -162,60 +162,60 @@ mapping|string|int htaccess(mapping access, RequestID id)
 }
 
 function(RequestID:mapping|int) allow_deny( function allow,
-					    function deny,
-					    int order )
+                                            function deny,
+                                            int order )
 {
 #ifdef HTACCESS_DEBUG
   report_debug("HTACCESS: allow_deny(%O, %O, %s)\n",
-	       allow, deny, 
-	       ([1:"allow, deny", -1:"mutual-failure",
-		 0:"deny, allow"])[order] || "UNKNOWN");
+               allow, deny, 
+               ([1:"allow, deny", -1:"mutual-failure",
+                 0:"deny, allow"])[order] || "UNKNOWN");
 #endif /* HTACCESS_DEBUG */
   // Sanity check.
   if (!allow && !deny) {
     error("At least one of allow or deny must be a function!\n");
   }
   return lambda( RequestID id ) {
-	   mixed not_allowed = allow && allow( id );
-	   mixed denied  = deny && deny( id );
-	   // Note: not_allowed is 1 or a mapping if none of the allow
-	   //       patterns matched.
-	   //       denied is 0 if none of the deny patterns matched.
+           mixed not_allowed = allow && allow( id );
+           mixed denied  = deny && deny( id );
+           // Note: not_allowed is 1 or a mapping if none of the allow
+           //       patterns matched.
+           //       denied is 0 if none of the deny patterns matched.
 #ifdef HTACCESS_DEBUG
-	   report_debug("HTACCESS: not_allowed: %O\n"
-			"          denied: %O\n"
-			"          order: %s\n"
-			"          allow: %O\n"
-			"          deny: %O\n",
-			not_allowed, denied,
-			([1:"allow, deny", -1:"mutual-failure",
-			  0:"deny, allow"])[order] || "UNKNOWN",
-			allow, deny);
+           report_debug("HTACCESS: not_allowed: %O\n"
+                        "          denied: %O\n"
+                        "          order: %s\n"
+                        "          allow: %O\n"
+                        "          deny: %O\n",
+                        not_allowed, denied,
+                        ([1:"allow, deny", -1:"mutual-failure",
+                          0:"deny, allow"])[order] || "UNKNOWN",
+                        allow, deny);
 #endif /* HTACCESS_DEBUG */
-	   // Note: Returns 1 or a mapping on access denied.
-	   //       Returns 0 on access permitted.
-	   switch( order )
-	   {
-	     case -1: // mutual-failure
-	       // Deprecated, equvivalent to allow,deny.
-	     case 1: //allow,deny
-	       // * At least one allow pattern MUST match.
-	       // AND
-	       // * All deny patterns MUST NOT match.
-	       if( not_allowed ) return not_allowed;
-	       return denied;
+           // Note: Returns 1 or a mapping on access denied.
+           //       Returns 0 on access permitted.
+           switch( order )
+           {
+             case -1: // mutual-failure
+               // Deprecated, equvivalent to allow,deny.
+             case 1: //allow,deny
+               // * At least one allow pattern MUST match.
+               // AND
+               // * All deny patterns MUST NOT match.
+               if( not_allowed ) return not_allowed;
+               return denied;
 
-	     case 0: // deny,allow
-	       // * All deny patterns MUST NOT match.
-	       // OR
-	       // * At least one allow pattern MUST match.
-	       if( !denied ) return 0;
-	       return not_allowed;
-	   }
-	   return 0;
-	 };
+             case 0: // deny,allow
+               // * All deny patterns MUST NOT match.
+               // OR
+               // * At least one allow pattern MUST match.
+               if( !denied ) return 0;
+               return not_allowed;
+           }
+           return 0;
+         };
 }
-					    
+                                            
 
 mapping parse_and_find_htaccess( RequestID id )
 {
@@ -237,11 +237,11 @@ mapping parse_and_find_htaccess( RequestID id )
     void flush_patterns()
     {
       foreach(indices(allow), string cat) {
-	roxen_allow += "allow "+cat+"="+(allow[cat]*",") + "\n";
+        roxen_allow += "allow "+cat+"="+(allow[cat]*",") + "\n";
       }
       allow = ([]);
       foreach(indices(deny), string cat) {
-	roxen_deny += "deny "+cat+"="+(deny[cat]*",") + "\n";
+        roxen_deny += "deny "+cat+"="+(deny[cat]*",") + "\n";
       }
       deny = ([]);
     };
@@ -273,71 +273,71 @@ mapping parse_and_find_htaccess( RequestID id )
       line = (replace(line, "\t", " ") / " " - ({""})) * " ";
 
       if(!strlen(line) || has_prefix(line, "#"))
-	continue;
+        continue;
 
       if(line[0] == ' ') /* There can be only one /Connor MacLeod */
-	line = line[1..];
+        line = line[1..];
 
       line = lower_case(line);
 
       if( line == "deny all" )
-	roxen_deny += "deny ip=*\n";
+        roxen_deny += "deny ip=*\n";
       else if( line == "allow all" )
-	roxen_allow += "allow ip=*\n";
+        roxen_allow += "allow ip=*\n";
       else if(sscanf(line, "realm %s", data)||
-	      sscanf(line, "authmethod %s", data)||
-	      sscanf(line, "userdb %s", data))
+              sscanf(line, "authmethod %s", data)||
+              sscanf(line, "userdb %s", data))
       {
-	flush_patterns();
-	roxen_allow += line+"\n";
-	roxen_deny += line+"\n";
+        flush_patterns();
+        roxen_allow += line+"\n";
+        roxen_deny += line+"\n";
       }
       else if(sscanf(line, "deny from %s", data))
-	if (data != "all") {
-	  if( (int)data )
-	    deny->ip += ({data+"*"});
-	  else
-	    deny->dns += ({"*"+data});
-	}
-	else
-	  roxen_deny += "deny ip=*\n";
+        if (data != "all") {
+          if( (int)data )
+            deny->ip += ({data+"*"});
+          else
+            deny->dns += ({"*"+data});
+        }
+        else
+          roxen_deny += "deny ip=*\n";
       else if(sscanf(line, "allow from %s", data))
-	if( data != "all" ) {
-	  if( (int)data )
-	    allow->ip += ({data+"*"});
-	  else
-	    allow->dns += ({"*"+data});
-	}
-	else
-	  roxen_allow += "allow ip=*\n";
+        if( data != "all" ) {
+          if( (int)data )
+            allow->ip += ({data+"*"});
+          else
+            allow->dns += ({"*"+data});
+        }
+        else
+          roxen_allow += "allow ip=*\n";
       else if(sscanf(line, "require %s %s", ent, data) == 2)
-	allow[ent] += (replace(data, ([" ":",","\t":","]))/",") - ({""});
+        allow[ent] += (replace(data, ([" ":",","\t":","]))/",") - ({""});
       else if(sscanf(line, "deny %s %s", ent, data) == 2)
-	deny[ent] += ({data});
+        deny[ent] += ({data});
       else if(sscanf(line, "satisfy %s", data))
-	if(data == "any")
-	  any_ok = 1;
-	else
-	  any_ok = 0;
+        if(data == "any")
+          any_ok = 1;
+        else
+          any_ok = 0;
       else if(has_prefix(line, "require valid-user"))
-	roxen_allow += "allow user=any\n";
+        roxen_allow += "allow user=any\n";
       else if(sscanf(line, "referer allow from %s", ent))
-	roxen_allow += "allow referer="+ent+"\n";
+        roxen_allow += "allow referer="+ent+"\n";
       else if(sscanf(line, "referer deny from %s", ent))
-	roxen_deny += "deny referer="+ent+"\n";
+        roxen_deny += "deny referer="+ent+"\n";
       else if(sscanf(line, "order %s", data))
       {
-	data -= " ";
-	if(has_prefix(data, "allow"))
-	  order = 1;
-	else if(has_prefix(data, "mutual-failure"))
-	  order = -1;
-	else
-	  order = 0;
-	continue;
+        data -= " ";
+        if(has_prefix(data, "allow"))
+          order = 1;
+        else if(has_prefix(data, "mutual-failure"))
+          order = -1;
+        else
+          order = 0;
+        continue;
 #ifdef HTACCESS_DEBUG
       } else {
-	report_debug("HTACCESS: Unknown directive %O\n", line);
+        report_debug("HTACCESS: Unknown directive %O\n", line);
 #endif /* HTACCESS_DEBUG */
       }
     }
@@ -353,9 +353,9 @@ mapping parse_and_find_htaccess( RequestID id )
       array(string) rows = roxen_allow/"\n";
       int i;
       for (i=0; i < sizeof(rows); i++) {
-	if (has_prefix(rows[i], "allow ")) {
-	  rows[i] += " return";
-	}
+        if (has_prefix(rows[i], "allow ")) {
+          rows[i] += " return";
+        }
       }
       roxen_allow = rows*"\n";
     }
@@ -368,12 +368,12 @@ mapping parse_and_find_htaccess( RequestID id )
     
     function fun =
       allow_deny( roxen.compile_security_pattern( roxen_allow, this_object() ),
-		  roxen.compile_security_pattern( roxen_deny, this_object() ),
-		  order );
+                  roxen.compile_security_pattern( roxen_deny, this_object() ),
+                  order );
     
     foreach( indices( m ), string s )
       foreach( Unicode.split_words_and_normalize( s ), string q )
-	access[lower_case(Unicode.normalize( s, "C" ))] = fun;
+        access[lower_case(Unicode.normalize( s, "C" ))] = fun;
     return "";
   };
 
@@ -387,7 +387,7 @@ mapping parse_and_find_htaccess( RequestID id )
 
 #ifdef HTACCESS_DEBUG
   report_debug(sprintf("HTACCESS: File:%O, mtime: %d\n"
-		       "%{    %s\n%}\n", file, mtime, (htaccess||"-")/"\n"));
+                       "%{    %s\n%}\n", file, mtime, (htaccess||"-")/"\n"));
 #endif /* HTACCESS_DEBUG */
     
   cache_key = "htaccess:parsed:" + id->conf->name + ":" + (id->misc->host||"*");
@@ -403,8 +403,8 @@ mapping parse_and_find_htaccess( RequestID id )
       "  deny all\n"
       "</limit>";
     report_debug(sprintf("HTACCESS: Failed to read htaccess file: %O\n"
-			 "HTACCESS: Using paranoia fallback:\n"
-			 "%{    %s\n%}\n", file, htaccess/"\n"));
+                         "HTACCESS: Using paranoia fallback:\n"
+                         "%{    %s\n%}\n", file, htaccess/"\n"));
   }
 
   if( !strlen(htaccess) )
@@ -433,30 +433,30 @@ mapping parse_and_find_htaccess( RequestID id )
     switch(cmd)
     {
       case "realm":
-	access->authname = rest;
-	break;
+        access->authname = rest;
+        break;
 
       case "redirecttemp":
       case "redirecttemporary":
       case "redirect":
       case "redirectperm":
       case "redirectpermanent":
-	access->redirect += ({ rest });
-	break;
+        access->redirect += ({ rest });
+        break;
 
       case "authuserfile":
       case "authgroupfile":
-	if(!access->userdb )
-	  access->userdb = "htaccess";
+        if(!access->userdb )
+          access->userdb = "htaccess";
         rest = combine_path(file, "..", rest);
-	// FALL-THROUGH
+        // FALL-THROUGH
 
       case "authname":
       case "userdb":
       case "authmethod":
       case "errorfile":
-	access[cmd] = rest;
-	break;
+        access[cmd] = rest;
+        break;
     }
   }
   Parser.HTML()->add_container( "limit",parse_limit )
@@ -495,19 +495,19 @@ mapping try_htaccess(RequestID id)
        file = Roxen.parse_rxml(file, id);
      TRACE_LEAVE("Access Denied (1)");
      return Roxen.http_low_answer(403, file ||
-				  ("<title>Access Denied</title>"
-				   "<h2 align=center>Access Denied</h2>"));
+                                  ("<title>Access Denied</title>"
+                                   "<h2 align=center>Access Denied</h2>"));
     case 2:
       TRACE_LEAVE("Access Denied (2)");
       return Roxen.http_low_answer(403, "<title>Access Denied</title>"
-				   "<h2 align=center>Access Denied</h2>"
-				   "<h3>This page is protected based on host- "
-				   "or domain-name. "
-				   "The server couldn't resolve your hostname."
-				   " <b>Your computer might lack a correct "
-				   "DNS PTR entry. In that "
-				   "case, ask your system administrator to "
-				   "add one.</b>");
+                                   "<h2 align=center>Access Denied</h2>"
+                                   "<h3>This page is protected based on host- "
+                                   "or domain-name. "
+                                   "The server couldn't resolve your hostname."
+                                   " <b>Your computer might lack a correct "
+                                   "DNS PTR entry. In that "
+                                   "case, ask your system administrator to "
+                                   "add one.</b>");
     default:
       TRACE_LEAVE("Access OK");
       return ret;
@@ -528,8 +528,8 @@ mapping last_resort(RequestID id)
       string file;
       if( file = READ(access->nofile) )
       {
-	TRACE_LEAVE("Custom no-such-file");
-	return Roxen.http_rxml_answer( file, id );
+        TRACE_LEAVE("Custom no-such-file");
+        return Roxen.http_rxml_answer( file, id );
       }
     }
   }
@@ -558,11 +558,11 @@ mapping remap_url(RequestID id)
       string s = (id->not_query/"/")[-1];
       if (denylist[lower_case(s)])
       {
-	report_debug("Denied access for "+s+"\n");
-	id->misc->error_code = 401;
-	TRACE_LEAVE("Access Denied");
-	return Roxen.http_low_answer(401, "<title>Access Denied</title>"
-				     "<h2 align=center>Access Denied</h2>");
+        report_debug("Denied access for "+s+"\n");
+        id->misc->error_code = 401;
+        TRACE_LEAVE("Access Denied");
+        return Roxen.http_low_answer(401, "<title>Access Denied</title>"
+                                     "<h2 align=center>Access Denied</h2>");
       }
     }
   }
@@ -596,8 +596,8 @@ class HtUser
   {
     int res = ::password_authenticate(password);
     report_debug(sprintf("HTACCESS: password_authenticate(%O)\n"
-			 "  user:%O, crypt:%O ==> %O\n",
-			 password, name(), crypted_password(), res));
+                         "  user:%O, crypt:%O ==> %O\n",
+                         password, name(), crypted_password(), res));
     return res;
   }
 #endif /* HTACCESS_DEBUG */
@@ -674,9 +674,9 @@ array(mapping) parse_groupfile( string f )
     foreach(indices(user_set), string u)
     {
       if( u2g[u] )
-	u2g[u]+=(<q[0]>);
+        u2g[u]+=(<q[0]>);
       else
-	u2g[u]=(<q[0]>);
+        u2g[u]=(<q[0]>);
     }
     groups[q[0]] = ({ q[0], passwd, this_gid, user_set });
     groups[this_gid] = groups[q[0]];
@@ -696,15 +696,15 @@ mapping parse_userfile( string f, mapping u2g, mapping groups )
     switch( sizeof( q ) )
     {
       case 2..6: // user:passwd
-	users[q[0]] = ({q[0],q[1],uid++,10000,q[0],"/tmp/","/nosuchshell",
-			u2g[q[0]], 0});
-	users[uid-1] = users[q[0]];
-	break;
+        users[q[0]] = ({q[0],q[1],uid++,10000,q[0],"/tmp/","/nosuchshell",
+                        u2g[q[0]], 0});
+        users[uid-1] = users[q[0]];
+        break;
 
       case 7: // user:passwd:uid:gid:name:home:shell
-	users[q[0]] = ({ q[0], q[1], (int)q[2], (int)q[3], q[4], q[5], q[6],
-			 u2g[q[0]], groups[q[3]]&&groups[q[3]][0] });
-	users[(int)q[2]] = users[q[0]];
+        users[q[0]] = ({ q[0], q[1], (int)q[2], (int)q[3], q[4], q[5], q[6],
+                         u2g[q[0]], groups[q[3]]&&groups[q[3]][0] });
+        users[(int)q[2]] = users[q[0]];
     }
   }
   return users;

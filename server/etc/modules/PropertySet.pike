@@ -325,7 +325,7 @@ string|array(SimpleNode)|mapping(string:mixed)
   case "DAV:resourcetype":	// RFC2518 13.9
     if ((get_stat()||([]))->isdir) {
       return ({
-	SimpleElementNode("DAV:collection", ([])),	// 12.2
+        SimpleElementNode("DAV:collection", ([])),	// 12.2
       });
     }
     return 0;
@@ -333,17 +333,17 @@ string|array(SimpleNode)|mapping(string:mixed)
   case "DAV:supportedlock":	// RFC2518 13.11
     {
       return ({
-	SimpleElementNode("DAV:lockentry", ([]))->
-	add_child(SimpleElementNode("DAV:lockscope", ([]))->
-		  add_child(SimpleElementNode("DAV:exclusive", ([]))))->
-	add_child(SimpleElementNode("DAV:locktype", ([]))->
-		  add_child(SimpleElementNode("DAV:write", ([])))),
+        SimpleElementNode("DAV:lockentry", ([]))->
+        add_child(SimpleElementNode("DAV:lockscope", ([]))->
+                  add_child(SimpleElementNode("DAV:exclusive", ([]))))->
+        add_child(SimpleElementNode("DAV:locktype", ([]))->
+                  add_child(SimpleElementNode("DAV:write", ([])))),
 
-	SimpleElementNode("DAV:lockentry", ([]))->
-	add_child(SimpleElementNode("DAV:lockscope", ([]))->
-		  add_child(SimpleElementNode("DAV:shared", ([]))))->
-	add_child(SimpleElementNode("DAV:locktype", ([]))->
-		  add_child(SimpleElementNode("DAV:write", ([])))),
+        SimpleElementNode("DAV:lockentry", ([]))->
+        add_child(SimpleElementNode("DAV:lockscope", ([]))->
+                  add_child(SimpleElementNode("DAV:shared", ([]))))->
+        add_child(SimpleElementNode("DAV:locktype", ([]))->
+                  add_child(SimpleElementNode("DAV:write", ([])))),
       });
     }
   case "http://apache.org/dav/props/executable":
@@ -379,7 +379,7 @@ string|array(SimpleNode)|mapping(string:mixed)
 
   case "DAV:ishidden":	// draft-hopmann-collection-props-00 1.6
     if ((has_suffix(path, "/") && has_prefix(basename(dirname(path)), ".")) ||
-	has_prefix(basename(path), ".")) {
+        has_prefix(basename(path), ".")) {
       return "1";
     }
     return "0";
@@ -425,7 +425,7 @@ string|array(SimpleNode)|mapping(string:mixed)
   //   multistatus XML element, with a response XML element which
   //   contains a 404 (Not Found) status value.
   return Roxen.http_status (Protocols.HTTP.HTTP_NOT_FOUND,
-			    "No such property.");
+                            "No such property.");
 }
 
 // RFC 2518 8.2
@@ -496,7 +496,7 @@ void commit()
 //!   entity returned by a GET request, automatically calculated by
 //!   the server.
 mapping(string:mixed) set_property(string prop_name,
-				   string|array(SimpleNode) value)
+                                   string|array(SimpleNode) value)
 {
   switch(prop_name) {
   case "http://apache.org/dav/props/executable":
@@ -507,7 +507,7 @@ mapping(string:mixed) set_property(string prop_name,
   case "DAV:getcontenttype":		// 13.5
   case "DAV:getlastmodified":		// 13.7
     return Roxen.http_status (Protocols.HTTP.HTTP_CONFLICT,
-			      "Attempt to set read-only property.");
+                              "Attempt to set read-only property.");
   }
   return set_dead_property(prop_name, value);
 }
@@ -537,10 +537,10 @@ mapping(string:mixed) set_property(string prop_name,
 //!    maintaining the consistency of the syntax and semantics of a
 //!    dead property.
 mapping(string:mixed) set_dead_property(string prop_name,
-					string|array(SimpleNode) value)
+                                        string|array(SimpleNode) value)
 {
   return Roxen.http_status (Protocols.HTTP.HTTP_METHOD_INVALID,
-			    "Setting of dead properties is not supported.");
+                            "Setting of dead properties is not supported.");
 }
 
 //! Attempt to remove the property @[prop_name].
@@ -564,7 +564,7 @@ mapping(string:mixed) remove_property(string prop_name)
   case "DAV:getcontenttype":	// 13.5
   case "DAV:getlastmodified":	// 13.7
     return Roxen.http_status (Protocols.HTTP.HTTP_CONFLICT,
-			      "Attempt to remove a read-only property.");
+                              "Attempt to remove a read-only property.");
   }
   // RFC 2518 12.13.1:
   //   Specifying the removal of a property that does not exist
@@ -592,8 +592,8 @@ mapping(string:mixed) remove_property(string prop_name)
 //!   Optional multiset of requested properties. If this parameter
 //!   is @expr{0@} (zero) then all available properties are requested.
 mapping(string:mixed) find_properties(string mode,
-				      MultiStatus.Prefixed result,
-				      multiset(string)|void filt)
+                                      MultiStatus.Prefixed result,
+                                      multiset(string)|void filt)
 {
   switch(mode) {
   case "DAV:propname":
@@ -614,7 +614,7 @@ mapping(string:mixed) find_properties(string mode,
   case "DAV:prop":
     foreach(filt; string prop_name;) {
       result->add_property(path, prop_name,
-			   query_property(prop_name));
+                           query_property(prop_name));
     }
     break;
   default:

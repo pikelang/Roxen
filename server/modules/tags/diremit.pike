@@ -21,19 +21,19 @@ class Imagesize(mapping m, RequestID id) {
       case "jpeg":
       case "jpg":
       case "png":
-	catch {
-	  object fd = id->conf->open_file( m->path, "r", id )[0];
-	  array xy = Dims.dims()->get( fd );
-	  x = (int)xy[0];
-	  y = (int)xy[1];
-	};
-	break;
+        catch {
+          object fd = id->conf->open_file( m->path, "r", id )[0];
+          array xy = Dims.dims()->get( fd );
+          x = (int)xy[0];
+          y = (int)xy[1];
+        };
+        break;
       default:
-	catch {
-	  Image.Image i = roxen.load_image( m->path,id );
-	  m["x-size"] = i->xsize();
-	  m["y-size"] = i->ysize();
-	};
+        catch {
+          Image.Image i = roxen.load_image( m->path,id );
+          m["x-size"] = i->xsize();
+          m["y-size"] = i->ysize();
+        };
       }
     }
     if(!x || !y) return ENCODE_RXML_TEXT("?", type);
@@ -50,25 +50,25 @@ class Realfile(mapping m, RequestID id) {
       n = ([]);
       string file = m->path;
       foreach( id->conf->location_modules(), mixed tmp ) {
-	if(!search(file, tmp[0])) {
+        if(!search(file, tmp[0])) {
 #ifdef MODULE_LEVEL_SECURITY
-	  if(id->conf->check_security(tmp[1], id))
-	    continue;
+          if(id->conf->check_security(tmp[1], id))
+            continue;
 #endif
-	  string s;
-	  if(s=function_object(tmp[1])->real_file(file[strlen(tmp[0])..],id)) {
-	    n["real-filename"] = s;
-	    n["real-dirname"]  = dirname( s );
-	    n["vfs"] = function_object(tmp[1])->module_identifier();
-	    n["vfs-root"] = function_object(tmp[1])->real_file( "", id );
-	    break;
-	  }
-	}
+          string s;
+          if(s=function_object(tmp[1])->real_file(file[strlen(tmp[0])..],id)) {
+            n["real-filename"] = s;
+            n["real-dirname"]  = dirname( s );
+            n["vfs"] = function_object(tmp[1])->module_identifier();
+            n["vfs-root"] = function_object(tmp[1])->real_file( "", id );
+            break;
+          }
+        }
       }
       if(!n["real-filename"]) {
-	n["real-filename"] = id->conf->real_file( m->path, id );
-	if( n["real-filename"] )
-	  n["real-dirname"] = dirname( n["real-filename"] );
+        n["real-filename"] = id->conf->real_file( m->path, id );
+        if( n["real-filename"] )
+          n["real-dirname"] = dirname( n["real-filename"] );
       }
     }
     return ENCODE_RXML_TEXT(n[var], type);
@@ -85,16 +85,16 @@ class Thumbnail(mapping m, mapping args, RequestID id) {
     if( (ct / "/")[0] == "image" ) {
       string ms = (args["thumbnail-size"]?args["thumbnail-size"]:"60");
       mapping cia = ([
-	"max-width":ms,
-	"max-height":ms,
-	"src":m->path,
-	"format":(args["thumbnail-format"]?args["thumbnail-format"]:"png"),
+        "max-width":ms,
+        "max-height":ms,
+        "src":m->path,
+        "format":(args["thumbnail-format"]?args["thumbnail-format"]:"png"),
       ]);
       if( args["thumbnail-format"] == "jpeg" )
-	cia["jpeg-quality"] = "40";
+        cia["jpeg-quality"] = "40";
       return ENCODE_RXML_TEXT( Roxen.parse_rxml( RXML.t_xml->
-						 format_tag( "cimg-url",
-							     cia ), id ), type);
+                                                 format_tag( "cimg-url",
+                                                             cia ), id ), type);
     }
     return ENCODE_RXML_TEXT(m["type-img"], type);
   }
@@ -160,14 +160,14 @@ class TagWSDirectoryplugin
         m["type-img"] = "internal-gopher-menu";
       } else {
         m->type = id->conf->type_from_filename( file );
-	if (arrayp(m->type))
-	  m->type = m->type[0];
+        if (arrayp(m->type))
+          m->type = m->type[0];
         m->size = Roxen.sizetostring( st[ ST_SIZE ] );
         m["type-img"] = Roxen.image_from_type( m->type );
       }
 
       m["real-filename"] = m["real-dirname"] = m["vfs"] =
-	m["vfs-root"] = Realfile(m, id);
+        m["vfs-root"] = Realfile(m, id);
       m->thumbnail = Thumbnail(m, args, id);
       m["x-size"] = m["y-size"] = Imagesize(m, id);
 
@@ -243,7 +243,7 @@ class TagDirectoryplugin
   {
     foreach(tagset->get_overridden_tags("emit#dir"), RXML.Tag t)
       if(t && t->sb_dir)
-	return t->get_dataset(args, id) || ({});
+        return t->get_dataset(args, id) || ({});
     return ::get_dataset (args, id);
   }
 }
@@ -407,7 +407,7 @@ constant tagdoc=([
  Returns the height of the image.
 </p></desc>",
 ])
-	   }),
+           }),
 
 "emit#ws-dir": #"<desc type='plugin'><p><short>
  Alias for the \"dir\" emit source that lists directories.</short>

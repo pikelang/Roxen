@@ -19,25 +19,25 @@
 <test no-strip-ws="">
 <rxml>
     x
-  		x
-  	 	 	     	x
+                x
+                                x
 </rxml>
 <result>
     x
-  		x
-  	 	 	     	x
+                x
+                                x
 </result>
 </test>
 
 <test>
 <rxml>
     x
-  		x
-  	 	 	     	x
+                x
+                                x
 </rxml>
 <result>x
-  		x
-  	 	 	     	x</result>
+                x
+                                x</result>
 </test>
 
 <test>
@@ -122,12 +122,12 @@
     <define tag="t">
       <if variable="_.a is t"/>
       <then>
-	1t
-	<if variable="_.b is t"/>
+        1t
+        <if variable="_.b is t"/>
       </then>
       <else>
-	1f
-	<if variable="_.c is t"/>
+        1f
+        <if variable="_.c is t"/>
       </else>
       <then>2t</then>
       <else>2f</else>
@@ -362,10 +362,10 @@
   <rxml type="string">
     <emit source="values" values="1,2" split=",">
       <if variable="_.value = 1">
-	<define tag="t">a</define>
+        <define tag="t">a</define>
       </if>
       <else>
-	<define tag="t">b</define>
+        <define tag="t">b</define>
       </else>
       <t/>
     </emit>
@@ -394,9 +394,9 @@
     <define container="foo">
       &_.value;
       <emit source="values" values="z">
-	&_.value;
-	<contents/>
-	&_.value;
+        &_.value;
+        <contents/>
+        &_.value;
       </emit>
       &_.value;
     </define>
@@ -414,9 +414,9 @@
     <define container="foo" scope="s">
       &s.value;
       <emit source="values" values="z" scope="s">
-	&s.value;
-	<contents/>
-	&s.value;
+        &s.value;
+        <contents/>
+        &s.value;
       </emit>
       &s.value;
     </define>
@@ -433,7 +433,7 @@
   <rxml type="string">
     <define container="foo" preparse="y">
       <trimlines>
-	&_.contents; &_.argument;
+        &_.contents; &_.argument;
       </trimlines>
     </define>
     <foo argument="x">y</foo>
@@ -445,8 +445,8 @@
   <rxml type="string">
     <define container="foo" preparse="y" scope="s">
       <trimlines>
-	&_.contents; &_.argument;
-	&s.contents; &s.argument;
+        &_.contents; &_.argument;
+        &s.contents; &s.argument;
       </trimlines>
     </define>
     <foo argument="x">y</foo>
@@ -486,7 +486,7 @@
 <contents copy-of="text()"/>
 </define
     ><x>a&auml; &amp; b <?x &amp;  y?><!--c--> <?y?><a
-	x='&amp;'>&lt;foo<a x='1' g="'">y</a></a
+        x='&amp;'>&lt;foo<a x='1' g="'">y</a></a
       ><b y='&lt;' p='q'
       />&gt;<a x='2' y='p'><a x='3'/><a x='4'/></a
     ><!--d--></x
@@ -606,13 +606,13 @@ a&auml; &amp; b  &gt;
     </define>
     <emit source="values" values="x">
       <x>
-	<set variable="var.foo">first</set>
-	<set variable="var.foo" type="text/xml">
-	  start <!-- the start -->
-	  <p><emit source="values" values="1,2" split=",">[&_.value;]</emit></p>
-	  stop<?foo bar?>
-	</set>
-	&var.foo:none;
+        <set variable="var.foo">first</set>
+        <set variable="var.foo" type="text/xml">
+          start <!-- the start -->
+          <p><emit source="values" values="1,2" split=",">[&_.value;]</emit></p>
+          stop<?foo bar?>
+        </set>
+        &var.foo:none;
       </x>
     </emit>
   </rxml>
@@ -693,7 +693,7 @@ a&auml; &amp; b  &gt;
   <rxml
     ><define tag="y" preparse=""
       ><maketag type="tag" name="made"
-	><attrib name="attr"><contents value-of="@a"/></attrib
+        ><attrib name="attr"><contents value-of="@a"/></attrib
       ></maketag
     ></define
     ><y a="1" b="2"
@@ -843,7 +843,7 @@ a&auml; &amp; b  &gt;
     <define container="x" scope="x" preparse>
       <define tag="y-text">y</define>
       <define container="y" preparse>
-	[<y-text/>:<contents/>][x:<contents scope="x"/>]
+        [<y-text/>:<contents/>][x:<contents scope="x"/>]
       </define>
       <define tag="y-text">z</define>
       <y>y-exp</y>
@@ -871,7 +871,7 @@ a&auml; &amp; b  &gt;
     <define container="x">
       <set variable="_.data"><contents value-of="item" result-set=""/></set>
       <emit source="values" variable="_.data" sort="value">
-	&_.value;<delimiter>|</delimiter>
+        &_.value;<delimiter>|</delimiter>
       </emit>
     </define>
     <x>
@@ -983,7 +983,7 @@ a&auml; &amp; b  &gt;
     /></define
     ><snyggtorkel
       ><!-- etta --><pcheck
-	><!-- tvåa --><p/><!-- trea --></pcheck
+        ><!-- tvåa --><p/><!-- trea --></pcheck
       ><!-- fyra --><p
     /></snyggtorkel
   ></rxml>
@@ -997,7 +997,7 @@ a&auml; &amp; b  &gt;
     /></define
     ><nisse
       ><e id="1"
-	>1<e id="1.1"
+        >1<e id="1.1"
       />2</e
       >3<e id="2"
     /></nisse
@@ -1012,7 +1012,7 @@ a&auml; &amp; b  &gt;
     /></define
     ><nisse
       ><e id="1"
-	>1<e id="1.1"
+        >1<e id="1.1"
       />2</e
       >3<e id="2"
     /></nisse
@@ -1027,7 +1027,7 @@ a&auml; &amp; b  &gt;
     /></define
     ><nisse
       ><e id="1"
-	>1<e id="1.1"
+        >1<e id="1.1"
       />2</e
       >3<e id="2"
     /></nisse
@@ -1042,11 +1042,11 @@ a&auml; &amp; b  &gt;
     /></define
     ><nisse
       ><e id="1"
-	><e id="1.1"
-	  ><e id="1.1.1"
-	    ><e id="1.1.1.1"
-	  /></e
-	></e
+        ><e id="1.1"
+          ><e id="1.1.1"
+            ><e id="1.1.1.1"
+          /></e
+        ></e
       ></e
     ></nisse
   ></rxml>
@@ -1071,9 +1071,9 @@ a&auml; &amp; b  &gt;
   <rxml type="array">
     <define container="elements">
       <value type="array">
-	<value type="string">b <inc variable="var.x"/>&var.x;</value>
-	<contents/>
-	<value type="string">e <inc variable="var.x"/>&var.x;</value>
+        <value type="string">b <inc variable="var.x"/>&var.x;</value>
+        <contents/>
+        <value type="string">e <inc variable="var.x"/>&var.x;</value>
       </value>
     </define>
     <value><inc variable="var.x"/>&var.x;</value>
@@ -1211,14 +1211,14 @@ a&auml; &amp; b  &gt;
     </define>
     <test>
       <a>
-	<b>
-	  <c type="1"/>
-	  <d>x</d>
-	</b>
-	<b>
-	  <c type="2"/>
-	  <d>y</d>
-	</b>
+        <b>
+          <c type="1"/>
+          <d>x</d>
+        </b>
+        <b>
+          <c type="2"/>
+          <d>y</d>
+        </b>
       </a>
     </test>
   </rxml>
@@ -1232,14 +1232,14 @@ a&auml; &amp; b  &gt;
     </define>
     <test>
       <a>
-	<b>
-	  <c type="1" foo="17"/>
-	  <d>x</d>
-	</b>
-	<b>
-	  <c type="2" foo="17"/>
-	  <d>y</d>
-	</b>
+        <b>
+          <c type="1" foo="17"/>
+          <d>x</d>
+        </b>
+        <b>
+          <c type="2" foo="17"/>
+          <d>y</d>
+        </b>
       </a>
     </test>
   </rxml>
@@ -1253,14 +1253,14 @@ a&auml; &amp; b  &gt;
     </define>
     <test>
       <a>
-	<b>
-	  <c type="1" foo="2"/>
-	  <d>x</d>
-	</b>
-	<b>
-	  <c type="2" foo="17"/>
-	  <d>y</d>
-	</b>
+        <b>
+          <c type="1" foo="2"/>
+          <d>x</d>
+        </b>
+        <b>
+          <c type="2" foo="17"/>
+          <d>y</d>
+        </b>
       </a>
     </test>
   </rxml>
@@ -1274,14 +1274,14 @@ a&auml; &amp; b  &gt;
     </define>
     <test>
       <a>
-	<b>
-	  <c type="1" foo="2"/>
-	  <d>x</d>
-	</b>
-	<b>
-	  <c type="2" foo="17"/>
-	  <d>y</d>
-	</b>
+        <b>
+          <c type="1" foo="2"/>
+          <d>x</d>
+        </b>
+        <b>
+          <c type="2" foo="17"/>
+          <d>y</d>
+        </b>
       </a>
     </test>
   </rxml>
@@ -1295,14 +1295,14 @@ a&auml; &amp; b  &gt;
     </define>
     <test>
       <a>
-	<b>
-	  <c type="1" foo="2">1</c>
-	  <d>x</d>
-	</b>
-	<b>
-	  <c type="2" foo="17">2</c>
-	  <d>y</d>
-	</b>
+        <b>
+          <c type="1" foo="2">1</c>
+          <d>x</d>
+        </b>
+        <b>
+          <c type="2" foo="17">2</c>
+          <d>y</d>
+        </b>
       </a>
     </test>
   </rxml>
@@ -1770,7 +1770,7 @@ a&auml; &amp; b  &gt;
   <rxml type="string">
     <emit source="TESTER" test="3" skiprows="1" maxrows="2">
       <emit source="values" from-scope="TESTER" sort="index">
-	&_.index;=[&_.value;]
+        &_.index;=[&_.value;]
       </emit>,
     </emit>
   </rxml>
@@ -1909,9 +1909,9 @@ b</strlen></rxml>
   <rxml type="any">
     <set variable="var.x" type="text/xml">Roxen<b>&ouml;</b></set>
     <!-- var.x contains an encoded entity since it's an xml value.
-	 Using the <value> tag below we also insert it with the
-	 text/xml type. That would break if TagStrLen had content_type
-	 RXML.t_text. -->
+         Using the <value> tag below we also insert it with the
+         text/xml type. That would break if TagStrLen had content_type
+         RXML.t_text. -->
     <strlen><value type="text/xml">&var.x:none;</value></strlen>
   </rxml>
   <equal>18</equal>
@@ -3050,12 +3050,12 @@ b</strlen></rxml>
     <cache>
       <set variable="var.num" value="1,2,3,4,5,6,7"/>
       <emit source="values" variable="var.num" split=",">
-	&_.value;
-	<delimiter>
-	  <nocache>
-	    <random separator="#">_#_#_#_</random>
-	  </nocache>
-	</delimiter>
+        &_.value;
+        <delimiter>
+          <nocache>
+            <random separator="#">_#_#_#_</random>
+          </nocache>
+        </delimiter>
       </emit>
     </cache>
   </rxml>
@@ -3305,8 +3305,8 @@ boo</set><emit source="values" values="&var.x;" advanced="words">&_.value; </emi
       <p>foo</p>
       <set variable="var.a">x</set>
       <value type="array">
-	<value>17</value>
-	<set variable="var.b">y</set>
+        <value>17</value>
+        <set variable="var.b">y</set>
       </value>
     </nooutput>
     &var.a;&var.b;
@@ -4043,7 +4043,7 @@ def
   <rxml type="any">
     <set variable="var.x" type="array">
       <emit source="TESTER" test="4">
-	&_.a;
+        &_.a;
       </emit>
     </set>
     &var.x;
@@ -4091,7 +4091,7 @@ def
   <rxml type="array">
     <emit source="TESTER" test="4">
       <if variable="_.a &gt; 1">
-	<value type="text/*"> &_.a;  &_.b; </value>
+        <value type="text/*"> &_.a;  &_.b; </value>
       </if>
     </emit>
   </rxml>
@@ -4126,9 +4126,9 @@ def
   <rxml>
     <set variable="var.x" type="mapping">
       <value type="mapping">
-	<value index="1">a</value>
-	<value index="2.3">b</value>
-	<value index="3s">c</value>
+        <value index="1">a</value>
+        <value index="2.3">b</value>
+        <value index="3s">c</value>
       </value>
     </set>
   </rxml>
@@ -4150,9 +4150,9 @@ def
   <rxml>
     <set variable="var.x" type="mapping">
       <emit source="TESTER" test="4">
-	<if variable="_.a &gt; 1">
-	  <value index="&_.a;">&_.b;</value>
-	</if>
+        <if variable="_.a &gt; 1">
+          <value index="&_.a;">&_.b;</value>
+        </if>
       </emit>
     </set>
     <emit source="values" variable="var.x" sort="value">
@@ -4172,7 +4172,7 @@ def
 <test>
   <rxml type="any">
     <test-args req-string="x" req-int="1"
-	       opt-string="&var.x;" opt-int="&var.x;" opt-float="&var.x;"/>
+               opt-string="&var.x;" opt-int="&var.x;" opt-float="&var.x;"/>
   </rxml>
   <equal>([
     "req-string": "x",
@@ -4199,7 +4199,7 @@ def
 <test>
   <rxml type="any">
     <test-args req-string="x" req-int="1"
-	       opt-string="" opt-int="" opt-float=""/>
+               opt-string="" opt-int="" opt-float=""/>
   </rxml>
   <equal>([
     "req-string": "x",

@@ -21,7 +21,7 @@ mapping tagdocumentation()
   mapping doc = compile_string("#define manual\n"+file->read(), __FILE__)->tagdoc;
   foreach(({ "cimg", "cimg-url" }), string tag)
     doc[tag] += the_cache->documentation(tag +
-					 " src='/internal-roxen-testimage'");
+                                         " src='/internal-roxen-testimage'");
   return doc;
 }
 
@@ -238,18 +238,18 @@ int do_ext;
 void create()
 {
   defvar("ext", Variable.Flag(0, VAR_MORE,
-			      "Append format to generated images",
-			      "Append the image format (.gif, .png, "
-			      ".jpg, etc) to the generated images. "
-			      "This is not necessary, but might seem "
-			      "nicer, especially to people who try "
-			      "to mirror your site."));
+                              "Append format to generated images",
+                              "Append the image format (.gif, .png, "
+                              ".jpg, etc) to the generated images. "
+                              "This is not necessary, but might seem "
+                              "nicer, especially to people who try "
+                              "to mirror your site."));
   defvar ("default_args",
-	  Variable.Mapping (([]), 0,
-			    "Default Arguments",
-			    "Arguments to add implicitly to cimg/cimg-url/"
-			    "emit#cimg calls. Explicit arguments will take "
-			    "precedence over any arguments specified here."));
+          Variable.Mapping (([]), 0,
+                            "Default Arguments",
+                            "Arguments to add implicitly to cimg/cimg-url/"
+                            "emit#cimg calls. Explicit arguments will take "
+                            "precedence over any arguments specified here."));
 }
 
 void start()
@@ -287,7 +287,7 @@ string status() {
   array s=the_cache->status();
   return sprintf("<b>Images in cache:</b> %d images<br />\n"
                  "<b>Cache size:</b> %s",
-		 s[0], Roxen.sizetostring(s[1]));
+                 s[0], Roxen.sizetostring(s[1]));
 }
 
 array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
@@ -326,9 +326,9 @@ array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
     
     if (mappingp(tmp)) {
       if (tmp->error == Protocols.HTTP.HTTP_UNAUTH)
-	return tmp;
+        return tmp;
       else
-	layers = 0;
+        layers = 0;
     }
     else layers = tmp;
   }
@@ -343,7 +343,7 @@ array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
 
   if (!sizeof(filter(layers->image(), objectp)))
     RXML.run_error("Failed to decode layers in specified image [%O]\n",
-		   args->src);
+                   args->src);
   if(!args["exclude-invisible-layers"])
      layers->set_misc_value( "visible",1 );
   foreach( layers, Image.Layer lay )
@@ -354,16 +354,16 @@ array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
   {
     foreach( args["exclude-layers"] / ",", string match )
       foreach( layers, Image.Layer lay )
-	if( glob( match, lay->get_misc_value( "name" ) ) )
-	  lay->set_misc_value( "visible", 0 );
+        if( glob( match, lay->get_misc_value( "name" ) ) )
+          lay->set_misc_value( "visible", 0 );
   }
 
   if( args["include-layers"] )
   {
     foreach( args["include-layers"] / ",", string match )
       foreach( layers, Image.Layer lay )
-	if( glob( match, lay->get_misc_value( "name" ) ) )
-	  lay->set_misc_value( "visible", 1 );
+        if( glob( match, lay->get_misc_value( "name" ) ) )
+          lay->set_misc_value( "visible", 1 );
   }
 
   array res = ({});
@@ -411,17 +411,17 @@ mapping get_my_args( mapping args, RequestID id )
       array(int)|Stat st = (id->conf->try_stat_file(a->src, id));
       if (st)
       {
-	string fn = id->conf->real_file( a->src, id );
-	if( fn ) Roxen.add_cache_stat_callback( id, fn, st[ST_MTIME] );
-      	a->mtime = (string) (a->stat = st[ST_MTIME]);
-	a->filesize = (string) st[ST_SIZE];
-	
+        string fn = id->conf->real_file( a->src, id );
+        if( fn ) Roxen.add_cache_stat_callback( id, fn, st[ST_MTIME] );
+        a->mtime = (string) (a->stat = st[ST_MTIME]);
+        a->filesize = (string) st[ST_SIZE];
+        
 #if constant(Sitebuilder) && constant(Sitebuilder.sb_start_use_imagecache)
-	//  The file we called try_stat_file() on above may be a SiteBuilder
-	//  file. If so we need to extend the argument data with e.g.
-	//  current language fork.
-	if (Sitebuilder.sb_prepare_imagecache)
-	  a = Sitebuilder.sb_prepare_imagecache(a, a->src, id);
+        //  The file we called try_stat_file() on above may be a SiteBuilder
+        //  file. If so we need to extend the argument data with e.g.
+        //  current language fork.
+        if (Sitebuilder.sb_prepare_imagecache)
+          a = Sitebuilder.sb_prepare_imagecache(a, a->src, id);
 #endif
       }
   }
@@ -473,16 +473,16 @@ class TagCimgplugin
       report_debug("%s:%d saved cacheable flags\n", __FILE__, __LINE__);
 #endif
       res->src=(query_absolute_internal_location(id)+
-		the_cache->store( a, id, timeout ));
+                the_cache->store( a, id, timeout ));
       if(args->filename && sizeof(args->filename))
-	res->src += "/" + Roxen.http_encode_url(args->filename);
+        res->src += "/" + Roxen.http_encode_url(args->filename);
       if(do_ext)
-	res->src += "." + a->format;
+        res->src += "." + a->format;
       data = the_cache->data( a, id , 0 );
       res["file-size"] = strlen(data);
       res["file-size-kb"] = strlen(data)/1024;
       if (lower_case(args->nodata || "no") == "no")
-	res["data"] = data;
+        res["data"] = data;
       res |= the_cache->metadata( a, id, 0, timeout ); // enforce generation
 #ifdef DEBUG_CACHEABLE
       report_debug("%s:%d restored cacheable flags\n", __FILE__, __LINE__);
@@ -511,19 +511,19 @@ class TagCImg
       string ext = "";
       string filename = "";
       if(args->filename && sizeof(args->filename))
-	filename += "/" + Roxen.http_encode_url(m_delete(args, "filename"));
+        filename += "/" + Roxen.http_encode_url(m_delete(args, "filename"));
       if(do_ext)
-	ext = "." + a->format;
+        ext = "." + a->format;
       args->src = query_absolute_internal_location( id )
-	+ the_cache->store( a, id, timeout ) + filename + ext;
+        + the_cache->store( a, id, timeout ) + filename + ext;
       int no_draw = !id->misc->generate_images;
       mapping size;
       if( !args->width && !args->height
-	  && (size = the_cache->metadata( a, id, no_draw, timeout )) )
+          && (size = the_cache->metadata( a, id, no_draw, timeout )) )
       {
-	// image in cache (no_draw above prevents generation on-the-fly)
-	args->width = size->xsize;
-	args->height = size->ysize;
+        // image in cache (no_draw above prevents generation on-the-fly)
+        args->width = size->xsize;
+        args->height = size->ysize;
       }
       int xml=!args->noxml;
       m_delete(args, "noxml");
@@ -549,11 +549,11 @@ class TagCImgURL {
       mapping a = get_my_args (check_args (args), id);
       
       if(args->filename && sizeof(args->filename))
-	filename = "/" + Roxen.http_encode_url(args->filename);
+        filename = "/" + Roxen.http_encode_url(args->filename);
       result = query_absolute_internal_location(id)
-	+ the_cache->store(a, id, timeout)
-	     + filename
-	     + (do_ext ? "." + a->format : "");
+        + the_cache->store(a, id, timeout)
+             + filename
+             + (do_ext ? "." + a->format : "");
       return 0;
     }
   }
