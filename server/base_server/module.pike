@@ -50,7 +50,7 @@ class ModuleJSONLogger {
 
   void create(object parent_config) {
     string name = combine_path_unix(parent_config->json_logger->logger_name,
-				    module_local_id());
+                                    module_local_id());
     ::create(name, UNDEFINED, parent_config->json_logger);
   }
 }
@@ -85,14 +85,14 @@ void report_error_sparsely (sprintf_format fmt, sprintf_args ... args)
   {predef::report_error_sparsely (fmt, @args);}
 
 void log_event (string facility, string action, string resource,
-		void|mapping(string:mixed) info)
+                void|mapping(string:mixed) info)
 //! Log an event. See @[Configuration.log_event] for details.
 //!
 //! @[facility] may be zero. The local module identifier as returned
 //! by @[module_local_id] is used as facility in that case.
 {
   _my_configuration->log_event (facility || _module_local_identifier,
-				action, resource, info);
+                                action, resource, info);
 }
 
 void json_log_trace(string|mapping log_msg) { json_log_with_level(log_msg, Logger.BaseJSONLogger.TRACE); }
@@ -214,17 +214,17 @@ int module_dependencies(Configuration configuration,
 //! however assume that its @[start] function has been called.
 {
   modules = map (modules,
-		 lambda (string modname) {
-		   sscanf ((modname / "/")[-1], "%[^#]", modname);
-		   return modname;
-		 });
+                 lambda (string modname) {
+                   sscanf ((modname / "/")[-1], "%[^#]", modname);
+                   return modname;
+                 });
   Configuration conf = configuration || my_configuration();
   if (!conf)
     report_warning ("Configuration not resolved; module(s) %s that %O "
-		    "depend on weren't added.\n", String.implode_nicely (modules),
-		    module_identifier() ||
-		    master()->describe_program(this_program) ||
-		    "unknown module");
+                    "depend on weren't added.\n", String.implode_nicely (modules),
+                    module_identifier() ||
+                    master()->describe_program(this_program) ||
+                    "unknown module");
   else
     conf->add_modules( modules, now );
   return 1;
@@ -233,7 +233,7 @@ int module_dependencies(Configuration configuration,
 string file_name_and_stuff()
 {
   return ("<b>Loaded from:</b> "+(roxen->filename(this_object()))+"<br>"+
-	  (this_object()->cvs_version?
+          (this_object()->cvs_version?
            "<b>CVS Version:</b> "+
            fix_cvs(this_object()->cvs_version)+"\n":""));
 }
@@ -373,8 +373,8 @@ string location_url()
   string short_array(array a)
   {
     return "({ " + (map(a, lambda(object o) {
-			     return sprintf("%O", o);
-			   })*", ") + " })";
+                             return sprintf("%O", o);
+                           })*", ") + " })";
   };
   string loc = query_location();
   if(!loc) return 0;
@@ -414,22 +414,22 @@ string location_url()
     uri->fragment = "ip=" + ip;
     if(has_value(uri->host, "*") || has_value(uri->host, "?"))
       if(glob(uri->host, hostname))
-	uri->host = hostname;
+        uri->host = hostname;
       else {
-	if(!candidate_uri) {
-	  candidate_uri = uri;
-	  candidate_uri->host = hostname;
-	}
-	continue;
+        if(!candidate_uri) {
+          candidate_uri = uri;
+          candidate_uri->host = hostname;
+        }
+        continue;
       }
     uri->path += loc[1..];
     return (string)uri;
   }
   if(candidate_uri) {
     report_warning("Warning: Could not find any suitable ports, continuing anyway. "
-		   "Please make sure that your Primary Server URL matches "
-		   "at least one port. Primary Server URL: %O, URLs: %s.\n",
-		 world_url, short_array(urls));
+                   "Please make sure that your Primary Server URL matches "
+                   "at least one port. Primary Server URL: %O, URLs: %s.\n",
+                 world_url, short_array(urls));
     candidate_uri->path += loc[1..];
     return (string)candidate_uri;
   }
@@ -448,7 +448,7 @@ function(RequestID:int|mapping) query_seclevels()
 }
 
 void set_status_for_path (string path, RequestID id, int status_code,
-			  string|void message, mixed... args)
+                          string|void message, mixed... args)
 //! Register a status to be included in the response that applies only
 //! for the given path. This is used for recursive operations that can
 //! yield different results for different encountered files or
@@ -532,34 +532,34 @@ class DefaultPropertySet
     if (!response_headers) {
       // Old kludge inherited from configuration.try_get_file.
       if (!id->misc->common)
-	id->misc->common = ([]);
+        id->misc->common = ([]);
 
       RequestID sub_id = id->clone_me();
       sub_id->misc->common = id->misc->common;
 
       sub_id->raw_url = sub_id->not_query = query_location() + path;
       if ((sub_id->raw_url != id->raw_url) && (id->raw_url != id->not_query)) {
-	// sub_id->raw_url = replace (id->raw_url, id->not_query, sub_id->not_query);
-	sub_id->raw_url = sub_id->not_query +
-	  (({ "" }) + (id->raw_url/"?")[1..]) * "?";
+        // sub_id->raw_url = replace (id->raw_url, id->not_query, sub_id->not_query);
+        sub_id->raw_url = sub_id->not_query +
+          (({ "" }) + (id->raw_url/"?")[1..]) * "?";
       }
       sub_id->method = "HEAD";
 
       mapping(string:mixed)|int(-1..0)|object res = find_file (path, sub_id);
       if (res == -1) res = ([]);
       else if (objectp (res)) {
-	string ext;
-	if(stringp(sub_id->extension)) {
-	  sub_id->not_query += sub_id->extension;
-	  ext = lower_case(Roxen.extension(sub_id->not_query, sub_id));
-	}
-	array(string) tmp=sub_id->conf->type_from_filename(sub_id->not_query, 1, ext);
-	if(tmp)
-	  res = ([ "file":res, "type":tmp[0], "encoding":tmp[1] ]);
-	else
-	  res = (["file": res]);
+        string ext;
+        if(stringp(sub_id->extension)) {
+          sub_id->not_query += sub_id->extension;
+          ext = lower_case(Roxen.extension(sub_id->not_query, sub_id));
+        }
+        array(string) tmp=sub_id->conf->type_from_filename(sub_id->not_query, 1, ext);
+        if(tmp)
+          res = ([ "file":res, "type":tmp[0], "encoding":tmp[1] ]);
+        else
+          res = (["file": res]);
       } else if (!res) {
-	res = Roxen.http_status(404, "File not found.");
+        res = Roxen.http_status(404, "File not found.");
       }
       response_headers = sub_id->make_response_headers (res);
       destruct (sub_id);
@@ -611,7 +611,7 @@ string|array(Parser.XML.Tree.SimpleNode)|mapping(string:mixed)
   mapping(string:mixed)|PropertySet properties = query_property_set(path, id);
   if (!properties) {
     return Roxen.http_status(Protocols.HTTP.HTTP_NOT_FOUND,
-			     "No such file or directory.");
+                             "No such file or directory.");
   }
   if (mappingp (properties))
     return properties;
@@ -625,7 +625,7 @@ string|array(Parser.XML.Tree.SimpleNode)|mapping(string:mixed)
 //! @seealso
 //!   @[query_property_set()]
 mapping(string:mixed) recurse_find_properties(string path, string mode,
-					      int depth, RequestID id,
+                                              int depth, RequestID id,
                                               array(string)|multiset(string)|void filt)
 {
   int startts = -gethrtime();
@@ -643,11 +643,11 @@ mapping(string:mixed) recurse_find_properties(string path, string mode,
                                 array(string)|multiset(string)|void filt)
   {
     SIMPLE_TRACE_ENTER (this, "%s for %O, depth %d",
-			mode == "DAV:propname" ? "Listing property names" :
-			mode == "DAV:allprop" ? "Retrieving all properties" :
-			mode == "DAV:prop" ? "Retrieving specific properties" :
-			"Finding properties with mode " + mode,
-			path, depth);
+                        mode == "DAV:propname" ? "Listing property names" :
+                        mode == "DAV:allprop" ? "Retrieving all properties" :
+                        mode == "DAV:prop" ? "Retrieving specific properties" :
+                        "Finding properties with mode " + mode,
+                        path, depth);
     mapping(string:mixed)|PropertySet properties = query_property_set(path, id);
 
     if (!objectp(properties)) {
@@ -666,9 +666,9 @@ mapping(string:mixed) recurse_find_properties(string path, string mode,
         properties->find_properties(mode, result, filt);
 
       if (ret) {
-	SIMPLE_TRACE_LEAVE ("Got status %d: %O", ret->error, ret->rettext);
+        SIMPLE_TRACE_LEAVE ("Got status %d: %O", ret->error, ret->rettext);
         result->add_status(path, ret->error, ret->rettext);
-	return ret;
+        return ret;
       }
     }
 
@@ -701,8 +701,8 @@ mapping(string:mixed) recurse_find_properties(string path, string mode,
 }
 
 mapping(string:mixed) patch_properties(string path,
-				       array(PatchPropertyCommand) instructions,
-				       RequestID id)
+                                       array(PatchPropertyCommand) instructions,
+                                       RequestID id)
 {
   SIMPLE_TRACE_ENTER (this, "Patching properties for %O", path);
   mapping(string:mixed)|PropertySet properties = query_property_set(path, id);
@@ -713,7 +713,7 @@ mapping(string:mixed) patch_properties(string path,
   }
   if (mappingp (properties)) {
     SIMPLE_TRACE_LEAVE ("Got error %d from query_property_set: %O",
-			properties->error, properties->rettext);
+                        properties->error, properties->rettext);
     return properties;
   }
 
@@ -726,7 +726,7 @@ mapping(string:mixed) patch_properties(string path,
 
   if (errcode = properties->start()) {
     SIMPLE_TRACE_LEAVE ("Got error %d from PropertySet.start: %O",
-			errcode->error, errcode->rettext);
+                        errcode->error, errcode->rettext);
     return errcode;
   }
 
@@ -740,35 +740,35 @@ mapping(string:mixed) patch_properties(string path,
     throw (err);
   } else {
     string prefix = map((query_location()[1..] + path)/"/",
-			Roxen.http_encode_url)*"/";
+                        Roxen.http_encode_url)*"/";
     MultiStatus.Prefixed result =
       id->get_multi_status()->prefix (id->url_base() + prefix);
     int any_failed;
     foreach(results, mapping(string:mixed) answer) {
       if (any_failed = (answer && (answer->error >= 300))) {
-	break;
+        break;
       }
     }
     if (any_failed) {
       // Unroll and fail any succeeded items.
       int i;
       mapping(string:mixed) answer =
-	Roxen.http_status (Protocols.HTTP.DAV_FAILED_DEP);
+        Roxen.http_status (Protocols.HTTP.DAV_FAILED_DEP);
       for(i = 0; i < sizeof(results); i++) {
-	if (!results[i] || results[i]->error < 300) {
-	  result->add_property("", instructions[i]->property_name,
-			       answer);
-	} else {
-	  result->add_property("", instructions[i]->property_name,
-			       results[i]);
-	}
+        if (!results[i] || results[i]->error < 300) {
+          result->add_property("", instructions[i]->property_name,
+                               answer);
+        } else {
+          result->add_property("", instructions[i]->property_name,
+                               results[i]);
+        }
       }
       properties->unroll();
     } else {
       int i;
       for(i = 0; i < sizeof(results); i++) {
-	result->add_property("", instructions[i]->property_name,
-			     results[i]);
+        result->add_property("", instructions[i]->property_name,
+                             results[i]);
       }
       properties->commit();
     }
@@ -784,12 +784,12 @@ mapping(string:mixed) patch_properties(string path,
 //! @returns
 //!   Returns a mapping on any error, zero otherwise.
 mapping(string:mixed) set_property (string path, string prop_name,
-				    string|array(Parser.XML.Tree.SimpleNode) value,
-				    RequestID id)
+                                    string|array(Parser.XML.Tree.SimpleNode) value,
+                                    RequestID id)
 {
   mapping(string:mixed)|PropertySet properties = query_property_set(path, id);
   if (!properties) return Roxen.http_status(Protocols.HTTP.HTTP_NOT_FOUND,
-					    "File not found.");
+                                            "File not found.");
   if (mappingp (properties)) return properties;
 
   mapping(string:mixed) result = properties->start();
@@ -811,11 +811,11 @@ mapping(string:mixed) set_property (string path, string prop_name,
 //! @returns
 //!   Returns a mapping on any error, zero otherwise.
 mapping(string:mixed) remove_property (string path, string prop_name,
-				       RequestID id)
+                                       RequestID id)
 {
   mapping(string:mixed)|PropertySet properties = query_property_set(path, id);
   if (!properties) return Roxen.http_status(Protocols.HTTP.HTTP_NOT_FOUND,
-					    "File not found.");
+                                            "File not found.");
   if (mappingp (properties)) return properties;
 
   mapping(string:mixed) result = properties->start();
@@ -933,15 +933,15 @@ protected mapping(string:mapping(mixed:DAVLock)) prefix_locks = ([]);
 //! The default implementation only handles the @expr{"DAV:write"@}
 //! lock type.
 mapping(string:DAVLock) find_locks(string path,
-				   int(-1..1) recursive,
-				   int(0..1) exclude_shared,
-				   RequestID id)
+                                   int(-1..1) recursive,
+                                   int(0..1) exclude_shared,
+                                   RequestID id)
 {
   // Common case.
   if (!sizeof(file_locks) && !sizeof(prefix_locks)) return 0;
 
   TRACE_ENTER(sprintf("find_locks(%O, %O, %O, X)",
-		      path, recursive, exclude_shared), this);
+                      path, recursive, exclude_shared), this);
 
   string rsc = resource_id (path, id);
 
@@ -951,17 +951,17 @@ mapping(string:DAVLock) find_locks(string path,
   if (exclude_shared) {
     mixed auth_user = authenticated_user_id (path, id);
     add_locks = lambda (mapping(mixed:DAVLock) sub_locks) {
-		  foreach (sub_locks; string user; DAVLock lock)
-		    if (user == auth_user ||
-			lock->lockscope == "DAV:exclusive")
-		      locks[lock->locktoken] = lock;
-		};
+                  foreach (sub_locks; string user; DAVLock lock)
+                    if (user == auth_user ||
+                        lock->lockscope == "DAV:exclusive")
+                      locks[lock->locktoken] = lock;
+                };
   }
   else
     add_locks = lambda (mapping(mixed:DAVLock) sub_locks) {
-		  locks |= mkmapping(values(sub_locks)->locktoken,
-				     values(sub_locks));
-		};
+                  locks |= mkmapping(values(sub_locks)->locktoken,
+                                     values(sub_locks));
+                };
 
   if (file_locks[rsc]) {
     add_locks (file_locks[rsc]);
@@ -969,19 +969,19 @@ mapping(string:DAVLock) find_locks(string path,
 
   if (recursive >= 0) {
     foreach(prefix_locks;
-	    string prefix; mapping(mixed:DAVLock) sub_locks) {
+            string prefix; mapping(mixed:DAVLock) sub_locks) {
       if (has_prefix(rsc, prefix)) {
-	add_locks (sub_locks);
-	break;
+        add_locks (sub_locks);
+        break;
       }
     }
   }
 
   if (recursive) {
     LOOP_OVER_BOTH (string prefix, mapping(mixed:DAVLock) sub_locks, {
-	if (has_prefix(prefix, rsc)) {
-	  add_locks (sub_locks);
-	}
+        if (has_prefix(prefix, rsc)) {
+          add_locks (sub_locks);
+        }
       });
   }
 
@@ -1016,7 +1016,7 @@ void unlock_path(string path, RequestID id)
   foreach(file_locks; string prefix; mapping(mixed:DAVLock) sub_locks) {
     if (has_prefix(prefix, rsc)) {
       TRACE_ENTER(sprintf("Unlocking %d locks for path %O...",
-			  sizeof(sub_locks), prefix), this);
+                          sizeof(sub_locks), prefix), this);
       m_delete(file_locks, prefix);
       TRACE_LEAVE("");
     }
@@ -1025,7 +1025,7 @@ void unlock_path(string path, RequestID id)
   foreach(prefix_locks; string prefix; mapping(mixed:DAVLock) sub_locks) {
     if (has_prefix(prefix, rsc)) {
       TRACE_ENTER(sprintf("Unlocking %d locks for path %O...",
-			  sizeof(sub_locks), prefix), this);
+                          sizeof(sub_locks), prefix), this);
       m_delete(prefix_locks, prefix);
       TRACE_LEAVE("");
     }
@@ -1054,7 +1054,7 @@ void unlock_path(string path, RequestID id)
 protected void register_lock(string path, DAVLock lock, RequestID id)
 {
   TRACE_ENTER(sprintf("register_lock(%O, lock(%O), X).", path, lock->locktoken),
-	      this);
+              this);
   ASSERT_IF_DEBUG (lock->locktype == "DAV:write");
   mixed auth_user = authenticated_user_id (path, id);
   path = resource_id (path, id);
@@ -1092,10 +1092,10 @@ protected void register_lock(string path, DAVLock lock, RequestID id)
 //!   The request id may have the value @expr{0@} (zero) if called
 //!   by @[Configuration()->expire_locks()].
 protected void unregister_lock (string path, DAVLock lock,
-				RequestID|int(0..0) id)
+                                RequestID|int(0..0) id)
 {
   TRACE_ENTER(sprintf("unregister_lock(%O, lock(%O), X).", path, lock->locktoken),
-	      this);
+              this);
   mixed auth_user = id && authenticated_user_id (path, id);
   path = resource_id (path, id);
   DAVLock removed_lock;
@@ -1104,9 +1104,9 @@ protected void unregister_lock (string path, DAVLock lock,
       removed_lock = m_delete(prefix_locks[path], auth_user);
     } else {
       foreach(prefix_locks[path]||([]); mixed user; DAVLock l) {
-	if (l == lock) {
-	  removed_lock = m_delete(prefix_locks[path], user);
-	}
+        if (l == lock) {
+          removed_lock = m_delete(prefix_locks[path], user);
+        }
       }
     }
     if (prefix_locks[path] && !sizeof (prefix_locks[path])) {
@@ -1118,17 +1118,17 @@ protected void unregister_lock (string path, DAVLock lock,
       removed_lock = m_delete (file_locks[path], auth_user);
     } else {
       foreach(file_locks[path]||([]); mixed user; DAVLock l) {
-	if (l == lock) {
-	  removed_lock = m_delete(file_locks[path], user);
-	}
+        if (l == lock) {
+          removed_lock = m_delete(file_locks[path], user);
+        }
       }
     }
     if (!sizeof (file_locks[path])) m_delete (file_locks, path);
   }
   // NB: The lock may have already been removed in the !id case.
   ASSERT_IF_DEBUG (!(id || removed_lock) ||
-		   (lock /*%O*/ == removed_lock /*%O*/),
-		   lock, removed_lock);
+                   (lock /*%O*/ == removed_lock /*%O*/),
+                   lock, removed_lock);
   TRACE_LEAVE("Ok.");
   return 0;
 }
@@ -1170,8 +1170,8 @@ protected void unregister_lock (string path, DAVLock lock,
 //!   To use the default lock implementation, call @[register_lock]
 //!   from this function.
 mapping(string:mixed) lock_file(string path,
-				DAVLock lock,
-				RequestID id)
+                                DAVLock lock,
+                                RequestID id)
 {
   return 0;
 }
@@ -1207,8 +1207,8 @@ mapping(string:mixed) lock_file(string path,
 //!   To use the default lock implementation, call @[unregister_lock]
 //!   from this function.
 mapping(string:mixed) unlock_file (string path,
-				   DAVLock lock,
-				   RequestID|int(0..0) id);
+                                   DAVLock lock,
+                                   RequestID|int(0..0) id);
 
 //! Used by some default implementations to check if we may perform a
 //! write access to @[path]. It should at least call
@@ -1230,8 +1230,8 @@ mapping(string:mixed) unlock_file (string path,
 //!   possible and then handle each member in the directory
 //!   recursively with @[write_access] etc.
 protected mapping(string:mixed)|int(0..1) write_access(string relative_path,
-						       int(0..1) recursive,
-						       RequestID id)
+                                                       int(0..1) recursive,
+                                                       RequestID id)
 {
   string path = query_location() + relative_path;
   return id->conf->check_locks(path, recursive, id);
@@ -1239,8 +1239,8 @@ protected mapping(string:mixed)|int(0..1) write_access(string relative_path,
 
 //!
 protected variant mapping(string:mixed)|int(0..1) write_access(array(string) paths,
-							       int(0..1) recursive,
-							       RequestID id)
+                                                               int(0..1) recursive,
+                                                               RequestID id)
 {
   mapping(string:mixed)|int(0..1) ret;
   foreach(paths, string path) {
@@ -1255,7 +1255,7 @@ protected variant mapping(string:mixed)|int(0..1) write_access(array(string) pat
 }
 
 mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
-						      RequestID id);
+                                                      RequestID id);
 
 //! Used by the default @[recurse_delete_files] implementation to
 //! delete a file or an empty directory.
@@ -1291,13 +1291,13 @@ protected mapping(string:mixed) delete_file(string path, RequestID id)
 //!   signify a 207 Multi-Status response using the info in
 //!   @[id->get_multi_status()].
 mapping(string:mixed) recurse_delete_files(string path,
-					   RequestID id,
-					   void|MultiStatus.Prefixed stat)
+                                           RequestID id,
+                                           void|MultiStatus.Prefixed stat)
 {
   SIMPLE_TRACE_ENTER (this, "Deleting %O recursively", path);
   if (!stat)
     stat = id->get_multi_status()->prefix (id->url_base() +
-					   query_location()[1..]);
+                                           query_location()[1..]);
 
   Stat st = stat_file(path, id);
   if (!st) {
@@ -1322,24 +1322,24 @@ mapping(string:mixed) recurse_delete_files(string path,
       int fail;
       if (!has_suffix(path, "/")) path += "/";
       foreach(find_dir(path, id) || ({}), string fname) {
-	fname = path + fname;
-	if (Stat sub_stat = stat_file (fname, id)) {
-	  SIMPLE_TRACE_ENTER (this, "Deleting %O", fname);
-	  if (mapping(string:mixed) sub_res = recurse(fname, sub_stat)) {
-	    // RFC 2518 8.6.2
-	    //   Additionally 204 (No Content) errors SHOULD NOT be returned
-	    //   in the 207 (Multi-Status). The reason for this prohibition
-	    //   is that 204 (No Content) is the default success code.
-	    if (sizeof (sub_res) && sub_res->error != 204) {
-	      stat->add_status(fname, sub_res);
-	    }
-	    if (!sizeof (sub_res) || sub_res->error >= 300) fail = 1;
-	  }
-	}
+        fname = path + fname;
+        if (Stat sub_stat = stat_file (fname, id)) {
+          SIMPLE_TRACE_ENTER (this, "Deleting %O", fname);
+          if (mapping(string:mixed) sub_res = recurse(fname, sub_stat)) {
+            // RFC 2518 8.6.2
+            //   Additionally 204 (No Content) errors SHOULD NOT be returned
+            //   in the 207 (Multi-Status). The reason for this prohibition
+            //   is that 204 (No Content) is the default success code.
+            if (sizeof (sub_res) && sub_res->error != 204) {
+              stat->add_status(fname, sub_res);
+            }
+            if (!sizeof (sub_res) || sub_res->error >= 300) fail = 1;
+          }
+        }
       }
       if (fail) {
-	SIMPLE_TRACE_LEAVE ("Partial failure");
-	return ([]);
+        SIMPLE_TRACE_LEAVE ("Partial failure");
+        return ([]);
       }
     }
 
@@ -1386,7 +1386,7 @@ protected mapping(string:mixed) copy_properties(
   string source, string destination, PropertyBehavior behavior, RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "copy_properties(%O, %O, %O, %O)",
-		     source, destination, behavior, id);
+                     source, destination, behavior, id);
   PropertySet source_properties = query_property_set(source, id);
   PropertySet destination_properties = query_property_set(destination, id);
 
@@ -1418,7 +1418,7 @@ protected mapping(string:mixed) copy_properties(
       // This is likely already so, since we're in the same module.
     }
     if ((subres->error < 300) ||
-	(subres->error == Protocols.HTTP.HTTP_CONFLICT)) {
+        (subres->error == Protocols.HTTP.HTTP_CONFLICT)) {
       // Ok, or read-only property.
       TRACE_LEAVE("Copy ok or read-only property.");
       continue;
@@ -1469,7 +1469,7 @@ protected mapping(string:mixed) copy_collection(
   Overwrite overwrite, MultiStatus.Prefixed result, RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "copy_collection(%O, %O, %O, %O, %O, %O).",
-		     source, destination, behavior, overwrite, result, id);
+                     source, destination, behavior, overwrite, result, id);
   Stat st = stat_file(destination, id);
   if (st) {
     // Destination exists. Check the overwrite header.
@@ -1483,47 +1483,47 @@ protected mapping(string:mixed) copy_collection(
       TRACE_ENTER("Destination exists and overwrite is on.", this);
       mapping(string:mixed) res = recurse_delete_files(destination, id, result);
       if (res && (!sizeof (res) || res->error >= 300)) {
-	// Failed to delete something.
-	TRACE_LEAVE("Deletion failed.");
-	TRACE_LEAVE("Copy collection failed.");
-	// RFC 2518 9.6 says:
-	//
-	//   If a COPY or MOVE is not performed due to the value of
-	//   the Overwrite header, the method MUST fail with a 412
-	//   (Precondition Failed) status code.
-	//
-	// That can perhaps be interpreted as that we should return
-	// 412 here. But otoh, in RFC 2518 8.8.5 COPY status codes:
-	//
-	//    412 (Precondition Failed) - /.../ the Overwrite header
-	//    is "F" and the state of the destination resource is
-	//    non-null.
-	//
-	// That clearly doesn't include this case. Also, common sense
-	// says that the error from the failed delete is more useful
-	// to the client.
+        // Failed to delete something.
+        TRACE_LEAVE("Deletion failed.");
+        TRACE_LEAVE("Copy collection failed.");
+        // RFC 2518 9.6 says:
+        //
+        //   If a COPY or MOVE is not performed due to the value of
+        //   the Overwrite header, the method MUST fail with a 412
+        //   (Precondition Failed) status code.
+        //
+        // That can perhaps be interpreted as that we should return
+        // 412 here. But otoh, in RFC 2518 8.8.5 COPY status codes:
+        //
+        //    412 (Precondition Failed) - /.../ the Overwrite header
+        //    is "F" and the state of the destination resource is
+        //    non-null.
+        //
+        // That clearly doesn't include this case. Also, common sense
+        // says that the error from the failed delete is more useful
+        // to the client.
 #if 0
-	return Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
+        return Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
 #elif 0
-	if (sizeof (res)) {
-	  // RFC 2518 8.8.3:
-	  //   If an error in executing the COPY method occurs with a
-	  //   resource other than the resource identified in the
-	  //   Request-URI then the response MUST be a 207
-	  //   (Multi-Status).
-	  //
-	  // So if the failure was on the root destination resource we
-	  // have to convert it to a multi-status.
-	  result->add_status (destination, res->error, res->rettext);
-	}
-	return ([]);
+        if (sizeof (res)) {
+          // RFC 2518 8.8.3:
+          //   If an error in executing the COPY method occurs with a
+          //   resource other than the resource identified in the
+          //   Request-URI then the response MUST be a 207
+          //   (Multi-Status).
+          //
+          // So if the failure was on the root destination resource we
+          // have to convert it to a multi-status.
+          result->add_status (destination, res->error, res->rettext);
+        }
+        return ([]);
 #else
-	// RFC 4918 9.8.5:
-	//   423 (Locked) - The destination resource, or resource
-	//   within the destination collection, was locked. This
-	//   response SHOULD contain the 'lock-token-submitted'
-	//   precondition element.
-	return res;
+        // RFC 4918 9.8.5:
+        //   423 (Locked) - The destination resource, or resource
+        //   within the destination collection, was locked. This
+        //   response SHOULD contain the 'lock-token-submitted'
+        //   precondition element.
+        return res;
 #endif
       }
       TRACE_LEAVE("Deletion ok.");
@@ -1535,8 +1535,8 @@ protected mapping(string:mixed) copy_collection(
       // No overwrite header.
       // Be nice, and fail only if we don't already have a collection.
       if (st->isdir) {
-	TRACE_LEAVE("Destination exists and is a directory.");
-	return copy_properties(source, destination, behavior, id);
+        TRACE_LEAVE("Destination exists and is a directory.");
+        return copy_properties(source, destination, behavior, id);
       }
       TRACE_LEAVE("Destination exists and is not a directory.");
       return Roxen.http_status(Protocols.HTTP.HTTP_CONFLICT);
@@ -1579,11 +1579,11 @@ protected mapping(string:mixed) copy_collection(
 //!   Content otherwise). Returns 0 if the source doesn't exist.
 //!   Returns an appropriate status mapping for any other error.
 protected mapping(string:mixed) copy_file(string source, string destination,
-					  PropertyBehavior behavior,
-					  Overwrite overwrite, RequestID id)
+                                          PropertyBehavior behavior,
+                                          Overwrite overwrite, RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "copy_file(%O, %O, %O, %O, %O)\n",
-		     source, destination, behavior, overwrite, id);
+                     source, destination, behavior, overwrite, id);
   TRACE_LEAVE("Not implemented.");
   return Roxen.http_status (Protocols.HTTP.HTTP_NOT_IMPL);
 }
@@ -1616,15 +1616,15 @@ protected mapping(string:mixed) copy_file(string source, string destination,
 //!   subpart or at the destination, to signify a 207 Multi-Status
 //!   response using the info in @[id->get_multi_status()].
 mapping(string:mixed) recurse_copy_files(string source, string destination,
-					 PropertyBehavior behavior,
-					 Overwrite overwrite, RequestID id,
-					 int|void one_level)
+                                         PropertyBehavior behavior,
+                                         Overwrite overwrite, RequestID id,
+                                         int|void one_level)
 {
   SIMPLE_TRACE_ENTER(this, "Recursive copy from %O to %O (%s)",
-		     source, destination,
-		     overwrite == DO_OVERWRITE ? "replace" :
-		     overwrite == NEVER_OVERWRITE ? "no overwrite" :
-		     "overlay");
+                     source, destination,
+                     overwrite == DO_OVERWRITE ? "replace" :
+                     overwrite == NEVER_OVERWRITE ? "no overwrite" :
+                     "overlay");
   string src_tmp = has_suffix(source, "/")?source:(source+"/");
   string dst_tmp = has_suffix(destination, "/")?destination:(destination+"/");
   if ((src_tmp == dst_tmp) ||
@@ -1639,7 +1639,7 @@ mapping(string:mixed) recurse_copy_files(string source, string destination,
     id->get_multi_status()->prefix (id->url_base() + prefix);
 
   mapping(string:mixed) recurse(string source, string destination,
-				int|void one_level) {
+                                int|void one_level) {
     // Note: Already got an extra TRACE_ENTER level on entry here.
 
     Stat st = stat_file(source, id);
@@ -1651,22 +1651,22 @@ mapping(string:mixed) recurse_copy_files(string source, string destination,
     //     copy_collection() and copy_file().
     if (st->isdir) {
       mapping(string:mixed) res =
-	copy_collection(source, destination, behavior, overwrite, result, id);
+        copy_collection(source, destination, behavior, overwrite, result, id);
       if (res && (!sizeof (res) || res->error >= 300)) {
-	// RFC 2518 8.8.3 and 8.8.8 (error minimization).
-	TRACE_LEAVE("Copy of collection failed.");
-	return res;
+        // RFC 2518 8.8.3 and 8.8.8 (error minimization).
+        TRACE_LEAVE("Copy of collection failed.");
+        return res;
       }
       if (!one_level) {
-	foreach(find_dir(source, id), string filename) {
-	  string subsrc = combine_path_unix(source, filename);
-	  string subdst = combine_path_unix(destination, filename);
-	  SIMPLE_TRACE_ENTER(this, "Copy from %O to %O\n", subsrc, subdst);
-	  mapping(string:mixed) sub_res = recurse(subsrc, subdst);
-	  if (sub_res && !(<0, 201, 204>)[sub_res->error]) {
-	    result->add_status(subdst, sub_res->error, sub_res->rettext);
-	  }
-	}
+        foreach(find_dir(source, id), string filename) {
+          string subsrc = combine_path_unix(source, filename);
+          string subdst = combine_path_unix(destination, filename);
+          SIMPLE_TRACE_ENTER(this, "Copy from %O to %O\n", subsrc, subdst);
+          mapping(string:mixed) sub_res = recurse(subsrc, subdst);
+          if (sub_res && !(<0, 201, 204>)[sub_res->error]) {
+            result->add_status(subdst, sub_res->error, sub_res->rettext);
+          }
+        }
       }
       TRACE_LEAVE("");
       return res;
@@ -1716,8 +1716,8 @@ mapping(string:mixed) recurse_copy_files(string source, string destination,
 //!   subpart or at the destination, to signify a 207 Multi-Status
 //!   response using the info in @[id->get_multi_status()].
 protected mapping(string:mixed) move_file(string source, string destination,
-					  PropertyBehavior behavior,
-					  Overwrite overwrite, RequestID id)
+                                          PropertyBehavior behavior,
+                                          Overwrite overwrite, RequestID id)
 {
   // Fall back to find_file().
   RequestID tmp_id = id->clone_me();
@@ -1787,8 +1787,8 @@ protected mapping(string:mixed) move_collection(
   if (!res || res->error != 501) {
     if (res && !sizeof(res)) {
       foreach(tmp_id->get_multi_status()->get_responses_by_prefix("");
-	      string href; MultiStatusNode status) {
-	id->set_status_for_url(href, status);
+              string href; MultiStatusNode status) {
+        id->set_status_for_url(href, status);
       }
     }
     return res;
@@ -1807,15 +1807,15 @@ protected mapping(string:mixed) move_collection(
     string subsrc = combine_path_unix(source, filename);
     string subdst = combine_path_unix(destination, filename);
     SIMPLE_TRACE_ENTER(this, "Recursive move from %O to %O\n",
-		       subsrc, subdst);
+                       subsrc, subdst);
     if (mapping(string:mixed) sub_res =
-	recurse_move_files(subsrc, subdst, behavior, overwrite, id)) {
+        recurse_move_files(subsrc, subdst, behavior, overwrite, id)) {
       if (!(<0, 201, 204>)[sub_res->error]) {
-	result->add_status(subdst, sub_res->error, sub_res->rettext);
+        result->add_status(subdst, sub_res->error, sub_res->rettext);
       }
       if (!sizeof (sub_res) || sub_res->error >= 300) {
-	// Failed to move some content.
-	fail = 1;
+        // Failed to move some content.
+        fail = 1;
       }
     }
   }
@@ -1848,8 +1848,8 @@ protected mapping(string:mixed) move_collection(
 //!   subpart or at the destination, to signify a 207 Multi-Status
 //!   response using the info in @[id->get_multi_status()].
 mapping(string:mixed) recurse_move_files(string source, string destination,
-					 PropertyBehavior behavior,
-					 Overwrite overwrite, RequestID id)
+                                         PropertyBehavior behavior,
+                                         Overwrite overwrite, RequestID id)
 {
   Stat st = stat_file(source, id);
   if (!st) return 0;
@@ -1900,8 +1900,8 @@ mapping(string:array(int|function)) query_simpletag_callers()
   foreach(glob("simpletag_*", indices(this_object())), string q)
     if(functionp(this_object()[q]))
       m[replace(q[10..],"_","-")] =
-	({ intp (this_object()[q + "_flags"]) && this_object()[q + "_flags"],
-	   this_object()[q] });
+        ({ intp (this_object()[q + "_flags"]) && this_object()[q + "_flags"],
+           this_object()[q] });
   return m;
 }
 
@@ -1911,8 +1911,8 @@ mapping(string:array(int|function)) query_simple_pi_tag_callers()
   foreach (glob ("simple_pi_tag_*", indices (this_object())), string q)
     if (functionp (this_object()[q]))
       m[replace (q[sizeof ("simple_pi_tag_")..], "_", "-")] =
-	({(intp (this_object()[q + "_flags"]) && this_object()[q + "_flags"]) |
-	  RXML.FLAG_PROC_INSTR, this_object()[q]});
+        ({(intp (this_object()[q + "_flags"]) && this_object()[q + "_flags"]) |
+          RXML.FLAG_PROC_INSTR, this_object()[q]});
   return m;
 }
 
@@ -1921,16 +1921,16 @@ RXML.TagSet query_tag_set()
   if (!module_tag_set) {
     array(function|program|object) tags =
       filter (rows (this_object(),
-		    glob ("Tag*", indices (this_object()))),
-	      lambda(mixed x) { return functionp(x)||programp(x); });
+                    glob ("Tag*", indices (this_object()))),
+              lambda(mixed x) { return functionp(x)||programp(x); });
     for (int i = 0; i < sizeof (tags); i++)
       if (programp (tags[i]))
-	if (!tags[i]->is_RXML_Tag) tags[i] = 0;
-	else tags[i] = tags[i]();
+        if (!tags[i]->is_RXML_Tag) tags[i] = 0;
+        else tags[i] = tags[i]();
       else {
-	tags[i] = tags[i]();
-	// Bogosity: The check is really a little too late here..
-	if (!tags[i]->is_RXML_Tag) tags[i] = 0;
+        tags[i] = tags[i]();
+        // Bogosity: The check is really a little too late here..
+        if (!tags[i]->is_RXML_Tag) tags[i] = 0;
       }
     tags -= ({0});
     module_tag_set =
@@ -1982,12 +1982,12 @@ mixed get_value_from_file(string path, string index, void|string pre)
 //!   will be removed when this object is destructed (eg via
 //!   refcount-garb).
 roxen.FSGarbWrapper register_fsgarb(string path, int max_age,
-				    int|void max_size, int|void max_files,
-				    string|void quarantine,
+                                    int|void max_size, int|void max_files,
+                                    string|void quarantine,
                                     int(0..1)|void cleanup_parent_dirs)
 {
   return roxen.register_fsgarb(module_identifier(), path, max_age,
-			       max_size, max_files, quarantine,
+                               max_size, max_files, quarantine,
                                cleanup_parent_dirs);
 }
 #endif
@@ -2035,7 +2035,7 @@ object sql_big_query_ro( string query, mixed ... args )
 }
 
 protected int create_sql_tables( mapping(string:array(string)) definitions,
-				 string|void comment, int|void no_unique_names )
+                                 string|void comment, int|void no_unique_names )
 //! Create multiple tables in one go. See @[get_my_table]
 //! Returns the number of tables that were actually created.
 {
@@ -2049,9 +2049,9 @@ protected int create_sql_tables( mapping(string:array(string)) definitions,
     foreach( indices( definitions ), string t )
     {
       if( !catch {
-	sql->query("CREATE TABLE "+t+" ("+definitions[t]*","+")" );
+        sql->query("CREATE TABLE "+t+" ("+definitions[t]*","+")" );
       } )
-	ddc++;
+        ddc++;
       DBManager.is_module_table( this_object(), my_db, t, comment );
     }
   }
@@ -2072,8 +2072,8 @@ protected string sql_table_exists( string name )
 
 
 protected string|int get_my_table( string|array(string) name,
-				   void|array(string)|string definition,
-				   string|void comment, int|void flag )
+                                   void|array(string)|string definition,
+                                   string|void comment, int|void flag )
 //! @decl string get_my_table( string name, array(string) types )
 //! @decl string get_my_table( string name, string definition )
 //! @decl string get_my_table( string definition )
@@ -2143,16 +2143,16 @@ protected string|int get_my_table( string|array(string) name,
     mixed error =
       catch
       {
-	get_my_sql()->query( "CREATE TABLE "+res+" ("+definition+")" );
-	DBManager.is_module_table( this_object(), my_db, res,
-				   oname+"\0"+comment );
+        get_my_sql()->query( "CREATE TABLE "+res+" ("+definition+")" );
+        DBManager.is_module_table( this_object(), my_db, res,
+                                   oname+"\0"+comment );
       };
     if( error )
     {
       if( strlen( name ) )
-	name = " "+name;
+        name = " "+name;
       report_error( "Failed to create table"+name+": "+
-		    describe_error( error ) );
+                    describe_error( error ) );
       return 0;
     }
     if( flag )
@@ -2208,7 +2208,7 @@ Sql.Sql get_my_sql( int|void read_only, void|string charset )
 // Callback used by the DB browser, if defined, for custom formatting
 // of database fields.
 int|string format_db_browser_value (string db_name, string table_name,
-				    string column_name, array(string) col_names,
-				    array(string) col_types, array(string) row,
-				    RequestID id);
+                                    string column_name, array(string) col_names,
+                                    array(string) col_types, array(string) row,
+                                    RequestID id);
 

@@ -26,19 +26,19 @@
 //!         ({ "nor", "Norwegian" }) }),
 //!      "swe");
 string select(string name, array(string)|array(array(string)) choices,
-		  void|string selected) {
+                  void|string selected) {
   string ret = "<select name=\"" + name + "\">\n";
 
   if(sizeof(choices) && arrayp(choices[0])) {
     foreach([array(array(string))]choices, array(string) value)
       ret += "<option value=\"" + value[0] + "\"" +
-	(value[0]==selected?" selected=\"selected\"":"") +
-	">" + value[1] + "</option>\n";
+        (value[0]==selected?" selected=\"selected\"":"") +
+        ">" + value[1] + "</option>\n";
   } else {
     foreach([array(string)]choices, string value)
       ret += "<option value=\"" + value + "\"" +
-	(value==selected?" selected=\"selected\"":"") +
-	">" + value + "</option>\n";
+        (value==selected?" selected=\"selected\"":"") +
+        ">" + value + "</option>\n";
   }
 
   return ret + "</select>";
@@ -79,8 +79,8 @@ string select(string name, array(string)|array(array(string)) choices,
 //! @seealso
 //!   pad_rows
 string simple_obox( array(array(string)) rows, void|string frame_color, void|string cell_color,
-		    void|string width, void|string padding,
-		    void|function(int, int, string, string : string) cell_callback ) {
+                    void|string width, void|string padding,
+                    void|function(int, int, string, string : string) cell_callback ) {
   string res = "";
   if(!cell_color) cell_color = "#ffffff";
   if(cell_callback) {
@@ -89,8 +89,8 @@ string simple_obox( array(array(string)) rows, void|string frame_color, void|str
       int x;
       res += "<tr>";
       foreach(row, string cell) {
-	res += cell_callback(x, y, cell_color, cell);
-	x++;
+        res += cell_callback(x, y, cell_color, cell);
+        x++;
       }
       res += "</tr>";
       y++;
@@ -100,7 +100,7 @@ string simple_obox( array(array(string)) rows, void|string frame_color, void|str
     foreach(rows, array(string) row) {
       res += "<tr>";
       foreach(row, string cell)
-	res += "<td bgcolor='" + cell_color + "'>" + cell + "</td>";
+        res += "<td bgcolor='" + cell_color + "'>" + cell + "</td>";
       res += "</tr>";
     }
 
@@ -108,7 +108,7 @@ string simple_obox( array(array(string)) rows, void|string frame_color, void|str
 }
 
 private string wrap_simple_obox( string rows, void|string frame_color,
-				 void|string width, void|string padding ) {
+                                 void|string width, void|string padding ) {
   if(!frame_color) frame_color = "#000000";
   return "<table bgcolor='" + frame_color + "' cellspacing='0' cellpadding='0' border='0'><tr><td>\n"
     "<table bgcolor='" + frame_color + "' cellspacing='" + (width||"1") + "' cellpadding='" +
@@ -128,7 +128,7 @@ array(array(string)) pad_rows( array(array(string)) rows, void|string padding ) 
 
 // Kludge: An alternative name to allow access from OBox.pad_rows.
 protected array(array(string)) _pad_rows( array(array(string)) rows,
-					  void|string padding )
+                                          void|string padding )
   {return pad_rows (rows, padding);}
 
 //! Provides the same functionality as the @[simple_obox] function,
@@ -158,8 +158,8 @@ class OBox {
   //!   void|string width, void|string padding,@
   //!   void|function(int, int, string, string : string) cell_callback)
   void create( void|string _frame_color, void|string _cell_color,
-	       void|string _width, void|string _padding,
-	       void|function(int, int, string, string : string) _cb) {
+               void|string _width, void|string _padding,
+               void|function(int, int, string, string : string) _cb) {
     if(_frame_color) frame_color = _frame_color;
     if(_cell_color) cell_color = _cell_color;
     if(_width) width = _width;
@@ -186,7 +186,7 @@ class OBox {
     }
     else
       foreach(_args, mapping m)
-	if(!m->bgcolor) m->bgcolor = cell_color;
+        if(!m->bgcolor) m->bgcolor = cell_color;
 
     args = _args;
   }
@@ -210,7 +210,7 @@ class OBox {
   void add_tagdata_cell( string tag, mapping(string:string) args, string contents ) {
     if(!args->bgcolor) args->bgcolor = cell_color;
     rows[-1] += ({ sprintf("<%s%{ %s='%s'%}>%s</%[0]s>",
-			   tag, (array)args, contents) });
+                           tag, (array)args, contents) });
   }
 
   //! Adds a cell with the provided content.
@@ -223,7 +223,7 @@ class OBox {
       add_tagdata_cell( "td", args[x], contents );
     else
       rows[-1] += ({ "<td bgcolor='" + cell_color + "'>" +
-		     contents + "</td>" });
+                     contents + "</td>" });
     x++;
   }
 
@@ -252,7 +252,7 @@ class OBox {
   //! Returns the result.
   string render() {
     return wrap_simple_obox( "<tr>" + map(rows, `*, "")*"</tr><tr>\n" + "</tr>",
-			     frame_color, width, padding );
+                             frame_color, width, padding );
   }
 
   //!

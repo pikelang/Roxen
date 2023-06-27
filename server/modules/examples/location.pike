@@ -8,19 +8,19 @@ constant cvs_version = "$Id$";
 constant module_type = MODULE_LOCATION|MODULE_EXPERIMENTAL;
 constant module_name = "RefDoc for MODULE_LOCATION";
 constant module_doc = "This module does nothing, but its inlined "
-		      "documentation gets imported into the roxen "
-		      "programmer manual. You really don't want to "
-		      "add this module to your virtual server, promise!";
+                      "documentation gets imported into the roxen "
+                      "programmer manual. You really don't want to "
+                      "add this module to your virtual server, promise!";
 
 // see common_api.pike for further explanations of the above constants
 
 void create()
 {
   defvar("mountpoint",
-	 Variable.Location("/dev/urandom/sort/of/", 0,
-			   "Mount point",
-			   "This is where the module will be inserted "
-			   "in the namespace of your server."));
+         Variable.Location("/dev/urandom/sort/of/", 0,
+                           "Mount point",
+                           "This is where the module will be inserted "
+                           "in the namespace of your server."));
 }
 
 mapping|Stdio.File|void find_file( string path, RequestID id )
@@ -60,7 +60,7 @@ mapping|Stdio.File|void find_file( string path, RequestID id )
 string make_random_string(int min_len, int|void max_len)
 {
   int length = min_len + (max_len ? random(max_len - min_len)
-				  : random(17));
+                                  : random(17));
   return (string)allocate(length, lambda(){ return random(256); })();
 }
 
@@ -118,12 +118,12 @@ array(int)|Stat stat_file( string path, RequestID id )
 //! is needed when uid is needed.
 {
   return ({ 0775, // mode
-	    ({ 17, -2 })[random(2)], // size/special
-	    963331858, // atime
-	    963331858, // mtime
-	    963331858, // ctime
-	    0, // uid
-	    0 /* gid */ });
+            ({ 17, -2 })[random(2)], // size/special
+            963331858, // atime
+            963331858, // mtime
+            963331858, // ctime
+            0, // uid
+            0 /* gid */ });
 } // Of course, it's typically silly to return something like this.
 
 mapping(string:array(int)|Stat) find_dir_stat( string path, RequestID id );

@@ -57,9 +57,9 @@ string parse( RequestID id )
     if( strlen(id->variables->pattern) )
       id->variables->pattern = "mysql://"+trim_sl(id->variables->pattern)+"/";
     DBManager.create_group( id->variables->group,
-			    id->variables->lname,
-			    id->variables->comment,
-			    id->variables->pattern );
+                            id->variables->lname,
+                            id->variables->comment,
+                            id->variables->pattern );
   }
   c = DBManager.get_group( id->variables->group );
 
@@ -95,7 +95,7 @@ string parse( RequestID id )
   res += "</table>";
 
   res += sprintf("<font size=+1><b>"+_(434,"Databases in the group %s")+
-		 "</b></font><br />", c->lname );
+                 "</b></font><br />", c->lname );
 
   array groups = DBManager.group_dbs( id->variables->group );
   res += "<dl>\n";
@@ -103,11 +103,11 @@ string parse( RequestID id )
     foreach( groups, string d )
     {
       res += "<dt><b>"+
-	(view_mode ? "" : "<a href='browser.pike?db="+d+"&amp;&usr.set-wiz-id;'>")+d+
-	(view_mode ? "" : "</a>")+
-	"</b>";
+        (view_mode ? "" : "<a href='browser.pike?db="+d+"&amp;&usr.set-wiz-id;'>")+d+
+        (view_mode ? "" : "</a>")+
+        "</b>";
       if( string cm = DBManager.module_table_info( d, "" )->comment )
-	res += "<dd>"+cm+"</dd>";
+        res += "<dd>"+cm+"</dd>";
       res += "</dt>\n";
     }
   else
@@ -119,11 +119,11 @@ string parse( RequestID id )
     string button;
     if ( sizeof(DBManager.group_dbs(id->variables->group)) )
       button = sprintf("<gbutton textcolor='#BEC2CB'>%s</gbutton>",
-		       _(352, "Delete group"));
+                       _(352, "Delete group"));
     else
       button = sprintf("<a href='%s?group=%s&amp;action=%s&amp;&usr.set-wiz-id;'><gbutton>%s</gbutton></a>",
-		       id->not_query, id->variables->group, "delete",
-		       _(352, "Delete group"));
+                       id->not_query, id->variables->group, "delete",
+                       _(352, "Delete group"));
     res += "<br />"+button;
   }
 

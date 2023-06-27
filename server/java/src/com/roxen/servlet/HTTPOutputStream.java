@@ -44,18 +44,18 @@ class HTTPOutputStream extends ServletOutputStream
     } else if(bufused+len > bufsize) {
       int first = bufsize-bufused;
       if(first>0) {
-	System.arraycopy(b, offs, buf, bufused, first);
-	bufused += first;
+        System.arraycopy(b, offs, buf, bufused, first);
+        bufused += first;
       } else
-	first = 0;
+        first = 0;
       flush();
       System.arraycopy(b, offs+first, buf, 0, bufused = len-first);
       if(bufused >= bufsize)
-	flush();
+        flush();
     } else {
       System.arraycopy(b, offs, buf, bufused, len);
       if((bufused += len) >= bufsize)
-	flush();
+        flush();
     }
   }
 

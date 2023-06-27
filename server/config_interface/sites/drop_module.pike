@@ -47,9 +47,9 @@ mapping|string parse( RequestID id )
                     lambda(mixed q){ return c->otomod[q]; });
 
   array pos = map( mods,
-		   lambda(string q) {
-		     return roxen.find_module( (q/"#")[0] )->get_name()+q;
-		   } );
+                   lambda(string q) {
+                     return roxen.find_module( (q/"#")[0] )->get_name()+q;
+                   } );
 
   sort(pos, mods);
   foreach( mods, string q )
@@ -58,7 +58,7 @@ mapping|string parse( RequestID id )
     int c = (int)((q/"#")[-1]);
     res += ("<p><gbutton href='drop_module.pike?config=&form.config;&amp;"
             "drop="+replace(q,"#","!")+"&amp;&usr.set-wiz-id;'> "+
-	    LOCALE(252, "Drop Module")+
+            LOCALE(252, "Drop Module")+
             " </gbutton>"+"&nbsp; <font size='+2'>&nbsp;"+m->get_name()+"</font> "+(c?" #"+(c+1):"")+"</p>" );
   }
   return page_base( id, res );

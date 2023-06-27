@@ -13,13 +13,13 @@ int du(string dir)
     mixed st = file_stat(path);
     if (st) {
       if (st[1] == -2) {
-	// Recurse
-	total += du(path);
+        // Recurse
+        total += du(path);
       } else if (st[1] >= 0) {
-	// Ordinary file
-	total += st[1];
+        // Ordinary file
+        total += st[1];
       } else {
-	werror(sprintf("%O is not an ordinary file!\n", path));
+        werror(sprintf("%O is not an ordinary file!\n", path));
       }
     } else {
       // Probably not reached.
@@ -56,12 +56,12 @@ int main(int argc, array(string) argv)
       break;
     case "help":
       write(sprintf("Usage:\n"
-		    "\t%s [options] quotafile\n"
-		    "Options:\n"
-		    "\t-c, --create   Create database.\n"
-		    "\t-h, --help     Show usage information.\n"
-		    "\t-v, --version  Show version information.\n",
-		    argv[0]));
+                    "\t%s [options] quotafile\n"
+                    "Options:\n"
+                    "\t-c, --create   Create database.\n"
+                    "\t-h, --help     Show usage information.\n"
+                    "\t-v, --version  Show version information.\n",
+                    argv[0]));
       exit(0);
       break;
     case "version":
@@ -91,12 +91,12 @@ int main(int argc, array(string) argv)
 
     if (!sizeof(in)) {
       if (sizeof(input) && (input[-1] != '\n')) {
-	input += "\n";
+        input += "\n";
       }
     } else {
       input += in;
       if (search(in, "\n") == -1) {
-	continue;
+        continue;
       }
     }
 
@@ -111,16 +111,16 @@ int main(int argc, array(string) argv)
   werror("Done. Rebuilding index...\n");
 
   werror(sprintf("Before:\n"
-		 "index:%O\n"
-		 "index_acc:%O\n",
-		 quota_db->index,
-		 quota_db->index_acc));
+                 "index:%O\n"
+                 "index_acc:%O\n",
+                 quota_db->index,
+                 quota_db->index_acc));
 
   quota_db->rebuild_index();
 
   werror(sprintf("After:\n"
-		 "index:%O\n",
-		 quota_db->index));
+                 "index:%O\n",
+                 quota_db->index));
 
   exit(0);
 }

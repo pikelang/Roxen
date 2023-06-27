@@ -39,10 +39,10 @@ int main(int argc, array(string) argv)
       break;
     case "--version":
       if (stringp(opt[1])) {
-	version_str = opt[1];
+        version_str = opt[1];
       } else {
-	werror("$Id$\n");
-	exit(0);
+        werror("$Id$\n");
+        exit(0);
       }
       break;
     case "--title":
@@ -62,8 +62,8 @@ int main(int argc, array(string) argv)
   string version_guid =
     Standards.UUID.make_version3(version_str, base_guid)->str();
   Directory root = Directory("SourceDir",
-			     Standards.UUID.UUID(version_guid)->encode(),
-			     "TARGETDIR");
+                             Standards.UUID.UUID(version_guid)->encode(),
+                             "TARGETDIR");
   string server_dir = "server-"+version_str;
 
 #if defined(UNIX_PREFIX) && defined(NT_PREFIX)
@@ -74,18 +74,18 @@ int main(int argc, array(string) argv)
 
   // First make sure we have a pike binary in the appropriate place.
   root->merge_module(server_dir+"/pike", replace(pike_module, "/", "\\"),
-		     "Pike", "PIKE_TARGETDIR");
+                     "Pike", "PIKE_TARGETDIR");
 
   Parser.XML.Tree.SimpleTextNode line_feed =
     Parser.XML.Tree.SimpleTextNode("\n");
 
   WixNode feature_node =
     WixNode("Feature", ([
-	      "ConfigurableDirectory":"TARGETDIR",
-	      "Title":title,
-	      "Level":"1",
-	      "Id":"F_ROXEN",
-	    ]))->
+              "ConfigurableDirectory":"TARGETDIR",
+              "Title":title,
+              "Level":"1",
+              "Id":"F_ROXEN",
+            ]))->
     add_child(line_feed)->
     add_child(WixNode("MergeRef", ([ "Id":"Pike" ])))->
     add_child(line_feed);
@@ -113,22 +113,22 @@ int main(int argc, array(string) argv)
   Directory d = root->low_add_path(({ "configurations" }));
   d->low_install_file("server_version", "server_version");
   feature_node->add_child(WixNode("ComponentRef", ([
-				    "Id":"C_" + d->id,
-				  ])))->
+                                    "Id":"C_" + d->id,
+                                  ])))->
     add_child(line_feed);
 
   // Add cleanup.
   root->uninstall_file(combine_path(server_dir, "bin/roxen*.exe"));
   feature_node->add_child(WixNode("ComponentRef", ([
-				    "Id":"C_" + root->sub_dirs[server_dir]->
-				    sub_dirs["bin"]->id,
-				  ])))->
+                                    "Id":"C_" + root->sub_dirs[server_dir]->
+                                    sub_dirs["bin"]->id,
+                                  ])))->
     add_child(line_feed);
   root->uninstall_file(combine_path(server_dir, "pikelo*.txt"));
   root->uninstall_file(combine_path(server_dir, "mysql*.txt"));
   feature_node->add_child(WixNode("ComponentRef", ([
-				    "Id":"C_" + root->sub_dirs[server_dir]->id,
-				  ])))->
+                                    "Id":"C_" + root->sub_dirs[server_dir]->id,
+                                  ])))->
     add_child(line_feed);
 
   // Start menu.
@@ -136,85 +136,85 @@ int main(int argc, array(string) argv)
     root->low_add_path(({"Program Menu"}), "ProgramMenuFolder");
 
   Directory sub_menu = start_menu->low_add_path(({title}),
-						"ProductMenuFolder");
+                                                "ProductMenuFolder");
   sub_menu->low_add_shortcut("Roxen Administration", "ProductMenuFolder", 0,
-			     "[BROWSER]",
-			     "[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/");
+                             "[BROWSER]",
+                             "[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/");
   sub_menu->low_add_shortcut("Roxen Documentation", "ProductMenuFolder", 0,
-			     "[BROWSER]",
-			     "[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/docs/");
+                             "[BROWSER]",
+                             "[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/docs/");
   sub_menu->low_add_shortcut("Start Roxen (log to file)", "ProductMenuFolder", 0,
-			     "[TARGETDIR]ntstart",
-			     "\"[TARGETDIR]ntstart.exe\" --quiet",
-			     "TARGETDIR", "minimized");
+                             "[TARGETDIR]ntstart",
+                             "\"[TARGETDIR]ntstart.exe\" --quiet",
+                             "TARGETDIR", "minimized");
   sub_menu->low_add_shortcut("Start Roxen (log to window)", "ProductMenuFolder", 0,
-			     "[TARGETDIR]ntstart",
-			     "\"[TARGETDIR]ntstart.exe\"",
-			     "TARGETDIR");
+                             "[TARGETDIR]ntstart",
+                             "\"[TARGETDIR]ntstart.exe\"",
+                             "TARGETDIR");
   feature_node->add_child(WixNode("ComponentRef", ([
-				    "Id":"C_" + sub_menu->id,
-				  ])))->
+                                    "Id":"C_" + sub_menu->id,
+                                  ])))->
     add_child(line_feed);
 
   // Generate the XML.
   Parser.XML.Tree.SimpleRootNode root_node = Parser.XML.Tree.SimpleRootNode()->
     add_child(Parser.XML.Tree.SimpleHeaderNode((["version": "1.0",
-						 "encoding": "utf-8"])))->
+                                                 "encoding": "utf-8"])))->
     add_child(WixNode("Wix", (["xmlns":wix_ns]))->
-	      add_child(line_feed)->
-	      add_child(WixNode("Product", ([
-				  "Manufacturer":manufacturer,
-				  "Name":title + " " + version_str,
-				  "Language":"1033",
-				  "UpgradeCode":base_guid,
-				  "Id":version_guid,
-				  "Version":version_str,
-				]))->
-			add_child(line_feed)->
+              add_child(line_feed)->
+              add_child(WixNode("Product", ([
+                                  "Manufacturer":manufacturer,
+                                  "Name":title + " " + version_str,
+                                  "Language":"1033",
+                                  "UpgradeCode":base_guid,
+                                  "Id":version_guid,
+                                  "Version":version_str,
+                                ]))->
+                        add_child(line_feed)->
 #if 0
-			add_child(WixNode("Upgrade", ([
-					    "Id":base_guid,
-					  ]))->
-				  add_child(line_feed)->
-				  add_child(WixNode("UpgradeVersion", ([
-						      "IgnoreRemoveFailure":"yes",
-						      "IncludeMaximum":"no",
-						      "Maximum":version_str,
-						      "OnlyDetect":"yes",
-						    ])))->
-				  add_child(line_feed))->
+                        add_child(WixNode("Upgrade", ([
+                                            "Id":base_guid,
+                                          ]))->
+                                  add_child(line_feed)->
+                                  add_child(WixNode("UpgradeVersion", ([
+                                                      "IgnoreRemoveFailure":"yes",
+                                                      "IncludeMaximum":"no",
+                                                      "Maximum":version_str,
+                                                      "OnlyDetect":"yes",
+                                                    ])))->
+                                  add_child(line_feed))->
 #endif /* 0 */
-			add_child(line_feed)->
-			add_child(WixNode("Package", ([
-					    "Manufacturer":manufacturer,
-					    "Languages":"1033",
-					    "Compressed":"yes",
-					    "InstallerVersion":"200",
-					    "Platforms":"Intel",
-					    "SummaryCodepage":"1252",
-					    "Id":version_guid,
-					  ])))->
-			add_child(line_feed)->
-			add_child(WixNode("Media", ([
-					    "Cabinet":"Roxen.cab",
-					    "EmbedCab":"yes",
-					    "Id":"1",
-					  ])))->
-			add_child(line_feed)->
-			// Same as [ProductName], but without
-			// the version number.
-			add_child(WixNode("Property", ([
-					    "Id":"ROXEN_TITLE",
-					    "Value":title,
-					  ])))->
-			add_child(line_feed)->
-			add_child(root->gen_xml(UNDEFINED, "1"))->
-			add_child(line_feed)->
-			add_child(feature_node)->
-			add_child(line_feed)->
-			add_child(WixNode("FragmentRef", ([
-					    "Id":"RoxenUI",
-					  ])))))->
+                        add_child(line_feed)->
+                        add_child(WixNode("Package", ([
+                                            "Manufacturer":manufacturer,
+                                            "Languages":"1033",
+                                            "Compressed":"yes",
+                                            "InstallerVersion":"200",
+                                            "Platforms":"Intel",
+                                            "SummaryCodepage":"1252",
+                                            "Id":version_guid,
+                                          ])))->
+                        add_child(line_feed)->
+                        add_child(WixNode("Media", ([
+                                            "Cabinet":"Roxen.cab",
+                                            "EmbedCab":"yes",
+                                            "Id":"1",
+                                          ])))->
+                        add_child(line_feed)->
+                        // Same as [ProductName], but without
+                        // the version number.
+                        add_child(WixNode("Property", ([
+                                            "Id":"ROXEN_TITLE",
+                                            "Value":title,
+                                          ])))->
+                        add_child(line_feed)->
+                        add_child(root->gen_xml(UNDEFINED, "1"))->
+                        add_child(line_feed)->
+                        add_child(feature_node)->
+                        add_child(line_feed)->
+                        add_child(WixNode("FragmentRef", ([
+                                            "Id":"RoxenUI",
+                                          ])))))->
     add_child(line_feed);
 
   write(root_node->render_xml());

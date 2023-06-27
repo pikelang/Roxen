@@ -25,24 +25,24 @@ string site_name;
 void create(Configuration conf) 
 {
   defvar("garb_schedule",
-	 Variable.Schedule( ({ 2, 1, 1, 0, 5 }), 0,
-			    "Schedule",
-			    "When to automatically perform the GC") )
+         Variable.Schedule( ({ 2, 1, 1, 0, 5 }), 0,
+                            "Schedule",
+                            "When to automatically perform the GC") )
     ->set_link_last_run(lambda() { return get_state(); });
 
   defvar("purge_limit", 100000, "Purge limit",
-	 TYPE_INT,
-	 "Maximum number of entries to delete in each run.");
+         TYPE_INT,
+         "Maximum number of entries to delete in each run.");
 
   defvar("local_purge_days", 183, "Local purge days",
-	 TYPE_INT,
-	 "Purge local argcache entries that has not been accessed in the specified number "
-	 "of days.");
+         TYPE_INT,
+         "Purge local argcache entries that has not been accessed in the specified number "
+         "of days.");
 
   defvar("remote_purge_days", 365, "Remote purge days",
-	 TYPE_INT,
-	 "Purge remote argcache entries that has not been accessed in the specified number "
-	 "of days.");
+         TYPE_INT,
+         "Purge remote argcache entries that has not been accessed in the specified number "
+         "of days.");
 
   if(conf)
     site_name = conf->query_name();
@@ -61,37 +61,37 @@ string status()
 
   array(mapping) local_entries = 
     local_db->query("SELECT count(*) as count "
-		    "FROM arguments2");
+                    "FROM arguments2");
 
   array(mapping) local_old = 
     local_db->query("SELECT id, ctime, atime "
-		    "FROM arguments2 "
-		    "ORDER BY atime ASC "
-		    "LIMIT 1");
+                    "FROM arguments2 "
+                    "ORDER BY atime ASC "
+                    "LIMIT 1");
 
   res += 
     sprintf("<tr><td>Local entries:</td> <td>%s</td></tr>\n"
-	    "<tr><td>Local oldest entry:</td> <td>%s</td></tr>\n",
-	    local_entries[0]->count,
-	    local_old[0]->atime);
+            "<tr><td>Local oldest entry:</td> <td>%s</td></tr>\n",
+            local_entries[0]->count,
+            local_old[0]->atime);
 
   Sql.Sql remote_db = DBManager.cached_get("replicate");
   if(remote_db)
   {
     array(mapping) remote_entries = 
       remote_db->query("SELECT count(*) as count "
-		       "FROM arguments2");
+                       "FROM arguments2");
     
     array(mapping) remote_old = 
       remote_db->query("SELECT id, ctime, atime "
-		       "FROM arguments2 "
-		       "ORDER BY atime ASC "
-		       "LIMIT 1");
+                       "FROM arguments2 "
+                       "ORDER BY atime ASC "
+                       "LIMIT 1");
     res += 
       sprintf("<tr><td>Remote entries:</td> <td>%s</td></tr>\n"
-	      "<tr><td>Remote oldest entry:</td> <td>%s</td></tr>\n",
-	      remote_entries[0]->count,
-	      remote_old[0]->atime);
+              "<tr><td>Remote oldest entry:</td> <td>%s</td></tr>\n",
+              remote_entries[0]->count,
+              remote_old[0]->atime);
   }
   else
     res += "<tr><td>No replicate database found.</td></tr>";
@@ -143,14 +143,14 @@ void purge_db(Sql.Sql db, int days, string name)
   int start_time = gethrtime();
 
   db->big_query("DELETE FROM arguments2 "
-		"WHERE atime < SUBDATE(NOW(), %d) "
-		"ORDER BY atime ASC "
-		"LIMIT %d",
-		days, query("purge_limit"));
+                "WHERE atime < SUBDATE(NOW(), %d) "
+                "ORDER BY atime ASC "
+                "LIMIT %d",
+                days, query("purge_limit"));
 
   werror("ArgCache Garb: Purged %d %s entries. [%f s]\n", 
-	 db->master_sql->affected_rows(), name,
-	 (gethrtime() - start_time)/1000000.0);
+         db->master_sql->affected_rows(), name,
+         (gethrtime() - start_time)/1000000.0);
 }
 
 void argcache_garb()
@@ -175,7 +175,7 @@ void create_index(Sql.Sql db, string name)
     int start_time = gethrtime();
     db->query("CREATE INDEX atime ON arguments2 (atime)");
     werror("ArgCache Garb: Add index complete. [%f s]\n", 
-	   (gethrtime() - start_time)/1000000.0);
+           (gethrtime() - start_time)/1000000.0);
   }
 }
 

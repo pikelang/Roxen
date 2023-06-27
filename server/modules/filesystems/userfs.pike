@@ -41,7 +41,7 @@ constant module_unique = 0;
 //     password hashing function with a single "*". cf [bug 7834].
 #define BAD_PASSWORD(us)	(query("only_password") && \
                                  ((us[1] == "") || \
-				  ((us[1][0] == '*') && (us[1][-1] == '*'))))
+                                  ((us[1][0] == '*') && (us[1][-1] == '*'))))
 
 int uid_was_zero()
 {
@@ -63,70 +63,70 @@ void create()
   filesystem::create();
   killvar("searchpath");
   defvar("searchpath", "NONE", _(3,"Search path"), TYPE_DIR|VAR_INITIAL,
-	 (0,"This is where the module will find the files in the real "
-	  "file system"),
-	 0, hide_searchpath);
+         (0,"This is where the module will find the files in the real "
+          "file system"),
+         0, hide_searchpath);
 
   set("mountpoint", "/~");
 
   defvar("only_password", 1, _(4,"Password users only"),
-	 TYPE_FLAG|VAR_INITIAL,
+         TYPE_FLAG|VAR_INITIAL,
          _(5,"Mount only home directories for users with valid passwords."));
 
   defvar("user_listing", 0, _(6,"Enable userlisting"), TYPE_FLAG|VAR_INITIAL,
-	 _(7,"If set a listing of all users will be shown when you access the "
-	   "mount point."));
+         _(7,"If set a listing of all users will be shown when you access the "
+           "mount point."));
 
   defvar("banish_list", ({ "root", "daemon", "bin", "sys", "admin",
-			   "lp", "smtp", "uucp", "nuucp", "listen",
-			   "nobody", "noaccess", "ftp", "news",
-			   "postmaster", ".htaccess", "401.inc", "404.inc",
-			   "favicon.ico" }), _(8,"Banish list"),
-	 TYPE_STRING_LIST, 
-	 _(9,"This is a list of users who's home directories will not be "
-	   "mounted."));
+                           "lp", "smtp", "uucp", "nuucp", "listen",
+                           "nobody", "noaccess", "ftp", "news",
+                           "postmaster", ".htaccess", "401.inc", "404.inc",
+                           "favicon.ico" }), _(8,"Banish list"),
+         TYPE_STRING_LIST, 
+         _(9,"This is a list of users who's home directories will not be "
+           "mounted."));
 
   defvar("own", 0, _(10,"Only owned files"), TYPE_FLAG,
-	 _(11,"If set, only files actually owned by the user will be sent "
-	   "from her home directory. This prohibits users from making "
-	   "confidental files available by symlinking to them. On the other "
-	   "hand it also makes it harder for user to cooperate on projects."));
+         _(11,"If set, only files actually owned by the user will be sent "
+           "from her home directory. This prohibits users from making "
+           "confidental files available by symlinking to them. On the other "
+           "hand it also makes it harder for user to cooperate on projects."));
   
   defvar("virtual_hosting", 0, _(12,"Virtual user hosting"),
-	 TYPE_FLAG|VAR_INITIAL,
-	 _(13,"If set, each user will get her own site. You access the user's "
-	 "with "
-	 "<br><tt>http://&lt;user&gt;.domain.com/&lt;mountpoint&gt;</tt> "
-	 "<br>instead of "
-	 "<br><tt>http://domain.com/&lt;mountpoint&gt;&lt;user&gt;</tt>. "
-	 "<p>This means that you normally set the mount point to '/'. "
-	 "<p>You need to set up CNAME entries in DNS for all users, or a "
-	 "regexp CNAME that matches all users, to get this to "
-	 "work."));
+         TYPE_FLAG|VAR_INITIAL,
+         _(13,"If set, each user will get her own site. You access the user's "
+         "with "
+         "<br><tt>http://&lt;user&gt;.domain.com/&lt;mountpoint&gt;</tt> "
+         "<br>instead of "
+         "<br><tt>http://domain.com/&lt;mountpoint&gt;&lt;user&gt;</tt>. "
+         "<p>This means that you normally set the mount point to '/'. "
+         "<p>You need to set up CNAME entries in DNS for all users, or a "
+         "regexp CNAME that matches all users, to get this to "
+         "work."));
 
   defvar("useuserid", 1, _(14,"Run user scripts as the owner of the script"),
-	 TYPE_FLAG|VAR_MORE,
-	 _(15,"If set, users' CGI and Pike scripts will be run as the user whos"
-	   " home directory the file was found in. This only works if the "
-	 " server was started as root."),
-	 0, uid_was_zero);
+         TYPE_FLAG|VAR_MORE,
+         _(15,"If set, users' CGI and Pike scripts will be run as the user whos"
+           " home directory the file was found in. This only works if the "
+         " server was started as root."),
+         0, uid_was_zero);
 
   defvar("pdir", "html/", _(16,"Public directory"),
-	 TYPE_STRING|VAR_INITIAL,
+         TYPE_STRING|VAR_INITIAL,
          _(17,"This is the directory in the home directory of the users which "
-	 "contains the files that will be shown on the web. "
-	 "If the module is mounted on <tt>/home/</tt>, the file "
-	 "<tt>/home/anne/test.html</tt> is accessed and the home direcory "
-	 "of Anne is <tt>/export/users/anne/</tt> the module will fetch "
-	 "the file <tt>/export/users/anne/&lt;Public dir&gt;/test.html</tt>."),
-	 0, hide_pdir);
+         "contains the files that will be shown on the web. "
+         "If the module is mounted on <tt>/home/</tt>, the file "
+         "<tt>/home/anne/test.html</tt> is accessed and the home direcory "
+         "of Anne is <tt>/export/users/anne/</tt> the module will fetch "
+         "the file <tt>/export/users/anne/&lt;Public dir&gt;/test.html</tt>."),
+         0, hide_pdir);
 
   defvar("homedir" ,1,_(18,"Look in users homedir"), TYPE_FLAG|VAR_INITIAL,
-	 _(19,"If set, the module will look for the files in the user's home "
-	 "directory, according to the <i>Public directory</i> variable. "
-	 "Otherwise the files are fetched from a directory with the same "
-	 "name as the user in the directory configured in the "
-	 "<i>Search path</i> variable." ));
+         _(19,"If set, the module will look for the files in the user's home "
+         "directory, according to the <i>Public directory</i> variable. "
+         "Otherwise the files are fetched from a directory with the same "
+         "name as the user in the directory configured in the "
+         "<i>Search path</i> variable." ));
 }
 
 multiset banish_list;
@@ -151,8 +151,8 @@ protected int on_banish_list (string u)
   if (banish_list[u]) {
     if(!banish_reported[u])
       {
-	banish_reported[u] = 1;
-	USERFS_WERR(sprintf("User %s banished...\n", u));
+        banish_reported[u] = 1;
+        USERFS_WERR(sprintf("User %s banished...\n", u));
       }
     return 1;
   }
@@ -169,9 +169,9 @@ protected array(string) find_user(string f, RequestID id)
     if(id->misc->host) {
       string host = (id->misc->host / ":")[0];
       if(search(host, ".") != -1) {
-	sscanf(host, "%s.%*s", u);
+        sscanf(host, "%s.%*s", u);
       } else {
-	u = host;
+        u = host;
       }
     }
   } else {
@@ -218,16 +218,16 @@ protected string low_real_path(string f, RequestID id)
     if(!us || BAD_PASSWORD(us) || banish_list[u])
     { // No user, or access denied.
       USERFS_WERR(sprintf("Bad password: %O? Banished? %O",
-			  (us?BAD_PASSWORD(us):1),
-			  banish_list[u]));
+                          (us?BAD_PASSWORD(us):1),
+                          banish_list[u]));
       return 0;
     }
     if(query("homedir"))
     {
       if(us[5][-1] != '/')
-	dir = us[ 5 ] + "/" + encode_path(query("pdir"));
+        dir = us[ 5 ] + "/" + encode_path(query("pdir"));
       else
-	dir = us[ 5 ] + encode_path(query("pdir"));
+        dir = us[ 5 ] + encode_path(query("pdir"));
     } else
       dir = encode_path(query("searchpath") + u + "/");
     dude_ok[u] = dir;
@@ -278,7 +278,7 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
     }
     if (stat[5] == (int)us[2]) {
       if(query("useuserid"))
-	id->misc->is_user = norm_f;
+        id->misc->is_user = norm_f;
     } else if (query("own")) {
       USERFS_WERR("File not owned by user.");
       return 0;
@@ -347,7 +347,7 @@ string status()
   if(sizeof(my_configuration()->user_databases()) == 0)
     return "<font color='&usr.warncolor;'>"+
       _(20,"You need at least one user database module in this virtual server "
-	"to resolve your users' homedirectories.")+
+        "to resolve your users' homedirectories.")+
       "</font>";
 }
 
@@ -355,7 +355,7 @@ mapping query_action_buttons()
 {
   if(sizeof(my_configuration()->user_databases()) == 0)
     return ([ _(21,"Add system user database module to server")
-	      : add_standard_userdb ]);
+              : add_standard_userdb ]);
   return ([]);
 }
 

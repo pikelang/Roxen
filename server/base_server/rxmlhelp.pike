@@ -46,7 +46,7 @@ string available_languages(object id) {
     pl="en";
   mapping languages=roxen->language_low(pl)->list_languages();
   return mktable( map(sort(indices(languages) & roxen->list_languages()),
-		      lambda(string code) { return ({ code, languages[code] }); } ));
+                      lambda(string code) { return ({ code, languages[code] }); } ));
 }
 
 // --------------------- Help layout functions --------------------
@@ -107,18 +107,18 @@ protected array desc_cont(TagdocParser parser, mapping m, string c, string rt)
     case "tag":    rt = sprintf("&lt;%s/&gt;", rt); break;
     case "cont":   rt = sprintf("&lt;%s&gt;&lt;/%s&gt;", rt, rt); break;
     case "both":   rt = sprintf("&lt;%s/&gt; or "
-				"&lt;%s&gt;&lt;/%s&gt;",
-				rt, rt, rt); break;
+                                "&lt;%s&gt;&lt;/%s&gt;",
+                                rt, rt, rt); break;
     case "plugin": rt = String.capitalize (replace(rt, "#", " plugin ")); break;
   //case "entity": rt = rt; break;
     case "scope":  rt = rt[..sizeof(rt)-2] + " ... ;";
     case "pi":     rt = "&lt;" + rt + " ... ?&gt;";
   }
   return ({sprintf("\n%s%s%s\n<p>%s</p>\n",
-		   hdr_tags[parser->level][0][0],
-		   parser->clone()->finish(rt)->read(),
-		   hdr_tags[parser->level][0][1],
-		   parser->clone()->finish(c)->read())});
+                   hdr_tags[parser->level][0][0],
+                   parser->clone()->finish(rt)->read(),
+                   hdr_tags[parser->level][0][1],
+                   parser->clone()->finish(c)->read())});
 }
 
 protected array attr_cont(TagdocParser parser, mapping m, string c)
@@ -126,10 +126,10 @@ protected array attr_cont(TagdocParser parser, mapping m, string c)
   string p="";
   if(!m->name) m->name="(Not entered)";
   if(m->value) p=sprintf("<i>%s=%s</i>%s<br />",
-			 m->name,
-			 attr_vals(m->value),
-			 m->default?" ("+m->default+")":""
-			 );
+                         m->name,
+                         attr_vals(m->value),
+                         m->default?" ("+m->default+")":""
+                         );
   if(m->required) p+="<i>This attribute is required.</i><br />";
   p = sprintf("<p><dl><dt><b>%s</b></dt><dd>%s%s</dd></dl></p>",m->name,p,c);
 
@@ -168,15 +168,15 @@ protected string ex_quote(string in)
   // FIXME: Find out why we have the "&lt;" inconsistency and eliminate it.
   return "<div style='white-space: pre; font-family: monospace'>" +
     replace(in,
-	    ({"<",    ">",    "&",     "&lt;"}),
-	    ({"&lt;", "&gt;", "&amp;", "&lt;"}) )+"</div>";
+            ({"<",    ">",    "&",     "&lt;"}),
+            ({"&lt;", "&gt;", "&amp;", "&lt;"}) )+"</div>";
 }
 
 protected string ex_cont(TagdocParser parser, mapping m, string c, string rt, void|object id)
 {
   c=Parser.HTML()->add_container("ent", lambda(Parser.HTML parser, mapping m, string c) {
-					  return "&amp;"+c+";"; 
-					} )->feed(c)->read();
+                                          return "&amp;"+c+";"; 
+                                        } )->feed(c)->read();
   string quoted = ex_quote(c);
   if(m->type=="box")
     return mktable( ({ ({ quoted }) }) );
@@ -241,11 +241,11 @@ protected string list_cont( TagdocParser parser, mapping m, string c )
   return "<"+type+">"+
     Parser.HTML()->
     add_containers( ([ "item":lambda(Parser.HTML p, mapping m, string c) {
-				return ({
-				  "<li>"+
-				  (m->name ? "<b>"+m->name+"</b><br />" : "")+
-				  c+"</li>" });
-			      } ]) )->finish(c)->read()+
+                                return ({
+                                  "<li>"+
+                                  (m->name ? "<b>"+m->name+"</b><br />" : "")+
+                                  c+"</li>" });
+                              } ]) )->finish(c)->read()+
     "</"+type+">";
 }
 
@@ -278,7 +278,7 @@ protected string help_tag( TagdocParser p, mapping m, string c )
 {
   if( m["for"] )
     return find_tag_doc( m["for"], RXML.get_context()->id,0,
-			 NEXT_HDR_LEVEL (p->level));
+                         NEXT_HDR_LEVEL (p->level));
   return 0; // keep.
 }
 
@@ -294,18 +294,18 @@ protected string format_doc(string|mapping doc, string name, object id, int leve
     if(id->misc->pref_languages) {
       foreach(id->misc->pref_languages->get_languages()+({"en"}), string code)
       {
-	object lang=roxen->language_low(code);
-	if(lang) {
-	  array lang_id=lang->id();
-	  if(doc[lang_id[2]]) {
-	    doc=doc[lang_id[2]];
-	    break;
-	  }
-	  if(doc[lang_id[1]]) {
-	    doc=doc[lang_id[1]];
-	    break;
-	  }
-	}
+        object lang=roxen->language_low(code);
+        if(lang) {
+          array lang_id=lang->id();
+          if(doc[lang_id[2]]) {
+            doc=doc[lang_id[2]];
+            break;
+          }
+          if(doc[lang_id[1]]) {
+            doc=doc[lang_id[1]];
+            break;
+          }
+        }
       }
     }
     else
@@ -328,57 +328,57 @@ protected string format_doc(string|mapping doc, string name, object id, int leve
            "desc":desc_cont,
            "attr":attr_cont,
            "ex":ex_cont,
-	   "ex-box":ex_box_cont,
-	   "ex-src":ex_src_cont,
-	   "ex-html":ex_html_cont,
+           "ex-box":ex_box_cont,
+           "ex-src":ex_src_cont,
+           "ex-html":ex_html_cont,
            "noex":noex_cont,
            "tag":lambda(TagdocParser p, mapping m, string c) {
                    return ({ "&lt;"+c+"&gt;" });
                  },
-	   "ent":lambda(TagdocParser p, mapping m, string c) {
-		   return ({ "&amp;" + c + ";" });
-		 },
+           "ent":lambda(TagdocParser p, mapping m, string c) {
+                   return ({ "&amp;" + c + ";" });
+                 },
 
-	   "xref":lambda(TagdocParser p, mapping m, string c) {
-		    string ref = m->href;
-		    if( ref ) {
-		      int is_tag = sscanf(ref, "%s.tag", ref);
+           "xref":lambda(TagdocParser p, mapping m, string c) {
+                    string ref = m->href;
+                    if( ref ) {
+                      int is_tag = sscanf(ref, "%s.tag", ref);
 
-		      if (!is_tag && has_suffix (ref, "/")) {
-			// There are references that look like <xref
-			// href='../if/'/>. Assume it's the tag name
-			// in the path.
-			ref = (ref/"/")[-2];
-			is_tag = 1;
-		      }
-		      else
-			ref = (ref/"/")[-1];
+                      if (!is_tag && has_suffix (ref, "/")) {
+                        // There are references that look like <xref
+                        // href='../if/'/>. Assume it's the tag name
+                        // in the path.
+                        ref = (ref/"/")[-2];
+                        is_tag = 1;
+                      }
+                      else
+                        ref = (ref/"/")[-1];
 
-		      if (!c || !sizeof (c))
-			c = Roxen.html_encode_string (replace(ref, "_", " "));
+                      if (!c || !sizeof (c))
+                        c = Roxen.html_encode_string (replace(ref, "_", " "));
 
-		      if (is_tag && ref != "")
-			c = "<a href='#tag_doc_" +
-			  Roxen.http_encode_url (ref) + "'>"
-			  "&lt;" + c + "&gt;"
-			  "</a>";
-		    }
+                      if (is_tag && ref != "")
+                        c = "<a href='#tag_doc_" +
+                          Roxen.http_encode_url (ref) + "'>"
+                          "&lt;" + c + "&gt;"
+                          "</a>";
+                    }
 
-		    return c;
-		  },
+                    return c;
+                  },
 
            "short":lambda(TagdocParser p, mapping m, string c) {
                      return m->hide?"":c; 
                    },
-	   "note":lambda(TagdocParser p, mapping m, string c) {
-		    return c;
-		  },
-	   "h1": lambda (TagdocParser p, mapping m, string c) {
-		   return ({hdr_tags[p->level][2][0],
-			    p->clone()->finish(c)->read(),
-			    hdr_tags[p->level][2][1]});
-		 },
-	 ]) )->
+           "note":lambda(TagdocParser p, mapping m, string c) {
+                    return c;
+                  },
+           "h1": lambda (TagdocParser p, mapping m, string c) {
+                   return ({hdr_tags[p->level][2][0],
+                            p->clone()->finish(c)->read(),
+                            hdr_tags[p->level][2][1]});
+                 },
+         ]) )->
     add_quote_tag("!--","","--")->
     set_extra(name, id)->finish(doc)->read();
 }
@@ -392,8 +392,8 @@ protected string parse_doc(string|mapping|array doc, string name, object id, int
     string sub = parse_mapping(doc[1], id, NEXT_HDR_LEVEL (level));
     if (sizeof (sub))
       return top +
-	hdr_tags[level][1][0] + "Defined in content" + hdr_tags[level][1][1] +
-	"<dl><dd>" + sub + "</dd></dl>";
+        hdr_tags[level][1][0] + "Defined in content" + hdr_tags[level][1][1] +
+        "<dl><dd>" + sub + "</dd></dl>";
     else
       return top;
   }
@@ -445,7 +445,7 @@ protected int generation;
 multiset undocumented_tags=(<>);
 
 string find_tag_doc(string name, RequestID id, int|void no_undoc,
-		    int|void level, void|mapping(string:int) documented_tags)
+                    int|void level, void|mapping(string:int) documented_tags)
 {
   RXMLHELP_WERR("Help for tag "+name+" requested.");
 
@@ -510,23 +510,23 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc,
     if(objectp(tag)) {
       // FIXME: New style tag. Check for internal documentation.
       if(tag->is_compat_tag) {
-	RXMLHELP_WERR(sprintf("CompatTag %O", tag));
-	tag=tag->fn;
+        RXMLHELP_WERR(sprintf("CompatTag %O", tag));
+        tag=tag->fn;
       }
       else if(tag->is_generic_tag) {
-	RXMLHELP_WERR(sprintf("GenericTag %O", tag));
-	tag=tag->_do_return;
+        RXMLHELP_WERR(sprintf("GenericTag %O", tag));
+        tag=tag->_do_return;
       }
       else {
-	RXMLHELP_WERR(sprintf("NormalTag %O", tag));
-	tag=object_program(tag);
+        RXMLHELP_WERR(sprintf("NormalTag %O", tag));
+        tag=object_program(tag);
       }
     }
     else if(arrayp(tag)) {
       if(tag[0])
-	tag=tag[0][1];
+        tag=tag[0][1];
       else if(tag[1])
-	tag=tag[1][1];
+        tag=tag[1][1];
     }
     else
       continue;
@@ -547,8 +547,8 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc,
     mapping(string:RXML.Tag) plugins=tag_set->get_plugins(name);
     if(sizeof(plugins)) {
       foreach(sort(indices(plugins)), string plugin)
-	res += find_tag_doc(name+"#"+plugin, id,no_undoc,
-			    NEXT_HDR_LEVEL (level), documented_tags);
+        res += find_tag_doc(name+"#"+plugin, id,no_undoc,
+                            NEXT_HDR_LEVEL (level), documented_tags);
     }
 
     if( !level ) {
@@ -570,9 +570,9 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc,
     RXML.set_context( old_ctx );
   }
   return (no_undoc ? "" : 
-	  "<h4>No documentation available for \"" +
-	  Roxen.html_encode_string(name) +
-	  "\".</h4>\n");
+          "<h4>No documentation available for \"" +
+          Roxen.html_encode_string(name) +
+          "\".</h4>\n");
 }
 
 string find_module_doc( string cn, string mn, RequestID id )

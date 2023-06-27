@@ -18,9 +18,9 @@ SIMPLE_DECODE(decode_int, (int)s );
 SIMPLE_DECODE(decode_module, s );
 SIMPLE_DECODE(decode_float, (float)s );
 SIMPLE_DECODE(decode_string,
-	      ((String.width(s)>8)?
-	       utf8_to_string(http_decode_string(string_to_utf8(s))):
-	       http_decode_string(s)));
+              ((String.width(s)>8)?
+               utf8_to_string(http_decode_string(string_to_utf8(s))):
+               http_decode_string(s)));
 
 constant xml_header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
@@ -115,14 +115,14 @@ mapping decode_config_file(string s)
   //  Older Roxen generated invalid XML headers so we have to perform a
   //  lower-case comparison.
   if( sscanf( lower_case(s[..100]),
-	      "%*s" + lower_case(xml_header) + "\n%*s" ) == 2 )
+              "%*s" + lower_case(xml_header) + "\n%*s" ) == 2 )
     s = utf8_to_string( s );
   else
     s = trim_comments( s );
   Parser.HTML()
     ->add_container ("region", decode_config_region)
     ->add_tags ( ([ "roxen-config"  : 0,
-		    "/roxen-config" : 0 ]) )
+                    "/roxen-config" : 0 ]) )
     ->add_quote_tag ("!--", "", "--")
     ->set_extra (res)
     ->finish (s);
@@ -160,14 +160,14 @@ string encode_mixed(mixed from, Configuration c, int|void indent)
      string res="<map>\n";
      foreach(sort (indices (from)), mixed i)
        res += "  "*indent + "  " + encode_mixed(i, c, indent + 1) + " : " +
-	 encode_mixed(from[i],c, indent + 1)+"\n";
+         encode_mixed(from[i],c, indent + 1)+"\n";
      return res + "  "*indent + "</map>";
    }
    default:
      if (objectp (from))
        return "<mod>"+name_of_module(from,c)+"</mod>";
      report_debug("I do not know how to encode "+
-		  sprintf("%t (%O)\n", from, from)+"\n");
+                  sprintf("%t (%O)\n", from, from)+"\n");
      return "<int>0</int>";
   }
 }
@@ -215,7 +215,7 @@ string trim_ws( string indata )
 }
 
 string encode_config_region(mapping m, string reg, Configuration c,
-			    int comments)
+                            int comments)
 {
   string res = "";
   string v;
@@ -225,14 +225,14 @@ string encode_config_region(mapping m, string reg, Configuration c,
     foreach( sort(indices( m )), string q ) {
       string cmt;
       if (comments)
-	if( catch {
-	  string|mapping name=roxenp()->find_module( (q/"#")[0] )->name;
-	  if(mappingp(name)) name=name->standard;
-	  cmt = " <!-- " + replace(replace(name, "--", "- -" ), "--", "- -" ) + " -->";
-	})
-	  cmt = " <!-- Error? -->";
+        if( catch {
+          string|mapping name=roxenp()->find_module( (q/"#")[0] )->name;
+          if(mappingp(name)) name=name->standard;
+          cmt = " <!-- " + replace(replace(name, "--", "- -" ), "--", "- -" ) + " -->";
+        })
+          cmt = " <!-- Error? -->";
       res += sprintf ("  %-30s <int>1</int> </var>%s\n",
-		      "<var name='"+q+"'>", cmt || "");
+                      "<var name='"+q+"'>", cmt || "");
     }
 
     return res;
@@ -267,10 +267,10 @@ string encode_config_region(mapping m, string reg, Configuration c,
       doc = c->get_doc_for( reg, v );
     if(doc)
       res += ("\n  <!--\n    "+
-	      replace(replace(sprintf("%*-=s",74,trim_ws(doc)),
-			      ({"\n","--"}), ({"\n    ","- -"})),
-		      "--", "- -")
-	      +"\n   -->\n");
+              replace(replace(sprintf("%*-=s",74,trim_ws(doc)),
+                              ({"\n","--"}), ({"\n    ","- -"})),
+                      "--", "- -")
+              +"\n   -->\n");
     string enc = encode_mixed(m[v],c,1);
     if (has_value (enc, "\n"))
       res += "  <var name='" + v + "'>" + enc + "</var>\n";
@@ -288,8 +288,8 @@ string encode_regions(mapping r, Configuration c)
     "<roxen-config>\n\n";
   int comments = all_constants()->roxen->query ("config_file_comments");
   foreach(r->EnabledModules ?
-	  ({"EnabledModules"}) + sort(indices(r) - ({"EnabledModules"})) :
-	  sort(indices(r)), v)
+          ({"EnabledModules"}) + sort(indices(r) - ({"EnabledModules"})) :
+          sort(indices(r)), v)
     res += "<region name='"+v+"'>\n" +
              encode_config_region(r[v],v,c,comments)
            + "</region>\n\n";

@@ -30,29 +30,29 @@ array(string) list_all_configurations()
     if(!fii)
     {
       report_fatal("I cannot read from the configurations directory ("+
-		   combine_path(getcwd(), configuration_dir)+")\n");
+                   combine_path(getcwd(), configuration_dir)+")\n");
       roxenloader.real_exit(-1); // Restart.
     }
     return ({});
   }
   return Array.uniq(map(filter(fii, lambda(string s){
-	  if(s == "CVS" || s == "Global_Variables" || s == "Global Variables" ||
-	     s == "global_variables" || s == "global variables" ||
-	     s == "server_version" ||
-	     s[0] == '_' || s[0] == '.' || s[0] == '#' || s[-1] == '~')
-	    return 0;
-	  return 1;
-	}), lambda(string s) {
-	  if (has_suffix(s, "~")) {
-	    if (has_suffix(s, "~2~"))
-	      s = s[..<3];
-	    else if (has_suffix(s, ".new~"))
-	      s = s[..<5];
-	    else
-	      s = s[..<1];
-	  }
-	  return replace(utf8_to_string(s), "_", " ");
-	}));
+          if(s == "CVS" || s == "Global_Variables" || s == "Global Variables" ||
+             s == "global_variables" || s == "global variables" ||
+             s == "server_version" ||
+             s[0] == '_' || s[0] == '.' || s[0] == '#' || s[-1] == '~')
+            return 0;
+          return 1;
+        }), lambda(string s) {
+          if (has_suffix(s, "~")) {
+            if (has_suffix(s, "~2~"))
+              s = s[..<3];
+            else if (has_suffix(s, ".new~"))
+              s = s[..<5];
+            else
+              s = s[..<1];
+          }
+          return replace(utf8_to_string(s), "_", " ");
+        }));
 }
 
 
@@ -65,7 +65,7 @@ void save_it(string cl, mapping data)
   if( call_outs[ cl ] ) {
 #ifdef DEBUG_CONFIG
     report_debug ("CONFIG: save_it removing call out for %O, count %O\n",
-		  cl, call_outs[cl]->counter);
+                  cl, call_outs[cl]->counter);
 #endif
     remove_call_out( call_outs[ cl ]->callout );
   }
@@ -74,7 +74,7 @@ void save_it(string cl, mapping data)
   call_outs[ cl ] = ([ "callout" : call_out( really_save_it, 0.1,
                                              cl, data, counter ),
                        "data" : data,
-		       "counter" : counter ]);
+                       "counter" : counter ]);
 #ifdef DEBUG_CONFIG
   report_debug ("CONFIG: save_it added call out for %O, count %O\n", cl, counter);
 #endif
@@ -87,7 +87,7 @@ private void really_save_it( string cl, mapping data, int counter )
 
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Writing configuration file for cl %O, count %O\n",
-	       cl, counter);
+               cl, counter);
 #endif
 
   f = configuration_dir + replace(string_to_utf8(cl), " ", "_");
@@ -96,8 +96,8 @@ private void really_save_it( string cl, mapping data, int counter )
 
   if(!fd)
     error("Creation of new config file ("+new+") failed"
-	  " ("+strerror(errno())+")"
-	  "\n");
+          " ("+strerror(errno())+")"
+          "\n");
 
   mixed err = catch 
   {
@@ -131,13 +131,13 @@ private void really_save_it( string cl, mapping data, int counter )
     
     if(!fd)
       error("Failed to open new config file (" + new + ") for reading"
-	    " (" + strerror (errno()) + ")\n" );
+            " (" + strerror (errno()) + ")\n" );
     config_stat_cache[cl] = fd->stat();
 
     string read_data = fd->read();
     if (!read_data)
       error ("Failed to read new config file (" + new + ")"
-	     " (" + strerror (fd->errno()) + ")\n");
+             " (" + strerror (fd->errno()) + ")\n");
     if( read_data != data )
       error("Config file differs from expected result");
     fd->close();
@@ -147,17 +147,17 @@ private void really_save_it( string cl, mapping data, int counter )
 
     if( file_stat(f) && !mv(f, f+"~") )
       error("Failed to move current config file (" + f + ") "
-	    "to backup file (" + f + "~)"
-	    " (" + strerror (errno()) + ")\n");
+            "to backup file (" + f + "~)"
+            " (" + strerror (errno()) + ")\n");
 
     if( !mv(new, f) )
     {
       string msg = "Failed to move new config file (" + new + ") "
-	"to current file (" + f + ")"
-	" (" + strerror (errno()) + ")\n";
+        "to current file (" + f + ")"
+        " (" + strerror (errno()) + ")\n";
       if( !mv( f+"~", f ) )
         error(msg + "Failed to move back backup file (" + f + "~)"
-	      " (" + strerror (errno()) + ")!\n");
+              " (" + strerror (errno()) + ")!\n");
       error(msg);
     }
 
@@ -183,7 +183,7 @@ private void really_save_it( string cl, mapping data, int counter )
   {
     if (!mv( f+"~", f ))
       report_debug ("Failed to move back backup file (" + f + "~)"
-		    " (" + strerror (errno()) + ")!\n");
+                    " (" + strerror (errno()) + ")!\n");
     Stdio.cp( f+"~2~", f+"~" );
   }
   catch (fd->close());		// Can't remove open files on NT.
@@ -199,8 +199,8 @@ Stat config_is_modified(string cl)
       return st;
     else
       foreach( ({ 1, 3, 5, 6 }), int i)
-	if(st[i] != config_stat_cache[cl][i])
-	  return st;
+        if(st[i] != config_stat_cache[cl][i])
+          return st;
 }
 
 mapping read_it(string cl)
@@ -209,7 +209,7 @@ mapping read_it(string cl)
   if (call_outs[cl]) {
 #ifdef DEBUG_CONFIG
     report_debug ("CONFIG: Reading data for %O count %O from call out list.\n",
-		  cl, call_outs[cl]->counter);
+                  cl, call_outs[cl]->counter);
 #endif
     return call_outs[cl]->data;
   }
@@ -225,49 +225,49 @@ mapping read_it(string cl)
   foreach(({ "", ".new~", "~", "~2~" }), string suffix) {
     mixed err = catch {
 #ifdef DEBUG_CONFIG
-	report_debug("CONFIG: Trying " + base + suffix + "\n");
+        report_debug("CONFIG: Trying " + base + suffix + "\n");
 #endif
-	fd = open(base + suffix, "r");
-	if (!fd) {
-	  if (suffix != ".new~") {
-	    report_warning("Failed to open configuration %sfile %O for %O.\n",
-			   sizeof(suffix)?"backup ":"",
-			   base + suffix, cl);
-	  }
-	  continue;
-	}
+        fd = open(base + suffix, "r");
+        if (!fd) {
+          if (suffix != ".new~") {
+            report_warning("Failed to open configuration %sfile %O for %O.\n",
+                           sizeof(suffix)?"backup ":"",
+                           base + suffix, cl);
+          }
+          continue;
+        }
 
-	string data = fd->read();
-	if (!sizeof(data || "")) {
-	  if (suffix != ".new~") {
-	    report_error("Configuration %sfile %O for %O is truncated.\n",
-			 sizeof(suffix)?"backup ":"",
-			 base + suffix, cl);
-	  }
-	  continue;
-	}
+        string data = fd->read();
+        if (!sizeof(data || "")) {
+          if (suffix != ".new~") {
+            report_error("Configuration %sfile %O for %O is truncated.\n",
+                         sizeof(suffix)?"backup ":"",
+                         base + suffix, cl);
+          }
+          continue;
+        }
 
-	config_stat_cache[cl] = fd->stat();
-	fd->close();
-	mapping res = decode_config_file( data );
-	if (sizeof(suffix)) {
+        config_stat_cache[cl] = fd->stat();
+        fd->close();
+        mapping res = decode_config_file( data );
+        if (sizeof(suffix)) {
 #ifdef DEBUG_CONFIG
-	  report_debug("CONFIG: Restoring " + base + " from " +
-		       base + suffix + "\n");
+          report_debug("CONFIG: Restoring " + base + " from " +
+                       base + suffix + "\n");
 #endif
-	  mv(base + suffix, base);
-	}
-	return res;
+          mv(base + suffix, base);
+        }
+        return res;
       };
 
     catch (fd->close());
 
     if (err) {
       report_error("Failed to read configuration %sfile %O for %O.\n"
-		   "%s\n",
-		   sizeof(suffix)?"backup ":"",
-		   base + suffix, cl,
-		   describe_backtrace(err));
+                   "%s\n",
+                   sizeof(suffix)?"backup ":"",
+                   base + suffix, cl,
+                   describe_backtrace(err));
     }
   }
 
@@ -310,18 +310,18 @@ void remove_configuration( string name )
 
   if( file_stat(f) && !mv(f, f+"~") ) {
     report_warning("Failed to move current config file (" + f + ") "
-		   "to backup file (" + f + "~)"
-		   " (" + strerror (errno()) + ")\n");
+                   "to backup file (" + f + "~)"
+                   " (" + strerror (errno()) + ")\n");
     if (file_stat (f) && !rm (f))
       error ("Failed to remove config file (" + f + ") "
-	     "(" + strerror (errno()) + ")\n");
+             "(" + strerror (errno()) + ")\n");
   }
 
   last_read = 0; last_data = 0;
 }
 
 void store( string reg, mapping(string:mixed) vars, int q,
-	    Configuration current_configuration )
+            Configuration current_configuration )
 //! Store the settings for a configuration region.
 //!
 //! @param reg
@@ -375,12 +375,12 @@ void store( string reg, mapping(string:mixed) vars, int q,
   {
     m = ([ ]);
     foreach ([mapping(string:Variable.Variable)] vars;
-	     string name; Variable.Variable var) {
+             string name; Variable.Variable var) {
       if (var->save) {
-	// Support for special save callbacks.
-	savers[var->save] = 1;
+        // Support for special save callbacks.
+        savers[var->save] = 1;
       } else {
-	m[ name ] = var->encode();
+        m[ name ] = var->encode();
       }
     }
     data[ reg ] = m;
@@ -405,7 +405,7 @@ string last_read;
 mapping last_data;
 
 mapping(string:mixed) retrieve(string reg,
-			       Configuration current_configuration)
+                               Configuration current_configuration)
 {
   string cl;
 #ifndef IN_INSTALL

@@ -22,21 +22,21 @@ string simple_check()
 function run(string script, int testno)
 {
   return lambda() {
-	   // Really a misnomer, but...
-	   if (!http_url) {
-	     foreach(c->query("URLs"), string url) {
-	       if(has_prefix( url, "ftp://")) {
-		 http_url = (url/"#")[0];
-	       }
-	     }
-	     if(!http_url) {
-	       werror("Cannot run test -- no FTP port open\n");
-	       return;
-	     }
-	   }
+           // Really a misnomer, but...
+           if (!http_url) {
+             foreach(c->query("URLs"), string url) {
+               if(has_prefix( url, "ftp://")) {
+                 http_url = (url/"#")[0];
+               }
+             }
+             if(!http_url) {
+               werror("Cannot run test -- no FTP port open\n");
+               return;
+             }
+           }
 
-	   run_pikescript(script, (string)testno);
-	 };
+           run_pikescript(script, (string)testno);
+         };
 }
 
 void setup()

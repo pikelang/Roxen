@@ -93,7 +93,7 @@ public class RXML {
    * @return            the same value as was passed in
    */
   public static native Object setVar(String var, Object val,
-				     String scopeName);
+                                     String scopeName);
 
   /**
    * Sets the value of a variable in the current scope.  Returns val.
@@ -118,7 +118,7 @@ public class RXML {
    * @return            the same value as was passed in
    */
   public static native Object userSetVar(String var, Object val,
-					 String scopeName);
+                                         String scopeName);
 
   /**
    * Sets the value of a variable in the current scope.  Returns val.

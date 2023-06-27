@@ -3,18 +3,18 @@
 checksum_sort()
 {
     case `uname -s` in
-	Linux)
-	    find . -type f -print0 |
-	      xargs -0 -n1 md5sum |
-	      LANG=c sort -k2
-	    ;;
-	    
-	Darwin)
-	    find . -type f -print0 |
-	      xargs -0 -n1 md5 -r |
-	      sed -e 's/ /  /' |
-	      LANG=c sort -k2
-	    ;;
+        Linux)
+            find . -type f -print0 |
+              xargs -0 -n1 md5sum |
+              LANG=c sort -k2
+            ;;
+            
+        Darwin)
+            find . -type f -print0 |
+              xargs -0 -n1 md5 -r |
+              sed -e 's/ /  /' |
+              LANG=c sort -k2
+            ;;
     esac
 }
 
@@ -48,24 +48,24 @@ fi
 if [ $# = 1 ]
 then
     case "$1" in
-	-h | --help)
-	    print_usage
-	    exit 1
-	    ;;
+        -h | --help)
+            print_usage
+            exit 1
+            ;;
 
-	*)
-	    sums_a="$1"
-	    sums_b=/tmp/checksum-install-"$$".md5
+        *)
+            sums_a="$1"
+            sums_b=/tmp/checksum-install-"$$".md5
 
-	    if [ ! -f "$sums_a" ]
-	    then
-		echo "Fatal: File does not exist: $sums_a" >&2
-		exit 1
-	    fi
-	    
-	    checksum_sort >"$sums_b"
-	    diff -U0 "$sums_a" "$sums_b"
-	    rm "$sums_b"
-	    ;;
+            if [ ! -f "$sums_a" ]
+            then
+                echo "Fatal: File does not exist: $sums_a" >&2
+                exit 1
+            fi
+            
+            checksum_sort >"$sums_b"
+            diff -U0 "$sums_a" "$sums_b"
+            rm "$sums_b"
+            ;;
     esac
 fi

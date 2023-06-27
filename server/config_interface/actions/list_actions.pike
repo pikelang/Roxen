@@ -13,13 +13,13 @@ string parse( RequestID id )
     catch
     {
       if( (q = ((program)f)()) && q->action &&
-	  (!config_setting2("group_tasks")
-	   || (q->action == (id->variables->class||"status") )) &&
-	  (!q->enabled || (q->enabled && q->enabled())))
+          (!config_setting2("group_tasks")
+           || (q->action == (id->variables->class||"status") )) &&
+          (!q->enabled || (q->enabled && q->enabled())))
       {
         res += ({("<action name='" + 
-		  replace((string)q->name, ({"\"", "'"}), ({"&#34;", "&#39;"})) + 
-		  "' fname="+f+" >" + q->doc + "</action>")});
+                  replace((string)q->name, ({"\"", "'"}), ({"&#34;", "&#39;"})) + 
+                  "' fname="+f+" >" + q->doc + "</action>")});
       }
     };
   }

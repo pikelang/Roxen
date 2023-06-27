@@ -38,10 +38,10 @@ Variable get_variables( string v )
 }
 
 string get_diff_def_html( Variable v,
-			  string button_tag,
-			  string def_url,
-			  string diff_url,
-			  int page )
+                          string button_tag,
+                          string def_url,
+                          string diff_url,
+                          int page )
 {
   if( page )
     return v->diff( 2 );
@@ -58,23 +58,23 @@ string get_diff_def_html( Variable v,
     {
       m = ([ "href":diff_url,"target":"_new", ]);
       diff_button =
-	Roxen.make_container( "a",m,
-			      Roxen.make_container(
-				button_tag,
-				([]),
-				LOCALE(474,"Show changes")
-			      ) );
+        Roxen.make_container( "a",m,
+                              Roxen.make_container(
+                                button_tag,
+                                ([]),
+                                LOCALE(474,"Show changes")
+                              ) );
     }
   }
   m = ([ "href" : def_url,
-	 "onclick" : "return confirm('" + LOCALE(1041, "Are you sure you want "
-						    "to restore the default "
-						    "value?") + "');" ]);
+         "onclick" : "return confirm('" + LOCALE(1041, "Are you sure you want "
+                                                    "to restore the default "
+                                                    "value?") + "');" ]);
   return diff_button + " " +
     Roxen.make_container( "a",m,
-	Roxen.make_container( button_tag, ([]),
-			      LOCALE(475, "Restore default value" )+
-			      (oneliner||"") ) );
+        Roxen.make_container( button_tag, ([]),
+                              LOCALE(475, "Restore default value" )+
+                              (oneliner||"") ) );
 
 }
 
@@ -481,14 +481,14 @@ class Variable
     {
       changed_values[ _id ] = to;
       if( get_changed_callback() )
-	get_changed_callback()( this_object() );
+        get_changed_callback()( this_object() );
       return 1;
     }
     else
     {
       m_delete( changed_values, _id );
       if( get_changed_callback() )
-	get_changed_callback()( this_object() );
+        get_changed_callback()( this_object() );
       return -1;
     }
   }
@@ -589,7 +589,7 @@ class Variable
       set_warning(0);
       val = transform_from_form( val[""], val );
       if( !force && val == query() )
-	return 0;
+        return 0;
       array b;
       mixed q = catch( b = verify_set_from_form( val ) );
       if( q || sizeof( b ) != 2 )
@@ -598,14 +598,14 @@ class Variable
           add_warning( q );
         else
           add_warning( "Internal error: Illegal sized array "
-		       "from verify_set_from_form\n" );
+                       "from verify_set_from_form\n" );
         return 0;
       }
       if( b ) 
       {
         add_warning( b[0] );
-	set( b[1] );
-	return 1;
+        set( b[1] );
+        return 1;
       }
     }
   }
@@ -656,7 +656,7 @@ class Variable
   }
 
   protected void create(mixed default_value, void|int flags,
-			void|LocaleString std_name, void|LocaleString std_doc)
+                        void|LocaleString std_name, void|LocaleString std_doc)
     //! Constructor. 
     //! Flags is a bitwise or of one or more of 
     //! 
@@ -758,13 +758,13 @@ class Float
     if(_max != no_limit && new_value > _max)
     {
       warn = sprintf(LOCALE(328,"Value is bigger than %s, adjusted"),
-		     _format(_max) );
+                     _format(_max) );
       new_value = _max;
     }
     else if(_min != no_limit && new_value < _min)
     {
       warn = sprintf(LOCALE(329,"Value is less than %s, adjusted"),
-		     _format(_min) );
+                     _format(_min) );
       new_value = _min;
     }
     return ({ warn, new_value });
@@ -804,9 +804,9 @@ class Float
     string value;
     catch {
       if (_may_be_empty && (float)query() == (float)0)
-	value = "";
+        value = "";
       else
-	value = query()==""? "" : _format( (float)query() );
+        value = query()==""? "" : _format( (float)query() );
     };
     
     additional_args = additional_args || ([]);
@@ -867,17 +867,17 @@ class Int
     string warn;
     if(!intp( new_value ) )
       return ({ sprintf(LOCALE(152,"%O is not an integer"),new_value),
-		query() });
+                query() });
     if( _max != no_limit && new_value > _max)
     {
       warn = sprintf(LOCALE(328,"Value is bigger than %s, adjusted"),
-		     (string)_max );
+                     (string)_max );
       new_value = _max;
     }
     else if( _min != no_limit && new_value < _min)
     {
       warn = sprintf(LOCALE(329,"Value is less than %s, adjusted"),
-		     (string)_min );
+                     (string)_min );
       new_value = _min;
     }
     return ({ warn, new_value });
@@ -947,15 +947,15 @@ class Priority
   {
     if (_max != maximum) {
       if (!maximum || !_max) {
-	set_default_value(0);
-	low_set(0);
+        set_default_value(0);
+        low_set(0);
       } else {
-	// Scale the old value.
-	int new_val = (query() * maximum)/_max;
-	if (new_val < minimum) new_val = minimum;
-	int new_default = (default_value() * maximum)/_max;
-	set_default_value(new_default);
-	low_set(new_val);
+        // Scale the old value.
+        int new_val = (query() * maximum)/_max;
+        if (new_val < minimum) new_val = minimum;
+        int new_default = (default_value() * maximum)/_max;
+        set_default_value(new_default);
+        low_set(new_val);
       }
     }
     _max = maximum;
@@ -976,7 +976,7 @@ class Priority
       m->value = (string)elem;
       if( equal( m->value, current ) ) {
         m->selected="selected";
-	selected = 1;
+        selected = 1;
       }
       res += "  "+Roxen.make_container( "option", m, (string)elem )+"\n";
     }
@@ -985,8 +985,8 @@ class Priority
       // so no other value appears to be selected, and to ensure that
       // the value doesn't change as a side-effect by another change.
       res += "  " + Roxen.make_container (
-	"option", (["value":current, "selected": "selected"]),
-	sprintf(LOCALE(332,"(keep stale value %s)"),current));
+        "option", (["value":current, "selected": "selected"]),
+        sprintf(LOCALE(332,"(keep stale value %s)"),current));
     return res + "</select>";
   }
 
@@ -1034,8 +1034,8 @@ class Priority
   {
     return ::doc() +
       sprintf((string)LOCALE(1120, "<p>%d is the highest priority and "
-			     "0 the lowest.</p>"),
-	      _max);
+                             "0 the lowest.</p>"),
+              _max);
   }
 }
 
@@ -1095,15 +1095,15 @@ class Text
       case 0: return 0;
       case 1: return "";
       case 2: 
-	array lines_orig = default_value()/"\n";
-	array lines_new  = query()/"\n";
+        array lines_orig = default_value()/"\n";
+        array lines_new  = query()/"\n";
 
-	Diff diff = Diff( lines_new, lines_orig, 2 );
+        Diff diff = Diff( lines_new, lines_orig, 2 );
 
-	if( sizeof(diff->get()) )
-	  return diff->html();
-	else
-	  return "<i>"+LOCALE(481,"No difference\n" )+"</i>";
+        if( sizeof(diff->get()) )
+          return diff->html();
+        else
+          return "<i>"+LOCALE(481,"No difference\n" )+"</i>";
     }
   }
 
@@ -1121,7 +1121,7 @@ class Text
   }
 
   protected void create(mixed default_value, void|int flags,
-			void|LocaleString std_name, void|LocaleString std_doc)
+                        void|LocaleString std_name, void|LocaleString std_doc)
     //! Constructor. 
     //! Flags is a bitwise or of one or more of 
     //! 
@@ -1216,8 +1216,8 @@ class Location
   {
     if( !strlen( value ) || !((<'~','/'>)[value[-1]]) )
       return ({
-	LOCALE(330,"You most likely want an ending '/' on this variable"),
-	value
+        LOCALE(330,"You most likely want an ending '/' on this variable"),
+        value
       });
     return ::verify_set( value );
   }
@@ -1293,13 +1293,13 @@ class MultipleChoice
   {
     if (multiselect && stringp(to)) {
       return ({ "Compatibility: "
-		"Converted to multi-select.\n",
-		({ to }),
+                "Converted to multi-select.\n",
+                ({ to }),
       });
     } else if (!multiselect && arrayp(to)) {
       return ({ "Compatibility: "
-		"Converted to single-select.\n",
-		sizeof (to) ? to[0] : default_value(),
+                "Converted to single-select.\n",
+                sizeof (to) ? to[0] : default_value(),
       });
     }
 
@@ -1311,7 +1311,7 @@ class MultipleChoice
   {
     if(!render) {
       if (multiselect)
-	return "(" + map(default_value(), _title) * ", " + ")";
+        return "(" + map(default_value(), _title) * ", " + ")";
       return "("+_title( default_value() )+")";
     }
   }
@@ -1355,15 +1355,15 @@ class MultipleChoice
       array b = ({ 0, val });
       mixed err = catch { b = verify_set_from_form(val); };
       if (err) {
-	add_warning(err);
-	return 0;
+        add_warning(err);
+        return 0;
       } else if (sizeof(b) != 2) {
-	add_warning("Internal error: Illegal sized array "
-		    "from verify_set_from_form\n");
-	return 0;
+        add_warning("Internal error: Illegal sized array "
+                    "from verify_set_from_form\n");
+        return 0;
       }
       if (b[0]) {
-	add_warning(b[0]);
+        add_warning(b[0]);
       }
       values += ({ b[1] });
     }
@@ -1409,34 +1409,34 @@ class MultipleChoice
       string res = "<table>\n";
       foreach( get_choice_list(), mixed elem )
       {
-	mapping m = ([
-	  "type": "checkbox",
-	  "name": path(),
-	  "value": _name(elem),
-	]);
-	if(has_value(current, m->value)) {
-	  m->checked="checked";
-	  current -= ({ m->value });
-	}
-	res += sprintf("<tr><td>%s</td><td>%s</td></tr>\n",
-		       Roxen.make_tag( "input", m),
-		       render_element(elem));
+        mapping m = ([
+          "type": "checkbox",
+          "name": path(),
+          "value": _name(elem),
+        ]);
+        if(has_value(current, m->value)) {
+          m->checked="checked";
+          current -= ({ m->value });
+        }
+        res += sprintf("<tr><td>%s</td><td>%s</td></tr>\n",
+                       Roxen.make_tag( "input", m),
+                       render_element(elem));
       }
       // Make an entry for the current values if they're not in the list,
       // to ensure that the value doesn't change as a side-effect by
       // another change.
       foreach(current, string value)
       {
-	mapping m = ([
-	  "type": "checkbox",
-	  "name": path(),
-	  "value": value,
-	  "checked": "checked",
-	]);
-	string title = sprintf(LOCALE(1121,"(stale value %s)"), value);
-	res += sprintf("<tr><td>%s</td><td>%s</td></tr>\n",
-		       Roxen.make_tag( "input", m),
-		       Roxen.html_encode_string(title));
+        mapping m = ([
+          "type": "checkbox",
+          "name": path(),
+          "value": value,
+          "checked": "checked",
+        ]);
+        string title = sprintf(LOCALE(1121,"(stale value %s)"), value);
+        res += sprintf("<tr><td>%s</td><td>%s</td></tr>\n",
+                       Roxen.make_tag( "input", m),
+                       Roxen.html_encode_string(title));
       }
       res += "</table>";
       // Hidden field allows saving of empty selection.
@@ -1450,28 +1450,28 @@ class MultipleChoice
       string res = "<select name='"+path()+"'"+autosubmit+">\n";
       foreach( get_choice_list(), mixed elem )
       {
-	mapping m = ([]);
-	m->value = _name( elem );
-	if( equal( m->value, current ) ) {
-	  m->selected="selected";
-	  selected = 1;
-	}
-	res += "  "+Roxen.make_container( "option", m, _title( elem ) )+"\n";
+        mapping m = ([]);
+        m->value = _name( elem );
+        if( equal( m->value, current ) ) {
+          m->selected="selected";
+          selected = 1;
+        }
+        res += "  "+Roxen.make_container( "option", m, _title( elem ) )+"\n";
       }
       if (!selected)
-	// Make an entry for the current value if it's not in the list,
-	// so no other value appears to be selected, and to ensure that
-	// the value doesn't change as a side-effect by another change.
-	res += "  " + Roxen.make_container (
-	  "option", (["value":current, "selected": "selected"]),
-	  sprintf(LOCALE(332,"(keep stale value %s)"),current));
+        // Make an entry for the current value if it's not in the list,
+        // so no other value appears to be selected, and to ensure that
+        // the value doesn't change as a side-effect by another change.
+        res += "  " + Roxen.make_container (
+          "option", (["value":current, "selected": "selected"]),
+          sprintf(LOCALE(332,"(keep stale value %s)"),current));
       return res + "</select>";
     }
   }
 
   protected void create( mixed default_value, array|mapping choices,
-			 void|int _flags, void|LocaleString std_name,
-			 void|LocaleString std_doc )
+                         void|int _flags, void|LocaleString std_name,
+                         void|LocaleString std_doc )
     //! Constructor. 
     //!
     //! Choices is the list of possible choices, can be set with 
@@ -1565,7 +1565,7 @@ class FontChoice
   }
 
   protected void create(mixed default_value, void|int flags,
-			void|LocaleString std_name, void|LocaleString std_doc)
+                        void|LocaleString std_name, void|LocaleString std_doc)
     //! Constructor. 
     //! Flags is a bitwise or of one or more of 
     //! 
@@ -1594,8 +1594,8 @@ class AuthMethodChoice
   }
 
   protected void create( string default_value, int flags,
-			 string std_name, string std_doc,
-			 Configuration c )
+                         string std_name, string std_doc,
+                         Configuration c )
   {
     config = c;
     ::create( default_value, ({}), flags, std_name, std_doc );
@@ -1615,8 +1615,8 @@ class UserDBChoice
   }
 
   protected void create( string default_value, int flags,
-			 string std_name, string std_doc,
-			 Configuration c )
+                         string std_name, string std_doc,
+                         Configuration c )
   {
     config = c;
     ::create( default_value, ({}), flags, std_name, std_doc );
@@ -1638,19 +1638,19 @@ class ModuleChoice
     array(RoxenModule)|RoxenModule old = changed_values[_id];
     if (!old) {
       if (module_id) {
-	if (multiselect) {
-	  old = map(module_id, transform_from_form);
-	} else {
-	  old = transform_from_form(module_id);
-	}
+        if (multiselect) {
+          old = map(module_id, transform_from_form);
+        } else {
+          old = transform_from_form(module_id);
+        }
       } else {
-	old = default_value();
-	if (old) {
-	  module_id = _name(old);
-	}
+        old = default_value();
+        if (old) {
+          module_id = _name(old);
+        }
       }
       if (old) {
-	changed_values[_id] = old;
+        changed_values[_id] = old;
       }
     }
     if (equal (to, old)) return 0;
@@ -1675,17 +1675,17 @@ class ModuleChoice
       module_id = to;
       array(RoxenModule) mods = map(to, transform_from_form);
       if (automatic_dependency) {
-	foreach(mods; int i; RoxenModule mod) {
-	  if (!mod && conf->enabled_modules[to[i]]) {
-	    conf->add_modules(({to[i]}), 1);
-	    mod = transform_from_form(to[i]);
-	  }
-	  if (!mod && conf->enabled_modules[to[i]])
-	    // The module exists but isn't started yet. Don't call set()
-	    // in this case since that will cause a bogus warning.
-	    return 0;
-	  mods[i] = mod;
-	}
+        foreach(mods; int i; RoxenModule mod) {
+          if (!mod && conf->enabled_modules[to[i]]) {
+            conf->add_modules(({to[i]}), 1);
+            mod = transform_from_form(to[i]);
+          }
+          if (!mod && conf->enabled_modules[to[i]])
+            // The module exists but isn't started yet. Don't call set()
+            // in this case since that will cause a bogus warning.
+            return 0;
+          mods[i] = mod;
+        }
       }
       // FIXME: Modules that have disappeared from the configuration
       // will be silently removed here. To fix that, "to" must be able
@@ -1696,13 +1696,13 @@ class ModuleChoice
       module_id = to;
       RoxenModule mod = transform_from_form (to);
       if (!mod && automatic_dependency && conf->enabled_modules[to]) {
-	conf->add_modules (({to}), 1);
-	mod = transform_from_form (to);
+        conf->add_modules (({to}), 1);
+        mod = transform_from_form (to);
       }
       if (!mod && conf->enabled_modules[to])
-	// The module exists but isn't started yet. Don't call set()
-	// in this case since that will cause a bogus warning.
-	return 0;
+        // The module exists but isn't started yet. Don't call set()
+        // in this case since that will cause a bogus warning.
+        return 0;
       to = mod;
     }
     return ::set(to);
@@ -1713,15 +1713,15 @@ class ModuleChoice
     array(RoxenModule)|RoxenModule res = changed_values[_id];
     if (!res || (multiselect && has_value(res, 0))) {
       if (module_id) {
-	// The module might have been reloaded.
-	// Try locating it again.
-	if (multiselect) {
-	  res = map(module_id, transform_from_form) - ({ 0 });
-	} else {
-	  res = transform_from_form(module_id);
-	}
+        // The module might have been reloaded.
+        // Try locating it again.
+        if (multiselect) {
+          res = map(module_id, transform_from_form) - ({ 0 });
+        } else {
+          res = transform_from_form(module_id);
+        }
       } else {
-	res = default_value();
+        res = default_value();
       }
       if (res) low_set(res);
     }
@@ -1795,9 +1795,9 @@ class ModuleChoice
   //!   before @expr{start@} in this module is called. Setting this
   //!   flag disables that.
   protected void create(string|array(string) default_id, int flags,
-			string std_name, string std_doc,
-			Configuration conf,
-			void|int no_automatic_dependency)
+                        string std_name, string std_doc,
+                        Configuration conf,
+                        void|int no_automatic_dependency)
   {
     this_program::default_id = default_id;
     this_program::conf = conf;
@@ -1826,8 +1826,8 @@ class ProviderChoice
   //! @param conf
   //!   The current configuration.
   protected void create(string default_id, int flags,
-			string std_name, string std_doc,
-			string provides, Configuration conf)
+                        string std_name, string std_doc,
+                        string provides, Configuration conf)
   {
     this_program::provides = provides;
     ::create(default_id, flags, std_name, std_doc, conf);
@@ -1849,8 +1849,8 @@ class List
     if (stringp(to)) {
       // Backward compatibility junk...
       return ({ "Compatibility: "
-		"Converted from TYPE_STRING to TYPE_STRING_LIST.\n",
-		map(to/",", global.String.trim_all_whites),
+                "Converted from TYPE_STRING to TYPE_STRING_LIST.\n",
+                map(to/",", global.String.trim_all_whites),
       });
     }
     return ::verify_set(to);
@@ -1883,14 +1883,14 @@ class List
     foreach( indices( vl ), string vv )
       if( sscanf( vv, ".set.%d", rn ) && (vv == ".set."+rn) )
       {
-	if ((rn >= 0) && (rn < sizeof(l))) {
-	  m_delete( id->real_variables, path()+vv );
-	  l[rn] = transform_from_form( vl[vv], vl );
-	  m_delete( vl, vv );
-	} else {
-	  report_debug("set_from_form(%O): vv:%O sizeof(l):%d\n",
-		       id, vv, sizeof(l));
-	}
+        if ((rn >= 0) && (rn < sizeof(l))) {
+          m_delete( id->real_variables, path()+vv );
+          l[rn] = transform_from_form( vl[vv], vl );
+          m_delete( vl, vv );
+        } else {
+          report_debug("set_from_form(%O): vv:%O sizeof(l):%d\n",
+                       id, vv, sizeof(l));
+        }
       }
     // then the move...
     foreach( indices(vl), string vv )
@@ -1929,10 +1929,10 @@ class List
     if( q || sizeof( b ) != 2 )
     {
       if( q )
-	add_warning( q );
+        add_warning( q );
       else
-	add_warning( "Internal error: Illegal sized array "
-		     "from verify_set_from_form\n" );
+        add_warning( "Internal error: Illegal sized array "
+                     "from verify_set_from_form\n" );
       return 0;
     }
 
@@ -1948,33 +1948,33 @@ class List
     {
       RequestID nid = id;
       while( nid->misc->orig )
-	nid = id->misc->orig;
+        nid = id->misc->orig;
 
       string section = RXML.get_var("section", "var");
       string query = nid->query;
       if( !query )
-	query = "";
+        query = "";
       else
-	query += "&";
+        query += "&";
 
       //  The URL will get a fragment identifier below and since some
       //  broken browsers (MSIE) incorrectly includes the fragment in
       //  the last variable value we'll place section before random.
       query +=
-	(section ? ("section=" + section + "&") : "") +
-	"random=" + random(4949494);
+        (section ? ("section=" + section + "&") : "") +
+        "random=" + random(4949494);
       query += "&_roxen_wizard_id=" + Roxen.get_wizard_id_cookie(id);
 
       string url =
-	Roxen.http_encode_invalids (nid->not_query +
-				    (nid->misc->path_info || "") +
-				    "?" + query + "#" + path());
+        Roxen.http_encode_invalids (nid->not_query +
+                                    (nid->misc->path_info || "") +
+                                    "?" + query + "#" + path());
 
       nid->set_response_header ("Location", url);
       if( nid->misc->defines )
-	nid->misc->defines[ " _error" ] = 302;
+        nid->misc->defines[ " _error" ] = 302;
       else if( id->misc->defines )
-	id->misc->defines[ " _error" ] = 302;
+        id->misc->defines[ " _error" ] = 302;
     }
 
     return ret;
@@ -1997,7 +1997,7 @@ class List
     foreach( map(query(), transform_to_form), mixed val )
     {
       res += "<tr>\n<td><font size='-1'>"+ render_row(prefix+"set."+i, val, width)
-	+ "</font></td>\n";
+        + "</font></td>\n";
 #define BUTTON(X,Y) ("<submit-gbutton2 name='"+X+"'>"+Y+"</submit-gbutton2>")
 #define REORDER(X,Y) ("<submit-gbutton2 name='"+X+"' icon-src='"+Y+"'></submit-gbutton2>")
 #define DIMBUTTON(X) ("<disabled-gbutton icon-src='"+X+"'></disabled-gbutton>")
@@ -2143,11 +2143,11 @@ class PortList
     foreach( sort(indices( roxenp()->protocols )), string p )
     {
       if( p == split->scheme ) {
-	res += "<option selected='t'>"+p+"</option>";
-	default_port = roxenp()->protocols[p]->default_port;
+        res += "<option selected='t'>"+p+"</option>";
+        default_port = roxenp()->protocols[p]->default_port;
       }
       else
-	res += "<option>"+p+"</option>";
+        res += "<option>"+p+"</option>";
     }
     res += "</select>";
 
@@ -2172,14 +2172,14 @@ class PortList
     if( (int)opts->nobind )
     {
       res +=
-	("<option value='0'>"+LOCALE("yes","Yes")+"</option>"
-	 "<option selected='t' value='1'>"+LOCALE("no","No")+"</option>");
+        ("<option value='0'>"+LOCALE("yes","Yes")+"</option>"
+         "<option selected='t' value='1'>"+LOCALE("no","No")+"</option>");
     }
     else
     {
       res +=
-	("<option selected='t' value='0'>"+LOCALE("yes","Yes")+"</option>"
-	 "<option value='1'>"+LOCALE("no","No")+"</option>");
+        ("<option selected='t' value='0'>"+LOCALE("yes","Yes")+"</option>"
+         "<option value='1'>"+LOCALE("no","No")+"</option>");
     }
     res += "</select>";
     return res;
@@ -2198,12 +2198,12 @@ class PortList
       host = "[" + host + "]";
     
     return (string)Standards.URI(va[v+"prot"]+"://"+ host +
-				 (va[v+"port"] && sizeof (va[v+"port"]) ?
-				  ":"+ va[v+"port"] : "") +"/"+va[v+"path"]+"#"
-		 // all options below this point
-				 "ip="+va[v+"ip"]+";"
-				 "nobind="+va[v+"nobind"]+";"
-				);
+                                 (va[v+"port"] && sizeof (va[v+"port"]) ?
+                                  ":"+ va[v+"port"] : "") +"/"+va[v+"path"]+"#"
+                 // all options below this point
+                                 "ip="+va[v+"ip"]+";"
+                                 "nobind="+va[v+"nobind"]+";"
+                                );
   }
 
   array verify_set_from_form( array(string) new_value )
@@ -2264,11 +2264,11 @@ class Flag
     string res = "<select name=\""+path()+"\"> ";
     if(query())
       res += "<option value=\"1\" selected=\"selected\">" +
-	LOCALE("yes", "Yes")+ "</option>\n"
-	"<option value=\"0\">" +LOCALE("no", "No")+ "</option>\n";
+        LOCALE("yes", "Yes")+ "</option>\n"
+        "<option value=\"0\">" +LOCALE("no", "No")+ "</option>\n";
     else
       res += "<option value=\"1\">" +LOCALE("yes", "Yes")+ "</option>\n"
-	"<option value=\"0\" selected>" +LOCALE("no", "No")+ "</option>\n";
+        "<option value=\"0\" selected>" +LOCALE("no", "No")+ "</option>\n";
     return res+"</select>";
   }
 }
@@ -2288,7 +2288,7 @@ protected array(string) verify_port( string port )
   if( (int)port )
   {
     warning += sprintf(LOCALE(333,"Assuming http://*:%[0]d/ for %[0]d")+"\n",
-		       (int)port);
+                       (int)port);
     port = "http://*:"+port+"/";
   }
   string protocol, host, path;
@@ -2298,7 +2298,7 @@ protected array(string) verify_port( string port )
 
   if(sscanf( port, "%[^:]://%[^/]%s", protocol, host, path ) != 3)
     return ({ sprintf(LOCALE(335,"%s does not conform to URL syntax")+"\n",port),
-	      port });
+              port });
   
 //   if( path == "" || path[-1] != '/' )
 //   {
@@ -2308,7 +2308,7 @@ protected array(string) verify_port( string port )
   if( protocol != lower_case( protocol ) )
   {
     warning += sprintf(LOCALE(338,"Changed %s to %s"),
-		       protocol, lower_case( protocol ))+"\n";  
+                       protocol, lower_case( protocol ))+"\n";  
     protocol = lower_case( protocol );
   }
 #if constant(SSL.File)
@@ -2318,7 +2318,7 @@ protected array(string) verify_port( string port )
     warning +=
       LOCALE(339,"SSL support not available in this Pike version.")+"\n"+
       sprintf(LOCALE(340,"Please use %s instead."),
-	      protocol[..strlen(protocol)-2])+"\n";
+              protocol[..strlen(protocol)-2])+"\n";
 #endif
   int pno;
   int default_pno =
@@ -2331,21 +2331,21 @@ protected array(string) verify_port( string port )
   } else {
     if (sscanf(host, "%s:%d", host, pno) == 2)
       if (pno != default_pno)
-	host = host + ":" + pno;
+        host = host + ":" + pno;
     port = protocol+"://"+host+path;
   }
   if (default_pno && (pno == default_pno))
     warning += sprintf(LOCALE(341, "Removed the default port number "
-				   "(%d) from %s"), pno, port) + "\n";
+                                   "(%d) from %s"), pno, port) + "\n";
   
   if( !roxenp()->protocols[ protocol ] )
     warning += sprintf(LOCALE(342,"Warning: The protocol %s is not known "
-			      "by roxen"),protocol)+"\n";
+                              "by roxen"),protocol)+"\n";
   return ({ (strlen(warning)?warning:0), port });
 }
 
 string input(string name, string value, int size,
-	     void|mapping(string:string) args, void|int noxml)
+             void|mapping(string:string) args, void|int noxml)
 {
   if(!args)
     args=([]);

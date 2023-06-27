@@ -7,12 +7,12 @@ void run(object env)
     foreach(({"/opt","/usr/opt","/usr", "/usr/local","/mp"}), string dir2)
       foreach(sort(glob("sybase*", get_dir(dir2) || ({}))), string dir)
       {
-	dir = dir2+"/"+dir;
-	if(file_stat(dir+"/lib"))
-	{
-	  sybdir = dir;
-	  break;
-	}
+        dir = dir2+"/"+dir;
+        if(file_stat(dir+"/lib"))
+        {
+          sybdir = dir;
+          break;
+        }
       }
   if(!sybdir)
     sybdir = env->get("SYBASE");

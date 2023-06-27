@@ -53,30 +53,30 @@ void start()
       switch(type)
       {
       case "allowip":
-	new_seclevels += ({ ({ regexp(replace(pat, ({ "?", "*", "." }),
-					      ({ ".", ".*", "\." }))),
-			       ALLOW, 
-			       regexp(replace(value, ({ "?", ".", "*" }),
-					      ({ ".", "\.", ".*" })))
-	}) });
-	break;
+        new_seclevels += ({ ({ regexp(replace(pat, ({ "?", "*", "." }),
+                                              ({ ".", ".*", "\." }))),
+                               ALLOW, 
+                               regexp(replace(value, ({ "?", ".", "*" }),
+                                              ({ ".", "\.", ".*" })))
+        }) });
+        break;
 
       case "denyip":
-	new_seclevels += ({ ({ regexp(replace(pat, ({ "?", ".", "*" }),
-					      ({ ".", "\.", ".*" }))),
-			       DENY, 
-			       regexp(replace(value, ({ "?", ".", "*" }),
-					      ({ ".", "\.", ".*" })))
-	}) });
-	break;
+        new_seclevels += ({ ({ regexp(replace(pat, ({ "?", ".", "*" }),
+                                              ({ ".", "\.", ".*" }))),
+                               DENY, 
+                               regexp(replace(value, ({ "?", ".", "*" }),
+                                              ({ ".", "\.", ".*" })))
+        }) });
+        break;
 
       case "allowuser":
-	new_seclevels += ({ ({ regexp(replace(pat, ({ "?", ".", "*", "," }),
-					      ({ ".", "\.", ".*","|" }))),
-			       USER,
-			       value,
-	}) });
-	break;
+        new_seclevels += ({ ({ regexp(replace(pat, ({ "?", ".", "*", "," }),
+                                              ({ ".", "\.", ".*","|" }))),
+                               USER,
+                               value,
+        }) });
+        break;
       }
     }
   }
@@ -92,35 +92,35 @@ int dont_use_page()
 void create()
 {
   defvar("sec", 
-	 "# Only allow from localhost, or persons with a valid account\n"
-	 "*:  allow ip=127.0.0.1\n"
-	 "*:  allow user=any\n",
-	 _(3,"Security patterns"),
+         "# Only allow from localhost, or persons with a valid account\n"
+         "*:  allow ip=127.0.0.1\n"
+         "*:  allow user=any\n",
+         _(3,"Security patterns"),
 
-	 TYPE_TEXT_FIELD|VAR_INITIAL,
+         TYPE_TEXT_FIELD|VAR_INITIAL,
 
-	 (0,"This is the security pattern list, which follows the format"
-	 "<br><tt>files: security pattern</tt><p>"
-	 "Each <i>security pattern</i> can be any from this list:<br>"
-	 "<hr noshade>"
-	 "allow ip=pattern<br>"
-	 "deny ip=pattern<br>"
-	 "allow user=user name,...<br>"
-	 "<hr noshade>"
-	 "<i>Files</i> are a glob pattern matching the files of the file "
-	 "system that will be affected by the security pattern. '*' will "
-	 "match one or more characters, '?' will match one character."));
+         (0,"This is the security pattern list, which follows the format"
+         "<br><tt>files: security pattern</tt><p>"
+         "Each <i>security pattern</i> can be any from this list:<br>"
+         "<hr noshade>"
+         "allow ip=pattern<br>"
+         "deny ip=pattern<br>"
+         "allow user=user name,...<br>"
+         "<hr noshade>"
+         "<i>Files</i> are a glob pattern matching the files of the file "
+         "system that will be affected by the security pattern. '*' will "
+         "match one or more characters, '?' will match one character."));
 
   defvar("page", 0, _(4,"Use form authentication"), TYPE_FLAG,
          (0,"If set it will produce a page containing a login form instead "
-	  "of sending a HTTP authentication needed header."), 0 );
+          "of sending a HTTP authentication needed header."), 0 );
   defvar("expire", 60*15, (0,"Authentication expire time"),
          TYPE_INT,
          _(5,"New authentication will be required if no page has been "
-	  "requested within this time, in seconds."),
+          "requested within this time, in seconds."),
          0, dont_use_page);
   defvar("authpage",
-	 "<HTML><HEAD><TITLE>Authentication needed</TITLE></HEAD><BODY>\n"
+         "<HTML><HEAD><TITLE>Authentication needed</TITLE></HEAD><BODY>\n"
          "<FORM METHOD=post ACTION=$File>\n"
          "<INPUT NAME=httpuser><P>\n"
          "<INPUT NAME=httppass TYPE=password><P>\n"
@@ -130,10 +130,10 @@ void create()
          _(6,"Form authentication page."),
          TYPE_TEXT_FIELD,
          _(7,"Should contain an form with input fields named <i>httpuser</i> "
-	   "and <i>httppass</i>. "
-	   "The string $File will be replaced with the URL to the current "
-	   "page being accessed and "
-	   "$Me with the URL to the site."),
+           "and <i>httppass</i>. "
+           "The string $File will be replaced with the URL to the current "
+           "page being accessed and "
+           "$Me with the URL to the site."),
          0, dont_use_page);
 
   ::create();
@@ -152,56 +152,56 @@ mixed not_allowed(string f, object id)
       switch(level[1])
       {
        case ALLOW: // allow ip=...
-	 if(level[2](id->remoteaddr))
-	   return 0; // Match. It's ok.
-	 break;
-	
+         if(level[2](id->remoteaddr))
+           return 0; // Match. It's ok.
+         break;
+        
        case DENY:  // deny ip=...
-	// If match, this IP-number will never be permitted access. No need to
-	// check any more. User and allow patterns are always checked first.
-	 if(level[2](id->remoteaddr))
-	   return http_low_answer(403, "<h2>Access forbidden</h2>"); 
-	 break;
-	
-	
+        // If match, this IP-number will never be permitted access. No need to
+        // check any more. User and allow patterns are always checked first.
+         if(level[2](id->remoteaddr))
+           return http_low_answer(403, "<h2>Access forbidden</h2>"); 
+         break;
+        
+        
        case USER:  // allow user=...
-	 string uname;
-	 need_auth = 1;
-	 if (query("page") && id->cookies["httpauth"]) {
-	   string user,pass,last;
-	   array(string) y=({ "","" });
-	   sscanf(id->cookies["httpauth"],"%s:%s:%s", user, pass, last);
-	   y[1]=user+":"+pass;
-	   id->auth=id->conf->auth_module->auth(y,id);
-	 }
+         string uname;
+         need_auth = 1;
+         if (query("page") && id->cookies["httpauth"]) {
+           string user,pass,last;
+           array(string) y=({ "","" });
+           sscanf(id->cookies["httpauth"],"%s:%s:%s", user, pass, last);
+           y[1]=user+":"+pass;
+           id->auth=id->conf->auth_module->auth(y,id);
+         }
 
-	 if(!(id->auth && id->auth[0])) {
-	   if(query("page")) {
-	     return http_low_answer(200,
-				    replace(Roxen.parse_rxml(query("authpage"), id),
-					    ({"$File", "$Me"}), 
-					    ({id->not_query,
-					      id->conf->query("MyWorldLocation")})));
+         if(!(id->auth && id->auth[0])) {
+           if(query("page")) {
+             return http_low_answer(200,
+                                    replace(Roxen.parse_rxml(query("authpage"), id),
+                                            ({"$File", "$Me"}), 
+                                            ({id->not_query,
+                                              id->conf->query("MyWorldLocation")})));
 
-	   } else {
-	     return Roxen.http_auth_required("user", 0, id);
-	   }
-	 }
-	 foreach(level[2]/",", uname) {
-	   if((id->auth[1]==uname) || (uname=="any") || (uname=="*")) {
-	     return 0;
-	   }
-	 }
-	 break;
+           } else {
+             return Roxen.http_auth_required("user", 0, id);
+           }
+         }
+         foreach(level[2]/",", uname) {
+           if((id->auth[1]==uname) || (uname=="any") || (uname=="*")) {
+             return 0;
+           }
+         }
+         break;
       }
   }
   if(need_auth) {
     if(query("page")) {
       return http_low_answer(200,
-			     replace(Roxen.parse_rxml(query("authpage"), id),
-				     ({"$File", "$Me"}), 
-				     ({id->not_query,
-				       id->conf->query("MyWorldLocation")})));
+                             replace(Roxen.parse_rxml(query("authpage"), id),
+                                     ({"$File", "$Me"}), 
+                                     ({id->not_query,
+                                       id->conf->query("MyWorldLocation")})));
     } else {
       return Roxen.http_auth_required("user", 0 , id);
     }
@@ -222,15 +222,15 @@ mixed find_file(string f, object id)
       sscanf(id->cookies["httpauth"],"%s:%s:%d", user, pass, last);
     } else if (id->cookies["httpauth"]) {
       report_warning(sprintf("secure_fs: find_file():\n"
-			     "Unexpected value for cookie \"httpauth\":\n"
-			     "%O\n",
-			     id->cookies["httpauth"]));
+                             "Unexpected value for cookie \"httpauth\":\n"
+                             "%O\n",
+                             id->cookies["httpauth"]));
     }
     if(!last || (last+query("expire") < time(1)))
       m_delete(id->cookies,"httpauth");
     if(id->variables["httpuser"]&&id->variables["httppass"])
       id->cookies["httpauth"]=sprintf("%s:%s:%d", id->variables["httpuser"],
-				      id->variables["httppass"], time(1));
+                                      id->variables["httppass"], time(1));
   }
 
   if(tmp2=::find_file(f, id))

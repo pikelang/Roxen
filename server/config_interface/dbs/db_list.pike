@@ -38,12 +38,12 @@ string format_table_owner (mapping(string:string) mod_info, void|int skip_conf)
   if (!skip_conf) {
     if (c) {
       mn = "<a href='../sites/site.html/" +
-	Roxen.http_encode_url (mod_info->conf) + "/'>" +
-	Roxen.html_encode_string (c->query_name()) + "</a>";
+        Roxen.http_encode_url (mod_info->conf) + "/'>" +
+        Roxen.html_encode_string (c->query_name()) + "</a>";
     }
     else
       mn = Roxen.html_encode_string (
-	sprintf ((string) _(542, "the deleted site %O"), mod_info->conf));
+        sprintf ((string) _(542, "the deleted site %O"), mod_info->conf));
   }
 
   if( m ) {
@@ -59,13 +59,13 @@ string format_table_owner (mapping(string:string) mod_info, void|int skip_conf)
   else if( i ) {
     if (mn)
       mn = sprintf (
-	(string) _(544, "the deleted module %s in %s"),
-	Roxen.html_encode_string (sprintf ("%O", (string) i->get_name())),
-	mn);
+        (string) _(544, "the deleted module %s in %s"),
+        Roxen.html_encode_string (sprintf ("%O", (string) i->get_name())),
+        mn);
     else
       mn = sprintf (
-	(string) _(545, "the deleted module %s"),
-	Roxen.html_encode_string (sprintf ("%O", (string) i->get_name())));
+        (string) _(545, "the deleted module %s"),
+        Roxen.html_encode_string (sprintf ("%O", (string) i->get_name())));
   }
 
   return mn;
@@ -96,7 +96,7 @@ string|mapping parse( RequestID id )
   mapping(string:mapping(string:int)) q = DBManager.get_permission_map( );
   if( !sizeof( q ) )
     return _(549, "No defined databases.\n");
-	
+        
   string res = "<style type='text/css'>\n"
     "#tbl {"
     " font-size: smaller;"
@@ -154,15 +154,15 @@ string|mapping parse( RequestID id )
 
     mapping(string:int) db_stats;
     if ( mixed e = catch {
-	db_stats = DBManager.db_stats( db ) || ([]);
+        db_stats = DBManager.db_stats( db ) || ([]);
       } ) {
       string em = describe_error(e);
       sscanf( em, "%*sreconnect to SQL-server%s", em);
       rres[db_group] += res +
-	"<td colspan='4'>" +
-	(db_url ? Roxen.html_encode_string (db_url) + "<br />" : "") +
-	"<font color='&usr.warncolor;'>" + em + "</font></td>"
-	"</tr>\n";
+        "<td colspan='4'>" +
+        (db_url ? Roxen.html_encode_string (db_url) + "<br />" : "") +
+        "<font color='&usr.warncolor;'>" + em + "</font></td>"
+        "</tr>\n";
       continue;
     }
 
@@ -183,17 +183,17 @@ string|mapping parse( RequestID id )
     else
     {
       if( mixed err = catch( DBManager.cached_get( db ) ) )
-	res += "<td><font color='&usr.warncolor;'>" +
-	  _(381,"Failed to connect") + ": " +
-	  describe_error(err) + "</font></td>";
+        res += "<td><font color='&usr.warncolor;'>" +
+          _(381,"Failed to connect") + ": " +
+          describe_error(err) + "</font></td>";
       else
-	res += "<td>remote</td>";
+        res += "<td>remote</td>";
     }
 
     // Backup schedule
 
     res += "<td>" + (DBManager.db_schedule(db) ||
-		     ("<i>" + _(1116, "NONE") + "</i>")) + "</td>";
+                     ("<i>" + _(1116, "NONE") + "</i>")) + "</td>";
 
     // Owner/info column
 
@@ -201,12 +201,12 @@ string|mapping parse( RequestID id )
 
     if (db == "local")
       res += "<td>" +
-	_(546, "Internal data that cannot be shared between servers.") +
-	"</td>";
+        _(546, "Internal data that cannot be shared between servers.") +
+        "</td>";
     else if (db == "shared")
       res += "<td>" +
-	_(547, "Internal data that may be shared between servers.") +
-	"</td>";
+        _(547, "Internal data that may be shared between servers.") +
+        "</td>";
     else if (db == "docs")
       res += "<td>" + _(1024, "Contains all documentation.") + "</td>";
     else if (!sizeof (db_mod_info))
@@ -215,7 +215,7 @@ string|mapping parse( RequestID id )
       res += "<td>" + String.capitalize (owner) + "</td>";
     else
       res += "<td>" +
-	Roxen.html_encode_string (db_mod_info->comment || "") + "</td>";
+        Roxen.html_encode_string (db_mod_info->comment || "") + "</td>";
 
     rres[db_group] += res + "</tr>\n";
   }
@@ -226,7 +226,7 @@ string|mapping parse( RequestID id )
       cats += ({ ({DBManager.get_group(c)->lname, c}) });
     else
       cats = ({ ({DBManager.get_group(c)->lname, c}) }) + cats;
-	
+        
   foreach( cats[0..0]+sort(cats[1..]); int i; array q ) {
     res += "<tbody>\n"
       "<tr class='group-hdr'><th colspan='6'>" + (i ? "<br/>" : "") +

@@ -127,27 +127,27 @@ private void write_some () {
       catch(tosend = fd_in->read( min( file_len, 32768 ) ));
       if( !tosend || !strlen(tosend) )
       {
-	tosend = "";
-	THROTTLING_DEBUG("read: errno: "+fd_in->errno()+"\n");
-	if( fd_in->errno() == 11 )
-	{
-	  remove_call_out( write_some );
-	  call_out( write_some, 0.01 );
-	}
-	else
-	{
-	  catch(fd_in->close());
-	  fd_in = 0;
-	  finish();
-	}
-	return;
+        tosend = "";
+        THROTTLING_DEBUG("read: errno: "+fd_in->errno()+"\n");
+        if( fd_in->errno() == 11 )
+        {
+          remove_call_out( write_some );
+          call_out( write_some, 0.01 );
+        }
+        else
+        {
+          catch(fd_in->close());
+          fd_in = 0;
+          finish();
+        }
+        return;
       }
       else
-	file_len -= strlen( tosend );
+        file_len -= strlen( tosend );
       if( (file_len <= 0)  )
       {
-	catch(fd_in->close());
-	fd_in = 0;
+        catch(fd_in->close());
+        fd_in = 0;
       }
     }
     else

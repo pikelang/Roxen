@@ -30,11 +30,11 @@ constant module_doc  = "This module provides the emit sources \"timerange\" and"
 // > &_.week.day.name; and so on from the look of the below scope_layout </emit>
 
 protected constant units =        ({ "Year", "Month", "Week", "Day",
-				     "Hour", "Minute", "Second" });
+                                     "Hour", "Minute", "Second" });
 protected constant calendars =    ({ "ISO", "Gregorian", "Julian", "Coptic",
-				     "Islamic", "Discordian", "unknown" });
+                                     "Islamic", "Discordian", "unknown" });
 protected constant output_units = ({ "years", "months", "weeks", "days",
-				     "hours", "minutes", "seconds", "unknown"});
+                                     "hours", "minutes", "seconds", "unknown"});
 // output_unit_no is used for the comparing when using query attribute.
 protected constant ouput_unit_no = ({ 3,6,0,9,12,15,18,0 });
 protected constant scope_layout = ([ // Date related data:
@@ -111,14 +111,14 @@ protected constant scope_layout = ([ // Date related data:
   "default.language"	: "q:language",
 ]);
 protected constant iso_weekdays = ([ "monday": 0, "tuesday": 1, "wednesday": 2,
-				     "thirsday": 3, // sic
-				     "thursday": 3, "friday": 4,"saturday": 5,
-				     "sunday": 6]);
+                                     "thirsday": 3, // sic
+                                     "thursday": 3, "friday": 4,"saturday": 5,
+                                     "sunday": 6]);
 protected constant gregorian_weekdays = ([ "sunday": 0, "monday": 1,
-					   "tuesday": 2, "wednesday": 3,
-					   "thirsday": 4, // sic
-					   "thursday": 4, "friday": 5,
-					   "saturday": 6]);
+                                           "tuesday": 2, "wednesday": 3,
+                                           "thirsday": 4, // sic
+                                           "thursday": 4, "friday": 5,
+                                           "saturday": 6]);
 
 protected mapping layout;
 //! create() constructs this module-global recursive mapping,
@@ -172,7 +172,7 @@ void create(Configuration conf)
 
   layout = ([]);
   array idx = indices( scope_layout ),
-	vals = values( scope_layout );
+        vals = values( scope_layout );
   for(int i = 0; i < sizeof( scope_layout ); i++)
   {
     array split = idx[i] / ".";
@@ -182,24 +182,24 @@ void create(Configuration conf)
     {
       string|function value = vals[i];
       if(sscanf(value, "o:%s", value))
-	value = [function]this_object()[value];
+        value = [function]this_object()[value];
       if(j == last)
-	if(t2 = t1[index])
-	  if(mappingp(t2))
-	    t1[index] += ([ "" : value ]);
-	  else
-	    t1 += ([ index : value,
-		     "" : t2 ]);
-	else
-	  t1[index] = value;
+        if(t2 = t1[index])
+          if(mappingp(t2))
+            t1[index] += ([ "" : value ]);
+          else
+            t1 += ([ index : value,
+                     "" : t2 ]);
+        else
+          t1[index] = value;
       else
-	if(t2 = t1[index])
-	  if(mappingp(t2))
-	    t1 = t2;
-	  else
-	    t1 = t1[index] = ([ "" : t2 ]);
-	else
-	  t1 = t1[index] = ([]);
+        if(t2 = t1[index])
+          if(mappingp(t2))
+            t1 = t2;
+          else
+            t1 = t1[index] = ([ "" : t2 ]);
+        else
+          t1 = t1[index] = ([]);
       j++;
     }
   }
@@ -209,49 +209,49 @@ void create(Configuration conf)
     inited_from_scratch = !!(calendar = Calendar.ISO_UTC);
 
   defvar("calendar", Variable.StringChoice("ISO", calendars-({"unknown"}), 0,
-	 "Default calendar type", "When no other calendar type is given, the "
-	 "rules of this calendar will be used. This also defines the calendar "
-	 "used for the calendar scope."))->set_changed_callback(lambda(object c)
-	 { calendar = calendar->set_calendar(c->query()); });
+         "Default calendar type", "When no other calendar type is given, the "
+         "rules of this calendar will be used. This also defines the calendar "
+         "used for the calendar scope."))->set_changed_callback(lambda(object c)
+         { calendar = calendar->set_calendar(c->query()); });
 
   // Could perhaps be done as a two-level widget for continent/region too using
   // sort(Array.uniq(column(map(Calendar.TZnames.zonenames(),`/,"/"),0))), but
   // where does UTC fit in that scheme? Nah, let's keep it simple instead:
   defvar("timezone", TZVariable("UTC", 0, "Default time zone",
-	 "When no other time zone is given, this time zone will be used. "
-	 "This also defines the time zone for the calendar scope. Some "
-	 "examples of valid time zones include \"Europe/Stockholm\", \"UTC\", "
-	 "\"UTC+3\" and \"UTC+10:30\"."))->set_changed_callback(lambda(object t)
-	 {
-	   calendar = calendar->set_timezone(t->query());
-	   cached_calendars = ([]);
-	 });
+         "When no other time zone is given, this time zone will be used. "
+         "This also defines the time zone for the calendar scope. Some "
+         "examples of valid time zones include \"Europe/Stockholm\", \"UTC\", "
+         "\"UTC+3\" and \"UTC+10:30\"."))->set_changed_callback(lambda(object t)
+         {
+           calendar = calendar->set_timezone(t->query());
+           cached_calendars = ([]);
+         });
 
   array known_languages = filter(indices(Calendar.Language), is_supported);
   known_languages = sort(map(known_languages, wash_language_name));
   defvar("language", Variable.StringChoice("English", known_languages, 0,
-					   "Default calendar language",
-	 "When no other language is given, this language will be used. "
-	 "This also defines the language for the calendar scope.\n"))
-	 ->set_changed_callback(lambda(Variable.Variable language)
-	 {
-	   calendar = calendar->set_language(language->query());
-	   cached_calendars = ([]);
-	 });
+                                           "Default calendar language",
+         "When no other language is given, this language will be used. "
+         "This also defines the language for the calendar scope.\n"))
+         ->set_changed_callback(lambda(Variable.Variable language)
+         {
+           calendar = calendar->set_language(language->query());
+           cached_calendars = ([]);
+         });
 
   defvar ("db_name",
-	  Variable.DatabaseChoice( " none", 0,
-				   "Default database", #"\
+          Variable.DatabaseChoice( " none", 0,
+                                   "Default database", #"\
 <p>Default database to use with the \"query\" attribute. If set to
 \"none\", the default database configured in the \"SQL tags\" module
 is used.</p>")
-	  ->set_configuration_pointer( my_configuration ) );
+          ->set_configuration_pointer( my_configuration ) );
 
   if(inited_from_scratch)
   {
     calendar = Calendar[query("calendar")]
-	     ->set_timezone(query("timezone"))
-	     ->set_language(query("language"));
+             ->set_timezone(query("timezone"))
+             ->set_language(query("language"));
   }
 
   DEBUG("\b => layout: %O.\n", layout);
@@ -305,7 +305,7 @@ string status()
 void set_entities(RXML.Context c)
 {
   c->add_scope("calendar", TimeRangeValue(calendar->Second(time(1)),
-					  "second", ""));
+                                          "second", ""));
 }
 
 //! Plays the role as both an RXML.Scope (for multi-indexable data
@@ -313,10 +313,10 @@ void set_entities(RXML.Context c)
 //! the leaves of all such entities (as well as the one-dot variables,
 //! for example scope.julian-day).
 class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
-		     string type,		// its type ("second"..."year")
-		     string parent_scope,       // e g "" or "calendar.next"
-		     string|void lang           // e.g. "sv" the language...
-		     )
+                     string type,		// its type ("second"..."year")
+                     string parent_scope,       // e g "" or "calendar.next"
+                     string|void lang           // e.g. "sv" the language...
+                     )
 {
   inherit RXML.Scope;
 
@@ -325,8 +325,8 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
   array(int|string) _encode()
   {
     array(int|string) a = ({ time->unix_time(), time->calendar()->calendar_name(),
-			     type, time->timezone()->zoneid, parent_scope,
-			     lang||query("language") });
+                             type, time->timezone()->zoneid, parent_scope,
+                             lang||query("language") });
     return a;
   }
 
@@ -348,17 +348,17 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
   //!   that the function returns a boolean answer that in RXML should
   //!   return either of the strings @tt{"yes"@} or @tt{"no"@}.
   protected string fetch_and_quote_value(string calendar_method,
-					 RXML.Type want_type,
-					 string|void parent_scope)
+                                         RXML.Type want_type,
+                                         string|void parent_scope)
   {
     string result, format_string;
     if(sscanf(calendar_method, "TZ:%s", calendar_method))
     {
       result = query("timezone");
       if(calendar_method == "region")
-	sscanf(result, "%[^-+/ ]", result);
+        sscanf(result, "%[^-+/ ]", result);
       else if(has_value(result, "/"))
-	sscanf(result, "%*s/%s", result);
+        sscanf(result, "%*s/%s", result);
     }
     else if(sscanf(calendar_method, "q:%s", calendar_method))
       result = query(calendar_method);
@@ -387,25 +387,25 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
     string reached;
     foreach((scope/".")[1..] + (var ? ({ var }) : ({})), string index)
       if(!mappingp(result))
-	RXML.run_error(sprintf("Can't sub-index %O with %O.\n",
-			       reached || "", index));
+        RXML.run_error(sprintf("Can't sub-index %O with %O.\n",
+                               reached || "", index));
       else if(!(result = result[ index ]))
       {
-	DEBUG("\b => ([])[0] (no such scope:%O%s)\n",
-	      scope, (zero_type(var) ? "" : sprintf(", var:%O combo", var)));
-	return ([])[0];
+        DEBUG("\b => ([])[0] (no such scope:%O%s)\n",
+              scope, (zero_type(var) ? "" : sprintf(", var:%O combo", var)));
+        return ([])[0];
       }
       else
-	reached = (reached ? reached + "." : "") + index;
+        reached = (reached ? reached + "." : "") + index;
     return result;
   }
 
   //! Called for each level towards the leaves, including the leaf itself.
   mixed `[](string var, void|RXML.Context ctx,
-	    void|string scope, void|RXML.Type want_type)
+            void|string scope, void|RXML.Type want_type)
   {
     DEBUG("%O->`[](var %O, ctx %O, scope %O, type %O)\b",
-	  this_object(), var, ctx, scope, want_type);
+          this_object(), var, ctx, scope, want_type);
     RequestID id = ctx->id; NOCACHE();
 
     // If we further down decide on creating a new TimeRangeValue, this will
@@ -443,10 +443,10 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
   //! step is however skipped when `[] returned an already quoted value rather
   //! than an object.
   mixed rxml_var_eval(RXML.Context ctx, string var,
-		      string scope, void|RXML.Type want_type)
+                      string scope, void|RXML.Type want_type)
   {
     DEBUG("%O->rxml_var_eval(ctx %O, var %O, scope %O, type %O)\b",
-	  this_object(), ctx, var, scope, want_type);
+          this_object(), ctx, var, scope, want_type);
     RequestID id = ctx->id; NOCACHE();
 
     // If we further down decide on creating a new TimeRangeValue, this will
@@ -487,9 +487,9 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
   array(string) _indices(void|RXML.Context ctx, void|string scope_name)
   {
     DEBUG("%O->_indices(%s)\b", this_object(),
-	  zero_type(ctx) ? "" : zero_type(scope_name) ?
-	  sprintf("ctx: %O, no scope", ctx) :
-	  sprintf("ctx: %O, scope %O", ctx, scope_name));
+          zero_type(ctx) ? "" : zero_type(scope_name) ?
+          sprintf("ctx: %O, no scope", ctx) :
+          sprintf("ctx: %O, scope %O", ctx, scope_name));
     mapping layout = scope_name ? dig_out(scope_name) : scope_layout;
     DEBUG("\b => %O", layout && indices(layout));
     return layout && indices(layout);
@@ -504,7 +504,7 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
     {
       case 't': return sprintf("TimeRangeValue(%s)", type);
       case 'O':
-	return sprintf("TimeRangeValue(%O/%O)", time, parent_scope);
+        return sprintf("TimeRangeValue(%O/%O)", time, parent_scope);
     }
   }
 }
@@ -528,7 +528,7 @@ Calendar.YMD get_calendar(string name)
     RXML.parse_error(sprintf("Unknown calendar %O.\n", name));
   return cached_calendars[wanted] = cached_calendars[uc_name] =
     Calendar[wanted]->set_timezone (query ("timezone"))
-		    ->set_language (query ("language"));
+                    ->set_language (query ("language"));
 }
 
 class TagEmitTimeZones
@@ -544,11 +544,11 @@ class TagEmitTimeZones
   }
 
   Calendar.TimeRange get_time_in_timezone(Calendar.TimeRange time,
-					  string tzname, string region)
+                                          string tzname, string region)
   {
     if (!zones) init();
     Calendar.TimeRange q = time->set_timezone(tzname),
-		      ds = Calendar.Events.tzshift->next(q); // next (non|)dst
+                      ds = Calendar.Events.tzshift->next(q); // next (non|)dst
     if(ds && (!zones[region]->next_shift || (zones[region]->next_shift < ds)))
       zones[region]->next_shift = ds;
     return q;
@@ -562,19 +562,19 @@ class TagEmitTimeZones
       zones->UTC = ([]);
       for(int i=-24; i<=24; i++)
       {
-	string offset = sprintf("UTC%+03d:%02d", i/2, i%2*30);
-	zones->UTC[offset] = get_time_in_timezone(time, offset, "UTC");
+        string offset = sprintf("UTC%+03d:%02d", i/2, i%2*30);
+        zones->UTC[offset] = get_time_in_timezone(time, offset, "UTC");
       }
       foreach((array)Calendar.TZnames.zones, [region, array z])
       {
-	zones[region] = ([]);
-	foreach(z, string s)
-	  zones[region][s] = get_time_in_timezone(time, region+"/"+s, region);
+        zones[region] = ([]);
+        foreach(z, string s)
+          zones[region][s] = get_time_in_timezone(time, region+"/"+s, region);
       }
     }
     else if(region != "UTC")
       foreach(Calendar.TZnames.zones[region], string z)
-	zones[region][z] = get_time_in_timezone(time, region+"/"+z, region);
+        zones[region][z] = get_time_in_timezone(time, region+"/"+z, region);
   }
 
   array get_dataset(mapping args, RequestID id)
@@ -584,7 +584,7 @@ class TagEmitTimeZones
     string region = m_delete(args, "region");
     if(!region)
       return map(sort(indices(zones)),
-		 lambda(string region) { return ([ "name":region ]); });
+                 lambda(string region) { return ([ "name":region ]); });
     Calendar.YMD cal = get_calendar(m_delete(args, "calendar"));
     Calendar.TimeRange time, next_shift;
     if(!(time = get_date("", args, cal)))
@@ -595,11 +595,11 @@ class TagEmitTimeZones
     if(next_shift && time > next_shift)
       refresh_zones(time, region);
     return map(sort(indices(zones[region]) - ({ "next_shift" })),
-	       lambda(string place)
-	       {
-		 return ([ "name" : place ]) +
-		   scopify(zones[region][place], "second");
-	       });
+               lambda(string place)
+               {
+                 return ([ "name" : place ]) +
+                   scopify(zones[region][place], "second");
+               });
   }
 }
 
@@ -620,7 +620,7 @@ class TagEmitTimeRange
     {
       output_unit = output_units[search(output_units, what)];
       if(output_unit == "unknown")
-	RXML.parse_error(sprintf("Unknown unit %O.\n", what));
+        RXML.parse_error(sprintf("Unknown unit %O.\n", what));
 
       unit_no = search(output_units, what);
       compare_num = ouput_unit_no[unit_no];
@@ -631,52 +631,52 @@ class TagEmitTimeRange
       if((what = m_delete(args, "from-week-day")) && from)
       {
         what = lower_case(what);
-	if(zero_type (gregorian_weekdays[what]))
+        if(zero_type (gregorian_weekdays[what]))
           RXML.parse_error(sprintf("Unknown day: %O\n",what));
         int weekday = from->week_day();
 
-	int weekday_needed;
+        int weekday_needed;
         if(cal_type != "ISO" && query("calendar") != "ISO") {
-	  weekday_needed = gregorian_weekdays[what]+1;
-	}
+          weekday_needed = gregorian_weekdays[what]+1;
+        }
         else
-	  weekday_needed = iso_weekdays[what]+1;
+          weekday_needed = iso_weekdays[what]+1;
 
-	int change_to;
+        int change_to;
         if (weekday < weekday_needed)
           change_to = 7 - (weekday_needed - weekday);
         else if(weekday > weekday_needed)
-	  change_to = weekday - weekday_needed;
-	if (change_to > 0)
+          change_to = weekday - weekday_needed;
+        if (change_to > 0)
           from = from - change_to;
       }
 
       to = get_date("to", args, cal) || to || from;
 
       if(what = m_delete(args, "to-week-day")){
-	what = lower_case(what);
-	if(zero_type (gregorian_weekdays[what]))
-	  RXML.parse_error(sprintf("Unknown day: %O\n",what));
-	int weekday = to->week_day();
+        what = lower_case(what);
+        if(zero_type (gregorian_weekdays[what]))
+          RXML.parse_error(sprintf("Unknown day: %O\n",what));
+        int weekday = to->week_day();
 
-	int weekday_needed;
-	if(cal_type != "ISO" && query("calendar") != "ISO") {
-	  weekday_needed = gregorian_weekdays[what]+1;
-	} else
-	  weekday_needed = iso_weekdays[what]+1;
+        int weekday_needed;
+        if(cal_type != "ISO" && query("calendar") != "ISO") {
+          weekday_needed = gregorian_weekdays[what]+1;
+        } else
+          weekday_needed = iso_weekdays[what]+1;
 
-	int change_to;
-	if (weekday < weekday_needed)
-	  change_to = weekday_needed - weekday;
-	else if(weekday > weekday_needed)
-	  change_to = 7 - (weekday - weekday_needed);
-	if (change_to > 0)// && upper_case(to->week_day_name()) != upper_case(what) - NOT NEEDED
-	{
-	  if(to == to->calendar()->Year())
-	    to = to->calendar()->Day() + change_to;
-	  else
-	    to += change_to;
-	}
+        int change_to;
+        if (weekday < weekday_needed)
+          change_to = weekday_needed - weekday;
+        else if(weekday > weekday_needed)
+          change_to = 7 - (weekday - weekday_needed);
+        if (change_to > 0)// && upper_case(to->week_day_name()) != upper_case(what) - NOT NEEDED
+        {
+          if(to == to->calendar()->Year())
+            to = to->calendar()->Day() + change_to;
+          else
+            to += change_to;
+        }
       }
 
 #if 0
@@ -686,17 +686,17 @@ class TagEmitTimeRange
       // indices are already deleted from the args mapping by now. /mast
 
       if((what = m_delete(args, "from-week-day")) && from)
-			{
+                        {
         what = lower_case(what);
-	if(zero_type (gregorian_weekdays[what]))
+        if(zero_type (gregorian_weekdays[what]))
           RXML.parse_error(sprintf("Unknown day: %O\n",what));
         int weekday_needed, change_to;
         int weekday = from->week_day();
 
         if(calendar != "ISO")
-	  weekday_needed = gregorian_weekdays[what]+1;
+          weekday_needed = gregorian_weekdays[what]+1;
         else
-	  weekday_needed = iso_weekdays[what]+1;
+          weekday_needed = iso_weekdays[what]+1;
         if (weekday < weekday_needed)
           change_to = 7 - (weekday_needed - weekday);
         else if(weekday > weekday_needed)
@@ -707,33 +707,33 @@ class TagEmitTimeRange
 
       if((what = m_delete(args, "to-week-day")))
       {
-	what = lower_case(what);
-	if(zero_type (gregorian_weekdays[what]))
-	  RXML.parse_error(sprintf("Unknown day: %O\n",what));
-	int change_to = 0, weekday_needed = 0;
-	int weekday = to->week_day();
-	if(calendar != "ISO")
-	  weekday_needed = gregorian_weekdays[what]+1;
-	else
-	  weekday_needed = iso_weekdays[what]+1;
+        what = lower_case(what);
+        if(zero_type (gregorian_weekdays[what]))
+          RXML.parse_error(sprintf("Unknown day: %O\n",what));
+        int change_to = 0, weekday_needed = 0;
+        int weekday = to->week_day();
+        if(calendar != "ISO")
+          weekday_needed = gregorian_weekdays[what]+1;
+        else
+          weekday_needed = iso_weekdays[what]+1;
 
-	if (weekday < weekday_needed)
-	  change_to = weekday_needed - weekday;
-	else if(weekday > weekday_needed)
-	  change_to = 7 - (weekday - weekday_needed);
-	if (change_to > 0)
-	  if(to == to->calendar()->Year())
-	    to = to->calendar()->Day() + change_to;
-	  else
-	    to += change_to;
+        if (weekday < weekday_needed)
+          change_to = weekday_needed - weekday;
+        else if(weekday > weekday_needed)
+          change_to = 7 - (weekday - weekday_needed);
+        if (change_to > 0)
+          if(to == to->calendar()->Year())
+            to = to->calendar()->Day() + change_to;
+          else
+            to += change_to;
       }
 #endif
 
       string range_type = m_delete(args, "inclusive") ? "range" : "distance";
       if(from <= to)
-	range = from[range_type]( to );
+        range = from[range_type]( to );
       else
-	range = to[range_type]( from );
+        range = to[range_type]( from );
     }
     else
       range = get_date("", args, cal) || cal->Second();
@@ -781,22 +781,22 @@ class TagEmitTimeRange
         sqlindexes = indices(rs[0]);
         foreach(dataset,Calendar.TimeRange testing)
         {
-	  int i = 0;
-	  int test = 1;
+          int i = 0;
+          int test = 1;
 
-	  foreach(rs,mapping rsrow)
-	  {
+          foreach(rs,mapping rsrow)
+          {
             if(testing->format_time()[..compare_num] == rsrow[use_date])
             {
-	      dset += ({({testing, rsrow})});
-	      test = 0;
-	    }
+              dset += ({({testing, rsrow})});
+              test = 0;
+            }
             i++;
           }
 
-	  if(test == 1)
-	    dset += ({testing});
-	} //End foreach
+          if(test == 1)
+            dset += ({testing});
+        } //End foreach
       }
     }// End if we have a SQL query
 
@@ -806,36 +806,36 @@ class TagEmitTimeRange
     if(plugin = m_delete(args, "plugin")) {
       array(RoxenModule) data_providers = id->conf->get_providers("timerange-plugin");
       foreach(data_providers, RoxenModule prov) {
-	if(prov->supplies_plugin_name && prov->supplies_plugin_name(plugin)) {
-	  provider = prov;
-	  break;
-	}
+        if(prov->supplies_plugin_name && prov->supplies_plugin_name(plugin)) {
+          provider = prov;
+          break;
+        }
       }
       if(provider) {
-	// Here we retrieve the data...
-	string compare_column = provider->get_column_name();
-	array(mapping(string:mixed)) provider_data = provider->get_dataset(args, range, id);
+        // Here we retrieve the data...
+        string compare_column = provider->get_column_name();
+        array(mapping(string:mixed)) provider_data = provider->get_dataset(args, range, id);
         foreach(dataset,Calendar.TimeRange test_date)
         {
-	  int i = 0;
-	  int test = 1;
+          int i = 0;
+          int test = 1;
 
-	  foreach(provider_data, mapping pro_data)
-	  {
+          foreach(provider_data, mapping pro_data)
+          {
             if(pro_data[compare_column]->overlaps(test_date) )
             {
-	      dset += ({ ({ test_date, pro_data }) });
-	      test = 0;
-	    }
+              dset += ({ ({ test_date, pro_data }) });
+              test = 0;
+            }
             i++;
           }
 
-	  if(test == 1)
-	    dset += ({test_date});
-	} //End foreach
+          if(test == 1)
+            dset += ({test_date});
+        } //End foreach
 
       } else {
-	RXML.run_error(sprintf("<emit#timerange> plugin %O does not exist.\n", plugin));
+        RXML.run_error(sprintf("<emit#timerange> plugin %O does not exist.\n", plugin));
       }
     }
     // End Eriks stuff, july 8 2004
@@ -867,7 +867,7 @@ mapping scopify(Calendar.TimeRange time, string unit, string|void parent_scope, 
 {
   TimeRangeValue value = TimeRangeValue(time, unit, parent_scope || "", lang);
   return mkmapping(indices( layout ),
-		   allocate(sizeof( layout ), value));
+                   allocate(sizeof( layout ), value));
 }
 
 Calendar.TimeRange get_date(string name, mapping args, Calendar.YMD calendar)
@@ -889,9 +889,9 @@ Calendar.TimeRange get_date(string name, mapping args, Calendar.YMD calendar)
   {
     if(catch(date = cal->dwim_time( what )))
       if(catch(date = cal->dwim_day( what )) || !date)
-	RXML.run_error(sprintf("Illegal %stime %O.\n", name, what));
+        RXML.run_error(sprintf("Illegal %stime %O.\n", name, what));
       else
-	date = date->second();
+        date = date->second();
   }
   else if(what = m_delete(args, name + "date"))
   {
@@ -915,7 +915,7 @@ Calendar.TimeRange get_date(string name, mapping args, Calendar.YMD calendar)
     }
   }
   return succeeded && date->set_timezone(calendar->timezone())
-			  ->set_language(calendar->language());
+                          ->set_language(calendar->language());
 }
 
 protected RoxenModule rxml_sql_module;
@@ -934,8 +934,8 @@ array(mapping) db_query(string q,string db_name)
     if (!rxml_sql_module) {
       rxml_sql_module = my_configuration()->get_provider ("rxml_sql");
       if (!rxml_sql_module)
-	RXML.run_error ("Couldn't connect to SQL server: "
-			"The \"SQL Tags\" module is required.\n");
+        RXML.run_error ("Couldn't connect to SQL server: "
+                        "The \"SQL Tags\" module is required.\n");
     }
 
     con = rxml_sql_module->get_rxml_sql_con (db_name);
@@ -945,11 +945,11 @@ array(mapping) db_query(string q,string db_name)
     // Use the database configured in the module. In this case we skip
     // the access check made by get_rxml_sql_con.
     mixed err = catch {
-	con = DBManager.get (db_name || default_db, my_configuration());
+        con = DBManager.get (db_name || default_db, my_configuration());
       };
     if (err || !con)
       RXML.run_error (err ? describe_error (err) :
-		      "Couldn't connect to SQL server.\n");
+                      "Couldn't connect to SQL server.\n");
   }
 
   array(mapping(string:mixed)) result;

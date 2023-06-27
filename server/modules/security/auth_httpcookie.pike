@@ -21,8 +21,8 @@ LocaleString module_doc =
   _(2,"Authenticate users using a cookie.");
 
 protected User low_authenticate( RequestID id,
-				 string user, string password,
-				 UserDB db )
+                                 string user, string password,
+                                 UserDB db )
 {
   if( User u = db->find_user( user ) )
     if( u->password_authenticate( password ) )
@@ -45,7 +45,7 @@ protected array(string) low_lookup_cookie( string cookie )
 {
   array r = 
     get_my_sql()->query( "SELECT name,password FROM "+
-		table+" WHERE cookie=%s", cookie );
+                table+" WHERE cookie=%s", cookie );
   if( !sizeof( r ) )
     return ({0,0});
   return ({ decode_pw(r[0]->password), decode_pw( r[0]->name ) });
@@ -67,10 +67,10 @@ protected string create_cookie( string u, string p )
   string c =
     String.string2hex(Crypto.SHA1.hash(COOKIE + u + "\0" + p + COOKIE));
   catch(get_my_sql()->query( "INSERT INTO "+table+" "
-			     "(cookie,name,password,timeout) "
-			     "VALUES (%s,%s,%s)",
-			     c, encode_pw(u), encode_pw(p),
-			     time(1) + 31536000));
+                             "(cookie,name,password,timeout) "
+                             "VALUES (%s,%s,%s)",
+                             c, encode_pw(u), encode_pw(p),
+                             time(1) + 31536000));
   return c;
 }
 
@@ -98,7 +98,7 @@ User authenticate( RequestID id, UserDB db )
   {
     foreach( id->conf->user_databases(), UserDB db )
       if( res = low_authenticate( id, user, password, db ) )
-	return res;
+        return res;
     Roxen.remove_cookie( id, COOKIE, "", 0, "/" );
     return 0;
   }
@@ -122,17 +122,17 @@ mapping authenticate_throw( RequestID id, string realm, UserDB db )
   {
     Roxen.set_cookie( id, COOKIE, create_cookie( u, p ), -1, 0, "/");
     return Roxen.http_redirect( id->not_query+"?"+
-				"netscape=needsthis&"+id->query, id );
+                                "netscape=needsthis&"+id->query, id );
   }
 
   return Roxen.http_rxml_answer(
     replace( query("user_form"),
-	     ({"PWINPUT", "UNINPUT", "REALM"}),
-	     ({
-	       "<input size=16 type='password' name='_cookie_password' />",
-	       "<input size=16 name='_cookie_username' />",
-	       realm
-	     }) ), id );
+             ({"PWINPUT", "UNINPUT", "REALM"}),
+             ({
+               "<input size=16 type='password' name='_cookie_password' />",
+               "<input size=16 name='_cookie_username' />",
+               realm
+             }) ), id );
 }
 
 void start()
@@ -143,26 +143,26 @@ void start()
 
   table =
     get_my_table("",
-		 ({
-		   "cookie varchar(40) PRIMARY KEY NOT NULL",
-		   "password varchar(255) NOT NULL",
-		   "name varchar(255) NOT NULL",
-		   "timeout bigint NOT NULL",
-		 }),
-		 "Used to store the information nessesary to "
-		 "authenticate roxen users" );
+                 ({
+                   "cookie varchar(40) PRIMARY KEY NOT NULL",
+                   "password varchar(255) NOT NULL",
+                   "name varchar(255) NOT NULL",
+                   "timeout bigint NOT NULL",
+                 }),
+                 "Used to store the information nessesary to "
+                 "authenticate roxen users" );
 
   Sql.Sql sql = get_my_sql();
   if (!sizeof(sql->query("DESCRIBE " + table + " timeout"))) {
     sql->query("ALTER TABLE " + table +
-	       " CHANGE password password varchar(255) NOT NULL");
+               " CHANGE password password varchar(255) NOT NULL");
     sql->query("ALTER TABLE " + table +
-	       " CHANGE name name varchar(255) NOT NULL");
+               " CHANGE name name varchar(255) NOT NULL");
     sql->query("ALTER TABLE " + table +
-	       " ADD timeout bigint NOT NULL");
+               " ADD timeout bigint NOT NULL");
   }
   sql->query("DELETE FROM " + table + " WHERE timeout < %d",
-	     time());
+             time());
 }
 
 protected void create()

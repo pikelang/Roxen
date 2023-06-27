@@ -21,12 +21,12 @@ int do_ext;
 void create()
 {
   defvar("ext", Variable.Flag(0, VAR_MORE,
-			      "Append format to generated images",
-			      "Append the image format (.gif, .png, "
-			      ".jpg, etc) to the generated images. "
-			      "This is not necessary, but might seem "
-			      "nicer, especially to people who try "
-			      "to mirror your site."));
+                              "Append format to generated images",
+                              "Append the image format (.gif, .png, "
+                              ".jpg, etc) to the generated images. "
+                              "This is not necessary, but might seem "
+                              "nicer, especially to people who try "
+                              "to mirror your site."));
 }
 
 void start()
@@ -53,7 +53,7 @@ string status() {
   array s=the_cache->status();
   return sprintf(_(4,"<b>Images in cache:</b> %d images<br />\n"
                    "<b>Cache size:</b> %s"),
-		 s[0], Roxen.sizetostring(s[1]));
+                 s[0], Roxen.sizetostring(s[1]));
 }
 
 Image.Layer|mapping generate_image(mapping a, mapping node_tree, RequestID id)
@@ -77,8 +77,8 @@ Image.Layer|mapping generate_image(mapping a, mapping node_tree, RequestID id)
     {
       e = ([]);
       if( sscanf( a->size, "(%d,%d)-(%d,%d)", e->x, e->y, e->x1, e->y1 ) != 4)
-	if( sscanf( a->size, "%d,%d", e->x1, e->y1 ) != 2)
-	  e = LazyImage.layers_extents( ll );;
+        if( sscanf( a->size, "%d,%d", e->x1, e->y1 ) != 2)
+          e = LazyImage.layers_extents( ll );;
     }
   } else
     e = LazyImage.layers_extents( ll );
@@ -116,7 +116,7 @@ class GXML##X								\
   inherit RXML.Tag;							\
   constant name = LazyImage.X.operation_name;				\
   constant flags = RXML.FLAG_DONT_REPORT_ERRORS;			\
-									\
+                                                                        \
   class Frame								\
   {									\
     inherit RXML.Frame;							\
@@ -125,7 +125,7 @@ class GXML##X								\
       TMP_PUSH( STACK_POP() );						\
       STACK_PUSH(0);							\
     }									\
-									\
+                                                                        \
     array do_return( RequestID id )					\
     {									\
       if (content && result_type->decode_charrefs)			\
@@ -134,10 +134,10 @@ class GXML##X								\
       LazyImage.LazyImage i = TMP_POP();				\
       LazyImage.LazyImage ii = STACK_POP();				\
       if( ii && i )							\
-	STACK_PUSH(LazyImage.join_images(i->ref(), LazyImage.new(LazyImage.X,\
-							  ii->ref(),args)));\
+        STACK_PUSH(LazyImage.join_images(i->ref(), LazyImage.new(LazyImage.X,\
+                                                          ii->ref(),args)));\
       else								\
-	STACK_PUSH( LazyImage.new(LazyImage.X,ii||i,args) );		\
+        STACK_PUSH( LazyImage.new(LazyImage.X,ii||i,args) );		\
     }									\
   }                                                                     \
 }
@@ -183,9 +183,9 @@ class GXMLStackDup
     array do_return( RequestID id )
     {
       catch {
-	LazyImage.LazyImage i = STACK_POP();
-	STACK_PUSH( i );
-	STACK_PUSH( i );
+        LazyImage.LazyImage i = STACK_POP();
+        STACK_PUSH( i );
+        STACK_PUSH( i );
       };
       parse_error("Too few elements on stack\n");
     }
@@ -204,10 +204,10 @@ class GXMLStackSwap
     array do_return( RequestID id )
     {
       catch {
-	LazyImage.LazyImage i = STACK_POP();
-	LazyImage.LazyImage j = STACK_POP();
-	STACK_PUSH( i );
-	STACK_PUSH( j );
+        LazyImage.LazyImage i = STACK_POP();
+        LazyImage.LazyImage j = STACK_POP();
+        STACK_PUSH( i );
+        STACK_PUSH( j );
       };
       parse_error("Too few elements on stack, need 2 to run stack-swap\n");
     }
@@ -247,8 +247,8 @@ class GXMLMerge
     {
       catch
       {
-	TMP_PUSH( STACK_POP() );
-	return 0;
+        TMP_PUSH( STACK_POP() );
+        return 0;
       };
       parse_error("Popping beyond end of stack\n");
     }
@@ -258,9 +258,9 @@ class GXMLMerge
       LazyImage.LazyImage a = TMP_POP();
       LazyImage.LazyImage b = STACK_POP();
       if( a && b )
-	STACK_PUSH( LazyImage.join_images( a, b ) );
+        STACK_PUSH( LazyImage.join_images( a, b ) );
       else
-	STACK_PUSH( a||b );
+        STACK_PUSH( a||b );
       return 0;
     }
   }
@@ -280,10 +280,10 @@ class GXMLPopDup
     {
       catch
       {
-	TMP_PUSH( STACK_POP() );
-	LazyImage.LazyImage b = STACK_POP();
-	STACK_PUSH( b ); STACK_PUSH( b );
-	return 0;
+        TMP_PUSH( STACK_POP() );
+        LazyImage.LazyImage b = STACK_POP();
+        STACK_PUSH( b ); STACK_PUSH( b );
+        return 0;
       };
       parse_error("Popping beyond end of stack\n");
     }
@@ -293,9 +293,9 @@ class GXMLPopDup
       LazyImage.LazyImage a = TMP_POP();
       LazyImage.LazyImage b = STACK_POP();
       if( a && b )
-	STACK_PUSH( LazyImage.join_images( a->ref(), b ) );
+        STACK_PUSH( LazyImage.join_images( a->ref(), b ) );
       else
-	STACK_PUSH( a||b );
+        STACK_PUSH( a||b );
       return 0;
     }
   }
@@ -313,8 +313,8 @@ class GXMLPopReplace
     {
       catch
       {
-	STACK_POP();
-	return 0;
+        STACK_POP();
+        return 0;
       };
       parse_error("Popping beyond end of stack\n");
     }
@@ -327,10 +327,10 @@ string parse_coordinates( string from )
   string res = "";
   p->xml_tag_syntax( 2 );
   p->add_container( "c", lambda(Parser.HTML p, mapping a, string c) {
-			   res += (String.trim_all_whites(a->x)+","+
-				   String.trim_all_whites(a->y)+",");
-			   return c;
-	           } );
+                           res += (String.trim_all_whites(a->x)+","+
+                                   String.trim_all_whites(a->y)+",");
+                           return c;
+                   } );
   p->feed( from )->finish();
   return res[..strlen(res)-2];
 }
@@ -408,9 +408,9 @@ protected class InternalTagSet
 
     mapping from = conf->rxml_tag_set->get_plugins("gxml");
     return builtin_tags + map (indices (from),
-			       lambda (string tn) {
-				 return GXTag( tn, from[tn] );
-			       });
+                               lambda (string tn) {
+                                 return GXTag( tn, from[tn] );
+                               });
   }
 
   protected int in_changed = 0;
@@ -448,11 +448,11 @@ class TagGXML
     constant is_RXML_encodable = 1;
 
     mixed `[] (string var, void|RXML.Context ctx,
-	       void|string scope_name, void|RXML.Type type)
+               void|string scope_name, void|RXML.Type type)
     {
       string scope;
       if (sscanf(scope_name, "%*s.layers.%s", scope) == 2)
-	return V("layers."+scope+"."+var);
+        return V("layers."+scope+"."+var);
       return this_object();
     }
 
@@ -464,33 +464,33 @@ class TagGXML
       mapping res = ([]);
       for( int i = 1; i<100; i++ )
       {
-	res[""+i] = V("guides."+v+"."+i);
-	res[""+(-i)] = V("guides."+v+"."+(-i));
+        res[""+i] = V("guides."+v+"."+i);
+        res[""+(-i)] = V("guides."+v+"."+(-i));
       }
       return res;
     }
     mapping gxml_vars =
     ([
       "guides":([
-	"v": make_guides_mapping("v"),
-	"x": make_guides_mapping("v"),
+        "v": make_guides_mapping("v"),
+        "x": make_guides_mapping("v"),
 
-	"h": make_guides_mapping("h"),
-	"y": make_guides_mapping("h"),
+        "h": make_guides_mapping("h"),
+        "y": make_guides_mapping("h"),
       ]),
       "image":([
-	"left":V("image.l"),  "l":V("image.l"),
-	"right":V("image.r"), "r":V("image.r"),
-	"top":V("image.t"),   "t":V("image.t"),
-	"width":V("image.w"), "w":V("image.w"),
-	"height":V("image.h"),"h":V("image.h"),
+        "left":V("image.l"),  "l":V("image.l"),
+        "right":V("image.r"), "r":V("image.r"),
+        "top":V("image.t"),   "t":V("image.t"),
+        "width":V("image.w"), "w":V("image.w"),
+        "height":V("image.h"),"h":V("image.h"),
       ]),
       "layer":([
-	"left":V("layer.l"),  "l":V("layer.l"),
-	"right":V("layer.r"), "r":V("layer.r"),
-	"top":V("layer.t"),   "t":V("layer.t"),
-	"width":V("layer.w"), "w":V("layer.w"),
-	"height":V("layer.h"),"h":V("layer.h"),
+        "left":V("layer.l"),  "l":V("layer.l"),
+        "right":V("layer.r"), "r":V("layer.r"),
+        "top":V("layer.t"),   "t":V("layer.t"),
+        "width":V("layer.w"), "w":V("layer.w"),
+        "height":V("layer.h"),"h":V("layer.h"),
       ]),
       "layers":LayersVars(),
     ]);
@@ -519,35 +519,35 @@ class TagGXML
       LazyImage.LazyImage i;
       if( catch( i = STACK_POP() ) )
       {
-	LazyImage.clear_cache();
-	parse_error("Popping out of stack\n");
+        LazyImage.clear_cache();
+        parse_error("Popping out of stack\n");
       }
       LazyImage.clear_cache();
       if( !catch( STACK_POP() ) )
-	tag_debug("Elements left on stack after end of rendering.\n");
+        tag_debug("Elements left on stack after end of rendering.\n");
 
       m_delete( id->misc, "gxml_stack" );
       m_delete( id->misc, "gxml_tmp_stack" );
       
       if( !i )
-	parse_error( "No image\n");
+        parse_error( "No image\n");
 
       int timeout = Roxen.timeout_dequantifier(args);
 
       mapping my_args = ([
-	"quant":     args->quant,
-	"crop":      args->crop,
-	"format":    args->format,
-	"maxwidth":  args->maxwidth,
-	"maxheight": args->maxheight,
-	"scale":     args->scale,
-	"dither":    args->dither,
-	"gamma":     args->gamma,
-	"size":      args->size,
-	"background":args->background, // Compatibility
+        "quant":     args->quant,
+        "crop":      args->crop,
+        "format":    args->format,
+        "maxwidth":  args->maxwidth,
+        "maxheight": args->maxheight,
+        "scale":     args->scale,
+        "dither":    args->dither,
+        "gamma":     args->gamma,
+        "size":      args->size,
+        "background":args->background, // Compatibility
       ]);
       foreach( glob( "*-*", indices(args)), string n )
-	my_args[n] = args[n];
+        my_args[n] = args[n];
 
       string src_filename = m_delete(args, "filename");
       mapping res_args = args - my_args;
@@ -557,21 +557,21 @@ class TagGXML
 
       string ext = "";
       if(do_ext)
-	ext = "." + (my_args->format || "png");
+        ext = "." + (my_args->format || "png");
       
       res_args->src = query_internal_location() + key +
-	((src_filename && sizeof(src_filename))? "/" + Roxen.http_encode_url(src_filename) : "") + ext;
+        ((src_filename && sizeof(src_filename))? "/" + Roxen.http_encode_url(src_filename) : "") + ext;
       int no_draw = !id->misc->generate_images;
       if( mapping size = the_cache->metadata( key, id, no_draw, timeout ) )
       {
-	res_args->width = size->xsize;
-	res_args->height = size->ysize;
+        res_args->width = size->xsize;
+        res_args->height = size->ysize;
       }
 
       if( !args->url ) 
-	result = Roxen.make_tag( "img", res_args, !res_args->noxml );
+        result = Roxen.make_tag( "img", res_args, !res_args->noxml );
       else
-	result = res_args->src;
+        result = res_args->src;
     }
   }
 }
@@ -585,8 +585,8 @@ mapping tagdocumentation()
   // Generate examples
   string ex = "";
   foreach (Array.transpose(({Image.Layer()->available_modes(),
-			     Image.Layer()->descriptions()})),
-	   [string mode,string desc])
+                             Image.Layer()->descriptions()})),
+           [string mode,string desc])
   {
     ex += sprintf(#"<p><b>%s</b></p><p>%s<br/>
 <ex-html>
@@ -599,7 +599,7 @@ mapping tagdocumentation()
   </gxml>
 </div>
 </ex-html></p>",
-		  mode, Roxen.html_encode_string(desc));
+                  mode, Roxen.html_encode_string(desc));
   }
   string s = doc["gxml"][1]["set-layer-mode"][..<7] + ex + "</attr>"; 
   doc["gxml"][1]["set-layer-mode"] = s;
@@ -711,26 +711,26 @@ Add this number of seconds to the time this entry is valid.</p>
       </p></attr>
       <attr name='name' value='string'><p>Name of the new layer.</p></attr>
       <attr name='font' value='string'><p>
-	Selects which font to use. You can get a list of all available fonts
-	by using the list fonts task in the administration interface, or by
-	using the <xref href='../output/emit_fonts.tag' /> plugin.</p>
+        Selects which font to use. You can get a list of all available fonts
+        by using the list fonts task in the administration interface, or by
+        using the <xref href='../output/emit_fonts.tag' /> plugin.</p>
       </attr>
 
       <attr name='fontsize' value='number'><p>
-	Selects which size of the font that should be used.</p>
+        Selects which size of the font that should be used.</p>
       </attr>
       <attr name='color' value='color'><p>
-	Sets the text color. 
+        Sets the text color. 
       </p></attr>
       <attr name='x' value='number'></attr>
       <attr name='y' value='number'></attr>
       <attr name='modulate-alpha'><p>
-	The text will be used to modulate the alpha channel of the specified
-	layer.
+        The text will be used to modulate the alpha channel of the specified
+        layer.
       </p></attr>
       <attr name='replace-alpha'><p>
-	Almost the same as the modulate-alpha attribute but replaces the whole
-	alpha channel of the specified layer.
+        Almost the same as the modulate-alpha attribute but replaces the whole
+        alpha channel of the specified layer.
       </p></attr>",
     "replace-alpha" : #"<desc type='both'><p>Replace the alpha channel of the
       specified layer(s) with either the alpha channel from another layer or a
@@ -760,16 +760,16 @@ Add this number of seconds to the time this entry is valid.</p>
 </gxml>
       </ex></desc>
       <attr name='layers' value='glob'><p>
-	Layer to create shadow for.
+        Layer to create shadow for.
       </p></attr>
       <attr name='layers-id' value='layer-id'><p>
-	Layer to create shadow for.
+        Layer to create shadow for.
       </p></attr>
       <attr name='xoffset' value='number'><p>
         How much to the right of the specified layer the shadow will fall.
       </p></attr>
       <attr name='yoffset' value='number'><p>
-	How much below the specified layer the shadow will fall.
+        How much below the specified layer the shadow will fall.
       </p></attr>
       <attr name='soft' value='number'><p>
         How blurred the shadow should be.
@@ -784,20 +784,20 @@ Add this number of seconds to the time this entry is valid.</p>
           <row><h>variable</h><h>Meaning</h></row>
           <row><c><p>L</p></c><c><p>The active layer</p></c></row>
           <row><c><p>S</p></c>
-	    <c><p>The source layer (the sum of the layers below)</p></c></row>
+            <c><p>The source layer (the sum of the layers below)</p></c></row>
           <row><c><p>D</p></c>
-	    <c><p>The destintion layer (the result)</p></c></row>
+            <c><p>The destintion layer (the result)</p></c></row>
           <row><c><p>Xrgb</p></c>
-	    <c><p>Layer red (<b>Xr</b>), green (<b>Xg</b>) or blue
+            <c><p>Layer red (<b>Xr</b>), green (<b>Xg</b>) or blue
               channel (<b>Xb</b>) </p></c></row>
           <row><c><p>Xhsv</p></c>
-	    <c><p>Layer hue (<b>Xh</b>), saturation (<b>Xs</b>) or
+            <c><p>Layer hue (<b>Xh</b>), saturation (<b>Xs</b>) or
               value channel (<b>Xv</b>) (virtual channels)</p></c></row>
           <row><c><p>Xhls</p></c>
-	    <c><p>Layer hue (<b>Xh</b>), lightness channel (<b>Xl</b>) or
-	      saturation (<b>Xs</b>) (virtual channels)</p></c></row>
+            <c><p>Layer hue (<b>Xh</b>), lightness channel (<b>Xl</b>) or
+              saturation (<b>Xs</b>) (virtual channels)</p></c></row>
           <row><c><p>aX</p></c>
-	    <c><p>Layer alpha, channel in layer alpha</p></c></row>
+            <c><p>Layer alpha, channel in layer alpha</p></c></row>
         </xtable>
         <i>All channels are calculated separately, if nothing else is
            specified.</i>
@@ -1143,9 +1143,9 @@ Add this number of seconds to the time this entry is valid.</p>
               values='4,8,16,32,64,128,255' split=','> 
           <gxml format='png' true-alpha=''>
             <select-from x='100' y='100' 
-			 edge-value='&values.value;' what='image'>
-	      <load-image src='/internal-roxen-testimage' />
-	    </select-from>
+                         edge-value='&values.value;' what='image'>
+              <load-image src='/internal-roxen-testimage' />
+            </select-from>
             <text color='green' 
                   fontsize='16'
                   x='3' y='3'>x: 100, y: 100\nedge-value: &values.value;</text>
@@ -1224,7 +1224,7 @@ Add this number of seconds to the time this entry is valid.</p>
         </desc>
         <attr name='x' value='number'></attr>
         <attr name='y' value='number'></attr>",
-		]),
+                ]),
     }),
     "line" : ({ #"<desc type='cont'><p>Draws a line, either as a new layer
       or by modifying the alpha of the given layer(s).</p>
@@ -1464,8 +1464,8 @@ Add this number of seconds to the time this entry is valid.</p>
   </attr>", ([
     "data" : ({ #"<desc type='cont'><p>Used for tags used to describe the 
       coordinate system.</p></desc>", ([
-	"frame" : #"<desc type='tag'><p>Draw a frame for the coordinate
-	  system.</p>
+        "frame" : #"<desc type='tag'><p>Draw a frame for the coordinate
+          system.</p>
           <ex>
 <gxml format='png' true-alpha='1'>
   <new-layer xsize='32' ysize='32' color='white' tiled='1' />
@@ -1476,34 +1476,34 @@ Add this number of seconds to the time this entry is valid.</p>
     </data>
   </coordinate-system>
 </gxml>
-	  </ex></desc>
-	  <attr name='width' value='width in pixels' default='2'><p>
-	    Width of the frame.
-	  </p></attr>
-	  <attr name='color' value='color'><p>Color of the frame.
-	  </p></attr>
-	  <attr name='name' value='name of the layer'
-	        default='coordinate-system.frame'><p>Name of the new layer that
-	    frame is drawn in.
-	  </p></attr>
-	  <attr name='mode' value='layer mode'><p>Sets the layer mode.
-	  </p></attr>",
-	"x" : ({ #"<desc type='cont'><p>Contains tags about how to draw the
-	  x-axis.</p></desc>
+          </ex></desc>
+          <attr name='width' value='width in pixels' default='2'><p>
+            Width of the frame.
+          </p></attr>
+          <attr name='color' value='color'><p>Color of the frame.
+          </p></attr>
+          <attr name='name' value='name of the layer'
+                default='coordinate-system.frame'><p>Name of the new layer that
+            frame is drawn in.
+          </p></attr>
+          <attr name='mode' value='layer mode'><p>Sets the layer mode.
+          </p></attr>",
+        "x" : ({ #"<desc type='cont'><p>Contains tags about how to draw the
+          x-axis.</p></desc>
           <attr name='start' value='number' default='0'><p>
-	    Start of the x-axis.
-	  </p></attr>
+            Start of the x-axis.
+          </p></attr>
           <attr name='end' value='number' default='1'><p>
-	    End of the x-axis.
-	  </p></attr>", ([
-	    "labels" : #"<desc type='both'><p>Labels to put along the x axis.
+            End of the x-axis.
+          </p></attr>", ([
+            "labels" : #"<desc type='both'><p>Labels to put along the x axis.
               You can either set all your labels yourself in the tag content
-	      separated by newlines. The first label will be put at the position
-	      of <att>start</att> and then use <att>step</att> to calculate the
+              separated by newlines. The first label will be put at the position
+              of <att>start</att> and then use <att>step</att> to calculate the
               subsequent positions until <att>end</att> is reached.</p>
-	      <p>If you don't want to explicitly write all your labels yourself
+              <p>If you don't want to explicitly write all your labels yourself
               then you can use <att>format</att> to automatically generate
-	      labels.</p>
+              labels.</p>
               <ex>
 <gxml format='png' true-alpha='1'>
   <new-layer color='white' xsize='32' ysize='32' tiled='1' />
@@ -1511,15 +1511,15 @@ Add this number of seconds to the time this entry is valid.</p>
     <data>
       <x start='0' end='6'>
         <labels start='0.5' end='4.5' step='1' rotate='90'>
-	  Hokkaido Nippon Ham Fighters
-	  Fukuoka Softbank Hawks
-	  Tohoku Rakuten Golden Eagles
-	  Saitama Seibu Lions
-	  Orix Buffaloes
+          Hokkaido Nippon Ham Fighters
+          Fukuoka Softbank Hawks
+          Tohoku Rakuten Golden Eagles
+          Saitama Seibu Lions
+          Orix Buffaloes
         </labels>
         <labels start='5.5' end='6' step='1' color='red' rotate='90'>
-	  Chiba Lotte Marines
-	</labels>
+          Chiba Lotte Marines
+        </labels>
       </x>
       <y start='1' end='16'>
         <labels start='1' end='16' step='1' format='%1.2f' />
@@ -1529,22 +1529,22 @@ Add this number of seconds to the time this entry is valid.</p>
   </coordinate-system>
 </gxml>
               </ex></desc>
-	      <attr name='start' value='number' required=''><p>
-		The first number in the sequence of labels along the x-axis.
+              <attr name='start' value='number' required=''><p>
+                The first number in the sequence of labels along the x-axis.
               </p></attr>
-	      <attr name='end' value='number' required=''><p>
-		The last number in the sequense of labels along the x-axis.
+              <attr name='end' value='number' required=''><p>
+                The last number in the sequense of labels along the x-axis.
               </p></attr>
-	      <attr name='step' value='number' required=''><p>
-		How many steps to do between each number.
+              <attr name='step' value='number' required=''><p>
+                How many steps to do between each number.
               </p></attr>
-	      <attr name='format' value='sprintf format'><p>This sets how the
-		generated labels should be outputted. It is possible to set how
-		many digits should be used and even if you want the output to be
-		hexadecimal, octal or binary. The format used is the same as
-		used by <xref href='../variable/sprintf.tag' /></p>
-		<p>This attribute is required if no content is given to 
-		<tag>labels</tag>.</p>
+              <attr name='format' value='sprintf format'><p>This sets how the
+                generated labels should be outputted. It is possible to set how
+                many digits should be used and even if you want the output to be
+                hexadecimal, octal or binary. The format used is the same as
+                used by <xref href='../variable/sprintf.tag' /></p>
+                <p>This attribute is required if no content is given to 
+                <tag>labels</tag>.</p>
                 <ex>
 <gxml format='png' true-alpha='1'>
   <new-layer color='white' xsize='32' ysize='32' tiled='1' />
@@ -1555,23 +1555,23 @@ Add this number of seconds to the time this entry is valid.</p>
         <labels start='1' end='16' step='1' format='0x%02X' />
       </x>
       <y start='0' end='100'>
-	<labels start='0' end='100' step='20' format='%d %%' />
+        <labels start='0' end='100' step='20' format='%d %%' />
       </y>
     </data>
   </coordinate-system>
 </gxml>
-	      </ex></attr>
-	      <attr name='font' value='font'><p>Font to use for the labels.
-	      </p></attr>
+              </ex></attr>
+              <attr name='font' value='font'><p>Font to use for the labels.
+              </p></attr>
               <attr name='fontsize' value='fontsize'><p>Fontsize.
-	      </p></attr>
+              </p></attr>
               <attr name='rotate' value='degree'><p>Rotate the the label this
-		much.
-	      </p></attr>
-	      <attr name='color' value='color'><p>Color of the labels.
-	      </p></attr>",
-	    "ticks" : #"<desc type='tag'><p>Draw lines that denote the scale.
-	      This tag works in much the same way as <tag>labels</tag>.
+                much.
+              </p></attr>
+              <attr name='color' value='color'><p>Color of the labels.
+              </p></attr>",
+            "ticks" : #"<desc type='tag'><p>Draw lines that denote the scale.
+              This tag works in much the same way as <tag>labels</tag>.
               </p>
               <ex>
 <gxml format='png' true-alpha='1'>
@@ -1590,81 +1590,81 @@ Add this number of seconds to the time this entry is valid.</p>
   </coordinate-system>
 </gxml>
               </ex></desc>
-	      <attr name='start' value='number' required=''><p>
-		The first position to draw a marker on.
+              <attr name='start' value='number' required=''><p>
+                The first position to draw a marker on.
               </p></attr>
-	      <attr name='end' value='number' required=''><p>
-		The last position to draw markers.
+              <attr name='end' value='number' required=''><p>
+                The last position to draw markers.
               </p></attr>
-	      <attr name='step' value='number' required=''><p>
-		How many steps between each marker.
+              <attr name='step' value='number' required=''><p>
+                How many steps between each marker.
               </p></attr>
-	      <attr name='width' value='width in pixels' required=''><p>
-		Thickness of the marker.
-	      </p></attr>
-	      <attr name='lenght' value='lenght in pixels' required=''><p>
-		Lenght of the marker.
-	      </p></attr>",
-		]),
-	      }),
-	"y" : ({ #"<desc type='cont'><p>Contains tags about how to draw the 
-	  y-axis.</p></desc>
+              <attr name='width' value='width in pixels' required=''><p>
+                Thickness of the marker.
+              </p></attr>
+              <attr name='lenght' value='lenght in pixels' required=''><p>
+                Lenght of the marker.
+              </p></attr>",
+                ]),
+              }),
+        "y" : ({ #"<desc type='cont'><p>Contains tags about how to draw the 
+          y-axis.</p></desc>
           <attr name='start' value='number' default='0'><p>
-	    Start of the y-axis.
-	  </p></attr>
+            Start of the y-axis.
+          </p></attr>
           <attr name='end' value='number' default='1'><p>
-	    End of the y-axis.
-	  </p></attr>", ([
-	    "labels" : #"<desc type='both'><p>Labels to put along the y-axis.
+            End of the y-axis.
+          </p></attr>", ([
+            "labels" : #"<desc type='both'><p>Labels to put along the y-axis.
               This tag works the same as the corresponding tag for 
-	      <tag>x</tag>.</p></desc>
-	      <attr name='start' value='number' required=''><p>
-		The first number in the sequence of labels along the y-axis.
+              <tag>x</tag>.</p></desc>
+              <attr name='start' value='number' required=''><p>
+                The first number in the sequence of labels along the y-axis.
               </p></attr>
-	      <attr name='end' value='number' required=''><p>
-		The last number in the sequense of labels along the y-axis.
+              <attr name='end' value='number' required=''><p>
+                The last number in the sequense of labels along the y-axis.
               </p></attr>
-	      <attr name='step' value='number' required=''><p>
-		How many steps to do between each number.
+              <attr name='step' value='number' required=''><p>
+                How many steps to do between each number.
               </p></attr>
-	      <attr name='format' value='sprintf format'><p>This sets how the
-		generated labels should be outputted. It is possible to set how
-		many digits should be used. The format used is the same as used
-		by <xref href='../variable/sprintf.tag' /></p>
-		<p>This attribute is required if no content is given to 
-		<tag>labels</tag>.</p>
-	      </attr>
-	      <attr name='font' value='font'><p>Font to use for the labels.
-	      </p></attr>
+              <attr name='format' value='sprintf format'><p>This sets how the
+                generated labels should be outputted. It is possible to set how
+                many digits should be used. The format used is the same as used
+                by <xref href='../variable/sprintf.tag' /></p>
+                <p>This attribute is required if no content is given to 
+                <tag>labels</tag>.</p>
+              </attr>
+              <attr name='font' value='font'><p>Font to use for the labels.
+              </p></attr>
               <attr name='fontsize' value='fontsize'><p>Fontsize.
-	      </p></attr>
+              </p></attr>
               <attr name='rotate' value='degree'><p>Rotate the the label this
-		much.
-	      </p></attr>
-	      <attr name='color' value='color'><p>Color of the labels.
-	      </p></attr>",
-	    "ticks" : #"<desc type='tag'><p>Draw lines that denote the scale.
-	      This tag works in much the same way as <tag>labels</tag>.
+                much.
+              </p></attr>
+              <attr name='color' value='color'><p>Color of the labels.
+              </p></attr>",
+            "ticks" : #"<desc type='tag'><p>Draw lines that denote the scale.
+              This tag works in much the same way as <tag>labels</tag>.
               </p></desc>
-	      <attr name='start' value='number' required=''><p>
-		The first position to draw a marker on.
+              <attr name='start' value='number' required=''><p>
+                The first position to draw a marker on.
               </p></attr>
-	      <attr name='end' value='number' required=''><p>
-		The last position to draw markers.
+              <attr name='end' value='number' required=''><p>
+                The last position to draw markers.
               </p></attr>
-	      <attr name='step' value='number' required=''><p>
-		How many steps between each marker.
+              <attr name='step' value='number' required=''><p>
+                How many steps between each marker.
               </p></attr>
-	      <attr name='width' value='width in pixels' required=''><p>
-		Thickness of the marker.
-	      </p></attr>
-	      <attr name='lenght' value='lenght in pixels' required=''><p>
-		Lenght of the marker.
-	      </p></attr>",
-	      ]),
-	    }),
-	  ]),
-	}),
+              <attr name='width' value='width in pixels' required=''><p>
+                Thickness of the marker.
+              </p></attr>
+              <attr name='lenght' value='lenght in pixels' required=''><p>
+                Lenght of the marker.
+              </p></attr>",
+              ]),
+            }),
+          ]),
+        }),
       ]),
     }),
     "legend" : ({ #"<desc type='cont'><p>This tag draws a legend which could be
@@ -1673,8 +1673,8 @@ Add this number of seconds to the time this entry is valid.</p>
 <gxml format='png' true-alpha='1'>
   <shadow soft='6'>
     <legend fontsize='12' border='black' bgcolor='white' fgcolor='black' 
-	    background='100%'
-	    square-border='black' font='Haru'>
+            background='100%'
+            square-border='black' font='Haru'>
       <label color='lightblue'>Mac OS X</label>
       <label color='red'>Red Hat Enterprise Linux</label>
       <label color='darkblue'>Solaris</label>
@@ -1684,7 +1684,7 @@ Add this number of seconds to the time this entry is valid.</p>
 </gxml>
       </ex></desc>
       <attr name='columns' value='positive integer' default='2'><p>
-	How many columns to use in the legend.
+        How many columns to use in the legend.
       </p></attr>
       <attr name='bgcolor' value='color' default='white'><p>Background color.
       </p></attr>
@@ -1696,10 +1696,10 @@ Add this number of seconds to the time this entry is valid.</p>
       <attr name='fontsize' value='fontsize'><p>Fontsize.
       </p></attr>
       <attr name='square-border' value='color'><p>Color of the border around
-	each color key in the legend.
+        each color key in the legend.
       </p></attr>
       <attr name='border' value='color'><p>Draws a border around the legend in
-	the given color.
+        the given color.
       </p></attr>
       <attr name='background' value='percent'><p>Sets opacity of the legend.</p>
       <ex>
@@ -1717,12 +1717,12 @@ Add this number of seconds to the time this entry is valid.</p>
 </gxml>
       </ex></attr>
       <attr name='name' value='string' default='values'><p>Set this name of the
-	new layer.
+        new layer.
       </p></attr>
 ", ([
       "label" : #"<desc type='cont'><p>Defines a key in the legend.</p></desc>
         <attr name='color'><p>Color of the key.</p></attr>",
-	]),
+        ]),
       }),
     ]),
   }),

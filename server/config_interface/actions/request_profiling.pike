@@ -10,8 +10,8 @@ constant action = "debug_info";
 
 LocaleString name= LOCALE(181,"Request profiling information");
 LocaleString doc = LOCALE(182,"Show some information about how how much time "
-			  "has been spent in requests. "
-			  "Mostly useful for developers.");
+                          "has been spent in requests. "
+                          "Mostly useful for developers.");
 
 int creation_date = time();
 
@@ -36,30 +36,30 @@ mixed page_0(object id)
       sort(ind, val);			// Sort after not_query.
       sort(0-column(val, 0)[*], ind, val);	// Sort after number of requets
       array(array(string)) data = (array(array(string)))
-	(((ind[*]/"?method=")[*]+val[*])[*]+((val[*][1][*]/val[*][0][*])/({}))[*]);
+        (((ind[*]/"?method=")[*]+val[*])[*]+((val[*][1][*]/val[*][0][*])/({}))[*]);
       array(int) sizes = allocate(4);
       map(data, lambda(array(string) row) {
-		  for(int i=2;i<=5;i++) {
-		    row[i] = reverse(reverse((string)row[i])/3.0*".");
-		    sizes[i-2] = max(sizes[i-2], sizeof(row[i]));
-		  }
-		  return row;
-		});
+                  for(int i=2;i<=5;i++) {
+                    row[i] = reverse(reverse((string)row[i])/3.0*".");
+                    sizes[i-2] = max(sizes[i-2], sizeof(row[i]));
+                  }
+                  return row;
+                });
       map(data, lambda(array(string) row) {
-		  for(int i=2;i<=5;i++)
-		    row[i] = sprintf("%:*s", sizes[i-2], row[i]);
-		  return row;
-		});
+                  for(int i=2;i<=5;i++)
+                    row[i] = sprintf("%:*s", sizes[i-2], row[i]);
+                  return row;
+                });
       res += "<br />\n"
-	"Configuration: "
-	"<b>"+Roxen.html_encode_string(conf->name)+"</b><br />\n"
-	"<pre>"+
-    	ADT.Table.ASCII.encode(ADT.Table.table(data,
-					       ({ "Path", "Method",
-						  "Count", "Total(탎)",
-						  "Max(탎)", "Average(탎)"
-					       })))+
-	"</pre>";
+        "Configuration: "
+        "<b>"+Roxen.html_encode_string(conf->name)+"</b><br />\n"
+        "<pre>"+
+        ADT.Table.ASCII.encode(ADT.Table.table(data,
+                                               ({ "Path", "Method",
+                                                  "Count", "Total(탎)",
+                                                  "Max(탎)", "Average(탎)"
+                                               })))+
+        "</pre>";
     }
   }
   return res;
@@ -90,7 +90,7 @@ mixed parse( RequestID id )
       "<p />\n"
       "<font color='&usr.warncolor;'>" +
       LOCALE(184,"NOTE: This information is only available if the "
-	     "server has been stared with <tt>-DPROFILE</tt>.") +
+             "server has been stared with <tt>-DPROFILE</tt>.") +
       "</font>"
       "<p />\n"
       "<cf-ok-button href='?class=&form.class;&amp;&usr.set-wiz-id;'/>";

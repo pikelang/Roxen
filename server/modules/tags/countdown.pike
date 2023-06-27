@@ -102,7 +102,7 @@ to 0 without the next attribute.</p>
 
 </attr>
 <attr name='prec' value='year|month|week|day|hour|minute|second'><p>Modifies the precision for 'boolean'- and 'combined'-arguments.</p></attr>"
-		]);
+                ]);
 #endif
 
 mapping set_to_julian_easter(int year) {
@@ -147,7 +147,7 @@ int find_a_month(string which)
     for(int i=1; i<13; i++)
       catch {
       if(which == lower_case(language_low(lang)->month(i))[..strlen(which)])
-	return i-1;
+        return i-1;
     };
   return 1;
 }
@@ -158,7 +158,7 @@ int find_a_day(string which)
   foreach(languages, string lang)
     for(int i=1; i<8; i++)
       if(which == lower_case(language_low(lang)->day(i))[..strlen(which)])
-	return i;
+        return i;
   return 1;
 }
 
@@ -166,7 +166,7 @@ constant language=roxen->language;
 string show_number(int n, mapping m, RequestID id)
 {
   return Roxen.number2string(n, m, language(m->lang||id->misc->defines->pref_language,
-					    m->ordered?"ordered":"number", id));
+                                            m->ordered?"ordered":"number", id));
 }
 
 // This function should be fixed to support different languages.
@@ -287,17 +287,17 @@ string countdown(mapping m, RequestID id)
   if(m->now) {
     mapping newnow=([]);
     if(sscanf(m->now, "%d-%d-%d",
-    	 newnow->year, newnow->mon, newnow->mday)==3 ||
+         newnow->year, newnow->mon, newnow->mday)==3 ||
        sscanf(m->now, "%4d%2d%2d",
-	 newnow->year, newnow->mon, newnow->mday)==3 ||
+         newnow->year, newnow->mon, newnow->mday)==3 ||
        sscanf(m->now, "%d-%s-%d",
          newnow->year, newnow->mon, newnow->mday) == 3)
        {
-	 if (stringp(newnow->mon))
+         if (stringp(newnow->mon))
            newnow->mon = ([ "jan":  1, "feb":  2, "mar":  3, "apr":  4,
                      "may":  5, "jun":  6, "jul":  7, "aug":  8,
                      "sep":  9, "oct": 10, "nov": 11, "dec": 12 ])
-	     [lower_case(sprintf("%s", newnow->mon))[0..2]];
+             [lower_case(sprintf("%s", newnow->mon))[0..2]];
          if (newnow->year>1900) newnow->year-=1900;
          newnow->mon--;
          if(catch {
@@ -318,27 +318,27 @@ string countdown(mapping m, RequestID id)
   if(m->year) {
        time_args->year = ((int)m->year-1900);
        if(time_args->year < -1800)
-	 time_args->year += 1900;
+         time_args->year += 1900;
        tprec="year";
        time_args=clear_less_significant(time_args, "year");
   }
   if(m->iso) {
        if(sscanf(m->iso, "%d-%d-%d",
-		 time_args->year, time_args->mon, time_args->mday)==3 ||
+                 time_args->year, time_args->mon, time_args->mday)==3 ||
           sscanf(m->iso, "%4d%2d%2d",
-		 time_args->year, time_args->mon, time_args->mday)==3 ||
+                 time_args->year, time_args->mon, time_args->mday)==3 ||
           sscanf(m->iso, "%d-%s-%d",
                  time_args->year, time_args->mon, time_args->mday) == 3)
-	 {
-	   if (stringp(time_args->mon))
+         {
+           if (stringp(time_args->mon))
            time_args->mon = ([ "jan":  1, "feb":  2, "mar":  3, "apr":  4,
                        "may":  5, "jun":  6, "jul":  7, "aug":  8,
                        "sep":  9, "oct": 10, "nov": 11, "dec": 12 ])
-	     [lower_case(sprintf("%s", time_args->mon))[0..2]];
+             [lower_case(sprintf("%s", time_args->mon))[0..2]];
          time_args=clear_less_significant(time_args, "day");
-	 tprec="day";
-	 time_args->mon--;
-	 if(time_args->year>1900) time_args->year-=1900;
+         tprec="day";
+         time_args->mon--;
+         if(time_args->year>1900) time_args->year-=1900;
        }
   }
   if(m->month) {

@@ -146,8 +146,8 @@ class Handler
         nb_output = (nb_output || "") + data[4..];
         break;
       case "*":
-	DEBUGMSG("ExtScript/rcb*: %O %O\n", nb_id, run_lock);
-	nb_output = (nb_output || "") + data[4..];
+        DEBUGMSG("ExtScript/rcb*: %O %O\n", nb_id, run_lock);
+        nb_output = (nb_output || "") + data[4..];
         nb_status = 1;
         finalize(nb_id);
         break;
@@ -187,22 +187,22 @@ class Handler
           opts["uid"] = settings->set_uid;
         if (settings->set_gid > 0)
           opts["gid"] = settings->set_gid;
-	else if (settings->set_uid && settings->set_gid != -1)
+        else if (settings->set_uid && settings->set_gid != -1)
         {
-	  // If we have set the uid, Process.Process may change the
-	  // group ID to the user's primary group ID, which is not
-	  // what we want here.
-	  opts["gid"] = system.getgid();
-	}
+          // If we have set the uid, Process.Process may change the
+          // group ID to the user's primary group ID, which is not
+          // what we want here.
+          opts["gid"] = system.getgid();
+        }
       }
 #endif
 
       mixed bt;
       if (bt = catch {
         proc = Process.Process(command, opts);
-	  })
-	{
-	  werror("ExtScript, Process.Process failed: " +
+          })
+        {
+          werror("ExtScript, Process.Process failed: " +
                  describe_backtrace(bt) + "\n");
           return ({ -1, "unable to start helper process" });
         }
@@ -214,7 +214,7 @@ class Handler
       DEBUGMSG("(L2p)");
       string res = pipe->read(4);
       if (!stringp(res) || sizeof(res) < 4 || res[0] != '=')
-	return ({ -1, "external process didn't respond" +
+        return ({ -1, "external process didn't respond" +
                         sprintf(" (Got: %O)", res) });
       DEBUGMSG("(NewSubprocess)");
       if (mode == "run")
@@ -268,30 +268,30 @@ class Handler
       {
         if (stringp(id->auth[0]) && stringp(id->auth[1]))
         {
-	  putvar("I", "auth_type", id->auth[0]);
+          putvar("I", "auth_type", id->auth[0]);
           putvar("E", "AUTH_TYPE", id->auth[0]);
           array arr = id->auth[1] / ":";
           putvar("I", "auth_user", arr[0]);
           putvar("E", "REMOTE_USER", arr[0]);
           if (sizeof(arr) > 1)
-	    putvar("I", "auth_passwd", arr[1]);
+            putvar("I", "auth_passwd", arr[1]);
         }
         else if (sizeof(id->auth) == 3 && intp(id->auth[0]))
         {
-	  putvar("I", "auth_type", "Basic");
+          putvar("I", "auth_type", "Basic");
           putvar("E", "AUTH_TYPE", "Basic");
           if (stringp(id->auth[1]))
           {
-	    putvar("I", "auth_user", id->auth[1]);
+            putvar("I", "auth_user", id->auth[1]);
             putvar("E", "REMOTE_USER", id->auth[1]);
           }
           if (stringp(id->auth[2]))
-	    putvar("I", "auth_passwd", id->auth[2]);
+            putvar("I", "auth_passwd", id->auth[2]);
         }
       }
 
       if (stringp(id->query))
-	putvar("E", "QUERY_STRING", id->query);
+        putvar("E", "QUERY_STRING", id->query);
       
       // Transfer explicit environment variables.
       mapping ee = id->misc->explicit_script_env;
@@ -317,7 +317,7 @@ class Handler
       string res = pipe->read(4);
       if (!stringp(res) || sizeof(res) != 4 || res[0] != '=' || res[3] != 0)
       {
-	pipe = 0; proc = 0; DEBUGMSG("@");
+        pipe = 0; proc = 0; DEBUGMSG("@");
         lock = 0;
         DEBUGMSG("ExtScript/restart\n");
         return launch(mode, arg, id, nonblock);
@@ -333,8 +333,8 @@ class Handler
       if (nonblock)
       { if (functionp(nonblock))
             nb_when_done = nonblock;
-	DEBUGMSG("ExtScript/launch/nonblock: %O\n", nb_id);
-	if (!catch ( pipe->set_nonblocking(read_callback, 0, finalize) ) )
+        DEBUGMSG("ExtScript/launch/nonblock: %O\n", nb_id);
+        if (!catch ( pipe->set_nonblocking(read_callback, 0, finalize) ) )
         { run_lock = lock;
           return ({ });
         }
@@ -342,47 +342,47 @@ class Handler
 
       while (sizeof(res = pipe->read(1)) > 0)
       {
-	DEBUGMSG("."+res);
+        DEBUGMSG("."+res);
         if (res == "a")
-	  continue;
+          continue;
         else if (res == "X")
-	  return ({ -1, "SCRIPT ERROR (1)" });
+          return ({ -1, "SCRIPT ERROR (1)" });
         else if (res == "+" || res == "*" || res == "?" || res == "=")
         {
-	  string tmp = pipe->read(3);
+          string tmp = pipe->read(3);
           len = tmp[1]*256 + tmp[2];
-	  DEBUGMSG(len + "<");
-	  // The len check is paranoia since read() might hang in
-	  // older pikes on NT when it's zero.
+          DEBUGMSG(len + "<");
+          // The len check is paranoia since read() might hang in
+          // older pikes on NT when it's zero.
           tmp = len ? pipe->read(len) : "";
           DEBUGMSG(">");
           if (stringp(tmp))
           {
-	    if (res == "=")
+            if (res == "=")
             {
-	      array arr = tmp / "=";
+              array arr = tmp / "=";
               if (arr[0] == "RETURNCODE")
               {
-		DEBUGMSG(":ExtScript:RETURNCODE=" + arr[1]*"=" + "\n");
+                DEBUGMSG(":ExtScript:RETURNCODE=" + arr[1]*"=" + "\n");
                 if (sscanf(arr[1], "%d", returncode) != 1)
                   returncode = 200;
               }
               else if (arr[0] == "HEADERS")
               {
-		headers = arr[1..] * "=";
+                headers = arr[1..] * "=";
               }
               else if (arr[0] == "ADDHEADER")
               {
-		headers = (headers || "") + arr[1..]*"=" + "\n";
+                headers = (headers || "") + arr[1..]*"=" + "\n";
                 DEBUGMSG(":ExtScript:ADDHEADER=" + arr[1..]*"=" + "\n");
               }
             }
             else if (res == "?")
             {
-	      return ({ -1, tmp });
+              return ({ -1, tmp });
             }
             else
-	      output += tmp;
+              output += tmp;
           }
           if (res == "*" || res == "?") break;
         }
@@ -390,10 +390,10 @@ class Handler
       }
       DEBUGMSG("<Done.>");
       if (res == "" || res == 0)
-	return ({ -1, "SCRIPT I/O ERROR (2)" });
+        return ({ -1, "SCRIPT I/O ERROR (2)" });
 
       if (++runcount > 5000)
-	proc = 0, pipe = 0, runcount = 0;
+        proc = 0, pipe = 0, runcount = 0;
 
       DEBUGMSG("}");
 
@@ -431,36 +431,36 @@ class Handler
     };
     if (bt) {
       werror("Failed to lookup in registry:\n%s\n",
-	     describe_backtrace(bt));
+             describe_backtrace(bt));
     }
     if (cmd) {
       // Perform %-substitution.
       command = ({});
       foreach(Process.split_quoted_string(cmd, 1), string arg) {
-	if (sizeof(arg) && arg[0] == '%') {
-	  int argno;
-	  if (arg == "%*") {
-	    command += ({ "--cmdsocket=3" });
-	  } else if (sscanf(arg, "%%%d", argno)) {
-	    if (argno == 1) {
-	      command += ({ binpath });
-	    } else if (argno == 2) {
-	      command += ({ "--cmdsocket=3" });
-	    }
-	  } else {
-	    command += ({ arg });
-	  }
-	} else {
-	  command += ({ arg });
-	}
+        if (sizeof(arg) && arg[0] == '%') {
+          int argno;
+          if (arg == "%*") {
+            command += ({ "--cmdsocket=3" });
+          } else if (sscanf(arg, "%%%d", argno)) {
+            if (argno == 1) {
+              command += ({ binpath });
+            } else if (argno == 2) {
+              command += ({ "--cmdsocket=3" });
+            }
+          } else {
+            command += ({ arg });
+          }
+        } else {
+          command += ({ arg });
+        }
       }
     } else {
       string s = Stdio.read_file(binpath, 0, 1);
       if (s && has_prefix(s, "#!")) {
-	command = Process.split_quoted_string(s[2..], 1) + command;
+        command = Process.split_quoted_string(s[2..], 1) + command;
       } else {
-	// Hope we can execute it anyway...
-	// Not likely, but we can hope.
+        // Hope we can execute it anyway...
+        // Not likely, but we can hope.
       }
     }
 #endif /* __NT__ */
@@ -484,11 +484,11 @@ protected void objdiag()
       string line = "  " + binpath;
       int     n = 0;
       foreach(m->handlers, Handler h)
-  	if (h)
-  	  line += "  H" + (++n) + "=" + h->procstat();
+        if (h)
+          line += "  H" + (++n) + "=" + h->procstat();
       DEBUGMSG(line + "\n");
       if (!n && cleaner) {
-	cleaner->stop();
+        cleaner->stop();
         cleaner = 0;
       }
     }
@@ -511,21 +511,21 @@ void periodic_cleanup()
       if (m->expire < now)
       {
         Thread.MutexKey lock = m->mutex->lock();
-  	DEBUGMSG("(Z)");
-  	if (m->handlers[0])
-  	{ if (m->handlers[0]->probe())
-  	  { DEBUGMSG("(*T*)");
-  	    m->handlers[0]->terminate();
-  	  }
-  	}
+        DEBUGMSG("(Z)");
+        if (m->handlers[0])
+        { if (m->handlers[0]->probe())
+          { DEBUGMSG("(*T*)");
+            m->handlers[0]->terminate();
+          }
+        }
   
-  	if (sizeof(m->handlers) > 1)
-  	   m->handlers = m->handlers[1..];
-  	else
-  	   m->handlers = ({ 0 });
-  	now = time();
-  	m->expire   = now+600/(2+sizeof(m->handlers));
-  	lock = 0;
+        if (sizeof(m->handlers) > 1)
+           m->handlers = m->handlers[1..];
+        else
+           m->handlers = ({ 0 });
+        now = time();
+        m->expire   = now+600/(2+sizeof(m->handlers));
+        lock = 0;
       }
     }
   }
@@ -552,7 +552,7 @@ Handler getscripthandler(string binpath, void|int multi, void|mapping settings)
     lock = dispatchmutex->lock();
     scripthandlers[binpath] = m =
        ([
-	 "handlers": ({ Handler(binpath) }),
+         "handlers": ({ Handler(binpath) }),
           "expire": time() + 600,  
           "mutex": Thread.Mutex(),
           "binpath": binpath
@@ -566,7 +566,7 @@ Handler getscripthandler(string binpath, void|int multi, void|mapping settings)
     {
       if (!h->busy())
       {
-	if (!h->procstat())
+        if (!h->procstat())
           return h;
         else return h;
       }

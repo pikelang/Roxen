@@ -73,7 +73,7 @@ protected void build_font_names_cache( )
           if(!new_ttf_font_names_cache[f])
             new_ttf_font_names_cache[f] = ([]);
           new_ttf_font_names_cache[f][ translate_ttf_style(n->style) ] =
-	    combine_path(dir+"/",fname);
+            combine_path(dir+"/",fname);
         }
       }
     }
@@ -164,8 +164,8 @@ class TTFWrapper
       object r2 = Image.Image( rr->xsize()+2, rr->ysize() );
       object r3 = rr*0.3;
       for( int i = 0; i<2; i++ )
-	for( int j = 0; j<2; j++ )
-	  r2->paste_alpha_color( r3,  255, 255, 255, i, j );
+        for( int j = 0; j<2; j++ )
+          r2->paste_alpha_color( r3,  255, 255, 255, i, j );
       rr = r2->paste_alpha_color( rr, 255,255,255, 1,1 );
     }
     rr->setcolor( 0,0,0 );

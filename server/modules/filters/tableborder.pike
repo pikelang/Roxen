@@ -32,26 +32,26 @@ constant module_type = MODULE_FILTER;
 constant module_name = "Table/Image Border Unveiler";
 constant module_doc  =
             "<p>"
-	      "This module modifies all <tt>&lt;table&gt;</tt> and/or "
-	      "<tt>&lt;img&gt;</tt> tags when a prestate \"tables\" or "
-	      "\"images\" is added, forcing the border attribute to 1. "
-	      "Debugging nested tables or images has never been easier."
-	    "</p><p>"
-	      "These convenient javascript functions <a href=\"" +
-	      JS_PRESTATE("tables") + "\">toggle the prestate \"tables\"</a> "
-	      "and <a href=\"" + JS_PRESTATE("images") + "\">\"images\"</a> "
-	      "respectively."
-	    "</p>";
+              "This module modifies all <tt>&lt;table&gt;</tt> and/or "
+              "<tt>&lt;img&gt;</tt> tags when a prestate \"tables\" or "
+              "\"images\" is added, forcing the border attribute to 1. "
+              "Debugging nested tables or images has never been easier."
+            "</p><p>"
+              "These convenient javascript functions <a href=\"" +
+              JS_PRESTATE("tables") + "\">toggle the prestate \"tables\"</a> "
+              "and <a href=\"" + JS_PRESTATE("images") + "\">\"images\"</a> "
+              "respectively."
+            "</p>";
 
 protected array(string) add_border(Parser.HTML me, mapping arg,
-				   string contents, RequestID id,
-				   Parser.HTML parser)
+                                   string contents, RequestID id,
+                                   Parser.HTML parser)
 {
   arg->border = "1";
   id->misc->borders_unveiled++;
   parser->set_extra( id, parser->clone() );
   return ({ Roxen.make_container(me->tag_name(), arg,
-				 parser->finish( contents )->read()) });
+                                 parser->finish( contents )->read()) });
 }
 
 mapping|void filter(mapping result, RequestID id)
@@ -70,10 +70,10 @@ mapping|void filter(mapping result, RequestID id)
     return 0; // signal that we didn't rewrite the result for good measure
 
   TRACE_ENTER("Turning on borders for all " +
-	      (id->prestate->tables ? "tables" : "") +
-	      (id->prestate->tables &&
-	       id->prestate->images ? " and "  : "") +
-	      (id->prestate->images ? "images" : "") + ".", 0);
+              (id->prestate->tables ? "tables" : "") +
+              (id->prestate->tables &&
+               id->prestate->images ? " and "  : "") +
+              (id->prestate->images ? "images" : "") + ".", 0);
 
   Parser.HTML parser = Parser.HTML();
   if(id->prestate->tables) parser->add_container("table", add_border);
@@ -82,7 +82,7 @@ mapping|void filter(mapping result, RequestID id)
   result->data = parser->finish( result->data )->read();
 
   TRACE_LEAVE(id->misc->borders_unveiled - 1 + " border" +
-	      (1==id->misc->borders_unveiled ? "" : "s" ) + " unveiled.");
+              (1==id->misc->borders_unveiled ? "" : "s" ) + " unveiled.");
 
   return result;
 }

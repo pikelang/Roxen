@@ -73,7 +73,7 @@ string render_view( RequestID id, int|void thumb )
     else 
     {
       return LOCALE(347,"Valid image set (no cimg module available, "
-		    "cannot show it)")+"\n";
+                    "cannot show it)")+"\n";
     }
   } else {
     return LOCALE(348,"No image set");

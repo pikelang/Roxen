@@ -133,8 +133,8 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
   {
     if(reader == null)
       reader =
-	new BufferedReader(new InputStreamReader(getInputStream(),
-						 getCharacterEncoding()));
+        new BufferedReader(new InputStreamReader(getInputStream(),
+                                                 getCharacterEncoding()));
     return reader;
   }
 
@@ -147,34 +147,34 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     while(cookieh.hasMoreElements()) {
       String chdrtxt = (String)cookieh.nextElement();
       try {
-	HeaderTokenizer cookiet =
-	  new HeaderTokenizer(chdrtxt);
-	Cookie lastcookie = null;
-	int version=0;
-	while(cookiet.more()) {
-	  String name = cookiet.getValue();
-	  String val = "";
-	  if(cookiet.lookingAt('=')) {
-	    cookiet.discard('=');
-	    val = cookiet.getValue();
-	  }
-	  if(cookiet.more())
-	    cookiet.discard(cookiet.lookingAt(',')? ',':';');
-	  if(name.startsWith("$")) {
-	    if(name.equals("$version"))
-	      version = Integer.parseInt(val);
-	    else
-	      if(lastcookie != null)
-		if(name.equals("$domain"))
-		  lastcookie.setDomain(val);
-		else if(name.equals("$path"))
-		  lastcookie.setPath(val);
-	  } else {
-	    cookiev.add(lastcookie = new Cookie(name, val));
-	    if(version != 0)
-	      lastcookie.setVersion(version);
-	  }
-	}
+        HeaderTokenizer cookiet =
+          new HeaderTokenizer(chdrtxt);
+        Cookie lastcookie = null;
+        int version=0;
+        while(cookiet.more()) {
+          String name = cookiet.getValue();
+          String val = "";
+          if(cookiet.lookingAt('=')) {
+            cookiet.discard('=');
+            val = cookiet.getValue();
+          }
+          if(cookiet.more())
+            cookiet.discard(cookiet.lookingAt(',')? ',':';');
+          if(name.startsWith("$")) {
+            if(name.equals("$version"))
+              version = Integer.parseInt(val);
+            else
+              if(lastcookie != null)
+                if(name.equals("$domain"))
+                  lastcookie.setDomain(val);
+                else if(name.equals("$path"))
+                  lastcookie.setPath(val);
+          } else {
+            cookiev.add(lastcookie = new Cookie(name, val));
+            if(version != 0)
+              lastcookie.setVersion(version);
+          }
+        }
       } catch(IllegalArgumentException e) { }
     }
     return (Cookie[])cookiev.toArray(new Cookie[cookiev.size()]);
@@ -240,7 +240,7 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     String h = getHeader(hdr);
     try {
       return (h==null? -1 :
-	      RoxenServletContext.dateformat.parse(h).getTime());
+              RoxenServletContext.dateformat.parse(h).getTime());
     } catch(ParseException e) {
       throw new IllegalArgumentException(e.getMessage());
     }
@@ -275,7 +275,7 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     Cookie[] cookies = getCookies();
     for(int i=0; i<cookies.length; i++) {
       if("JSESSIONID".equalsIgnoreCase(cookies[i].getName()))
-	return cookies[i].getValue();
+        return cookies[i].getValue();
     }
     return null;
   }
@@ -312,9 +312,9 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
   }
 
   ServletRequest(RoxenServletContext cx, RoxenSessionContext sx,
-		 int cl, String ct, String pr, String sc,
-		 String sn, int sp, String ra, String rh, String d,
-		 String mp, String ap, String pi, String me, String ru,
+                 int cl, String ct, String pr, String sc,
+                 String sn, int sp, String ra, String rh, String d,
+                 String mp, String ap, String pi, String me, String ru,
                  String u, String q, String pt)
   {
     context = cx;
@@ -374,16 +374,16 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     while (st.hasMoreTokens()) {
       String t = st.nextToken();
       if(";".equals(t))
-	break;
+        break;
       else if("-".equals(t))
-	;
+        ;
       else if(lang == null)
-	lang = t.toLowerCase();
+        lang = t.toLowerCase();
       else if(cntry == null)
-	cntry = t.toUpperCase();
+        cntry = t.toUpperCase();
       else {
-	variant = t;
-	break;
+        variant = t;
+        break;
       }
     }
     if(lang == null)
@@ -414,7 +414,7 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     else while(e.hasMoreElements()) {
       StringTokenizer st = new StringTokenizer((String)e.nextElement(), ",");
       while (st.hasMoreTokens())
-	v.add(parseLocale(st.nextToken()));
+        v.add(parseLocale(st.nextToken()));
     }
     return v.elements();
   }

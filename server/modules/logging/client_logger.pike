@@ -19,8 +19,8 @@ constant module_doc  = "This is a client logger. It simply logs the 'user-agent'
 void create()
 {
   defvar("logfile", "$LOGDIR/Clients", "Client log file",
-	 TYPE_STRING,
-	 "This is the file into which all client names will be put.\n");
+         TYPE_STRING,
+         "This is the file into which all client names will be put.\n");
 }
 
 // This is a pointer to the method 'log' in the file object. For speed.

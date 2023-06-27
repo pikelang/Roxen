@@ -45,7 +45,7 @@ void create()
   defvar("extensions", ({ "pl", "perl" }),
     LOCALE(1,"Extensions"), TYPE_STRING_LIST,
     LOCALE(2,"List of URL extensions that indicate that the document "
-	   "is a Perl script."));
+           "is a Perl script."));
 
 #if 0
   defvar("libdir", "./perl",
@@ -59,12 +59,12 @@ void create()
   defvar("showbacktrace", 0,
     LOCALE(5, "Show Backtraces"), TYPE_FLAG,
     LOCALE(6, "This setting decides whether to deliver a backtrace in the "
-	   "document if an error is caught while a script runs."));
+           "document if an error is caught while a script runs."));
 
   defvar("tagenable", 0,
     LOCALE(7, "Enable Perl Tag"), TYPE_FLAG,
     LOCALE(8, "This setting decides whether to enable parsing of Perl code "
-	   "in RXML pages, in &lt;perl&gt;..&lt;/perl&gt; containers."));
+           "in RXML pages, in &lt;perl&gt;..&lt;/perl&gt; containers."));
 
   defvar("scriptout", "HTTP",
     LOCALE(9, "Script output"), TYPE_MULTIPLE_STRING,
@@ -104,9 +104,9 @@ void create()
          ({ 1, 2, 3, 4, 5, 6 }) );
 
   defvar("caching", 0,
-	 LOCALE(18, "Cache output"), TYPE_FLAG,
-	 LOCALE(19, "Whether to cache the result of scripts. This is usually "
-		"not desirable, so the default for this setting is No."));
+         LOCALE(18, "Cache output"), TYPE_FLAG,
+         LOCALE(19, "Whether to cache the result of scripts. This is usually "
+                "not desirable, so the default for this setting is No."));
 
 #if constant(getpwnam)
   defvar("identity", "nobody:*",
@@ -195,8 +195,8 @@ protected void add_headers(string headers, object id)
           case "Content-Languages":
             // Might require special treatment in the future?
             ;
-	  default:
-	    id->add_response_header (name, value);
+          default:
+            id->add_response_header (name, value);
         }
     }
 }
@@ -293,7 +293,7 @@ mixed handle_file_extension(Stdio.File file, string ext, object id)
 
 #if 1
   return http_string_answer("Script file not accessible in this filesystem "
-			    "(no real file).");
+                            "(no real file).");
 #else
   // Possible security leak allowing people to read the contents
   // of script files.

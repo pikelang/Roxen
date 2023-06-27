@@ -54,19 +54,19 @@ string status()
     foreach(global_events, Event event)
     {
       res += sprintf("<tr>\n"
-		     "  <td>%s</td>\n"
-		     "  <td>%d</td>\n"
-		     "  <td>%s</td>\n"
-		     "  <td>%f</td>\n"
-		     "  <td>%f</td>\n"
-		     "  <td>%f</td>\n"
-		     "  <td>%d</td>\n"
-		     "</tr>\n", 
-		     event->url, event->period, event->host||"",
-		     event->low/1000000.0,
-		     event->high/1000000.0,
-		     event->last/1000000.0,
-		     event->count);
+                     "  <td>%s</td>\n"
+                     "  <td>%d</td>\n"
+                     "  <td>%s</td>\n"
+                     "  <td>%f</td>\n"
+                     "  <td>%f</td>\n"
+                     "  <td>%f</td>\n"
+                     "  <td>%d</td>\n"
+                     "</tr>\n", 
+                     event->url, event->period, event->host||"",
+                     event->low/1000000.0,
+                     event->high/1000000.0,
+                     event->last/1000000.0,
+                     event->count);
       
     }
     res += "</table>\n";
@@ -76,7 +76,7 @@ string status()
 
 mapping(string:function) query_action_buttons() {
   return ([ "Start Crawler": start_crawler,
-	    "Stop Crawler": stop_crawler ]);
+            "Stop Crawler": stop_crawler ]);
 }
 
 class Event
@@ -125,16 +125,16 @@ string crawler_status = "<font color='FFB700'><b>Waiting</b></font>";
 void create() 
 {
   defvar("crawl_src", "http://localhost/periodic-crawl.txt", 
-	 "Crawl list URL", TYPE_STRING,
+         "Crawl list URL", TYPE_STRING,
          "<p>The URL to the file that contains the list of URLs or paths to fetch. "
          "It should be a text file with one URL or path, and its periodicity in "
-	 "seconds separated by space, per line. It is also possible to specify "
-	 "an optional host header at the end of the line, e.g:</p>"
-	 "<pre>"
-	 "  http://localhost:8080/ 5<br/>"
-	 "  http://localhost:8080/ 5 mobile.roxen.com<br/>"
-	 "  http://localhost:8080/news 10<br/>"
-	 "  http://localhost:8080/sports 10<br/>"
+         "seconds separated by space, per line. It is also possible to specify "
+         "an optional host header at the end of the line, e.g:</p>"
+         "<pre>"
+         "  http://localhost:8080/ 5<br/>"
+         "  http://localhost:8080/ 5 mobile.roxen.com<br/>"
+         "  http://localhost:8080/news 10<br/>"
+         "  http://localhost:8080/sports 10<br/>"
          "  /rss.xml?category=3455&id=47 20"
          "</pre>"
          "When a path is provided instead of a URL, a full URL will be constructed by "
@@ -147,25 +147,25 @@ void create()
          "if the frontends need to crawl using separate URLs.");
 
   defvar("crawl_delay", 60, 
-	 "Crawl Delay", TYPE_INT,
-	 "Wait this amount of second before starting the crawler after "
-	 "the roxen server has started or the module has been reloaded.");
+         "Crawl Delay", TYPE_INT,
+         "Wait this amount of second before starting the crawler after "
+         "the roxen server has started or the module has been reloaded.");
 
   defvar("curl_path", "/usr/bin/curl", 
-	 "Curl Path", TYPE_STRING,
-	 "The path to the curl binary.");
+         "Curl Path", TYPE_STRING,
+         "The path to the curl binary.");
 
   defvar("curl_timeout", 300, 
-	 "Curl Timeout", TYPE_INT,
-	 "The timeout in seconds for each fetch.");
+         "Curl Timeout", TYPE_INT,
+         "The timeout in seconds for each fetch.");
 
   defvar("debug", 0, 
-	 "Debug", TYPE_FLAG,
-	 "Activate to print debug messages in the debug log.");
+         "Debug", TYPE_FLAG,
+         "Activate to print debug messages in the debug log.");
 
   defvar("enable", 1, 
-	 "Enable", TYPE_FLAG,
-	 "Enable/Disable the crawler.");
+         "Enable", TYPE_FLAG,
+         "Enable/Disable the crawler.");
 
 }
 
@@ -223,9 +223,9 @@ array(Event) fetch_events(string crawl_src)
     ERROR_MSG("Can't fetch crawl source file: %O\n", query("crawl_src"));
     crawler_status = 
       sprintf("<font color='BC311B'>"
-	      "  <b>Can't fetch crawl source file: %O.</b>"
-	      "</font>", 
-	      query("crawl_src"));
+              "  <b>Can't fetch crawl source file: %O.</b>"
+              "</font>", 
+              query("crawl_src"));
     return 0;
   }
 
@@ -240,10 +240,10 @@ array(Event) fetch_events(string crawl_src)
     {
       ERROR_MSG("Parse error in crawl source file:\n%s\n", crawl_file);
       crawler_status = 
-	sprintf("<font color='BC311B'>"
-		"  <b>Parse error in crawl source file: %O.</b>"
-		"</font>", 
-		query("crawl_src"));
+        sprintf("<font color='BC311B'>"
+                "  <b>Parse error in crawl source file: %O.</b>"
+                "</font>", 
+                query("crawl_src"));
       return 0;
     }
 
@@ -301,11 +301,11 @@ void do_fetch()
     event->update_statistics(fetch_time);
     
     DEBUG_MSG("%O Pe:%d Ho:%O Lo:%f Hi:%f La:%f Co:%d\n", 
-	      event->url, event->period, event->host||"",
-	      event->low/1000000.0,
-	      event->high/1000000.0,
-	      event->last/1000000.0,
-	      event->count);
+              event->url, event->period, event->host||"",
+              event->low/1000000.0,
+              event->high/1000000.0,
+              event->last/1000000.0,
+              event->count);
   }
 
   schedule_event(event);
@@ -327,10 +327,10 @@ int fetch_url(string url, string|void host)
   array command_args = ({ query("curl_path"), 
                           "-o", "/dev/null",
                           "--max-redirs", (string)curl_redirs,
-			  "--max-time", (string)query("curl_timeout"),
+                          "--max-time", (string)query("curl_timeout"),
                           //"--stderr", "/dev/null",
-			  "--silent",
-			  "--show-error" });
+                          "--silent",
+                          "--show-error" });
 
   if(host)
     command_args += ({ "--header", "Host: "+host });
@@ -354,7 +354,7 @@ int fetch_url(string url, string|void host)
     if (code) // curl exit code = 0 for success
     {
       ERROR_MSG("Process %s failed with exit code %d\n", 
-		query("curl_path"), code);
+                query("curl_path"), code);
       return -1;
     }
 

@@ -34,7 +34,7 @@ class TagTranslationRegistration {
 
     array do_return(RequestID id) {
       if(args->path && args->path!="") {
-	Locale.register_project(args->project, args->path);
+        Locale.register_project(args->project, args->path);
       }
       id->misc->translation_proj = args->project;
       result = "";
@@ -48,9 +48,9 @@ class TagTranslate {
   constant name = "translate";
 
   array(RXML.Type) result_types = ({ RXML.t_xml(RXML.PXml),
-				     RXML.t_html(RXML.PXml),
-				     RXML.t_text(RXML.PXml),
-				     RXML.t_any(RXML.PXml) });
+                                     RXML.t_html(RXML.PXml),
+                                     RXML.t_text(RXML.PXml),
+                                     RXML.t_any(RXML.PXml) });
 
   mapping(string:RXML.Type) opt_arg_types = ([ 
     "id":RXML.t_text(RXML.PEnt),
@@ -66,12 +66,12 @@ class TagTranslate {
       if (!proj) RXML.parse_error("Missing translation project.\n");
       if (!args->id) RXML.parse_error("Missing translation identifier.\n");
       string trans = Locale.translate(proj, roxen.locale->get(),
-				      (int)args->id || args->id,
-				      content);
+                                      (int)args->id || args->id,
+                                      content);
 
       if(args->variable) {
-	RXML.user_set_var(args->variable, trans, args->scope);
-	return 0;
+        RXML.user_set_var(args->variable, trans, args->scope);
+        return 0;
       }
       
       return ({ trans });

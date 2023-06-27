@@ -11,7 +11,7 @@ inherit "module";
 void create()
 {
   defvar("extension", "map", "Mapfile extension", TYPE_STRING,
-	 "All files ending with this extension will be parsed as map-files.");
+         "All files ending with this extension will be parsed as map-files.");
 }
 
 constant module_type = MODULE_FILE_EXTENSION;
@@ -30,7 +30,7 @@ int parse_color(string col, int multi)
   if(!sscanf(col, "#%2x%2x%2x", r, g, b))
     if(!sscanf(col, "(%d,%d,%d)", r, g, b))
       if(!sscanf(col, "%d,%d,%d", r, g, b))
-	return 0;
+        return 0;
   
   return r*256*256 + g*256 + b;
 }
@@ -53,51 +53,51 @@ mapping find_colors(array lines, int color)
       sscanf(lines[i], "%*s:%s", s);
       if(sscanf(s, "%s-%s:%s", bc, c, url)==3)
       {
-	col1=parse_color(bc, color);
-	col2=parse_color(c, color);
+        col1=parse_color(bc, color);
+        col2=parse_color(c, color);
 
-	if(color)
-	{
-	  sr=(col1/(256*256))&255;
-	  sg=(col1/256)&255;
-	  sb=col1&255;
-	
-	  er=(col2/(256*256))&255;
-	  eg=(col2/256)&255;
-	  eb=col2&255;
-	} else {
-	  if(col1>col2)
-	  {
-	    sw=col1;
-	    col1=col2;
-	    col2=sw;
-	    res["ranges"] += ({ ({ col1, col2, url }) });
-	    continue;
-	  }
-	}
-	if(sr>er)
-	{
-	  sw=sr; 
-	  sr=er; 
-	  er=sw;
-	}
+        if(color)
+        {
+          sr=(col1/(256*256))&255;
+          sg=(col1/256)&255;
+          sb=col1&255;
+        
+          er=(col2/(256*256))&255;
+          eg=(col2/256)&255;
+          eb=col2&255;
+        } else {
+          if(col1>col2)
+          {
+            sw=col1;
+            col1=col2;
+            col2=sw;
+            res["ranges"] += ({ ({ col1, col2, url }) });
+            continue;
+          }
+        }
+        if(sr>er)
+        {
+          sw=sr; 
+          sr=er; 
+          er=sw;
+        }
 
-	if(sg>eg)
-	{
-	  sw=sg; 
-	  sg=eg; 
-	  eg=sw;
-	}
+        if(sg>eg)
+        {
+          sw=sg; 
+          sg=eg; 
+          eg=sw;
+        }
 
-	if(sb>eb)
-	{
-	  sw=sb; 
-	  sb=eb; 
-	  eb=sw;
-	}
-	res["ranges"] += ({ ({ ({ sr, sg, sb }), ({ er, eg, eb }), url }) });
+        if(sb>eb)
+        {
+          sw=sb; 
+          sb=eb; 
+          eb=sw;
+        }
+        res["ranges"] += ({ ({ ({ sr, sg, sb }), ({ er, eg, eb }), url }) });
       } else if(sscanf(s, "%s:%s", bc, url)) {
-	res[parse_color(bc, color)]=url;
+        res[parse_color(bc, color)]=url;
       }
     }
   }
@@ -188,7 +188,7 @@ array parse_ncsa_map_line(string line)
    case "circ":
     if (sscanf( line, "%*s %s %d,%d %d,%d", Url, x, y, x1, y1) == 5)
       return  ({ ({ TYPE_NCSA_CIRCLE, Url,  ({ ({ x, y }), ({ x1, y1 }) }) 
-		    }) });
+                    }) });
    case "poin":
     if (sscanf(line, "%*s %s %d,%d", Url, x, y) == 3)
       return ({ ({ TYPE_POINT, ({ x, y, Url }) }) });
@@ -199,10 +199,10 @@ array parse_ncsa_map_line(string line)
       mixed poly = ({ ({x, y}) });
       
       while(sscanf(line, "%d,%d %s", x, y, line) == 3)
-	poly += ({ ({ x, y }) });
+        poly += ({ ({ x, y }) });
 
       if(sscanf(line, "%d,%d", x, y) == 2)
-	poly += ({ ({ x, y }) });
+        poly += ({ ({ x, y }) });
       
       return ({ ({ TYPE_POLY, Url, poly }) });
     }
@@ -263,41 +263,41 @@ mixed parse_map_file( object o )
       switch(cmd[0..2])
       {
        case "def":
-	if(sscanf(line, cmd+" %s", Url ))
-	  coordinate_list[0] = replace(Url, ({" ", "\t"}), ({"",""}));
-	break;
+        if(sscanf(line, cmd+" %s", Url ))
+          coordinate_list[0] = replace(Url, ({" ", "\t"}), ({"",""}));
+        break;
 
        case "voi": 
-	if(sscanf(line, cmd+" %s", Url ))
-	  coordinate_list += 
-	    ({ ({ TYPE_VOID, replace(Url, ({" ", "\t"}), ({"",""})) }) });
-	break;
+        if(sscanf(line, cmd+" %s", Url ))
+          coordinate_list += 
+            ({ ({ TYPE_VOID, replace(Url, ({" ", "\t"}), ({"",""})) }) });
+        break;
 
 
        case "cir": case "rec": case "pol": case "poi":
-	if(sscanf(line, "%*s(%*s"))
-	  coordinate_list += parse_cern_map_line(line);
-	else
-	  coordinate_list += parse_ncsa_map_line(line);
-	break;
-	
+        if(sscanf(line, "%*s(%*s"))
+          coordinate_list += parse_cern_map_line(line);
+        else
+          coordinate_list += parse_ncsa_map_line(line);
+        break;
+        
        case "ppm": case "pgm":
-	if (sscanf( line, "ppm:%s", tmp1 ))
-	  coordinate_list += 
-	    ({ ({ TYPE_PPM_IMAGE,(replace(tmp1, "\t", "")/" " - ({""})) * "", 
-		  find_colors(replace(data, ({" ", "\t"}), ({"",""}))/"\n", 1)
-		  }) });
-	else if (sscanf( line, "pgm:%s", tmp1 ))
-	  ({ ({ TYPE_PGM_IMAGE, tmp1, 
-		find_colors(replace(data, ({" ", "\t"}), ({"",""}))/"\n", 0)
-		}) });
-	break;
+        if (sscanf( line, "ppm:%s", tmp1 ))
+          coordinate_list += 
+            ({ ({ TYPE_PPM_IMAGE,(replace(tmp1, "\t", "")/" " - ({""})) * "", 
+                  find_colors(replace(data, ({" ", "\t"}), ({"",""}))/"\n", 1)
+                  }) });
+        else if (sscanf( line, "pgm:%s", tmp1 ))
+          ({ ({ TYPE_PGM_IMAGE, tmp1, 
+                find_colors(replace(data, ({" ", "\t"}), ({"",""}))/"\n", 0)
+                }) });
+        break;
 
        case "col:":
-	break;
+        break;
       
        default:
-	coordinate_list += parse_roxen_map_line(line);
+        coordinate_list += parse_roxen_map_line(line);
       }
   }
   return compress_coordinate_list(coordinate_list);
@@ -362,11 +362,11 @@ mixed do_color_match(string file, mapping cols, int x, int y, int color)
       col1=cols["ranges"][i][0];
       col2=cols["ranges"][i][1];
       if(r>=col1[0] && g>=col1[1] && b>=col1[2] 
-	 && r<=col2[0] && g<=col2[1] && b<=col2[2])
-	return cols["ranges"][i][2];
+         && r<=col2[0] && g<=col2[1] && b<=col2[2])
+        return cols["ranges"][i][2];
     } else {			/* Greyscale color */
       if(grey >= cols["ranges"][i][0] && grey <= cols["ranges"][i][1])
-	return cols["ranges"][i][2];
+        return cols["ranges"][i][2];
     }
   }
   return 0;
@@ -379,10 +379,10 @@ int ncsa_circle(mixed coords, int x, int y)
   int radius1, radius2;
   
   radius1 = ((coords[0][Y] - coords[1][Y]) * 
-	     (coords[0][Y] -
-	      coords[1][Y])) + ((coords[0][X] - coords[1][X]) * 
-				(coords[0][X] -
-				 coords[1][X]));
+             (coords[0][Y] -
+              coords[1][Y])) + ((coords[0][X] - coords[1][X]) * 
+                                (coords[0][X] -
+                                 coords[1][X]));
   radius2 = ((coords[0][Y] - y) * (coords[0][Y] - y)) +
     ((coords[0][X] - x) * (coords[0][X] - x));
   return (radius2 <= radius1);
@@ -443,7 +443,7 @@ int polygon(mixed points, int tx, int ty)
 
 /* Find the URL for the coordinate (x,y) in the file (map_file_name) */
 string map_get_filename( int x, int y, string map_file_name, object o,
-			 object conf)
+                         object conf)
 {
   string cache_name = "mapfile:" +conf->name;
   array(int) s = (array(int))o->stat();
@@ -464,45 +464,45 @@ string map_get_filename( int x, int y, string map_file_name, object o,
     if(x == -1 && y == -1)
     {
       if(coordinate_list[c][0] == TYPE_VOID)
-	return coordinate_list[c][1];
+        return coordinate_list[c][1];
     } else {
       if(coordinate_list[c][0] == TYPE_POINT)
       {
-	int maxd=1000000, closest=-1, dist;
-	array (array (int|string)) points;
-	points=coordinate_list[c][1];
-	/* In the list of points find the closest... */
-	for(int i=0; i<sizeof(points); i++)
-	{
-	  dist=sqrt(sqr(x-points[i][0]) + sqr(y-points[i][1]));
-	  if(dist < maxd)
-	  {
-	    maxd=dist;
-	    closest=i;
-	  }
-	}
-	if(closest >= 0)
-	  return points[closest][2];
+        int maxd=1000000, closest=-1, dist;
+        array (array (int|string)) points;
+        points=coordinate_list[c][1];
+        /* In the list of points find the closest... */
+        for(int i=0; i<sizeof(points); i++)
+        {
+          dist=sqrt(sqr(x-points[i][0]) + sqr(y-points[i][1]));
+          if(dist < maxd)
+          {
+            maxd=dist;
+            closest=i;
+          }
+        }
+        if(closest >= 0)
+          return points[closest][2];
       } 
       if((coordinate_list[c][0] == TYPE_RECTANGLE 
-	  && x >= coordinate_list[c][2] && y >= coordinate_list[c][3]
-	  && x <= coordinate_list[c][4] && y <= coordinate_list[c][5])
-	 || (coordinate_list[c][0] == TYPE_CIRCLE
-	     && (sqrt(sqr(x-coordinate_list[c][2])+
-		      sqr(y-coordinate_list[c][3]))
-		 <= coordinate_list[c][4]))
-	 || (coordinate_list[c][0] == TYPE_NCSA_CIRCLE
-	     && ncsa_circle(coordinate_list[c][2], x, y))
-	 || (coordinate_list[c][0] == TYPE_POLY
-	     && polygon(coordinate_list[c][2], x, y)))   
-	return coordinate_list[c][1];
+          && x >= coordinate_list[c][2] && y >= coordinate_list[c][3]
+          && x <= coordinate_list[c][4] && y <= coordinate_list[c][5])
+         || (coordinate_list[c][0] == TYPE_CIRCLE
+             && (sqrt(sqr(x-coordinate_list[c][2])+
+                      sqr(y-coordinate_list[c][3]))
+                 <= coordinate_list[c][4]))
+         || (coordinate_list[c][0] == TYPE_NCSA_CIRCLE
+             && ncsa_circle(coordinate_list[c][2], x, y))
+         || (coordinate_list[c][0] == TYPE_POLY
+             && polygon(coordinate_list[c][2], x, y)))   
+        return coordinate_list[c][1];
       if(coordinate_list[c][0] & TYPE_IMAGE)
       {
-	string u;
-	u=do_color_match(coordinate_list[c][1], coordinate_list[c][2], x, y,
-			 coordinate_list[c][0]&TYPE_IMAGE_COLOR);
+        string u;
+        u=do_color_match(coordinate_list[c][1], coordinate_list[c][2], x, y,
+                         coordinate_list[c][0]&TYPE_IMAGE_COLOR);
 
-	if(u) return u;
+        if(u) return u;
       }
     }
   }
@@ -522,20 +522,20 @@ mapping thevoid()
 {
 #ifdef NSERIOUS
   return Roxen.http_string_answer("<html><head><title>The Void!</title></head>"
-				  "<body bgcolor='#000000' text='#ff0000'>"
-				  "<h1 align='center'>The Void!</h1>"
-				  "<h2>You come to the void if you fall out of a "
-				  "room, and have nowhere to go.  If you give the "
-				  "command 'church' you will be transported "
-				  "there. <br />"
-				  "Castle of Incanus."
-				  "<ul>No obvious exits.</ul>"
-				  "A nun (saintly).<br />"
-				  "A unicorn horn.<br />"
-				  "A rope tied to horn.<br />"
-				  "A unicorn.<br />"
-				  "A rope.<br />"
-				  "</h2></body></html>");
+                                  "<body bgcolor='#000000' text='#ff0000'>"
+                                  "<h1 align='center'>The Void!</h1>"
+                                  "<h2>You come to the void if you fall out of a "
+                                  "room, and have nowhere to go.  If you give the "
+                                  "command 'church' you will be transported "
+                                  "there. <br />"
+                                  "Castle of Incanus."
+                                  "<ul>No obvious exits.</ul>"
+                                  "A nun (saintly).<br />"
+                                  "A unicorn horn.<br />"
+                                  "A rope tied to horn.<br />"
+                                  "A unicorn.<br />"
+                                  "A rope.<br />"
+                                  "</h2></body></html>");
 #else
   return 0;
 #endif
@@ -563,14 +563,14 @@ mapping|string handle_file_extension(Stdio.File file, string ext, RequestID id)
     if(sscanf(" "+map_file_name+" ", "%s$%[a-zA-Z_]%s",pre, varname, rest)==3)
     {
       map_file_name = (pre + 
-		       Roxen.http_encode_invalids(id->variables[varname]
-						  ||id->state[varname]||"")
-		       + rest) - " ";
+                       Roxen.http_encode_invalids(id->variables[varname]
+                                                  ||id->state[varname]||"")
+                       + rest) - " ";
     }
     if((strlen(map_file_name)>6 && 
-	(map_file_name[3]==':' || map_file_name[4]==':' || 
-	 map_file_name[5]==':' || map_file_name[6]==':') ||
-	map_file_name[0]=='/'))
+        (map_file_name[3]==':' || map_file_name[4]==':' || 
+         map_file_name[5]==':' || map_file_name[6]==':') ||
+        map_file_name[0]=='/'))
       return Roxen.http_redirect(map_file_name, id);
     return Roxen.http_redirect(dirname(id->not_query)+"/"+ map_file_name, id);
   }

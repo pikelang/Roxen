@@ -600,8 +600,8 @@ protected void create()
   router->get("v2/configurations/:configuration/modules/:module/variables/:variable", handle_get_variable);
 
   router->get("v2/configurations/:configuration/modules/:module/variables",
-	      lambda(string method, mapping(string:string) params,
-		     mixed ignored_data, RequestID ignored_id) {
+              lambda(string method, mapping(string:string) params,
+                     mixed ignored_data, RequestID ignored_id) {
     mapping stuff = get_configuration_module_variable(params);
     if(stuff->error)
       return stuff->error;
@@ -610,8 +610,8 @@ protected void create()
   });
 
   router->post("v2/configurations/:configuration/modules/:new_module",
-	       lambda(string method, mapping(string:string) params,
-		      mixed ignored_data, RequestID ignored_id) {
+               lambda(string method, mapping(string:string) params,
+                      mixed ignored_data, RequestID ignored_id) {
     mapping stuff = get_configuration_module_variable(params);
     if(stuff->error)
       return stuff->error;
@@ -629,8 +629,8 @@ protected void create()
   });
 
   router->delete("v2/configurations/:configuration/modules/:module",
-		 lambda(string method, mapping(string:string) params,
-			mixed ignored_data, RequestID ignored_id) {
+                 lambda(string method, mapping(string:string) params,
+                        mixed ignored_data, RequestID ignored_id) {
     mapping stuff = get_configuration_module_variable(params);
     if(stuff->error)
       return stuff->error;
@@ -645,8 +645,8 @@ protected void create()
   router->get("v2/configurations/:configuration/variables/:variable", handle_get_variable);
 
   router->get("v2/configurations/:configuration/variables",
-	      lambda(string method, mapping(string:string) params,
-		     mixed ignored_data, RequestID ignored_id) {
+              lambda(string method, mapping(string:string) params,
+                     mixed ignored_data, RequestID ignored_id) {
     mapping stuff = get_configuration_module_variable(params);
     if(stuff->error)
       return stuff->error;
@@ -655,8 +655,8 @@ protected void create()
   });
 
   router->get("v2/configurations/:configuration/modules",
-	      lambda(string method, mapping(string:string) params,
-		     mixed ignored_data, RequestID ignored_id) {
+              lambda(string method, mapping(string:string) params,
+                     mixed ignored_data, RequestID ignored_id) {
     mapping stuff = get_configuration_module_variable(params);
     if(stuff->error)
       return stuff->error;
@@ -697,39 +697,39 @@ class RESTResource
   protected void delete_resource (string name, RESTObj parent, RequestID id);
   protected RESTValue get_obj (RESTObj obj, RESTObj parent, RequestID id);
   protected RESTValue put_obj (RESTObj obj, RESTObj parent, RequestID id,
-			       void|RESTValue value);
+                               void|RESTValue value);
 
   protected mapping(string:mixed)|array(mixed)
   apply_resource (function func,
-		  int|string resource,
-		  RESTObj parent,
-		  RequestID id,
-		  int(0..1) tolerant)
+                  int|string resource,
+                  RESTObj parent,
+                  RequestID id,
+                  int(0..1) tolerant)
   {
     string method = id->method;
     if (functionp (func)) {
       array(string) resource_list =
-	resource == resource_all ? list (parent, id) : ({ resource });
+        resource == resource_all ? list (parent, id) : ({ resource });
 
       mapping(string:RESTObj|mapping) res = mkmapping (resource_list,
-			map (resource_list,
-			     lambda (string resource)
-			     {
-			       RESTObj res;
-			       if (mixed err = catch {
-				   res = func (resource, parent, id);
-				 }) {
-				 if (tolerant)
-				   return ([ "apply_error":
-					     describe_error (err) ]);
-				 throw (err);
-			       }
+                        map (resource_list,
+                             lambda (string resource)
+                             {
+                               RESTObj res;
+                               if (mixed err = catch {
+                                   res = func (resource, parent, id);
+                                 }) {
+                                 if (tolerant)
+                                   return ([ "apply_error":
+                                             describe_error (err) ]);
+                                 throw (err);
+                               }
 
-			       return res;
-			     }));
+                               return res;
+                             }));
       return filter (res,
-		     lambda (RESTObj obj)
-		     { return !mappingp (obj) || !obj->apply_error; });
+                     lambda (RESTObj obj)
+                     { return !mappingp (obj) || !obj->apply_error; });
     } else {
       error ("Method \"%s\" not available here.\n", method);
     }
@@ -737,8 +737,8 @@ class RESTResource
 
   mapping(string:mixed)|array(mapping(string:mixed))|mixed
   handle_resource (array(string) path, RequestID id, mixed client_data,
-		   int(0..1) envelope, RESTObj parent,
-		   void|int(0..1) tolerant)
+                   int(0..1) envelope, RESTObj parent,
+                   void|int(0..1) tolerant)
   {
     if (!sizeof (path))
       return list (parent, id) + ({ "_all" });
@@ -752,55 +752,55 @@ class RESTResource
 
     if (method == "GET" || method == "PUT" || sizeof (path) > 1) {
       if (functionp (lookup_resource))
-	objs = apply_resource (lookup_resource, resource, parent, id,
-			       (tolerant || resource == resource_all));
+        objs = apply_resource (lookup_resource, resource, parent, id,
+                               (tolerant || resource == resource_all));
       else
-	error ("Method \"%s\" not available here.\n", method);
+        error ("Method \"%s\" not available here.\n", method);
     }
 
     if (sizeof (path) > 1) {
       if (RESTResource r = sub_resource_map[path[1]]) {
-	mapping(string:RESTObj) res =
-	  map (objs,
-	       lambda (RESTObj obj)
-	       {
-		 mixed res = r->handle_resource (path[2..], id, client_data,
-						 envelope, obj,
-						 (tolerant ||
-						  resource == resource_all));
-		 if (zero_type (res))
-		   ([ "apply_error": "No such resource." ]);
+        mapping(string:RESTObj) res =
+          map (objs,
+               lambda (RESTObj obj)
+               {
+                 mixed res = r->handle_resource (path[2..], id, client_data,
+                                                 envelope, obj,
+                                                 (tolerant ||
+                                                  resource == resource_all));
+                 if (zero_type (res))
+                   ([ "apply_error": "No such resource." ]);
 
-		 return res;
-	       });
-	res = filter (res,
-		      lambda (RESTObj obj)
-		      { return !mappingp (obj) || !obj->apply_error; });
+                 return res;
+               });
+        res = filter (res,
+                      lambda (RESTObj obj)
+                      { return !mappingp (obj) || !obj->apply_error; });
 
-	if (resource == resource_all)
-	  return res;
+        if (resource == resource_all)
+          return res;
 
-	if (sizeof (res))
-	  return values(res)[0];
+        if (sizeof (res))
+          return values(res)[0];
 
-	return ([ "apply_error": "No such resource." ]);
+        return ([ "apply_error": "No such resource." ]);
       } else {
-	error ("Resource \"%s\" not found.\n", path[1]);
+        error ("Resource \"%s\" not found.\n", path[1]);
       }
       error ("Never reached.\n");
     }
 
     if (method == "POST") {
       if (functionp (post_resource)) {
-	objs = apply_resource (post_resource, resource, parent, id, tolerant);
+        objs = apply_resource (post_resource, resource, parent, id, tolerant);
       } else {
-	error ("Method \"%s\" not available here.\n", method);
+        error ("Method \"%s\" not available here.\n", method);
       }
     } else if (method == "DELETE") {
       if (functionp (delete_resource)) {
-	objs = apply_resource (delete_resource, resource, parent, id, tolerant);
+        objs = apply_resource (delete_resource, resource, parent, id, tolerant);
       } else {
-	error ("Method \"%s\" not available here.\n", method);
+        error ("Method \"%s\" not available here.\n", method);
       }
     }
 
@@ -810,25 +810,25 @@ class RESTResource
     switch (method) {
     case "GET":
       if (functionp (get_obj)) {
-	value_res = map (objs, get_obj, parent, id);
-	got_value = 1;
+        value_res = map (objs, get_obj, parent, id);
+        got_value = 1;
       } else if (!envelope) {
-	error ("Method \"%s\" not available here.\n", method);
+        error ("Method \"%s\" not available here.\n", method);
       }
       break;
     case "POST":
       if (functionp (get_obj)) {
-	value_res = map (objs, get_obj, parent, id);
-	got_value = 1;
+        value_res = map (objs, get_obj, parent, id);
+        got_value = 1;
       }
       break;
     case "PUT":
       if (functionp (put_obj)) {
-	value_res = map (objs, put_obj, parent, id, client_data);
-	got_value = 1;
-	method_handled = 1;
+        value_res = map (objs, put_obj, parent, id, client_data);
+        got_value = 1;
+        method_handled = 1;
       } else {
-	error ("Method \"%s\" not available here.\n", method);
+        error ("Method \"%s\" not available here.\n", method);
       }
       break;
     }
@@ -836,19 +836,19 @@ class RESTResource
     if (envelope) {
       mapping(string:mixed) res = ([]);
       if (method == "GET")
-	res["subresources"] = indices (sub_resource_map);
+        res["subresources"] = indices (sub_resource_map);
 
       if (got_value)
-	res["value"] = value_res;
+        res["value"] = value_res;
       return res;
     }
 
     if (got_value) {
       if (resource == resource_all)
-	return value_res;
+        return value_res;
 
       if (sizeof (value_res))
-	return values(value_res)[0];
+        return values(value_res)[0];
     }
 
     return ([ "apply_error": "No such resource." ]);
@@ -891,7 +891,7 @@ class RESTVariables
   }
 
   protected RESTValue put_obj (RESTObj obj, RESTObj parent, RequestID id,
-			       RESTValue value)
+                               RESTValue value)
   {
     string err;
     mixed mangled_value;
@@ -924,10 +924,10 @@ class RESTModuleActions
 
     if (parent->query_action_buttons) {
       mapping(string:function|array(function|string)) mod_buttons =
-	parent->query_action_buttons(id);
+        parent->query_action_buttons(id);
       array(string) titles = indices(mod_buttons);
       if (sizeof(titles)) {
-	res += Array.sort (titles);
+        res += Array.sort (titles);
       }
     }
 
@@ -938,37 +938,37 @@ class RESTModuleActions
   {
     if (name == "Reload") {
       return lambda()
-	     {
-	       roxenloader.LowErrorContainer ec =
-		 roxenloader.LowErrorContainer();
-	       RoxenModule new_module;
-	       Configuration conf = parent->my_configuration();
-	       string mod_id = parent->module_local_id();
-	       string mod_id_2 = replace (mod_id, "#", "!");
+             {
+               roxenloader.LowErrorContainer ec =
+                 roxenloader.LowErrorContainer();
+               RoxenModule new_module;
+               Configuration conf = parent->my_configuration();
+               string mod_id = parent->module_local_id();
+               string mod_id_2 = replace (mod_id, "#", "!");
 
-	       roxenloader.push_compile_error_handler (ec);
-	       new_module = conf->reload_module(mod_id);
-	       roxenloader.pop_compile_error_handler();
+               roxenloader.push_compile_error_handler (ec);
+               new_module = conf->reload_module(mod_id);
+               roxenloader.pop_compile_error_handler();
 
-	       if (sizeof (ec->get())) {
-		 report_debug (ec->get());
-		 error (ec->get());
-	       }
-	     };
+               if (sizeof (ec->get())) {
+                 report_debug (ec->get());
+                 error (ec->get());
+               }
+             };
     } else if (function qab = parent->query_action_buttons) {
       mapping(string:function|array(function|string)) buttons =
-	qab (id);
+        qab (id);
       foreach(indices(buttons), string title) {
-	// Is this typecast really needed? The return value of
-	// query_action_buttons is defined as mapping(string:...)
-	// after all... (Code copied from site_content.pike.)
-	if ((string)name == (string)title) {
-	  function|array(function|string) action = buttons[title];
-	  if (arrayp(action))
-	    return action[0];
+        // Is this typecast really needed? The return value of
+        // query_action_buttons is defined as mapping(string:...)
+        // after all... (Code copied from site_content.pike.)
+        if ((string)name == (string)title) {
+          function|array(function|string) action = buttons[title];
+          if (arrayp(action))
+            return action[0];
 
-	  return action;
-	}
+          return action;
+        }
       }
     }
 
@@ -976,7 +976,7 @@ class RESTModuleActions
   }
 
   protected RESTValue put_obj (RESTObj obj, RESTObj parent, RequestID id,
-			       void|RESTValue value)
+                               void|RESTValue value)
   {
     if (obj) {
       obj (id);
@@ -1060,7 +1060,7 @@ class RESTConfigurations
 
 array top_level_resources = ({ RESTConfigurations(), RESTVariables() });
 mapping(string:object) top_level_map = mkmapping (top_level_resources->name,
-						  top_level_resources);
+                                                  top_level_resources);
 
 constant jsonflags = Standards.JSON.HUMAN_READABLE;
 
@@ -1126,31 +1126,31 @@ mapping(string:mixed) find_file (string f, RequestID id)
     } else {
       string errstr = "Method %s not available here.\n";
       return
-	Roxen.http_low_answer (Protocols.HTTP.HTTP_METHOD_INVALID,
-			       Standards.JSON.encode (([ "error": errstr ])));
+        Roxen.http_low_answer (Protocols.HTTP.HTTP_METHOD_INVALID,
+                               Standards.JSON.encode (([ "error": errstr ])));
     }
   } else {
     if (mixed err = catch {
-	if (RESTResource r = top_level_map[segments[0]]) {
-	  mixed client_data;
-	  if ((id->method == "PUT" || id->method == "POST") &&
-	      sizeof (id->data)) {
-	    client_data = Standards.JSON.decode_utf8 (id->data);
-	  }
-	  int envelope = id->variables["envelope"] == "1";
-	  json_res = r->handle_resource (segments[1..] - ({ "" }), id,
-					 client_data, envelope, roxen);
-	  got_result = 1;
-	}
+        if (RESTResource r = top_level_map[segments[0]]) {
+          mixed client_data;
+          if ((id->method == "PUT" || id->method == "POST") &&
+              sizeof (id->data)) {
+            client_data = Standards.JSON.decode_utf8 (id->data);
+          }
+          int envelope = id->variables["envelope"] == "1";
+          json_res = r->handle_resource (segments[1..] - ({ "" }), id,
+                                         client_data, envelope, roxen);
+          got_result = 1;
+        }
       }) {
 #if 0
       report_error (describe_backtrace (err));
 #endif
       string errstr = describe_error (err);
       mapping(string:mixed) res =
-	Roxen.http_low_answer (Protocols.HTTP.HTTP_BAD,
-			       Standards.JSON.encode ((["error": errstr]),
-						      jsonflags) + "\n");
+        Roxen.http_low_answer (Protocols.HTTP.HTTP_BAD,
+                               Standards.JSON.encode ((["error": errstr]),
+                                                      jsonflags) + "\n");
       id->set_output_charset ("utf-8");
       res->type = "application/json";
       return res;
@@ -1160,15 +1160,15 @@ mapping(string:mixed) find_file (string f, RequestID id)
   if (got_result) {
     mapping(string:mixed) res =
       Roxen.http_low_answer (Protocols.HTTP.HTTP_OK,
-			     Standards.JSON.encode (json_res, jsonflags) +
-			     "\n");
+                             Standards.JSON.encode (json_res, jsonflags) +
+                             "\n");
     id->set_output_charset ("utf-8");
     res->type = "application/json";
     return res;
   }
 
   return Roxen.http_low_answer (Protocols.HTTP.HTTP_NOT_FOUND,
-				Standards.JSON.encode (
-				  (["error": "Resource not found."]),
-				  jsonflags) + "\n");
+                                Standards.JSON.encode (
+                                  (["error": "Resource not found."]),
+                                  jsonflags) + "\n");
 }

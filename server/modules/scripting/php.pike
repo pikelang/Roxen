@@ -46,13 +46,13 @@ void create(Configuration conf)
   ::create(conf);
 
   defvar("command", Variable.File(find_in_path("php", getenv("PATH")) ||
-				  "/usr/local/bin/php",
-				  VAR_INITIAL, "PHP interpreter",
-				  "This is the full path to the php "
-				  "interpreter."));
+                                  "/usr/local/bin/php",
+                                  VAR_INITIAL, "PHP interpreter",
+                                  "This is the full path to the php "
+                                  "interpreter."));
   defvar("ext", Variable.StringList(({ "php" }), 0, "PHP-script extensions",
-				       "List of extensions to send though "
-				       "the php interpreter."));
+                                       "List of extensions to send though "
+                                       "the php interpreter."));
 }
 
 array(string) query_file_extensions()
@@ -103,11 +103,11 @@ class PHPScript
 
     // Send input to script..
     Stdio.sendfile(0/*tosend*/,scriptfd,-1,-1,0,stdin,
-		   lambda(int i,mixed q){
-		     DWERR("Wrote %d bytes to stdin.\n", i);
-		     stdin->close();
-		     stdin=0;
-		   });
+                   lambda(int i,mixed q){
+                     DWERR("Wrote %d bytes to stdin.\n", i);
+                     stdin->close();
+                     stdin=0;
+                   });
 
     // And then read the output.
     if(!blocking)
@@ -142,13 +142,13 @@ class PHPScript
   void kill_script()
   {
     DWERR(sprintf("PHPScript::kill_script()"
-		  "next_kill: %d\n", next_kill));
+                  "next_kill: %d\n", next_kill));
 
     if(pid && !pid->status())
     {
       int signum = 9;
       if (next_kill < sizeof(kill_signals)) {
-	signum = kill_signals[next_kill++];
+        signum = kill_signals[next_kill++];
       }
       if(pid->kill)  // Pike 0.7, for roxen 1.4 and later
         pid->kill(signum);
@@ -188,7 +188,7 @@ class PHPScript
     stdin = stdin->pipe(/*Stdio.PROP_IPC|Stdio.PROP_NONBLOCK*/);
 
     if (mid->realfile ||
-	(mid->realfile = mid->conf->real_file(mid->not_query, mid))) {
+        (mid->realfile = mid->conf->real_file(mid->not_query, mid))) {
       options->cwd = combine_path(getcwd(), mid->realfile, "..");
     }
 
@@ -196,25 +196,25 @@ class PHPScript
     if(!getuid())
     {
       if (uid >= 0) {
-	options->uid = uid;
+        options->uid = uid;
       } else {
-	// Some OS's (HPUX) have negative uids in /etc/passwd,
-	// but don't like them in setuid() et al.
-	// Remap them to the old 16bit uids.
-	options->uid = 0xffff & uid;
+        // Some OS's (HPUX) have negative uids in /etc/passwd,
+        // but don't like them in setuid() et al.
+        // Remap them to the old 16bit uids.
+        options->uid = 0xffff & uid;
 
-	if (options->uid <= 10) {
-	  // Paranoia
-	  options->uid = 65534;
-	}
+        if (options->uid <= 10) {
+          // Paranoia
+          options->uid = 65534;
+        }
       }
       if (gid >= 0) {
-	options->gid = gid;
+        options->gid = gid;
       } else {
-	// Some OS's (HPUX) have negative gids in /etc/passwd,
-	// but don't like them in setgid() et al.
-	// Remap them to the old 16bit gids.
-	options->gid = 0xffff & gid;
+        // Some OS's (HPUX) have negative gids in /etc/passwd,
+        // but don't like them in setgid() et al.
+        // Remap them to the old 16bit gids.
+        options->gid = 0xffff & gid;
 
 // 	if (options->gid <= 10) {
 // 	  // Paranoia
@@ -247,11 +247,11 @@ class PHPScript
 
 #ifdef __NT__
     if(!(pid = Process.Process( nt_opencommand(query("command"),
-					       arguments),
-				options )))
+                                               arguments),
+                                options )))
 #else
     if(!(pid = Process.Process( ({ query("command") }) + arguments,
-				options )))
+                                options )))
 #endif /* __NT__ */
       error("Failed to create PHP process.\n");
     if(query("kill_call_out"))
@@ -321,10 +321,10 @@ class PHPScript
     // Protect against execution of arbitrary code in broken bash.
     foreach(environment; string e; string v) {
       if (has_prefix(v, "() {")) {
-	report_warning("CGI: Function definition in environment variable:\n"
-		       "CGI: %O=%O\n",
-		       e, v);
-	environment[e] = " " + v;
+        report_warning("CGI: Function definition in environment variable:\n"
+                       "CGI: %O=%O\n",
+                       e, v);
+        environment[e] = " " + v;
       }
     }
 

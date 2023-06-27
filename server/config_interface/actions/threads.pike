@@ -8,8 +8,8 @@ constant action="debug_info";
 
 string name= LOCALE(35, "Thread backtrace");
 string doc = LOCALE(36, 
-		    "Shows a backtrace (stack) for each and every "
-		    "thread in Roxen.");
+                    "Shows a backtrace (stack) for each and every "
+                    "thread in Roxen.");
 
 protected string last_id, last_from;
 
@@ -83,15 +83,15 @@ mixed parse( RequestID id )
       // it typically only is busy doing this page),
       // otherwise in display name order.
       if (a == roxen->backend_thread)
-	return 0;
+        return 0;
       else if (b == roxen->backend_thread)
-	return 1;
+        return 1;
       else if (a == this_thread())
-	return 1;
+        return 1;
       else if (b == this_thread())
-	return 0;
+        return 0;
       else
-	return Array.dwim_sort_func(th_names[a], th_names[b]);
+        return Array.dwim_sort_func(th_names[a], th_names[b]);
     });
 
   string res =
@@ -128,20 +128,20 @@ mixed parse( RequestID id )
     string busy_time = "";
     if (int start_hrtime = thread_task_start_times[threads[i]])
       busy_time = sprintf(" &ndash; busy for %.3fs",
-			  (hrnow - start_hrtime) / 1e6);
+                          (hrnow - start_hrtime) / 1e6);
     res +=
       sprintf ("<h3 class='%s' "
-	       " onclick='toggle_vis(\"%s\", this); return false;'>"
-	       "%s%s</h3>\n"
-	       "<ol class='%s' id='%s'> %s</ol>\n",
-	       open_state,
-	       "bt_" + div_num,
-	       th_names[threads[i]],
-	       busy_time,
-	       open_state,
-	       "bt_" + div_num,
-	       format_backtrace(describe_backtrace(threads[i]->backtrace())/
-				"\n", id));
+               " onclick='toggle_vis(\"%s\", this); return false;'>"
+               "%s%s</h3>\n"
+               "<ol class='%s' id='%s'> %s</ol>\n",
+               open_state,
+               "bt_" + div_num,
+               th_names[threads[i]],
+               busy_time,
+               open_state,
+               "bt_" + div_num,
+               format_backtrace(describe_backtrace(threads[i]->backtrace())/
+                                "\n", id));
     div_num++;
   }
 

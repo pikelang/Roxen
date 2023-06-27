@@ -45,13 +45,13 @@ string parse( RequestID id )
       status += tmp+"% done)<br />\n";
       status += "<i>"+st[3]+"</i><br />";
       for( int i = 4; i<sizeof(st); i++ )
-	status += (st[i]/"</font")[0]+"<br />";
+        status += (st[i]/"</font")[0]+"<br />";
 
       status = "<cimg format=png src='/internal-roxen-pixel-orange' "
-	"     scale='"+(int)(2.8*(int)tmp)+",12'/>"
-	"<cimg format=png src='/internal-roxen-pixel-black' "
-	"     scale='"+(int)(280-(2.5*(int)tmp))+",12' />"
-	"<br />"+status;
+        "     scale='"+(int)(2.8*(int)tmp)+",12'/>"
+        "<cimg format=png src='/internal-roxen-pixel-black' "
+        "     scale='"+(int)(280-(2.5*(int)tmp))+",12' />"
+        "<br />"+status;
     }
     status += "</font>";
 

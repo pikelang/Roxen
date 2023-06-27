@@ -72,7 +72,7 @@ int(0..1) set_from_form(RequestID id)
       set_warning( q );
     else
       set_warning( "Internal error: Illegal sized array "
-		   "from verify_set_from_form\n" );
+                   "from verify_set_from_form\n" );
     return 0;
   }
 
@@ -107,8 +107,8 @@ int(0..1) set_from_form(RequestID id)
     
     nid->misc->moreheads =
       ([
-	"Location":nid->not_query+(nid->misc->path_info||"")+
-	"?"+query+"#"+path(),
+        "Location":nid->not_query+(nid->misc->path_info||"")+
+        "?"+query+"#"+path(),
       ]);
     if( nid->misc->defines )
       nid->misc->defines[ " _error" ] = 302;
@@ -123,7 +123,7 @@ int(0..1) set_from_form(RequestID id)
 array(string) render_row(string prefix, mixed val, int width)
 {
   return ({ Variable.input( prefix+"a", val[0], width ),
-	    Variable.input( prefix+"b", val[1], width ) });
+            Variable.input( prefix+"b", val[1], width ) });
 }
 
 LocaleString key_title = LOCALE(376, "Name");
@@ -141,11 +141,11 @@ string render_view( RequestID id, void|mapping additional_args )
     foreach( sort(indices(val)), mixed var )
     {
       res += "<tr>\n"
-	"<td><font size='-1'>"+var+
-	"</font></td><td><font size='-1'>"
-	+transform_to_form(val[var])+
-	"</font></td>\n"
-	"</tr>\n";
+        "<td><font size='-1'>"+var+
+        "</font></td><td><font size='-1'>"
+        +transform_to_form(val[var])+
+        "</font></td>\n"
+        "</tr>\n";
     }
   }
   res += "</table>\n\n";
@@ -169,13 +169,13 @@ string render_form( RequestID id, void|mapping additional_args )
 
     foreach( sort(indices(val)), mixed var ) {
       res += "<tr>\n<td><font size='-1'>"+
-	render_row(prefix+"set."+i,
-		   ({ var,transform_to_form(val[var]) }) ,
-		   width) * "</font></td><td><font size='-1'>"
-	+ "</font></td>\n";
+        render_row(prefix+"set."+i,
+                   ({ var,transform_to_form(val[var]) }) ,
+                   width) * "</font></td><td><font size='-1'>"
+        + "</font></td>\n";
       res += "\n<td>"+
-	BUTTON(prefix+"delete."+i, LOCALE(227, "Delete") )
-	+"</td>";
+        BUTTON(prefix+"delete."+i, LOCALE(227, "Delete") )
+        +"</td>";
       "</tr>";
       i++;
     }

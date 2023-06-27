@@ -22,14 +22,14 @@ parse_args()
 {
     while [ ! c"$1" = "c" ]
     do
-	case "$1" in
-	    --config-dir=*)
-		DIR=`echo "$1" | sed -e 's/--config-dir=//'`
-		FILES=`echo "$1" | sed -e's/--config-dir=//' -e's/\.//g' -e's./..g' -e 's.-..g'`
-	    ;;
-	esac
+        case "$1" in
+            --config-dir=*)
+                DIR=`echo "$1" | sed -e 's/--config-dir=//'`
+                FILES=`echo "$1" | sed -e's/--config-dir=//' -e's/\.//g' -e's./..g' -e 's.-..g'`
+            ;;
+        esac
     
-	shift
+        shift
     done
 }
 

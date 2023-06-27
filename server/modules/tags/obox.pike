@@ -25,7 +25,7 @@ LocaleString module_name = LOCALE(1,"Tags: Outlined box");
 
 LocaleString module_doc  =
   LOCALE(2,"This module provides the <tt>&lt;obox&gt;</tt> tag that "
-	 "draws outlined boxes.");
+         "draws outlined boxes.");
 
 constant unit_gif = "/internal-roxen-unit";
 
@@ -34,14 +34,14 @@ protected string img_placeholder (mapping args)
   int width=((int)args->outlinewidth)||1;
 
   return sprintf("<img src=\"%s\" alt=\"\" "
-		 // border:1 is here to work around a buggy rendering in NS4.
-		 "style=\"display:block; border:1;\" "
-		 "width=\"%d\" height=\"%d\"%s>",
-		 unit_gif, width, width, (args->noxml?"":" /"));
+                 // border:1 is here to work around a buggy rendering in NS4.
+                 "style=\"display:block; border:1;\" "
+                 "width=\"%d\" height=\"%d\"%s>",
+                 unit_gif, width, width, (args->noxml?"":" /"));
 }
 
 protected string handle_title(string name, mapping junk_args,
-			      string contents, mapping args)
+                              string contents, mapping args)
 {
   args->title=contents;
   return "";
@@ -51,9 +51,9 @@ protected string horiz_line(mapping args)
 {
   args->fixedleft="";
   return sprintf("<tr><td colspan=\"5\" bgcolor=\"%s\">\n"
-		 "%s</td></tr>\n",
-		 args->outlinecolor,
-		 img_placeholder(args));
+                 "%s</td></tr>\n",
+                 args->outlinecolor,
+                 img_placeholder(args));
 }
 
 protected string title(mapping args)
@@ -71,79 +71,79 @@ protected string title(mapping args)
   switch (args->style) {
    case "groupbox":
     return sprintf("<tr><td colspan=\"2\"><font size=\"-3\">&nbsp;</font></td>\n"
-		   "<td rowspan=\"3\"%s nowrap=\"nowrap\">&nbsp;<b>"		/* bgcolor */
-		   "%s%s%s"                 /* titlecolor, title, titlecolor */
-		   "</b>&nbsp;</td>\n"
-		   "<td colspan=\"2\"><font size=\"-3\">&nbsp;</font></td></tr>\n"
-		   "<tr%s>"				/* bgcolor */
-		   "<td bgcolor=\"%s\" colspan=\"2\">\n"	/* outlinecolor */
-		   "%s</td>\n"				/* empty */
-		   "<td bgcolor=\"%s\" colspan=\"2\">\n"
-		   "%s</td></tr>\n"			/* empty */
+                   "<td rowspan=\"3\"%s nowrap=\"nowrap\">&nbsp;<b>"		/* bgcolor */
+                   "%s%s%s"                 /* titlecolor, title, titlecolor */
+                   "</b>&nbsp;</td>\n"
+                   "<td colspan=\"2\"><font size=\"-3\">&nbsp;</font></td></tr>\n"
+                   "<tr%s>"				/* bgcolor */
+                   "<td bgcolor=\"%s\" colspan=\"2\">\n"	/* outlinecolor */
+                   "%s</td>\n"				/* empty */
+                   "<td bgcolor=\"%s\" colspan=\"2\">\n"
+                   "%s</td></tr>\n"			/* empty */
 
-		   "<tr%s><td bgcolor=\"%s\">"      /* bgcolor, outlinecolor */
-		   "%s</td>\n"				/* empty */
-		   "<td%s><font size=\"-3\">%s</font></td>" /* left, fixedleft */
-		   "<td%s><font size=\"-3\">%s</font></td>\n" /* right, fixedright */
-		   "<td bgcolor=\"%s\">"		/* outlinecolor */
-		   "%s</td></tr>\n"			/* empty */
-		   ,
-		   args->bgcolor ? " bgcolor=\""+args->bgcolor+"\"" : "",
-		   args->titlecolor ? "<font color=\""+args->titlecolor+"\">" : "",
-		   args->title,
-		   args->titlecolor ? "</font>" : "",
-		   args->bgcolor ? " bgcolor=\""+args->bgcolor+"\"" : "",
-		   args->outlinecolor,
-		   empty,
-		   args->outlinecolor,
-		   empty,
-		   args->bgcolor ? " bgcolor=\""+args->bgcolor+"\"" : "",
-		   args->outlinecolor,
-		   empty,
-		   args->left ? " width=\""+args->left+"\"" : "",
-		   (args->fixedleft ?
-		    ("&nbsp;"*(int)args->fixedleft) : "&nbsp;"),
-		   args->right ? " width=\""+args->right+"\"" : "",
-		   (args->fixedright ?
-		    ("&nbsp;"*(int)args->fixedright) : "&nbsp;"),
-		   args->outlinecolor,
-		   empty);
+                   "<tr%s><td bgcolor=\"%s\">"      /* bgcolor, outlinecolor */
+                   "%s</td>\n"				/* empty */
+                   "<td%s><font size=\"-3\">%s</font></td>" /* left, fixedleft */
+                   "<td%s><font size=\"-3\">%s</font></td>\n" /* right, fixedright */
+                   "<td bgcolor=\"%s\">"		/* outlinecolor */
+                   "%s</td></tr>\n"			/* empty */
+                   ,
+                   args->bgcolor ? " bgcolor=\""+args->bgcolor+"\"" : "",
+                   args->titlecolor ? "<font color=\""+args->titlecolor+"\">" : "",
+                   args->title,
+                   args->titlecolor ? "</font>" : "",
+                   args->bgcolor ? " bgcolor=\""+args->bgcolor+"\"" : "",
+                   args->outlinecolor,
+                   empty,
+                   args->outlinecolor,
+                   empty,
+                   args->bgcolor ? " bgcolor=\""+args->bgcolor+"\"" : "",
+                   args->outlinecolor,
+                   empty,
+                   args->left ? " width=\""+args->left+"\"" : "",
+                   (args->fixedleft ?
+                    ("&nbsp;"*(int)args->fixedleft) : "&nbsp;"),
+                   args->right ? " width=\""+args->right+"\"" : "",
+                   (args->fixedright ?
+                    ("&nbsp;"*(int)args->fixedright) : "&nbsp;"),
+                   args->outlinecolor,
+                   empty);
    case "caption":
     return sprintf("<tr%s><td colspan=\"2\"><font size=\"-3\">&nbsp;</font></td>\n"
-		   "<td rowspan=\"3\" nowrap=\"nowrap\">&nbsp;<b>"		/* bgcolor */
-		   "%s%s%s"                 /* titlecolor, title, titlecolor */
-		   "</b>&nbsp;</td>\n"
-		   "<td colspan=\"2\"><font size=\"-3\">&nbsp;</font></td></tr>\n"
-		   "<tr bgcolor=\"%s\">"		/* outlinecolor */
-		   "<td colspan=\"2\">\n"	
-		   "%s</td>\n"				/* empty */
-		   "<td colspan=\"2\">\n"
-		   "%s</td></tr>\n"			/* empty */
+                   "<td rowspan=\"3\" nowrap=\"nowrap\">&nbsp;<b>"		/* bgcolor */
+                   "%s%s%s"                 /* titlecolor, title, titlecolor */
+                   "</b>&nbsp;</td>\n"
+                   "<td colspan=\"2\"><font size=\"-3\">&nbsp;</font></td></tr>\n"
+                   "<tr bgcolor=\"%s\">"		/* outlinecolor */
+                   "<td colspan=\"2\">\n"	
+                   "%s</td>\n"				/* empty */
+                   "<td colspan=\"2\">\n"
+                   "%s</td></tr>\n"			/* empty */
 
-		   "<tr bgcolor=\"%s\"><td>"      /*  outlinecolor */
-		   "%s</td>\n"				/* empty */
-		   "<td%s><font size=\"-3\">%s</font></td>" /* left, fixedleft */
-		   "<td%s><font size=\"-3\">%s</font></td>\n" /* right, fixedright */
-		   "<td bgcolor=\"%s\">"		/* outlinecolor */
-		   "%s</td></tr>\n"			/* empty */
-		   ,
-		   args->outlinecolor ? " bgcolor=\""+args->outlinecolor+"\"" : "",
-		   args->titlecolor ? "<font color=\""+args->titlecolor+"\">" : "",
-		   args->title,
-		   args->titlecolor ? "</font>" : "",
-		   args->outlinecolor,
-		   empty,
-		   empty,
-		   args->outlinecolor,
-		   empty,
-		   args->left ? " width=\""+args->left+"\"" : "",
-		   (args->fixedleft ?
-		    ("&nbsp;"*(int)args->fixedleft) : "&nbsp;"),
-		   args->right ? " width=\""+args->right+"\"" : "",
-		   (args->fixedright ?
-		    ("&nbsp;"*(int)args->fixedright) : "&nbsp;"),
-		   args->outlinecolor,
-		   empty);
+                   "<tr bgcolor=\"%s\"><td>"      /*  outlinecolor */
+                   "%s</td>\n"				/* empty */
+                   "<td%s><font size=\"-3\">%s</font></td>" /* left, fixedleft */
+                   "<td%s><font size=\"-3\">%s</font></td>\n" /* right, fixedright */
+                   "<td bgcolor=\"%s\">"		/* outlinecolor */
+                   "%s</td></tr>\n"			/* empty */
+                   ,
+                   args->outlinecolor ? " bgcolor=\""+args->outlinecolor+"\"" : "",
+                   args->titlecolor ? "<font color=\""+args->titlecolor+"\">" : "",
+                   args->title,
+                   args->titlecolor ? "</font>" : "",
+                   args->outlinecolor,
+                   empty,
+                   empty,
+                   args->outlinecolor,
+                   empty,
+                   args->left ? " width=\""+args->left+"\"" : "",
+                   (args->fixedleft ?
+                    ("&nbsp;"*(int)args->fixedleft) : "&nbsp;"),
+                   args->right ? " width=\""+args->right+"\"" : "",
+                   (args->fixedright ?
+                    ("&nbsp;"*(int)args->fixedright) : "&nbsp;"),
+                   args->outlinecolor,
+                   empty);
   }
 }
 

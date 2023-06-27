@@ -62,7 +62,7 @@ void start(int level, Configuration conf)
 
   if(strlen(query("NoCacheFor")))
     if(catch(no_cache_for = Regexp("("+(query("NoCacheFor")-"\r"-"\n\n")/"\n"*")|("
-				   +")")->match))
+                                   +")")->match))
       report_error("Parse error in 'No cache' regular expression.\n");
 
   if(!no_cache_for) no_cache_for = lambda(string i){return 0;};
@@ -99,9 +99,9 @@ void do_write(string host, string oh, string more)
 }
 
 #define MY_TIME(X) sprintf("%s%d:%d", (X)>(60*60)?(X)/(60*60)+":":"",\
-			     (X)%(60*60)/60, (X)%60)
+                             (X)%(60*60)/60, (X)%60)
 void log_client(string host, string oh, string id, string more, string client,
-		int _time, string resolve)
+                int _time, string resolve)
 {
   more = "[" + cern_http_date(time(1)) + "] http://" + (host?host:oh) + ":" +
          id + " " + more + " " + MY_TIME(_time) + " ";
@@ -147,9 +147,9 @@ string|void init_proxies()
     }
 
     if(err=catch(cachers += ({ ({ Regexp(bar[0])->match, 
-				  ({ bar[1], (int)bar[2] }) }) })))
+                                  ({ bar[1], (int)bar[2] }) }) })))
       res += "Syntax error in regular expression in ccaching proxy: " +
-	     bar[0] + "\n" + err[0];
+             bar[0] + "\n" + err[0];
   }
 
   foreach(query("Proxies")/"\n", foo)
@@ -167,9 +167,9 @@ string|void init_proxies()
     }
 
     if(err=catch(proxies += ({ ({ Regexp(bar[0])->match, 
-				  ({ bar[1], (int)bar[2] }) }) })))
+                                  ({ bar[1], (int)bar[2] }) }) })))
       res += "Syntax error in regular expression in ccaching proxy: " +
-	     bar[0] + "\n" + err[0];
+             bar[0] + "\n" + err[0];
   }
 
   foreach(query("Filters")/"\n", foo)
@@ -187,9 +187,9 @@ string|void init_proxies()
     }
 
     if(err=catch(filters += ({ ({ Regexp(bar[0])->match, 
-				   bar[1..]*" " })})))
+                                   bar[1..]*" " })})))
       res += "PROXY: Syntax error in regular expression in proxy: " + bar[0] + "\n" +
-	     err[0];
+             err[0];
   }
 
   if(!strlen(res))
@@ -260,70 +260,70 @@ string check_variable(string name, mixed value)
 void create()
 {         
   defvar("logfile", "", "Logfile", TYPE_FILE,
-	 "Empty the field for no log at all. "
-	 "For filename substitution patterns "
-	 "see the description of the main logfile.");
+         "Empty the field for no log at all. "
+         "For filename substitution patterns "
+         "see the description of the main logfile.");
   
   defvar("log_resolve_client", "Resolved", "Log client hostnames",
          TYPE_STRING_LIST|VAR_MORE,
-	 "Specify if client hostnames should be logged always \"Resolved\", "
-	 "only resolved \"IfCached\" or as \"IPAddress\". "
-	 "Note, that all resolving of hostnames is done asynchroneously and "
-	 "request speed is not affected by the resolve method.",
-	 ({ "Resolved", "IfCached", "IPAddress"}),
-	 lambda(){return !query("logfile") || !strlen(query("logfile"));});
+         "Specify if client hostnames should be logged always \"Resolved\", "
+         "only resolved \"IfCached\" or as \"IPAddress\". "
+         "Note, that all resolving of hostnames is done asynchroneously and "
+         "request speed is not affected by the resolve method.",
+         ({ "Resolved", "IfCached", "IPAddress"}),
+         lambda(){return !query("logfile") || !strlen(query("logfile"));});
 
   defvar("online_stats", 0, "Online stats",
          TYPE_FLAG|VAR_MORE,
-	 "Set this option to enable online statistics as e.g. HTTP returncodes "
-	 "and length of proxy connections, see Actions->Status->Proxy. "
-	 "Note that this will result in an additional load of about 3% of "
-	 "the proxy load.");
+         "Set this option to enable online statistics as e.g. HTTP returncodes "
+         "and length of proxy connections, see Actions->Status->Proxy. "
+         "Note that this will result in an additional load of about 3% of "
+         "the proxy load.");
 
   defvar("mountpoint", "http:/", "Location", TYPE_LOCATION|VAR_MORE,
-	 "By default, this is http:/. If you set anything else, all "
-	 "normal WWW-clients will fail. But, other might be useful"
-	 ", like /http/. if you set this location, a link formed like "
-	 " this: &lt;a href=\"/http/\"&lt;my.www.server&gt;/a&gt; will enable"
-	 " accesses to local WWW-servers through a firewall.<p>"
-	 "Please consider security, though.");
+         "By default, this is http:/. If you set anything else, all "
+         "normal WWW-clients will fail. But, other might be useful"
+         ", like /http/. if you set this location, a link formed like "
+         " this: &lt;a href=\"/http/\"&lt;my.www.server&gt;/a&gt; will enable"
+         " accesses to local WWW-servers through a firewall.<p>"
+         "Please consider security, though.");
 
   defvar("NoCacheFor", "", "No cache for", TYPE_TEXT_FIELD|VAR_MORE,
-	 "This is a list of regular expressions. URLs that match "
-	 "any entry in this list will not be cached at all.");
+         "This is a list of regular expressions. URLs that match "
+         "any entry in this list will not be cached at all.");
 
   defvar("http_codes_to_cache", ({ "200", "300", "301", "404" }),
-	 "Http codes to cache", TYPE_STRING_LIST|VAR_MORE,
-	 "Cache documents with these http codes. "
-	 "A reasonable set is \"200\", \"300\", \"301\", \"404\".");
+         "Http codes to cache", TYPE_STRING_LIST|VAR_MORE,
+         "Cache documents with these http codes. "
+         "A reasonable set is \"200\", \"300\", \"301\", \"404\".");
 
   defvar("reload_from_cache", 0, "Handle reloads from diskcache", TYPE_FLAG|VAR_MORE,
-	 "This option disables the no-cache pragma and reloads will be done "
-	 "from the proxy's diskcache. "
-	 "Note that with this option set there is no way the client can "
-	 "initiate a reload from the original server to the diskcache of "
-	 "this proxy. "
-	 "Thus documents will be cached forever unless expired (via an expire "
-	 "header). "
-	 "Please consider this option only if you have installed other means "
-	 "to force reload of pages.");
+         "This option disables the no-cache pragma and reloads will be done "
+         "from the proxy's diskcache. "
+         "Note that with this option set there is no way the client can "
+         "initiate a reload from the original server to the diskcache of "
+         "this proxy. "
+         "Thus documents will be cached forever unless expired (via an expire "
+         "header). "
+         "Please consider this option only if you have installed other means "
+         "to force reload of pages.");
 
   defvar("modified_from_cache", 0, "Handle if-modified-since from diskcache", TYPE_FLAG|VAR_MORE,
-	 "With this option set if-modified-since requests will be checked "
-	 "against the proxy's diskcache. "
-	 "This can be a major improvement to proxy response times if there are "
-	 "many clients with local cache and uptodate checks set to every time. "
-	 "Set to \"No\" if requests should go to the original server. ");
+         "With this option set if-modified-since requests will be checked "
+         "against the proxy's diskcache. "
+         "This can be a major improvement to proxy response times if there are "
+         "many clients with local cache and uptodate checks set to every time. "
+         "Set to \"No\" if requests should go to the original server. ");
 
   defvar("cache_cookies", 0, "Cache pages with cookies", TYPE_FLAG|VAR_MORE,
-	 "If this option is set, documents with cookies will be cached. "
-	 "As such pages might be dynamically made depending on the values of "
-	 "the cookies, you might want to leave this option off.");
+         "If this option is set, documents with cookies will be cached. "
+         "As such pages might be dynamically made depending on the values of "
+         "the cookies, you might want to leave this option off.");
 
   defvar("cache_without_content_length", 0, "Cache pages without content-length",
-	 TYPE_FLAG|VAR_MORE,
-	 "A content-length of zero is often used to prevent caching of pages. "
-	 "To bypass content-length checks set this to true.");
+         TYPE_FLAG|VAR_MORE,
+         "A content-length of zero is often used to prevent caching of pages. "
+         "To bypass content-length checks set this to true.");
 
   defvar("cache_expired_cheat", 0, "Cache expired cheat time",
          TYPE_INT|VAR_MORE,
@@ -333,141 +333,141 @@ void create()
          "A negative value has the effect that a page gets expired earlier. "
          "A positive value has the effect that a page gets expired later. "
          //"This also applies to Pragma \"cache-control: max-age\"."
-	 );
+         );
 
   defvar("Cachers", "", "Remote caching proxy regular expressions",
-	 TYPE_TEXT_FIELD|VAR_MORE,
-	 "Here you can add redirects to remote caching proxy servers. "
-	 "If a page is considered cacheable (no cookies, no queries, ...) "
-	 "and requested from a host matching a pattern, this proxy will "
-	 "query the remote caching proxy server at the host and port "
-	 "specified.<p> "
-	 "Note, that this proxy does not check (yet) if the remote caching "
-	 "proxy server handles the request in caching or proxy mode.<p>"
-	 "Example:<hr noshade>"
-	 "<pre>"
-	 "# All hosts inside *.rydnet.lysator.liu.se has to be\n"
-	 "# accessed through lysator.liu.se\n"
-	 ".*\\.rydnet\\.lysator\\.liu\\.se        130.236.253.11  80\n"
-	 "# Do not access *.dec.com via a remote proxy\n"
-	 ".*\\.dec\\.com                         no_proxy        0\n"
-	 "# But all other .com\n"
-	 ".*\\.com                         130.236.253.11        0\n"
-	 "</pre>"
-	 "Please note that this <b>must</b> be "
-	 "<a href=$configurl/regexp.html>Regular Expressions</a>.");
+         TYPE_TEXT_FIELD|VAR_MORE,
+         "Here you can add redirects to remote caching proxy servers. "
+         "If a page is considered cacheable (no cookies, no queries, ...) "
+         "and requested from a host matching a pattern, this proxy will "
+         "query the remote caching proxy server at the host and port "
+         "specified.<p> "
+         "Note, that this proxy does not check (yet) if the remote caching "
+         "proxy server handles the request in caching or proxy mode.<p>"
+         "Example:<hr noshade>"
+         "<pre>"
+         "# All hosts inside *.rydnet.lysator.liu.se has to be\n"
+         "# accessed through lysator.liu.se\n"
+         ".*\\.rydnet\\.lysator\\.liu\\.se        130.236.253.11  80\n"
+         "# Do not access *.dec.com via a remote proxy\n"
+         ".*\\.dec\\.com                         no_proxy        0\n"
+         "# But all other .com\n"
+         ".*\\.com                         130.236.253.11        0\n"
+         "</pre>"
+         "Please note that this <b>must</b> be "
+         "<a href=$configurl/regexp.html>Regular Expressions</a>.");
 
   defvar("cacher_timeout", 10, "Remote caching proxy server timeout",
-	 TYPE_INT|VAR_MORE,
-	 "If the remote caching proxy server does not respond within the "
-	 "specified time (seconds) the request will be redirected to a "
-	 "matching remote proxy server. If there is no matching remote "
-	 "proxy server the server host will be contacted directly (by this "
-	 "proxy). Set to zero if an error should be returned to the "
-	 "browser instead.",
-	 0, lambda(){return !query("Cachers") || !strlen(query("Cachers"));});
+         TYPE_INT|VAR_MORE,
+         "If the remote caching proxy server does not respond within the "
+         "specified time (seconds) the request will be redirected to a "
+         "matching remote proxy server. If there is no matching remote "
+         "proxy server the server host will be contacted directly (by this "
+         "proxy). Set to zero if an error should be returned to the "
+         "browser instead.",
+         0, lambda(){return !query("Cachers") || !strlen(query("Cachers"));});
 
   defvar("Proxies", "", "Remote proxy regular expressions", TYPE_TEXT_FIELD|VAR_MORE,
-	 "Here you can add redirects to remote proxy servers. If a file is "
-	 "requested from a server host matching a pattern, this proxy will "
-	 "query the remote proxy server at the host and port specified.<p> "
-	 "Hopefully, that remote proxy will then connect the server host. "
-	 "<p>"
-	 "Example:<hr noshade>"
-	 "<pre>"
-	 "# All hosts inside *.rydnet.lysator.liu.se has to be\n"
-	 "# accessed through lysator.liu.se\n"
-	 ".*\\.rydnet\\.lysator\\.liu\\.se        130.236.253.11  80\n"
-	 "# Do not access *.dec.com via a remote proxy\n"
-	 ".*\\.dec\\.com                         no_proxy        0\n"
-	 "# But all other .com\n"
-	 ".*\\.com                         130.236.253.11        0\n"
-	 "</pre>"
-	 "Please note that this <b>must</b> be "
-	 "<a href=$configurl/regexp.html>Regular Expressions</a>.");
+         "Here you can add redirects to remote proxy servers. If a file is "
+         "requested from a server host matching a pattern, this proxy will "
+         "query the remote proxy server at the host and port specified.<p> "
+         "Hopefully, that remote proxy will then connect the server host. "
+         "<p>"
+         "Example:<hr noshade>"
+         "<pre>"
+         "# All hosts inside *.rydnet.lysator.liu.se has to be\n"
+         "# accessed through lysator.liu.se\n"
+         ".*\\.rydnet\\.lysator\\.liu\\.se        130.236.253.11  80\n"
+         "# Do not access *.dec.com via a remote proxy\n"
+         ".*\\.dec\\.com                         no_proxy        0\n"
+         "# But all other .com\n"
+         ".*\\.com                         130.236.253.11        0\n"
+         "</pre>"
+         "Please note that this <b>must</b> be "
+         "<a href=$configurl/regexp.html>Regular Expressions</a>.");
 
   defvar("remote_timeout", 10, "Remote proxy server timeout",
-	 TYPE_INT|VAR_MORE,
-	 "If the remote proxy server does not respond within the "
-	 "specified time (seconds) the server host will be contacted "
-	 "directly (by this proxy). Set to zero if an error should be "
-	 "returned to the browser instead.",
-	 0, lambda(){return !query("Proxies") || !strlen(query("Proxies"));});
+         TYPE_INT|VAR_MORE,
+         "If the remote proxy server does not respond within the "
+         "specified time (seconds) the server host will be contacted "
+         "directly (by this proxy). Set to zero if an error should be "
+         "returned to the browser instead.",
+         0, lambda(){return !query("Proxies") || !strlen(query("Proxies"));});
 
   defvar("Filters", "", "External filter regular expressions", TYPE_TEXT_FIELD|VAR_MORE,
-	 "External filters to run if the regular expression match. "
-	 "<p>Examples (this one works): "
-	 "<pre>"
-	 "www2.infoseek:[0-9]*/       bin/proxyfilterdemo infoseek\n"
-	 "www2.infoseek.com:[0-9]*/.*html   bin/proxyfilterdemo infoseek\n"
-	 "www.lycos.com:[0-9]*/       bin/proxyfilterdemo lycos\n"
-	 "www.lycos.com:[0-9]*/.*html bin/proxyfilterdemo lycos\n"
-	 "</pre>"
-	 "Please note that this <b>must</b> be "
-	 "<a href=$configurl/regexp.html>Regular Expressions</a>.");
+         "External filters to run if the regular expression match. "
+         "<p>Examples (this one works): "
+         "<pre>"
+         "www2.infoseek:[0-9]*/       bin/proxyfilterdemo infoseek\n"
+         "www2.infoseek.com:[0-9]*/.*html   bin/proxyfilterdemo infoseek\n"
+         "www.lycos.com:[0-9]*/       bin/proxyfilterdemo lycos\n"
+         "www.lycos.com:[0-9]*/.*html bin/proxyfilterdemo lycos\n"
+         "</pre>"
+         "Please note that this <b>must</b> be "
+         "<a href=$configurl/regexp.html>Regular Expressions</a>.");
 
 /* nothing yet
   defvar("filesize_disk_max", 32, "Cache filesize maximum for disk cache",
          TYPE_INT_LIST|VAR_MORE,
-	 "Cache files to disk upto this size (mb). "
-	 "Set to zero for unlimited.",
-	 ({ 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 }));
+         "Cache files to disk upto this size (mb). "
+         "Set to zero for unlimited.",
+         ({ 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 }));
  */
   defvar("cache_memory_filesize", 16, "Cache filesize maximum for memory cache",
          TYPE_INT_LIST|VAR_MORE,
-	 "While caching keep files in memory upto this size (kb).",
-	 ({ 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 }));
+         "While caching keep files in memory upto this size (kb).",
+         ({ 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 }));
 
   defvar("browser_socket_buffersize", 8192, "Browser socket buffer size",
          TYPE_INT_LIST|VAR_MORE,
-	 "Try set the socket buffer size of the browser connection.",
-	 ({ 4096, 8192, 16384, 32768 }));
+         "Try set the socket buffer size of the browser connection.",
+         ({ 4096, 8192, 16384, 32768 }));
 
   defvar("browser_socket_keepalive", 0, "Browser socket keep alive",
          TYPE_FLAG|VAR_MORE,
-	 "Try keep browser connection active by enabling the periodic "
-	 "transmission of messages on the browser socket. ");
+         "Try keep browser connection active by enabling the periodic "
+         "transmission of messages on the browser socket. ");
 
   defvar("browser_timeout", 0, "Browser timeout",
          TYPE_INT|VAR_MORE,
-	 "Time in seconds after which a browser connection will "
-	 "be terminated. Set to zero if you do not want timeout checks.");
+         "Time in seconds after which a browser connection will "
+         "be terminated. Set to zero if you do not want timeout checks.");
 
   defvar("browser_idle_timeout", 0, "Browser idle timeout",
          TYPE_INT|VAR_MORE,
-	 "Time in seconds after which an idle browser connection will "
-	 "be terminated. Set to zero if you do not want idle timeout checks.");
+         "Time in seconds after which an idle browser connection will "
+         "be terminated. Set to zero if you do not want idle timeout checks.");
 
   defvar("server_timeout", 0, "Server timeout",
          TYPE_INT|VAR_MORE,
-	 "Time in seconds after which a server connection will "
-	 "be terminated. Set to zero if you do not want timeout checks.");
+         "Time in seconds after which a server connection will "
+         "be terminated. Set to zero if you do not want timeout checks.");
 
   defvar("server_idle_timeout", 0, "Server idle timeout",
          TYPE_INT|VAR_MORE,
-	 "Time in seconds after which an idle server connection will "
-	 "be terminated. Set to zero if you do not want idle timeout checks.");
+         "Time in seconds after which an idle server connection will "
+         "be terminated. Set to zero if you do not want idle timeout checks.");
 
   defvar("server_continue", 1, "Server continue",
          TYPE_FLAG|VAR_MORE,
-	 "If this option is set a caching server connection will be continued "
-	 "even if the requesting browser connection vanished. "
-	 "If a high loaded proxy regularly runs out of sockets unsetting this "
-	 "option might help a bit.");
+         "If this option is set a caching server connection will be continued "
+         "even if the requesting browser connection vanished. "
+         "If a high loaded proxy regularly runs out of sockets unsetting this "
+         "option might help a bit.");
 
   defvar("server_socket_keepalive", 0, "Server socket keep alive",
          TYPE_FLAG|VAR_MORE,
-	 "Try keeps server connection active by enabling the periodic "
-	 "transmission of messages on the server socket.");
+         "Try keeps server connection active by enabling the periodic "
+         "transmission of messages on the server socket.");
 /*
   defvar("server_additional_output", 0, "Server additional output",
          TYPE_FLAG|VAR_MORE,
-	 "If this option is set a caching server connection will be used "
-	 "for additional requests to the same URL. "
-	 "Note that this might be a problem with broken or frozen server "
-	 "connections. "
-	 "It should probably only used together with \"Timeout Server "
-	 "Connection\" set to an appropriate value.");
+         "If this option is set a caching server connection will be used "
+         "for additional requests to the same URL. "
+         "Note that this might be a problem with broken or frozen server "
+         "connections. "
+         "It should probably only used together with \"Timeout Server "
+         "Connection\" set to an appropriate value.");
  */
 }
 
@@ -498,7 +498,7 @@ mapping http_request_init(RequestID id)
   werror("http_request_init(%O)...\n", id);
   if (has_prefix(id->misc->prot_cache_key, "http://")) {
     if ((query_location() == "http:/") &&
-	(!has_prefix(id->raw_url, "http:/"))) {
+        (!has_prefix(id->raw_url, "http:/"))) {
       // Undo the RFC 2068 5.1.2 stuff
       werror("Setting raw_url to %O\n", id->misc->prot_cache_key);
       id->raw_url = id->misc->prot_cache_key;
@@ -542,13 +542,13 @@ mapping find_file( string f, object id )
     {
       if(search(f, "/") == -1)
       {
-	host=f;
-	file="";
+        host=f;
+        file="";
       } else {
 #ifdef PROXY_DEBUG
-	report_debug("I cannot find a hostname and a filename in "+f+"\n");
+        report_debug("I cannot find a hostname and a filename in "+f+"\n");
 #endif
-	return 0; /* This is not a proxy request. */
+        return 0; /* This is not a proxy request. */
       }
     }
     port=80; /* Default */
@@ -594,14 +594,14 @@ class Server
     sscanf(h, "%s\n", headers["_code"]);
     foreach((h-"\r")/"\n", string line)
       if(sscanf(line, "%s:%s", _name, value) == 2){
-	sscanf(value, "%*[ \t]%s", value);
-	headers[lower_case(_name-" ")] = value;
+        sscanf(value, "%*[ \t]%s", value);
+        headers[lower_case(_name-" ")] = value;
       }
     sscanf(upper_case(headers["_code"]), "HTTP/%*s %d", _http_code);
     if(_http_code <= 0)
     {
       SERVER_DEBUG("parse_headers - invalid http_code("+_http_code+") in "+
-		    _data[..p-1]);
+                    _data[..p-1]);
     }
   }
 
@@ -729,7 +729,7 @@ class Server
       // do not send anything before header is complete
       //   or recognized as invalid
       if(!headers)
-	return;
+        return;
 
       // remove pending remote (caching) proxy timeout callback
       if(remote || cacher)
@@ -743,19 +743,19 @@ class Server
 
 #define NOT_MODIFIED "HTTP/1.0 304 Not Modified\r\n\r\n"
       if(client && client->id->since &&
-	 _http_code == 200 && headers["last-modified"] &&
+         _http_code == 200 && headers["last-modified"] &&
          !client->modified(headers["last-modified"], client->id->since))
       {
         if(from_server){
           from_server->set_blocking(0,0,0);
           from_server = 0;
         }
-	finish(304, NOT_MODIFIED);
-	return;
+        finish(304, NOT_MODIFIED);
+        return;
       }
 
       if(cache_is_wanted &&
-	 (cache_is_wanted = client->headers_cache_wanted(headers)))
+         (cache_is_wanted = client->headers_cache_wanted(headers)))
         mode("Caching");
       else
         mode("Proxy");
@@ -766,16 +766,16 @@ class Server
       // leave the rest to client->id->send
       if(!cache_is_wanted)
       {
-	//SERVER_DEBUG("server_got(" + len + ") - proxy only")
+        //SERVER_DEBUG("server_got(" + len + ") - proxy only")
 
         from_server->set_read_callback(0);
-	_last_got = -1;
+        _last_got = -1;
 
-	send(_data, 1);
-	_data = 0;
-	send(from_server);
+        send(_data, 1);
+        _data = 0;
+        send(from_server);
 
-	return;
+        return;
       }
 
       // first write after header is complete and cache is wanted
@@ -814,14 +814,14 @@ class Server
         //SERVER_DEBUG("server_got(" + strlen(_data) + ") setup to_disk")
 
         mode("ToDisk");
-	d = _data;
-	len = strlen(_data);
+        d = _data;
+        len = strlen(_data);
       }
       else
       {
-	SERVER_DEBUG("server_got(" + strlen(_data) + ") - to_disk failed")
+        SERVER_DEBUG("server_got(" + strlen(_data) + ") - to_disk failed")
 
-	cache_is_wanted = 0;
+        cache_is_wanted = 0;
         mode("Proxy");
         return;
       }
@@ -843,14 +843,14 @@ class Server
 
       if(!to_disk_pipe || catch(to_disk_pipe->write(d)))
       {
-	 //SERVER_DEBUG("server_got(" + len + ") - setup and write to_disk_pipe")
+         //SERVER_DEBUG("server_got(" + len + ") - setup and write to_disk_pipe")
 
-	 if (!pipe)
-	   pipe = (program)"fastpipe";
-	 to_disk_pipe = pipe();
-	 to_disk_pipe->write(d);
-	 to_disk_pipe->set_done_callback(lambda(){to_disk_pipe=0;});
-	 to_disk_pipe->output(to_disk->file);
+         if (!pipe)
+           pipe = (program)"fastpipe";
+         to_disk_pipe = pipe();
+         to_disk_pipe->write(d);
+         to_disk_pipe->set_done_callback(lambda(){to_disk_pipe=0;});
+         to_disk_pipe->output(to_disk->file);
       }
     }
   }
@@ -927,7 +927,7 @@ class Server
         to_disk_pipe = 0;
       //}
       //else
-	// delete_cache_file(to_disk); // done by http_check_cache_file
+        // delete_cache_file(to_disk); // done by http_check_cache_file
     }
     else if(cache_is_wanted && (cache_is_wanted = received_content_length()) &&
       (to_disk = roxen->create_cache_file("http", name)))
@@ -935,7 +935,7 @@ class Server
       //SERVER_DEBUG("finish - write memory cache to_disk_pipe")
 
       if (!pipe)
-	pipe = (program)"fastpipe";
+        pipe = (program)"fastpipe";
       to_disk_pipe = pipe();
       to_disk_pipe->write(_data);
       to_disk_pipe->set_done_callback(lambda(){to_disk_pipe=0;finish();});
@@ -1033,12 +1033,12 @@ class Server
   {
     foreach(proxies, array tmp)
       if(tmp[0](host))
-	if(tmp[1][0]!="no_proxy")
-	{
-	  if(timeout)
-	    call_out(connected_to_server, timeout, 0);
+        if(tmp[1][0]!="no_proxy")
+        {
+          if(timeout)
+            call_out(connected_to_server, timeout, 0);
           return tmp[1] + ({ host }) + ({ port });
-	}
+        }
         else
           return 0;
   }
@@ -1132,66 +1132,66 @@ class Server
       if(headers)
       {
         //SERVER_DEBUG("connected_to_server - already connected/headers")
-	if(_from_server)
-	{
-	  _from_server->set_blocking(0,0,0);
-	  _from_server = 0;
-	}
-	return;
+        if(_from_server)
+        {
+          _from_server->set_blocking(0,0,0);
+          _from_server = 0;
+        }
+        return;
       }
 
       // any further connect is coming late
       if(from_server)
       {
-	from_server->set_blocking(0,0,0);
-	from_server = 0;
+        from_server->set_blocking(0,0,0);
+        from_server = 0;
       }
 
       if(remote && remote_timeout)
       {
         /* SERVER_DEBUG("connected_to_server - remote(" + remote[0] + "," +
-		     remote[1]+")_connect failed") /**/
+                     remote[1]+")_connect failed") /**/
 
-	client->remote = 0;
-	remove_call_out(connected_to_server);
-	if(_from_server)
-	{
-	  _from_server->set_blocking(0,0,0);
-	  _from_server = 0;
-	}
+        client->remote = 0;
+        remove_call_out(connected_to_server);
+        if(_from_server)
+        {
+          _from_server->set_blocking(0,0,0);
+          _from_server = 0;
+        }
         mode("HostLookup");
         call_out(roxen->host_to_ip, 0, remote[2], got_hostname, remote[2], remote[3]);
-	remote = 0;
-	return;
+        remote = 0;
+        return;
       }
 
       if(cacher && cacher_timeout)
       {
         /* SERVER_DEBUG("connected_to_server - cacher(" + cacher[0] + "," +
-		     cacher[1] + ")_connect failed") /**/
+                     cacher[1] + ")_connect failed") /**/
 
-	client->cacher = 0;
-	remove_call_out(connected_to_server);
-	if(_from_server)
-	{
-	  _from_server->set_blocking(0,0,0);
-	  _from_server = 0;
-	}
+        client->cacher = 0;
+        remove_call_out(connected_to_server);
+        if(_from_server)
+        {
+          _from_server->set_blocking(0,0,0);
+          _from_server = 0;
+        }
         mode("HostLookup");
-	if(remote = is_remote_proxy(proxies, cacher[2], cacher[3],
-	  remote_timeout))
-	{
-	  cacher = 0;
-	  client->remote = 1;
+        if(remote = is_remote_proxy(proxies, cacher[2], cacher[3],
+          remote_timeout))
+        {
+          cacher = 0;
+          client->remote = 1;
           roxen->host_to_ip(remote[0], got_hostname, remote[0], remote[1]);
-	}
-	else
-	{
+        }
+        else
+        {
           call_out(roxen->host_to_ip, 0, cacher[2], got_hostname,
                    cacher[2], cacher[3]);
-	  cacher = 0;
-	}
-	return;
+          cacher = 0;
+        }
+        return;
       }
 
       if(remote)
@@ -1202,7 +1202,7 @@ class Server
                cacher[0] + ":" + cacher[1] + "."));
       else
         finish(500, error_msg("Connection refused by: "+ proxyhost +
-	       "."));
+               "."));
       return;
     }
 
@@ -1217,7 +1217,7 @@ class Server
       if(!from_server || !from_server->query_address())
       {
         finish(500, error_msg("Connection to server vanished"));
-	return;
+        return;
       }
     }
 
@@ -1242,7 +1242,7 @@ class Server
       q=f->pipe();
       from_server->set_blocking(0,0,0);
       spawne((filter/" ")[0], (filter/" ")[1..], ([ ]), from_server, q,
-	     Stdio.stderr);
+             Stdio.stderr);
       destruct(from_server);
       destruct(q);
       from_server=f;
@@ -1286,7 +1286,7 @@ class Request
       string host, rest;
       sscanf(name, "%s:%s", host, rest);
       roxen->ip_to_host(host, proxy->log_client, host, rest, more, _remoteaddr,
-	time() - _start, query("log_resolve_client"));
+        time() - _start, query("log_resolve_client"));
     }
 
     if(query("online_stats")){
@@ -1415,7 +1415,7 @@ class Request
 
     if(headers["expires"] &&
        !Roxen.is_modified(headers["expires"],
-	 time() - cache_expired_cheat))
+         time() - cache_expired_cheat))
     {
       //REQUEST_DEBUG("headers_cache_is_wanted - expired("+headers["expires"]+")")
       return 0;
@@ -1452,7 +1452,7 @@ class Request
   }
 
   constant MONTHS= (["jan":0, "feb":1, "mar":2, "apr":3, "may":4, "jun":5,
-		     "jul":6, "aug":7, "sep":8, "oct":9, "nov":10, "dec":11,]);
+                     "jul":6, "aug":7, "sep":8, "oct":9, "nov":10, "dec":11,]);
 
   private int convert_time(string a)
   {
@@ -1546,19 +1546,19 @@ class Request
       // try disk cache
       object disk_cache;
       if((disk_cache = roxen->cache_file("http", name)) &&
-	 http_codes_to_cache[_http_code = disk_cache->headers[" returncode"]])
+         http_codes_to_cache[_http_code = disk_cache->headers[" returncode"]])
       {
-	//REQUEST_DEBUG("create - disk_cache")
-	_mode = "Disk";
+        //REQUEST_DEBUG("create - disk_cache")
+        _mode = "Disk";
 
         if(query("modified_from_cache") && id->since &&
            disk_cache->headers["last-modified"] &&
            !modified(disk_cache->headers["last-modified"], id->since))
         {
-	  disk_cache = 0;
+          disk_cache = 0;
           finish(304, NOT_MODIFIED);
-	  return;
-	}
+          return;
+        }
 
         int len = disk_cache->file->stat()[ST_SIZE]-disk_cache->headers->head_size;
         cache_file_info = ((disk_cache->rfile/"roxen_cache/http/")[1]) + "\t" +
@@ -1567,8 +1567,8 @@ class Request
         from_disk = disk_cache->file;
         id->send_result(http_file_answer(disk_cache->file, "raw", len));
 
-	disk_cache->file = 0;
-	disk_cache = 0;
+        disk_cache->file = 0;
+        disk_cache = 0;
         return;
       }
 
@@ -1578,23 +1578,23 @@ class Request
       /*
       object request;
       if(query("server_additional_output") && sizeof(requests) &&
-	 (request=search(requests, name)) && request->server &&
-	 request->server->_data && request->server->headers &&
-	 (request->server->idle() < 30))
+         (request=search(requests, name)) && request->server &&
+         request->server->_data && request->server->headers &&
+         (request->server->idle() < 30))
       {
-	REQUEST_DEBUG("create - running server("+sizeof(request->server->clients)+", "+sizeof(requests)+") found")
+        REQUEST_DEBUG("create - running server("+sizeof(request->server->clients)+", "+sizeof(requests)+") found")
         if(id->since &&
            request->server->_headers["last-modified"] &&
            !modified(request->server->_headers["last-modified"], id->since))
-	{
+        {
           finish(304, NOT_MODIFIED);
-	  return;
-	}
-	if(request->server->add_client(this_object()))
-	{
+          return;
+        }
+        if(request->server->add_client(this_object()))
+        {
           //add_request(this_object());
           return;
-	}
+        }
       }
       */
     }
@@ -1638,7 +1638,7 @@ class Request
     {
       //REQUEST_DEBUG("finish - pipe is running")
       if (!done_done)
-	id->start_sender(send_pipe_done);
+        id->start_sender(send_pipe_done);
       done_done = 1;
       return;
     }

@@ -58,9 +58,9 @@ class BaseJSONLogger {
 #endif
     mapping gt = gmtime(tod[0]);
     string ret = sprintf("%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
-			 1900 + gt->year, 1+gt->mon, gt->mday,
-			 gt->hour, gt->min, gt->sec,
-			 tod[1]/1000);
+                         1900 + gt->year, 1+gt->mon, gt->mday,
+                         gt->hour, gt->min, gt->sec,
+                         tod[1]/1000);
 
     return ret;
   }
@@ -161,7 +161,7 @@ class SocketLogger {
     // callback, which will add the data to the actual stream.
     int write(string|Stdio.Buffer data) {
       if (stringp(data)) {
-	data = Stdio.Buffer(data);
+        data = Stdio.Buffer(data);
       }
 
       output->add(data);
@@ -175,14 +175,14 @@ class SocketLogger {
       // that output buffer to the socket buffer and create a new
       // buffer for future messages to this logger.
       if (sizeof(output)) {
-	buff->add(output);
-	res = sizeof(output);
-	output->clear();
-	// output = Stdio.Buffer(4096);
+        buff->add(output);
+        res = sizeof(output);
+        output->clear();
+        // output = Stdio.Buffer(4096);
       }
 
       if (!sizeof(buff)) {
-	sock->set_write_callback(0);
+        sock->set_write_callback(0);
       }
 
       return res;
@@ -248,27 +248,27 @@ class SocketLogger {
       // No port specified - assume UNIX socket
       int res = port->bind_unix(socket_path, accept_cb);
       if (!res) {
-	werror("Failed to bind socket path %O for configuration logger.\n", socket_path);
-	return UNDEFINED;
+        werror("Failed to bind socket path %O for configuration logger.\n", socket_path);
+        return UNDEFINED;
       } else {
-	ports_by_path[socket_path] = port;
-	return port;
+        ports_by_path[socket_path] = port;
+        return port;
       }
     } else {
       sscanf(socket_path, "%s:%d", string ip, int tcp_port);
       switch(ip||"") {
       case "":
       case "*":
-	ip = "::";
+        ip = "::";
       default:
       }
 
       int res = port->bind(tcp_port, accept_cb, ip, 1);
       if (res != 1) {
-	werror("Failed to bind log port!\n%s\n", strerror(port->errno()));
+        werror("Failed to bind log port!\n%s\n", strerror(port->errno()));
       } else {
-	ports_by_path[socket_path] = port;
-	return port;
+        ports_by_path[socket_path] = port;
+        return port;
       }
     }
   }
@@ -286,15 +286,15 @@ class SocketLogger {
 
     foreach(ports_by_path; string path; Stdio.Port p) {
       if (p == socket) {
-	p->close();
-	if (Stdio.exist(path)) {
-	  if (!rm(path)) {
-	    werror("Failed to remove log socket %s\n", path);
-	  }
-	}
-	m_delete(ports_by_path, path);
-	destruct(p);
-	return 1;
+        p->close();
+        if (Stdio.exist(path)) {
+          if (!rm(path)) {
+            werror("Failed to remove log socket %s\n", path);
+          }
+        }
+        m_delete(ports_by_path, path);
+        destruct(p);
+        return 1;
       }
     }
 

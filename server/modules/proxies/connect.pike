@@ -35,28 +35,28 @@ void nope(object hmm)
 void create()
 {
   defvar("ConRefused", 
-	 /**/
-	 "505 Connection Refused by remote server\n"
-	 "Content-type: text/html\n\n"
-	 "<title>Connection refused by remote server</title>\n"
-	 "<h1 align=center>Connection refused by remote server</h1>\n"
-	 "<hr noshade>\n<font size=+2>Please try again later.</font>\n"
-	 "<i>Sorry</i>\n<hr noshade>",
-	 /**/
-	 "Connection refused message",
-	 TYPE_TEXT_FIELD,
-	 "The message to send when the requested host deny the connection.");
+         /**/
+         "505 Connection Refused by remote server\n"
+         "Content-type: text/html\n\n"
+         "<title>Connection refused by remote server</title>\n"
+         "<h1 align=center>Connection refused by remote server</h1>\n"
+         "<hr noshade>\n<font size=+2>Please try again later.</font>\n"
+         "<i>Sorry</i>\n<hr noshade>",
+         /**/
+         "Connection refused message",
+         TYPE_TEXT_FIELD,
+         "The message to send when the requested host deny the connection.");
 
   defvar("NoHost", 
-	 /**/
-	 "505 No such host\nContent-type: text/html\n\n"
-	 "<title>The host does not exist</title>\n" 
-	 "<h1 align=center>I am unable to locate that host</h1>\n"
-	 "<i>Sorry</i>\n<hr noshade>",
-	 /**/
-	 "No such host message",
-	 TYPE_TEXT_FIELD,
-	 "The message to send when the requested host cannot be found.");
+         /**/
+         "505 No such host\nContent-type: text/html\n\n"
+         "<title>The host does not exist</title>\n" 
+         "<h1 align=center>I am unable to locate that host</h1>\n"
+         "<i>Sorry</i>\n<hr noshade>",
+         /**/
+         "No such host message",
+         TYPE_TEXT_FIELD,
+         "The message to send when the requested host cannot be found.");
 
   defvar("AllowedPorts", ({ "1-65535" }), "Allowed Ports",
          TYPE_STRING_LIST,

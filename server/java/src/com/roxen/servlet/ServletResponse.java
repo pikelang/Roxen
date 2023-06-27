@@ -69,25 +69,25 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
       contentType = type;
       HeaderTokenizer ct = new HeaderTokenizer(type);
       try {
-	ct.getValue();
-	ct.discard('/');
-	ct.getValue();
-	if(ct.more())
-	  for(;;) {
-	    while(!ct.lookingAt(';'))
-	      if(ct.more())
-		ct.getValue();
-	      else
-		break;
-	    ct.discard(';');
-	    if(!ct.more())
-	      break;
-	    if("charset".equalsIgnoreCase(ct.getValue())) {
-	      ct.discard('=');
-	      encoding = ct.getValue();
-	      break;
-	    }
-	  }
+        ct.getValue();
+        ct.discard('/');
+        ct.getValue();
+        if(ct.more())
+          for(;;) {
+            while(!ct.lookingAt(';'))
+              if(ct.more())
+                ct.getValue();
+              else
+                break;
+            ct.discard(';');
+            if(!ct.more())
+              break;
+            if("charset".equalsIgnoreCase(ct.getValue())) {
+              ct.discard('=');
+              encoding = ct.getValue();
+              break;
+            }
+          }
       } catch(IllegalArgumentException e) {
       }
     }
@@ -97,7 +97,7 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
   {
     if(outputStream == null) {
       if(writer != null)
-	throw new IllegalStateException();
+        throw new IllegalStateException();
       outputStream = pikeStream;
     }
     return outputStream;
@@ -107,19 +107,19 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
   {
     Object statustext;
     out.println("HTTP/1.0 "+status+" "+
-		  ((statustext=statusTexts.get(new Integer(status)))==null?
-		   "Foo":(String)statustext));
+                  ((statustext=statusTexts.get(new Integer(status)))==null?
+                   "Foo":(String)statustext));
     if(!containsHeader("Content-Type"))
       out.println("Content-Type: "+contentType);
     if(contentLength != -1 && !containsHeader("Content-Length"))
       out.println("Content-Length: "+contentLength);
     if(headers != null)
       for(Enumeration e = headers.elements(); e.hasMoreElements() ;) {
-	Object v = e.nextElement();
-	if(v instanceof String)
-	  out.println((String)v);
-	else for(Iterator i = ((List)v).iterator(); i.hasNext(); )
-	  out.println((String)i.next());
+        Object v = e.nextElement();
+        if(v instanceof String)
+          out.println((String)v);
+        else for(Iterator i = ((List)v).iterator(); i.hasNext(); )
+          out.println((String)i.next());
       }
     out.println();
     if(statusmsg != null)
@@ -130,9 +130,9 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
   {
     if(writer == null) {
       if(outputStream != null)
-	throw new IllegalStateException();
+        throw new IllegalStateException();
       writer = new PrintWriter(new OutputStreamWriter(pikeStream,
-						      getCharacterEncoding()));
+                                                      getCharacterEncoding()));
     }
     return writer;
   }
@@ -141,7 +141,7 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
   {
     if(encoding == null) {
       if(contentType == null)
-	contentType = "text/plain";
+        contentType = "text/plain";
       encoding = System.getProperty("file.encoding", "iso-8859-1");
       contentType += "; charset="+encodeValue(encoding);
     }
@@ -207,11 +207,11 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
       return "\"\"";
     for(int i=0; i<val.length(); i++)
       if(badAtomChar(val.charAt(i))) {
-	for(int p=0; (p=val.indexOf('\\', p))>=0; p+=2)
-	  val = val.substring(0, p)+'\\'+val.substring(p);
-	for(int p=0; (p=val.indexOf('"', p))>=0; p+=2)
-	  val = val.substring(0, p)+'\\'+val.substring(p);
-	return '"'+val+'"';
+        for(int p=0; (p=val.indexOf('\\', p))>=0; p+=2)
+          val = val.substring(0, p)+'\\'+val.substring(p);
+        for(int p=0; (p=val.indexOf('"', p))>=0; p+=2)
+          val = val.substring(0, p)+'\\'+val.substring(p);
+        return '"'+val+'"';
       }
     return val;
   }

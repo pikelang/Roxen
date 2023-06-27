@@ -42,7 +42,7 @@ class LocationModuleChoice
   }
 
   protected void create(string default_value, void|int flags,
-			void|LocaleString std_name, void|LocaleString std_doc)
+                        void|LocaleString std_name, void|LocaleString std_doc)
   {
     ::create(default_value, ({}), flags, std_name, std_doc);
   }
@@ -82,7 +82,7 @@ protected RoxenModule get_mod()
 }
 
 mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
-						      RequestID id)
+                                                      RequestID id)
 {
   RoxenModule mod = get_mod();
   return mod && mod->find_file (path, id);

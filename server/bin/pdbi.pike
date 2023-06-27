@@ -49,34 +49,34 @@ void main(int argc, array argv)
     case "du":
       int n;
       if(table)
-	n = du(o, table, arg);
+        n = du(o, table, arg);
       else
-	n = du(o, arg);
+        n = du(o, arg);
       write(sprintf("%d\n", n));
       break;
     case "ls":
       if(table || arg)
-	write(indices(o[table || arg])*"\n"+"\n");
+        write(indices(o[table || arg])*"\n"+"\n");
       else
-	write(indices(o)*"\n"+"\n");
+        write(indices(o)*"\n"+"\n");
       break;
     case "cat":
       if(table && mkmultiset(indices(o[table]))[arg])
-	write(sprintf("%O\n", o[table][arg]));
+        write(sprintf("%O\n", o[table][arg]));
       else
-	write(sprintf("%O: %O: No such row\n", table, arg));
+        write(sprintf("%O: %O: No such row\n", table, arg));
       break;
     case "pwd":
       write("["+(table?table:"")+"]\n");
       break;
     case "cd":
       if(arg == "..") {
-	table = 0;
+        table = 0;
       } else {
-	if(mkmultiset(indices(o))[arg])
-	  table = arg;
-	else
-	  write(sprintf("%O: %O: No such table\n", argv[0], arg));
+        if(mkmultiset(indices(o))[arg])
+          table = arg;
+        else
+          write(sprintf("%O: %O: No such table\n", argv[0], arg));
       }
       break;
     case "help":

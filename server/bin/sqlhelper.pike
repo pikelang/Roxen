@@ -56,7 +56,7 @@ void handle_err(mixed err) {
     string bt = "";
     if((sizeof(err) > 1) && arrayp(err[1]))
       catch {
-	bt = "\n" + describe_backtrace(err[1]);
+        bt = "\n" + describe_backtrace(err[1]);
       };
     write_msg(encode_value( ({ "E",err[0] + bt }) ));
   }
@@ -79,17 +79,17 @@ void main() {
     array cmd;
     if(!(err = catch(cmd = decode_value(s)))) {
       if(!db && cmd[0]!="connect") {
-	werror("sqlhelper: The DB connection has been closed. Attempting to reconnect.\n");
-	err = catch { 
-	  if_connect(db_url);
-	};
-	if(err) {
-	  handle_err(err);
-	  continue;
-	}
+        werror("sqlhelper: The DB connection has been closed. Attempting to reconnect.\n");
+        err = catch { 
+          if_connect(db_url);
+        };
+        if(err) {
+          handle_err(err);
+          continue;
+        }
       }
       err = catch { 
-	ret = this_object()["if_"+cmd[0]](@cmd[1..]);
+        ret = this_object()["if_"+cmd[0]](@cmd[1..]);
       };
     }
     if(err)
@@ -128,10 +128,10 @@ mapping fix_row(array fields, array row) {
 #if constant(Oracle.NULL)
     string data =
       ( row[i] == Oracle.NULL ||
-	row[i] == Oracle.NULLint ||
-	row[i] == Oracle.NULLdate ||
-	row[i] == Oracle.NULLstring ||
-	row[i] == Oracle.NULLfloat )
+        row[i] == Oracle.NULLint ||
+        row[i] == Oracle.NULLdate ||
+        row[i] == Oracle.NULLstring ||
+        row[i] == Oracle.NULLfloat )
       ? "" : (string)row[i];
 #else
     string data = row[i];
@@ -153,9 +153,9 @@ mixed if_query(mixed ... args) {
     mapping new_bindings = ([ ]);
     foreach(indices(args[1]),string ind) {
       if(ind[0..2] == "@@@")
-	new_bindings[ind[3..]] = String.string2hex(args[1][ind]);
+        new_bindings[ind[3..]] = String.string2hex(args[1][ind]);
       else {
-	new_bindings[ind] = args[1][ind];
+        new_bindings[ind] = args[1][ind];
       }
     }
     bindings = new_bindings;
@@ -174,7 +174,7 @@ mixed if_query(mixed ... args) {
   if(res && arrayp(res))
     foreach(res, mapping m)
       foreach(indices(m),string s)
-	m[s] = m[s] ? (string)m[s] : "";
+        m[s] = m[s] ? (string)m[s] : "";
   */
 
   SIM_LC();

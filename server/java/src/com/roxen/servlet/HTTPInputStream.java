@@ -12,9 +12,9 @@ class HTTPInputStream extends ServletInputStream
   {
     if(data != null)
       if(pos<data.length())
-	return data.charAt(pos++);
+        return data.charAt(pos++);
       else
-	data = null;
+        data = null;
     return -1;
   }
 

@@ -56,11 +56,11 @@ mapping|int(0..0)|AFS.ClientSession
   if (!cs) {
     // We need to create a new session
     if (mixed err = catch {
-	cs = AFS.ClientSession(id, this, session_hash);
+        cs = AFS.ClientSession(id, this, session_hash);
       }) {
 #ifdef DEBUG_CLIENT_SESSION_CREATION
       werror("Unable to create session:\n%s\n",
-	     describe_backtrace(err));
+             describe_backtrace(err));
 #endif /* DEBUG_CLIENT_SESSION_CREATION */
       return Roxen.http_low_answer(401, "Unauthorized");
     }
@@ -130,24 +130,24 @@ class PollAction
   ]);
 
   int(0..0)|mapping exec(RequestID id,
-			 void|AFS.ClientSession cs,
-			 mapping(string:mixed) args,
-			 void|string tag)
+                         void|AFS.ClientSession cs,
+                         mapping(string:mixed) args,
+                         void|string tag)
   {
     ASSERT_IF_DEBUG(cs);
 
     if (int timeout = args["timeout"]) {
       if (timeout == -1) {
-	// Auto mode.
-	if (!zero_type (args->interval) &&
-	    (args->interval != client_poll_interval))
-	  cs->push_response (AFS.ClientMessages.poll,
-			     ([ "poll_interval" : client_poll_interval ]),
-			     tag);
+        // Auto mode.
+        if (!zero_type (args->interval) &&
+            (args->interval != client_poll_interval))
+          cs->push_response (AFS.ClientMessages.poll,
+                             ([ "poll_interval" : client_poll_interval ]),
+                             tag);
 
-	return cs->set_notification_id(id, tag, client_poll_timeout);
+        return cs->set_notification_id(id, tag, client_poll_timeout);
       } else {
-	return cs->set_notification_id(id, tag, timeout);
+        return cs->set_notification_id(id, tag, timeout);
       }
     }
 
@@ -176,8 +176,8 @@ void get_fs_actions(RoxenModule module)
   foreach(sort(indices(module)), string i) {
 #ifdef DEBUG_FS_ACTIONS
     werror(" %s %d %d\n", i,
-	   programp(module[i]),
-	   programp(module[i]) && module[i]->filesystem_action);
+           programp(module[i]),
+           programp(module[i]) && module[i]->filesystem_action);
 #endif /* DEBUG_FS_ACTIONS */
     if (programp(module[i]) && module[i]->filesystem_action) {
       AFS.Action fsa = module[i]();
@@ -241,8 +241,8 @@ void get_fs_actions(RoxenModule module)
 //! @seealso
 //!   @[find_file()]
 mapping|array(mapping) call_fs_action(string path, RequestID id,
-				      AFS.ClientSession|mapping|void cs,
-				      mapping(string:array)|void variables)
+                                      AFS.ClientSession|mapping|void cs,
+                                      mapping(string:array)|void variables)
 {
   // We do require a proper session. Without it, we can't enqueue the
   // response or return data already queued for the client.
@@ -252,7 +252,7 @@ mapping|array(mapping) call_fs_action(string path, RequestID id,
 
   if (!cs || mappingp(cs)) {
     AFS_DEBUG_MSG ("AFS call %O: No session id\n",
-		   fs_actions[path] && fs_actions[path]->name);
+                   fs_actions[path] && fs_actions[path]->name);
     return cs || Roxen.http_low_answer(400, "Please provide a session id!");
   }
 
@@ -274,7 +274,7 @@ mapping|array(mapping) call_fs_action(string path, RequestID id,
     } else {
       AFS_DEBUG_MSG ("AFS call %O: Multiple subscribe arguments\n", fsa->name);
       return Roxen.http_low_answer (Protocols.HTTP.HTTP_BAD,
-				    "Multiple subscribe arguments found.\n");
+                                    "Multiple subscribe arguments found.\n");
     }
   }
 
@@ -285,11 +285,11 @@ mapping|array(mapping) call_fs_action(string path, RequestID id,
 
   mapping(string:mixed) args;
   if (mixed err = catch (
-	args = fsa->decode_args(variables, Roxen.THROW_RXML))) {
+        args = fsa->decode_args(variables, Roxen.THROW_RXML))) {
     if (objectp (err) && err->is_RXML_Backtrace) {
       AFS_DEBUG_MSG ("AFS call %O: %sRaw args: %O\n", fsa->name, err->msg,
-		     mkmapping (indices (variables),
-				column (values (variables), 0)));
+                     mkmapping (indices (variables),
+                                column (values (variables), 0)));
       return Roxen.http_low_answer (Protocols.HTTP.HTTP_BAD, err->msg);
     }
     throw (err);
@@ -297,7 +297,7 @@ mapping|array(mapping) call_fs_action(string path, RequestID id,
 
   if (!fsa->access_perm(id, cs, args, tag)) {
     AFS_DEBUG_MSG ("AFS call %O: Permission denied. Args: %O\n",
-		   fsa->name, args - (["session_id": 1]));
+                   fsa->name, args - (["session_id": 1]));
     return Roxen.http_low_answer(403, "Permission denied.");
   }
 
@@ -305,30 +305,30 @@ mapping|array(mapping) call_fs_action(string path, RequestID id,
     // Client is trying to change a subscription, which isn't supported!
     AFS_DEBUG_MSG ("AFS call %O: Subscription change attempt\n", fsa->name);
     return Roxen.http_low_answer(403,
-				 sprintf("Client has already subscribed to "
-					 "objects using the key %q and "
-					 "modifying existing subscriptions is "
-					 "not allowed.",
-					 subscription_id));
+                                 sprintf("Client has already subscribed to "
+                                         "objects using the key %q and "
+                                         "modifying existing subscriptions is "
+                                         "not allowed.",
+                                         subscription_id));
   }
 
   if (subscription_id) {
     if (array(AFS.Types.ClientMessage) types = fsa->subscribable_types) {
       foreach (types, AFS.Types.ClientMessage cmt) {
-	cs->add_subscription (subscription_id, cmt, fsa->push, args);
+        cs->add_subscription (subscription_id, cmt, fsa->push, args);
       }
     } else {
       AFS_DEBUG_MSG ("AFS call %O: Unsubscribable action\n", fsa->name);
       return Roxen.http_low_answer (Protocols.HTTP.HTTP_BAD,
-				    sprintf ("Subscriptions not implemented "
-					     "for action %s.", fsa->name));
+                                    sprintf ("Subscriptions not implemented "
+                                             "for action %s.", fsa->name));
     }
   }
 
   AFS_DEBUG_MSG ("AFS call %O: Executing with args: %O\n",
-		 fsa->name, args - (["session_id": 1]));
+                 fsa->name, args - (["session_id": 1]));
   mapping|array(mapping) res = (fsa->exec(id, cs, args, tag) ||
-				cs->get_responses());
+                                cs->get_responses());
 #ifdef AFS_DEBUG
   if (mappingp (res))
     AFS_DEBUG_MSG ("AFS call %O: Returned http response: %O\n", fsa->name, res);
@@ -336,9 +336,9 @@ mapping|array(mapping) call_fs_action(string path, RequestID id,
     AFS_DEBUG_MSG ("AFS call %O: Returned response messages:\n", fsa->name);
     foreach (res; int i; mapping msg) {
       if (msg->msg_type == "error")
-	AFS_DEBUG_MSG ("  %d: Error: %O\n", i, msg->message || msg);
+        AFS_DEBUG_MSG ("  %d: Error: %O\n", i, msg->message || msg);
       else
-	AFS_DEBUG_MSG ("  %d: %O\n", i, msg->msg_type);
+        AFS_DEBUG_MSG ("  %d: %O\n", i, msg->msg_type);
     }
   }
   else
@@ -362,7 +362,7 @@ mapping|array(mapping) call_fs_action(string path, RequestID id,
 //! @seealso
 //!   @[find_file()], @[call_fs_action()]
 mapping(string:mixed)|int(-1..0)|Stdio.File find_action(string path,
-							RequestID id)
+                                                        RequestID id)
 {
   NOCACHE(); // Never cache action requests.
 
@@ -373,16 +373,16 @@ mapping(string:mixed)|int(-1..0)|Stdio.File find_action(string path,
     {
       res = call_fs_action(path, id);
       if (!mappingp(res)) {
-	string json_res =
-	  Standards.JSON.encode(res,
+        string json_res =
+          Standards.JSON.encode(res,
 #ifdef AFS_HUMAN_READABLE
-				Standards.JSON.HUMAN_READABLE|
-				Standards.JSON.PIKE_CANONICAL
+                                Standards.JSON.HUMAN_READABLE|
+                                Standards.JSON.PIKE_CANONICAL
 #endif
-			       );
-	res = Roxen.http_low_answer(200, json_res);
-	id->set_output_charset("utf-8");
-	res->type = "application/json";
+                               );
+        res = Roxen.http_low_answer(200, json_res);
+        id->set_output_charset("utf-8");
+        res->type = "application/json";
       }
     };
 
@@ -404,7 +404,7 @@ array(AFS.ClientSession) get_message_subscribers(AFS.Types.ClientMessage cmt)
 }
 
 void broadcast_client_message(AFS.Types.ClientMessage cmt,
-			      mixed ... push_args)
+                              mixed ... push_args)
 //! Broadcast a message to subscribing clients.
 //!
 //! @param cmt
@@ -415,7 +415,7 @@ void broadcast_client_message(AFS.Types.ClientMessage cmt,
 {
   if (multiset subscriptions = client_subscriptions[cmt]) {
     foreach (get_iterator (subscriptions);
-	     AFS.ClientSession.Subscription sub;) {
+             AFS.ClientSession.Subscription sub;) {
       ASSERT_IF_DEBUG (cmt == sub->cmt);
       sub->push (@push_args);
     }

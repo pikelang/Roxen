@@ -56,11 +56,11 @@ class TagFnord {
 
     array do_enter(RequestID id) {
       if(id->prestate->fnord)
-	do_iterate=0;
+        do_iterate=0;
       else {
-	if(args->alt)
-	  result=args->alt;
-	do_iterate=-1;
+        if(args->alt)
+          result=args->alt;
+        do_iterate=-1;
       }
       return 0;
     }
@@ -76,9 +76,9 @@ constant module_type = MODULE_TAG|MODULE_EXPERIMENTAL;
 LocaleString module_name = LOCALE(3,"Newstyle Fnord!");
 LocaleString module_doc  =
   LOCALE(4,"Adds an extra container tag, &lt;fnord&gt; that's supposed "
-	 "to make things invisible unless the \"fnord\" prestate is present."
-	 "<p>This module is here as an example of how to write a "
-	 "very simple newstyle RXML-parsing module.</p>");
+         "to make things invisible unless the \"fnord\" prestate is present."
+         "<p>This module is here as an example of how to write a "
+         "very simple newstyle RXML-parsing module.</p>");
 
 // Last, but not least, we want a documentation that can be integrated in the
 // online manual. The mapping tagdoc maps from container names to it's description.

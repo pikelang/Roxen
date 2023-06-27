@@ -109,16 +109,16 @@ string disk_info()
   return
     (disk_name?
      sprintf("Disk (%s):\n"
-	     "%s%s\t%1dkb%s\n"
-	     "\t%1dkb (%1d%%) used, %1dkb avail\n",
-	     ctime(disk_time)-"\n",
-	     strlen(disk_name)?"\tfilesystem name: "+disk_name+"\n":"",
-	     strlen(disk_type)?"\tfilesystem type: "+disk_type+"\n":"",
-	     disk_max, disk_i_max>0?" "+disk_i_max+" files":"",
-	     disk_used, disk_capacity, disk_avail):"") + 
+             "%s%s\t%1dkb%s\n"
+             "\t%1dkb (%1d%%) used, %1dkb avail\n",
+             ctime(disk_time)-"\n",
+             strlen(disk_name)?"\tfilesystem name: "+disk_name+"\n":"",
+             strlen(disk_type)?"\tfilesystem type: "+disk_type+"\n":"",
+             disk_max, disk_i_max>0?" "+disk_i_max+" files":"",
+             disk_used, disk_capacity, disk_avail):"") + 
     (disk_i_used>0?
      sprintf("\t%1d (%1d%%) files used, %1d files available\n",
-	     disk_i_used, disk_i_capacity, disk_i_avail):"");
+             disk_i_used, disk_i_capacity, disk_i_avail):"");
 }
 
 void current_cache_message()
@@ -128,18 +128,18 @@ void current_cache_message()
   string now = ctime(time(1))-"\n";
   
   LOGGER(sprintf("Cache(%s): %1.3f MB data (%1.2f%%)\n",
-		 now,
-		 (float)BLOCK_TO_KB(cache_size)/1024.0,
-		 (float)cache_size*100/max_cache_size
-		 ));
+                 now,
+                 (float)BLOCK_TO_KB(cache_size)/1024.0,
+                 (float)cache_size*100/max_cache_size
+                 ));
   if(max_num_files>0)
     LOGGER(sprintf("Cache(%s):\n"
-		   "\t%1d files (%1.2f%%)\n",
-		   now, num_files, (float)num_files*100/max_num_files));
+                   "\t%1d files (%1.2f%%)\n",
+                   now, num_files, (float)num_files*100/max_num_files));
   else
     LOGGER(sprintf("Cache(%s):\n"
-		   "\t %1d files\n",
-		   now, num_files));
+                   "\t %1d files\n",
+                   now, num_files));
 
   if(disk_name)
     LOGGER(disk_info());
@@ -147,10 +147,10 @@ void current_cache_message()
   if(lastgc>0) {
     string gctime = ctime(lastgc)-"\n";
     LOGGER(sprintf("Gc(%s):\n"
-		   "\t%1.3f MB (%d files) removed in last gc run\n"
-		   "\tremoved files were last accessed %s\n",
-		   gctime, (float)BLOCK_TO_KB(removed)/1024.0, removed_files,
-		   ctime(garbage_time)-"\n"));
+                   "\t%1.3f MB (%d files) removed in last gc run\n"
+                   "\tremoved files were last accessed %s\n",
+                   gctime, (float)BLOCK_TO_KB(removed)/1024.0, removed_files,
+                   ctime(garbage_time)-"\n"));
   }
 }
 
@@ -194,7 +194,7 @@ int read_cache_status()
 
   return 1;
 }
-		 
+                 
 void create_cache(string logprefix)
 {
   lp = logprefix;
@@ -340,16 +340,16 @@ void find_all_files_in(string dir, function|void cb)
     {
       if(st[1] == -2)
       {
-	if((path != "..") && (path!="."))
-	  find_all_files_in(dir+path+"/", cb);
+        if((path != "..") && (path!="."))
+          find_all_files_in(dir+path+"/", cb);
       } else {
-	if(!cb)
-	{
-	  cache_size += FILE_SIZE_TO_BLOCK(st[1]);
-	  num_files++;
-	  update(dir+path, st[2], st[1]);
-	} else
-	  cb(dir+path);
+        if(!cb)
+        {
+          cache_size += FILE_SIZE_TO_BLOCK(st[1]);
+          num_files++;
+          update(dir+path, st[2], st[1]);
+        } else
+          cb(dir+path);
       }
     }
   }
@@ -401,17 +401,17 @@ void collect(int amnt, function callback)
 //      LOGGER("Collect. first_log="+first_log+"; last_log="+last_log+"\n");
       if(rl = parse_log(first_log))
       {
-	logsize = sizeof(rl);
-	amnt = collect_log(amnt, callback, rl);
-	if(logsize != sizeof(rl))
-	  unparse_log(rl, first_log);
+        logsize = sizeof(rl);
+        amnt = collect_log(amnt, callback, rl);
+        if(logsize != sizeof(rl))
+          unparse_log(rl, first_log);
       }
     }
   }; 
   if(r)
   {
     LOGGER("Error while garbagecollecting: "+r[0]+"\n"
-	   +describe_backtrace(r[1]));
+           +describe_backtrace(r[1]));
     return;
   }
   
@@ -521,7 +521,7 @@ int remove_one_file(string fname, int last_access)
       update(fname, s[2], 0);
       return 0; /* See you next time */
     }
-	
+        
     int i;
     i=FILE_SIZE_TO_BLOCK(s[1]);
     cache_size-=i;
@@ -570,31 +570,31 @@ string statistics()
     gc_info="";
   else
     gc_info=sprintf("GC(%s):\n"
-		    "\t%2.2f Mb (%d files) removed\n"
-		    "\tlast run was %d minutes ago\n"
-		    "\tremoved files were last accessed %s\n",
-		    ctime(lastgc)-"\n",
-		    (float)removed/(1048576.0/BLOCK_SIZE),
-		    removed_files,
-		    (time()-lastgc)/60,
-		    ctime(garbage_time)-"\n");
+                    "\t%2.2f Mb (%d files) removed\n"
+                    "\tlast run was %d minutes ago\n"
+                    "\tremoved files were last accessed %s\n",
+                    ctime(lastgc)-"\n",
+                    (float)removed/(1048576.0/BLOCK_SIZE),
+                    removed_files,
+                    (time()-lastgc)/60,
+                    ctime(garbage_time)-"\n");
 
   rm("statistics");
   Stdio.write_file("statistics",
-		   sprintf("Cache(%s):\n"
-			   "\t%1d files%s\n"
-			   "\t%1.3f MB (%1.2f%%)\n"
-			   "\n"
-			   "%s\n"
-			   "%s",
-			   ctime(time())-"\n", num_files,
-			   max_num_files>0?
-			   sprintf(" (%1.2f%%)",
-				   (float)cache_size*100/max_cache_size):"",
-			   ((float)BLOCK_TO_KB(cache_size))/(1024.0),
-			   max_cache_size>0?
-			   (float)cache_size*100/max_cache_size:0.0,
-			   gc_info, disk_info()));
+                   sprintf("Cache(%s):\n"
+                           "\t%1d files%s\n"
+                           "\t%1.3f MB (%1.2f%%)\n"
+                           "\n"
+                           "%s\n"
+                           "%s",
+                           ctime(time())-"\n", num_files,
+                           max_num_files>0?
+                           sprintf(" (%1.2f%%)",
+                                   (float)cache_size*100/max_cache_size):"",
+                           ((float)BLOCK_TO_KB(cache_size))/(1024.0),
+                           max_cache_size>0?
+                           (float)cache_size*100/max_cache_size:0.0,
+                           gc_info, disk_info()));
 }
 
 private string lf;
@@ -666,7 +666,7 @@ void init_disk_check(string dir, int minfree)
 }
 
 void create(string cdir, string logfiles, int cng, int mcs,
-	    int mnf, int minfree, string gc_lf)
+            int mnf, int minfree, string gc_lf)
 {
   if (!stringp(cdir)) return;	// Pike 7.6 calls create() with argv.
 
@@ -693,11 +693,11 @@ void create(string cdir, string logfiles, int cng, int mcs,
       create_cache(logfiles);
 
       if(last_log < 10)
-	find_all_files_and_log_it();
+        find_all_files_and_log_it();
       
       if(Stdio.file_size(lp+"cachelog"+_order(1))>=0) {
-	LOGGER("Found rechecking unfinished ...\n");
-	find_all_files_and_log_it();
+        LOGGER("Found rechecking unfinished ...\n");
+        find_all_files_and_log_it();
       }
 
       call_out(find_all_files_and_log_it, (BLOCK_TO_KB(cache_size)/5)+3600);

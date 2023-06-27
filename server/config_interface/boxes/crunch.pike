@@ -42,8 +42,8 @@ class Fetcher
       crunch_date( time()-24*60*60*7 );
     query = Protocols.HTTP.Query( )->set_callbacks( done, fail );
     query->async_request( "bugzilla.roxen.com", 80,
-			  "GET "+url+" HTTP/1.0",
-			  ([ "Host":"bugzilla.roxen.com:80" ]) );
+                          "GET "+url+" HTTP/1.0",
+                          ([ "Host":"bugzilla.roxen.com:80" ]) );
   }
 }
 
@@ -51,54 +51,54 @@ class Fetcher
 class Data( string data )
 {
   class Bug( int id, string href, string short, string created,
-	     string product, string component,
-	     string version, string opsys, string arch,
-	     string severity, string priority, string status,
-	     string resolution )
+             string product, string component,
+             string version, string opsys, string arch,
+             string severity, string priority, string status,
+             string resolution )
   {
     string format( )
     {
       if( product == "Roxen WebServer" &&
-	  (version > roxen.roxen_ver) )
-	return "";
+          (version > roxen.roxen_ver) )
+        return "";
 
       if( (product == "Pike") && sizeof(version) &&
-	  (abs((float)version - __VERSION__) > 0.09) )
-	return "";
+          (abs((float)version - __VERSION__) > 0.09) )
+        return "";
 
       switch( status )
       {
-	case "RESOLVED":
-	  status = "fixed";
-	  break;
-	case "ASSIGNED":
-	  status = "open";
-	  break;
-	case "NEW":
-	  status = "<font color='&usr.warncolor;'>New</font>";
-	  break;
-	default:
+        case "RESOLVED":
+          status = "fixed";
+          break;
+        case "ASSIGNED":
+          status = "open";
+          break;
+        case "NEW":
+          status = "<font color='&usr.warncolor;'>New</font>";
+          break;
+        default:
       }
       resolution = "";
       switch( component )
       {
-	case "Admin Interface":
-	  component = "GUI";
-	  break;
-	case "Image Module":
-	  component = "Image";
+        case "Admin Interface":
+          component = "GUI";
+          break;
+        case "Image Module":
+          component = "Image";
       }
       return "<tr valign=top>"
-	"<td><font size=-1>"+(product - "Roxen WebServer")+
-	" <nobr>"+(component-"Other ")+"</nobr></font></td>"
-	"<td><font size=-1><a href='"+ href +"'>"+short+"</a></font></td>"
-	"<td><font size=-1>"+lower_case(status)+"</font></td></tr>";
+        "<td><font size=-1>"+(product - "Roxen WebServer")+
+        " <nobr>"+(component-"Other ")+"</nobr></font></td>"
+        "<td><font size=-1><a href='"+ href +"'>"+short+"</a></font></td>"
+        "<td><font size=-1>"+lower_case(status)+"</font></td></tr>";
     }
 
     int `<(Bug what )
     {
       if( what->status != status )
-	return (what->status > status);
+        return (what->status > status);
       return what->product+what->component+what->short > product+component+short;
     }
     
@@ -166,15 +166,15 @@ class Data( string data )
     md = ([]);
     entry_parser->finish(content)->read();
     parsed += ({ Bug( (int)md->id, md->href, md->title, md->updated,
-		      md->summary_bz_feed_product_value||"",
-		      md->summary_bz_feed_component_value||"",
-		      md->summary_bz_feed_version_value||"",
-		      md->summary_bz_feed_opsys_value||"",
-		      md->summary_bz_feed_arch_value||"",
-		      md->summary_nz_feed_severity_value||"",
-		      md->summary_bz_feed_priority_value||"",
-		      md->summary_bz_feed_bug_status_value||"",
-		      md->summary_bz_feed_resolution_value||"" ) });
+                      md->summary_bz_feed_product_value||"",
+                      md->summary_bz_feed_component_value||"",
+                      md->summary_bz_feed_version_value||"",
+                      md->summary_bz_feed_opsys_value||"",
+                      md->summary_bz_feed_arch_value||"",
+                      md->summary_nz_feed_severity_value||"",
+                      md->summary_bz_feed_priority_value||"",
+                      md->summary_bz_feed_bug_status_value||"",
+                      md->summary_bz_feed_resolution_value||"" ) });
   }
   
   void parse( )
@@ -217,7 +217,7 @@ string parse( RequestID id )
     if( !(data = cache_lookup( "crunch_data", "data", cache_context )) )
     {
       if( !fetcher )
-	fetcher = Fetcher(cache_context);
+        fetcher = Fetcher(cache_context);
       contents = "Fetching data from Crunch...";
     } else {
       crunch_data = Data( data );

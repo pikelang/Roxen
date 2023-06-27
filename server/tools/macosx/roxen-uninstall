@@ -32,20 +32,20 @@ remove_all()
 
 case "$1" in
     -h)
-	usage
-	exit
-	;;
+        usage
+        exit
+        ;;
     --help)
-	usage
-	exit
-	;;
+        usage
+        exit
+        ;;
 
     --remove-all)
-	remove_all
-	exit
-	;;
+        remove_all
+        exit
+        ;;
 
     *)
-	usage >&2
-	exit 1
+        usage >&2
+        exit 1
 esac

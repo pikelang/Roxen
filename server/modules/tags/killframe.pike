@@ -21,9 +21,9 @@ inherit "module";
 void create()
 {
   defvar( "killindex", 1, "Remove index files from the URL", TYPE_FLAG,
-	  "If set, the module will remove occurrences of any index file from "
-	  "the end of the URL, leaving only a slash. The index file "
-	  "definition is taken from the active directory module." );
+          "If set, the module will remove occurrences of any index file from "
+          "the end of the URL, leaving only a slash. The index file "
+          "definition is taken from the active directory module." );
 }
 
 constant module_type = MODULE_TAG;
@@ -45,7 +45,7 @@ constant tagdoc=(["killframe":#"<desc tag='tag'><p><short>
 <attr name='killindex'><p>
  Removes trailing index.html from the URL.</p>
 </attr>",
-		]);
+                ]);
 #endif
 
 string tag_killframe( string tag, mapping m, object id )
@@ -86,7 +86,7 @@ string tag_killframe( string tag, mapping m, object id )
 
     foreach( indexfiles, string index )
       if( my_url[l-strlen(index)..] == "/" +index )
-	my_url = my_url[..l-strlen(index)];
+        my_url = my_url[..l-strlen(index)];
   }
 
   // Put back the variables if there were any.
@@ -97,12 +97,12 @@ string tag_killframe( string tag, mapping m, object id )
   //Mozilla 3 on Solaris cows with top.frames.length
   if( id->client && id->client[0][..8] == "Mozilla/3" )
     javascript = ( "   if(top.location != \""+ my_url  +"\")\n"
-		   "     top.location = \""+ my_url  +"\";\n" );
+                   "     top.location = \""+ my_url  +"\";\n" );
   else
     javascript = ( "   if(top.frames.length>1)\n"
-		   "     top.location = \""+ my_url +"\";\n" );
+                   "     top.location = \""+ my_url +"\";\n" );
 
   return("<script language=\"javascript\"><!--\n"
-	 + javascript
-	 + "//--></script>\n");
+         + javascript
+         + "//--></script>\n");
 }

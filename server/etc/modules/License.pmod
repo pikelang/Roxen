@@ -23,7 +23,7 @@ array(Configuration) get_configurations_for_license(Key key)
     if(Configuration conf = roxen.get_configuration(conf_name)) {
       Key _key = conf->getvar("license")->get_key();
       if(_key && _key->number() == key->number())
-	confs += ({ conf });
+        confs += ({ conf });
     }
   return confs;
 }
@@ -43,7 +43,7 @@ Key|mapping get_license(string license_dir, string filename)
   int mtime = file_stat(path)->mtime;
   if(license_keys[path] && mtime > license_keys_time[path])
     m_delete(license_keys, path);
-	      
+              
   if(!license_keys[path]) {
     Key key = Key(license_dir, filename);
 
@@ -51,10 +51,10 @@ Key|mapping get_license(string license_dir, string filename)
     foreach(values(license_keys), Key other_key)
     {
       if(key->number() == other_key->number()) {
-	return ([ "filename": filename,
-		  "message":  "Can't load license.",
-		  "reason":   ("Same license number as in license "+
-			       other_key->filename()+".") ]);
+        return ([ "filename": filename,
+                  "message":  "Can't load license.",
+                  "reason":   ("Same license number as in license "+
+                               other_key->filename()+".") ]);
       }
     }
     //werror("new %O.\n", key);
@@ -80,8 +80,8 @@ array(Key|mapping) get_licenses(string license_dir)
       report_debug(describe_backtrace(err));
       
       licenses += ({ ([ "filename":  filename,
-			"message":   "Can't load license.",
-			"reason":    describe_error(err) ]) });
+                        "message":   "Can't load license.",
+                        "reason":    describe_error(err) ]) });
     }
     else licenses += ({ key });
   }
@@ -172,8 +172,8 @@ class Key
   protected string encrypt(string msg)
   {
     Crypto.RSA rsa = Crypto.RSA()->
-		     set_public_key(@read_public_key())->
-		     set_private_key(read_private_key());
+                     set_public_key(@read_public_key())->
+                     set_private_key(read_private_key());
     // Emulate Crypto.RSA.sha_sign from earlier Pikes.
     string(8bit) digest = sprintf("%c%s%1H", 4, "sha1", Crypto.SHA1->hash(msg));
     return rsa->raw_sign(digest)->digits(256);
@@ -200,8 +200,8 @@ class Key
   {
     string license_name = Stdio.append_path(license_dir, _filename);
     string s = sprintf("Roxen License:\n %O\n-START-\n%s\n-END-\n",
-		       content,
-		       MIME.encode_base64(encrypt(encode_value(content))));
+                       content,
+                       MIME.encode_base64(encrypt(encode_value(content))));
     int bytes = Stdio.write_file(license_name, s);
     chmod(license_name, 384);
     if(sizeof(s) != bytes)
@@ -228,7 +228,7 @@ class Key
     string msg = decrypt(s);
     if(!msg)
       error("Error reading license file %s. Signature verification failed.\n",
-	    license_name);
+            license_name);
     content = decode_value(msg);
     return bytes;
   }
@@ -286,9 +286,9 @@ class Key
       configurations -= ({ configuration->name });
     foreach(configurations, string conf_name)
       if(Configuration conf = roxen.get_configuration(conf_name)) {
-	Key key = conf->getvar("license")->get_key();
-	if(key && key->number() == number())
-	  return conf;
+        Key key = conf->getvar("license")->get_key();
+        if(key && key->number() == number())
+          return conf;
       }
   }
   
@@ -298,12 +298,12 @@ class Key
   // check.
   {
     return sprintf("%s (%s #%d)%s", _filename, type(), number(),
-		   used_in(configuration)?"!":"");
+                   used_in(configuration)?"!":"");
   }
 #endif
 
   string|void verify(int verify_mode, object /*Configuration*/|void configuration,
-		     int|void time, string|void _hostname)
+                     int|void time, string|void _hostname)
   // Verifies if the license complies with the current setup. Returns
   // an error message if a breach was found.
 
@@ -321,19 +321,19 @@ class Key
       array conflicting_confs = (confs | ({ configuration }));
       // verify configuration integrity.
       if(sizeof(conflicting_confs) > sites_i()) {
-	if(verify_mode)
-	  return sprintf("The license "+filename()+" is already used in the following "
-			 "configurations: %s. License permits only "
-			 "%d concurrent sites.",
-			 String.implode_nicely((conflicting_confs -
-						({ configuration }))->name),
-			 sites_i());
-	else
-	  report_warning("Configuration",
-			 sprintf("License used in too many configurations: %s. "
-				 "License permits only %d concurrent sites.",
-				 String.implode_nicely((conflicting_confs - ({ 0 }))
-						       ->name), sites_i()));
+        if(verify_mode)
+          return sprintf("The license "+filename()+" is already used in the following "
+                         "configurations: %s. License permits only "
+                         "%d concurrent sites.",
+                         String.implode_nicely((conflicting_confs -
+                                                ({ configuration }))->name),
+                         sites_i());
+        else
+          report_warning("Configuration",
+                         sprintf("License used in too many configurations: %s. "
+                                 "License permits only %d concurrent sites.",
+                                 String.implode_nicely((conflicting_confs - ({ 0 }))
+                                                       ->name), sites_i()));
       }
     }
     
@@ -341,23 +341,23 @@ class Key
     {
       // verify expiration integrity.
       if(expires() != "*" && Calendar.ISO->dwim_day(expires())->unix_time() < time)
-	if(verify_mode)
-	  return sprintf("The license "+filename()+" has expired.");
-	else
-	  report_warning("Expiration", sprintf("License expired"));
+        if(verify_mode)
+          return sprintf("The license "+filename()+" has expired.");
+        else
+          report_warning("Expiration", sprintf("License expired"));
     }
 
     if(_hostname && configuration)
     {
       // verify hostname integrity.
       if(!glob(hostname(), _hostname))
-	if(verify_mode)
-	  sprintf("The license "+filename()+" hostname %O does not match "
-		  "primary server url %O.",
-		  _hostname, hostname());
-	else
-	  report_warning("Hostname", sprintf("Hostname mismatch: %O does not match %O",
-					     hostname(), _hostname));
+        if(verify_mode)
+          sprintf("The license "+filename()+" hostname %O does not match "
+                  "primary server url %O.",
+                  _hostname, hostname());
+        else
+          report_warning("Hostname", sprintf("Hostname mismatch: %O does not match %O",
+                                             hostname(), _hostname));
     }
   }
   
@@ -401,11 +401,11 @@ class LicenseVariable
   mapping get_translation_table()
   {
     return mkmapping(get_choice_list(),
-		     ({ "None" }) +
-		     map(get_choice_list() - ({ 0 }),
-			 lambda(string file)
-			 { return Key(license_dir, file)->
-			     name(configuration); }));
+                     ({ "None" }) +
+                     map(get_choice_list() - ({ 0 }),
+                         lambda(string file)
+                         { return Key(license_dir, file)->
+                             name(configuration); }));
   }
   
   array(string|mixed) verify_set(mixed new_value)
@@ -419,31 +419,31 @@ class LicenseVariable
     {
       Key key;
       if(mixed err = catch { key = get_license(license_dir, new_value); }) {
-	report_debug("License error: %s\n", describe_backtrace(err));
-	return ({ sprintf("Error reading license: %O\n  %s", new_value, err[0]),
-		  query() });
+        report_debug("License error: %s\n", describe_backtrace(err));
+        return ({ sprintf("Error reading license: %O\n  %s", new_value, err[0]),
+                  query() });
       }
 
       if(!key) {
-	report_debug("Error: Trying to load a nonexisting license: %s\n", new_value);
-	return ({ sprintf("License %s does not exist.\n", new_value),
-		  query() });
+        report_debug("Error: Trying to load a nonexisting license: %s\n", new_value);
+        return ({ sprintf("License %s does not exist.\n", new_value),
+                  query() });
       }
       
       if(mappingp(key)) {
-	report_debug("Error: %s Filename: %s, Reason: %s\n",
-		     key["message"], key["filename"], key["reason"]);
-	
-	return ({ sprintf("Error reading license: %O\n"
-			  "  %s Filename: %s, Reason: %s\n",
-			  new_value, key["message"], key["filename"], key["reason"]),
-		  query() });
+        report_debug("Error: %s Filename: %s, Reason: %s\n",
+                     key["message"], key["filename"], key["reason"]);
+        
+        return ({ sprintf("Error reading license: %O\n"
+                          "  %s Filename: %s, Reason: %s\n",
+                          new_value, key["message"], key["filename"], key["reason"]),
+                  query() });
       }
       
       string url = configuration && configuration->get_url();
       string hostname = url && sizeof(url) && Standards.URI(url)->host;
       if(string err = key->verify(verify_mode, configuration, time(), hostname))
-	return ({ err, query() });
+        return ({ err, query() });
     }
     return ({ 0, new_value });
   }
@@ -461,8 +461,8 @@ class LicenseVariable
   }
   
   protected void create(string _license_dir, void|int _flags,
-			void|LocaleString std_name, void|LocaleString std_doc,
-			Configuration _configuration, int|void _verify_mode)
+                        void|LocaleString std_name, void|LocaleString std_doc,
+                        Configuration _configuration, int|void _verify_mode)
   {
     license_dir = _license_dir;
     configuration = _configuration;

@@ -15,13 +15,13 @@ string parse( RequestID id )
   string data;
   string contents;
   if( !(data = .Box.get_http_data( "community.roxen.com", 80,
-			      "GET /boxes/articles.html HTTP/1.0" ) ) )
+                              "GET /boxes/articles.html HTTP/1.0" ) ) )
     contents = "Fetching data from community...";
   else
     contents = replace( data, ({ "/articles/",
-				 "cellspacing=\"0\"",
-				 "cellpadding=\"0\"",
-			      }),
-			({"http://community.roxen.com/articles/","",""}));
+                                 "cellspacing=\"0\"",
+                                 "cellpadding=\"0\"",
+                              }),
+                        ({"http://community.roxen.com/articles/","",""}));
   return ("<box type='"+box+"' title='"+box_name+"'>"+contents+"</box>");
 }

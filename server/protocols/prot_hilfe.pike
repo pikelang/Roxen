@@ -68,9 +68,9 @@ class Connection
     {
       if( functionp( mod ) ) mod = function_object( mod );
       if( mod )
-	last_module = mod;
+        last_module = mod;
       if(msg[-1] != '\n' )
-	msg += "\n";
+        msg += "\n";
       string m = sprintf("%O:", last_module );
       m = (m[..40]+"                                    "[..39-strlen(m)]);
       return sprintf("%s%s", m, Roxen.html_decode_string(msg) );
@@ -101,7 +101,7 @@ class Connection
     {
       old_backtrace = backtrace();
       if( strlen( String.trim_all_whites(msg) ) )
-	rl->readline->write( fix_msg(indent+msg,0), 1 );
+        rl->readline->write( fix_msg(indent+msg,0), 1 );
       indent = indent[..strlen(indent)-3];
     }
 
@@ -110,18 +110,18 @@ class Connection
       indent = "";
       switch( level )
       {
-	case 0:
-	  misc->trace_enter = 0;
-	  misc->trace_leave = 0;
-	  break;
-	case 1:
-	  misc->trace_enter = debug_trace_enter_1;
-	  misc->trace_leave = debug_trace_leave_1;
-	  break;
-	default:
-	  misc->trace_enter = debug_trace_enter_2;
-	  misc->trace_leave = debug_trace_leave_2;
-	  break;
+        case 0:
+          misc->trace_enter = 0;
+          misc->trace_leave = 0;
+          break;
+        case 1:
+          misc->trace_enter = debug_trace_enter_1;
+          misc->trace_leave = debug_trace_leave_1;
+          break;
+        default:
+          misc->trace_enter = debug_trace_enter_2;
+          misc->trace_leave = debug_trace_leave_2;
+          break;
       }
       return this_object();
     }
@@ -131,23 +131,23 @@ class Connection
       raw_url = Roxen.http_encode_invalids( f );
       if( strlen( f ) > 5 )
       {
-	string a;
-	switch( f[1] )
-	{
-	  case '<':
-	    if (sscanf(f, "/<%s>/%s", a, f)==2)
-	    {
-	      config = (multiset)(a/",");
-	      f = "/"+f;
-	    }
-	    // intentional fall-through
-	  case '(':
-	    if(strlen(f) && sscanf(f, "/(%s)/%s", a, f)==2)
-	    {
-	      prestate = (multiset)( a/","-({""}) );
-	      f = "/"+f;
-	    }
-	}
+        string a;
+        switch( f[1] )
+        {
+          case '<':
+            if (sscanf(f, "/<%s>/%s", a, f)==2)
+            {
+              config = (multiset)(a/",");
+              f = "/"+f;
+            }
+            // intentional fall-through
+          case '(':
+            if(strlen(f) && sscanf(f, "/(%s)/%s", a, f)==2)
+            {
+              prestate = (multiset)( a/","-({""}) );
+              f = "/"+f;
+            }
+        }
       }
       not_query = Roxen.simplify_path( scan_for_query( f ) );
       return this_object();
@@ -158,45 +158,45 @@ class Connection
       Configuration c;
       foreach( indices(roxen->urls), string u )
       {
-	mixed q = roxen->urls[u];
-	if( glob( u+"*", url ) )
-	  if( (c = q->port->find_configuration_for_url(url, this_object(), 1 )) )
-	  {
-	    conf = c;
-	    break;
-	  }
+        mixed q = roxen->urls[u];
+        if( glob( u+"*", url ) )
+          if( (c = q->port->find_configuration_for_url(url, this_object(), 1 )) )
+          {
+            conf = c;
+            break;
+          }
       }
 
       if(!c)
       {
-	// pass 2: Find a configuration with the 'default' flag set.
-	foreach( roxen->configurations, c )
-	  if( c->query( "default_server" ) )
-	  {
-	    conf = c;
-	    break;
-	  }
-	  else
-	    c = 0;
+        // pass 2: Find a configuration with the 'default' flag set.
+        foreach( roxen->configurations, c )
+          if( c->query( "default_server" ) )
+          {
+            conf = c;
+            break;
+          }
+          else
+            c = 0;
       }
       if(!c)
       {
-	// pass 3: No such luck. Let's allow default fallbacks.
-	foreach( indices(roxen->urls), string u )
-	{
-	  mixed q = roxen->urls[u];
-	  if( (c = q->port->find_configuration_for_url( url,this_object(), 1 )) )
-	  {
-	    conf = c;
-	    break;
-	  }
-	}
+        // pass 3: No such luck. Let's allow default fallbacks.
+        foreach( indices(roxen->urls), string u )
+        {
+          mixed q = roxen->urls[u];
+          if( (c = q->port->find_configuration_for_url( url,this_object(), 1 )) )
+          {
+            conf = c;
+            break;
+          }
+        }
       }
 
       if (!c->inited) {
-	// FIXME: We can be called from the backend thread, so this
-	// should be queued for a handler thread.
-	c->enable_all_modules();
+        // FIXME: We can be called from the backend thread, so this
+        // should be queued for a handler thread.
+        c->enable_all_modules();
       }
 
       string host;
@@ -213,10 +213,10 @@ class Connection
     switch( what )
     {
       case "accesses":
-	error("Not supported anymore.\n");
+        error("Not supported anymore.\n");
 
       default:
-	error("Don't know how to debug "+what+"\n");
+        error("Don't know how to debug "+what+"\n");
     }
   }
 
@@ -253,8 +253,8 @@ class Connection
       string d_trim = d && String.trim_all_whites(d);
       if( !d || (d_trim == "quit") )
       {
-	begone( );
-	return;
+        begone( );
+        return;
       }
 
       if (d_trim == "macros") {
@@ -273,7 +273,7 @@ class Connection
       add_input_line( d );
       write( state->finishedp() ? "> " : ">> " );
       user->settings->set("hilfe_history",
-			  rl->readline->get_history()->encode());
+                          rl->readline->get_history()->encode());
       user->settings->save();
     }
 
@@ -281,9 +281,9 @@ class Connection
     {
       ::create();
       write = lambda (string msg, mixed... args) {
-		if (sizeof (args)) msg = sprintf (msg, @args);
-		rl->readline->write (msg);
-	      };
+                if (sizeof (args)) msg = sprintf (msg, @args);
+                rl->readline->write (msg);
+              };
       constants["RequestID"] = myRequestID;
       constants["conf"] = my_conf;
       constants["port"] = my_port_obj;
@@ -296,7 +296,7 @@ class Connection
       user->settings->restore( );
       string hi;
       if( (hi = user->settings->query("hilfe_history")) != "" )
-	rl->readline->get_history()->create( 512, hi/"\n" );
+        rl->readline->get_history()->create( 512, hi/"\n" );
       rl->readline->get_history()->finishline("");
       rl->readline->get_history()->initline();
       print_version();
@@ -316,59 +316,59 @@ class Connection
     switch( state )
     {
       case USER:
-	if(!(user = roxen.find_admin_user(line_nolf) ) )
-	{
+        if(!(user = roxen.find_admin_user(line_nolf) ) )
+        {
           string user_msg =
             sizeof(line_nolf) ? ("\"" + line_nolf + "\"") : "<blank>";
-	  rl->readline->write("No such user: " + user_msg + "\n");
-	} 
-	else 
-	{
-	  state++;
-	}
-	break;
+          rl->readline->write("No such user: " + user_msg + "\n");
+        } 
+        else 
+        {
+          state++;
+        }
+        break;
       case PASSWORD:
-	if( !verify_password(line_nolf, user->password) )
-	{
-	  rl->readline->write("Wrong password.\n");
-	  state=USER;
-	} 
-	else
-	{
-	  if( !my_port_obj->query( "require_auth" ) || user->auth( "Hilfe" ) )
-	    state++;
-	  else
-	  {
-	    rl->readline->write("User lacks permission to access hilfe.\n");
-	    state = USER;
-	  }
-	}
-	break;
+        if( !verify_password(line_nolf, user->password) )
+        {
+          rl->readline->write("Wrong password.\n");
+          state=USER;
+        } 
+        else
+        {
+          if( !my_port_obj->query( "require_auth" ) || user->auth( "Hilfe" ) )
+            state++;
+          else
+          {
+            rl->readline->write("User lacks permission to access hilfe.\n");
+            state = USER;
+          }
+        }
+        break;
       default:
-	handler->got_data( line && line_nolf );
-	return;
+        handler->got_data( line && line_nolf );
+        return;
     }
 
     switch( state )
     {
       case USER:
-	rl->set_secret( 0 );
-	rl->readline->write("Username: ");
-	break;
+        rl->set_secret( 0 );
+        rl->readline->write("Username: ");
+        break;
       case PASSWORD:
-	rl->set_secret( 1 );
-	rl->readline->write("Password: ");
-	break;
+        rl->set_secret( 1 );
+        rl->readline->write("Password: ");
+        break;
       case LEAVE:
-	rl->set_secret( 0 );
-	state++;
-	handler = Handler( );
+        rl->set_secret( 0 );
+        state++;
+        handler = Handler( );
 #ifndef THREADS
-	signal( signum("ALRM"), handle_alarm );
-	update_lu();
-	handle_alarm();
+        signal( signum("ALRM"), handle_alarm );
+        update_lu();
+        handle_alarm();
 #endif
-	break;
+        break;
     }
   }
 

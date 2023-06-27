@@ -88,7 +88,7 @@ function html_color_to_rgb(name)
 
 //  Conversion from integer to hex
 var hex_digits = new Array("0", "1", "2", "3", "4", "5", "6", "7",
-			   "8", "9", "A", "B", "C", "D", "E", "F");
+                           "8", "9", "A", "B", "C", "D", "E", "F");
 var hex_string = "0123456789ABCDEF";
 function int_to_hex(n)
 {

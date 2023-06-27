@@ -793,7 +793,7 @@ To create an image in this folder, click "Next". To use a different folder, ente
           <Publish Event="NewDialog" Value="[FolderForm_NextArgs]"><![CDATA[FolderForm_NextArgs<>"" AND OutOfDiskSpace<>1]]></Publish>
           <Publish Property="ALLUSERS" Value="2"><![CDATA[FolderForm_AllUsers="ALL" AND VersionNT>=400 AND Privileged=1 AND FolderForm_AllUsersVisible=1]]></Publish>
           <Publish Property="ALLUSERS" Value="{}"><![CDATA[FolderForm_AllUsers="ME" AND VersionNT>=400 AND Privileged=1 AND FolderForm_AllUsersVisible=1]]></Publish>
-	  <Publish Property="INSTALL_SERVICE" Value="0"><![CDATA[Privileged<>1]]></Publish>
+          <Publish Property="INSTALL_SERVICE" Value="0"><![CDATA[Privileged<>1]]></Publish>
           <Publish Event="DoAction" Value="FindRelatedProducts"><![CDATA[1]]></Publish>
         </Control>
         <Control Id="FolderLabel" Type="Text" X="18" Y="114" Width="348" Height="12" TabSkip="no">
@@ -882,19 +882,19 @@ Click "Next" to start the installation.</Text>
         <Control Id="StartServerText" Type="Text" X="9" Y="123" Width="354" Height="14">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Start server after installation</Text>
         </Control>
-	<Control Id="StartServerGroup" Type="RadioButtonGroup" X="18" Y="137" Width="348" Height="48" Property="START_SERVER">
+        <Control Id="StartServerGroup" Type="RadioButtonGroup" X="18" Y="137" Width="348" Height="48" Property="START_SERVER">
           <Text>{\VSI_MS_Shell_Dlg13.0_0_0}MsiRadioButtonGroup</Text>
-	  <Condition Action="disable">NOT MYSQLDEXE</Condition>
+          <Condition Action="disable">NOT MYSQLDEXE</Condition>
         </Control>
         <Control Id="InstallServiceText" Type="Text" X="9" Y="185" Width="354" Height="14">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Install as service</Text>
-	  <Condition Action="disable">(NOT VersionNT) OR (INSTALLATION_TYPE="2") OR (Privileged&lt;&gt;1)</Condition>
-	  <Condition Action="enable">VersionNT AND (INSTALLATION_TYPE&lt;&gt;"2") AND (Privileged=1)</Condition>
+          <Condition Action="disable">(NOT VersionNT) OR (INSTALLATION_TYPE="2") OR (Privileged&lt;&gt;1)</Condition>
+          <Condition Action="enable">VersionNT AND (INSTALLATION_TYPE&lt;&gt;"2") AND (Privileged=1)</Condition>
         </Control>
-	<Control Id="InstallServiceGroup" Type="RadioButtonGroup" X="18" Y="199" Width="348" Height="48" Property="INSTALL_SERVICE">
+        <Control Id="InstallServiceGroup" Type="RadioButtonGroup" X="18" Y="199" Width="348" Height="48" Property="INSTALL_SERVICE">
           <Text>{\VSI_MS_Shell_Dlg13.0_0_0}MsiRadioButtonGroup</Text>
-	  <Condition Action="disable">(NOT VersionNT) OR (INSTALLATION_TYPE="2") OR (Privileged&lt;&gt;1)</Condition>
-	  <Condition Action="enable">VersionNT AND (INSTALLATION_TYPE&lt;&gt;"2") AND (Privileged=1)</Condition>
+          <Condition Action="disable">(NOT VersionNT) OR (INSTALLATION_TYPE="2") OR (Privileged&lt;&gt;1)</Condition>
+          <Condition Action="enable">VersionNT AND (INSTALLATION_TYPE&lt;&gt;"2") AND (Privileged=1)</Condition>
         </Control>
       </Dialog>
       <Dialog Id="CustomTextA" Width="373" Height="287" Title="[ProductName]">
@@ -911,8 +911,8 @@ Click "Next" to start the installation.</Text>
         </Control>
         <Control Id="Edit1" Type="Edit" X="18" Y="120" Width="348" Height="18" Property="SERVER_NAME" Sunken="yes">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
-	  <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
-	  <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
+          <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
+          <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
         </Control>
 
         <Control Id="Protocol_Label" Type="Text" X="18" Y="144" Width="165" Height="12" TabSkip="no">
@@ -923,13 +923,13 @@ Click "Next" to start the installation.</Text>
         </Control>
         <Control Id="ProtocolSelector" Type="ComboBox" X="18" Y="156" Width="165" Height="18" Property="SERVER_PROTOCOL" Sunken="yes" ComboList="yes">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiComboBox</Text>
-	  <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
-	  <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
+          <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
+          <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
         </Control>
         <Control Id="Edit2" Type="Edit" X="201" Y="156" Width="165" Height="18" Property="SERVER_PORT" Sunken="yes">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
-	  <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
-	  <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
+          <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
+          <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
         </Control>
 
         <Control Id="Label3" Type="Text" X="18" Y="180" Width="348" Height="12" TabSkip="no">
@@ -997,8 +997,8 @@ Click "Next" to start the installation.</Text>
         </Control>
         <Control Id="MysqldEdit" Type="Edit" X="18" Y="156" Width="348" Height="18" Property="MYSQLDEXE" Sunken="yes">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiComboBox</Text>
-	  <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
-	  <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
+          <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
+          <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
         </Control>
 
         <Control Id="Myisamchk_Label" Type="Text" X="18" Y="180" Width="348" Height="12" TabSkip="no">
@@ -1006,8 +1006,8 @@ Click "Next" to start the installation.</Text>
         </Control>
         <Control Id="MyisamchkEdit" Type="Edit" X="18" Y="192" Width="348" Height="18" Property="MYISAMCHKEXE" Sunken="yes">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
-	  <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
-	  <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
+          <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
+          <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
         </Control>
 
         <Control Id="Mysqladmin_Label" Type="Text" X="18" Y="216" Width="348" Height="12" TabSkip="no">
@@ -1015,8 +1015,8 @@ Click "Next" to start the installation.</Text>
         </Control>
         <Control Id="MysqladminEdit" Type="Edit" X="18" Y="228" Width="348" Height="18" Property="MYSQLADMINEXE" Sunken="yes">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
-	  <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
-	  <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
+          <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
+          <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
         </Control>
 
         <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
@@ -1110,32 +1110,32 @@ Click "Next" to start the installation.</Text>
         </Control>
       </Dialog>
       <RadioButtonGroup Property="AdminMaintenanceForm_Action">
-	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}&amp;Repair [ProductName]" X="0" Y="0" Width="348" Height="17" Value="Repair" />
-	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Re&amp;move [ProductName]" X="0" Y="18" Width="348" Height="17" Value="Remove" />
+        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}&amp;Repair [ProductName]" X="0" Y="0" Width="348" Height="17" Value="Repair" />
+        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Re&amp;move [ProductName]" X="0" Y="18" Width="348" Height="17" Value="Remove" />
       </RadioButtonGroup>
       <RadioButtonGroup Property="MaintenanceForm_Action">
-	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}&amp;Repair [ProductName]" X="0" Y="0" Width="348" Height="17" Value="Repair" />
-	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Re&amp;move [ProductName]" X="0" Y="18" Width="348" Height="17" Value="Remove" />
+        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}&amp;Repair [ProductName]" X="0" Y="0" Width="348" Height="17" Value="Repair" />
+        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Re&amp;move [ProductName]" X="0" Y="18" Width="348" Height="17" Value="Remove" />
       </RadioButtonGroup>
       <RadioButtonGroup Property="FolderForm_AllUsers">
-	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}&amp;Everyone" X="0" Y="0" Width="342" Height="17" Value="ALL" />
-	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Just &amp;me" X="0" Y="18" Width="342" Height="17" Value="ME" />
+        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}&amp;Everyone" X="0" Y="0" Width="342" Height="17" Value="ALL" />
+        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Just &amp;me" X="0" Y="18" Width="342" Height="17" Value="ME" />
       </RadioButtonGroup>
       <RadioButtonGroup Property="INSTALLATION_TYPE">
-	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Custom" X="0" Y="0" Width="348" Height="17" Value="1" />
-	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Typical" X="0" Y="24" Width="348" Height="17" Value="2" />
+        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Custom" X="0" Y="0" Width="348" Height="17" Value="1" />
+        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Typical" X="0" Y="24" Width="348" Height="17" Value="2" />
       </RadioButtonGroup>
       <RadioButtonGroup Property="START_SERVER">
-	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Yes" X="0" Y="0" Width="348" Height="17" Value="1" />
-	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}No" X="0" Y="24" Width="348" Height="17" Value="0" />
+        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Yes" X="0" Y="0" Width="348" Height="17" Value="1" />
+        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}No" X="0" Y="24" Width="348" Height="17" Value="0" />
       </RadioButtonGroup>
       <RadioButtonGroup Property="INSTALL_SERVICE">
-	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Yes" X="0" Y="0" Width="348" Height="17" Value="1" />
-	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}No" X="0" Y="24" Width="348" Height="17" Value="0" />
+        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Yes" X="0" Y="0" Width="348" Height="17" Value="1" />
+        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}No" X="0" Y="24" Width="348" Height="17" Value="0" />
       </RadioButtonGroup>
       <ComboBox Property="SERVER_PROTOCOL">
-	<ListItem Value="http" />
-	<ListItem Value="https" />
+        <ListItem Value="http" />
+        <ListItem Value="https" />
       </ComboBox>
       <TextStyle Id="VSI_MS_Sans_Serif13.0_0_0" FaceName="MS Sans Serif" Size="9" Red="0" Green="0" Blue="0" />
       <TextStyle Id="VSI_MS_Sans_Serif16.0_1_0" FaceName="MS Sans Serif" Size="12" Red="0" Green="0" Blue="0" Bold="yes" />
@@ -1329,7 +1329,7 @@ Click "Next" to start the installation.</Text>
     <Condition Message="Windows Scripting Host is required to run this installer.">Installed OR WSH</Condition>
     <Property Id="OLDCONFIGDIR">
       <DirectorySearch Id="OLDCONFIGURATIONS" Path="[TARGETDIR]..\configurations">
-	<FileSearch LongName="Global_Variables" MinSize="128" />
+        <FileSearch LongName="Global_Variables" MinSize="128" />
       </DirectorySearch>
     </Property>
     <Property Id="MYSQLLOCATIONLOCATION">

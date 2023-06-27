@@ -12,8 +12,8 @@ constant action = "debug_info";
 
 string name= LOCALE(27, "Resolve path...");
 string doc = LOCALE(28, 
-		    "Check which modules handles the path you enter in "
-		    "the form");
+                    "Check which modules handles the path you enter in "
+                    "the form");
 
 string link(string to, string name)
 {
@@ -43,16 +43,16 @@ string module_name(function|RoxenModule|RXML.Tag m)
       mapping mod = c->modules[mn];
       if(mod->enabled == m)
       {
-	name = sprintf("<a href=\"%s\">%s</a> (%s)",
-		       @get_conf_url_to_module(c->name+"/"+mn), roxen->filename(m));
-	break;
+        name = sprintf("<a href=\"%s\">%s</a> (%s)",
+                       @get_conf_url_to_module(c->name+"/"+mn), roxen->filename(m));
+        break;
       }
       else if(mod->copies && !zero_type(search(mod->copies, m)))
       {
-	name = sprintf("<a href=\"%s\">%s</a> (%s)",
-		       @get_conf_url_to_module(c->name+"/"+mn+"#"+search(mod->copies, m)),
-		       roxen->filename(m));
-	break;
+        name = sprintf("<a href=\"%s\">%s</a> (%s)",
+                       @get_conf_url_to_module(c->name+"/"+mn+"#"+search(mod->copies, m)),
+                       roxen->filename(m));
+        break;
       }
     }
   }
@@ -168,7 +168,7 @@ mapping|int resolv_get_file(object c, object nid)
     trace_enter_ol("", this_object());
   }
   trace_leave_ol(sprintf("Uncaught exception thrown:\n\n%s\n",
-			 resolv_describe_backtrace(err)));
+                         resolv_describe_backtrace(err)));
 
   while(level) {
     trace_leave_ol("");
@@ -189,15 +189,15 @@ void resolv_handle_request(object c, object nid)
       nid->misc->trace_enter("First module", funp);
       if(file = funp( nid ))
       {
-	nid->misc->trace_leave("Returns data");
-	break;
+        nid->misc->trace_leave("Returns data");
+        break;
       }
       if(nid->conf != c)
       {
-	c = nid->conf;
-	nid->misc->trace_leave("Request transfered to the virtual server "+c->query_name());
-	again=1;
-	break;
+        c = nid->conf;
+        nid->misc->trace_leave("Request transfered to the virtual server "+c->query_name());
+        again=1;
+        break;
       }
       nid->misc->trace_leave("");
     }
@@ -209,17 +209,17 @@ void resolv_handle_request(object c, object nid)
     {
       nid->misc->trace_enter("Last try module", funp);
       if(file = funp(nid)) {
-	if (file == 1) {
-	  nid->misc->trace_enter("Returned recurse", 0);
-	  resolv_handle_request(c, nid);
-	  nid->misc->trace_leave("Recurse done");
-	  nid->misc->trace_leave("Last try done");
-	  return;
-	}
-	nid->misc->trace_leave("Returns data");
-	break;
+        if (file == 1) {
+          nid->misc->trace_enter("Returned recurse", 0);
+          resolv_handle_request(c, nid);
+          nid->misc->trace_leave("Recurse done");
+          nid->misc->trace_leave("Last try done");
+          return;
+        }
+        nid->misc->trace_leave("Returns data");
+        break;
       } else
-	nid->misc->trace_leave("");
+        nid->misc->trace_leave("");
     }
   }
 }
@@ -292,14 +292,14 @@ string parse( RequestID id )
     foreach( raw_vars /"&", string val_pair ) {
       string idx, val;
       if( sscanf(val_pair, "%s=%s", idx, val) == 2 ) {
-	if(nid->variables[idx]) {
-	  if(arrayp(nid->variables[idx]))
-	    nid->variables[idx] += ({ val });
-	  else
-	    nid->variables[idx] = ({ nid->variables[idx], val });
-	} else {
-	  nid->variables[idx] = val;
-	}
+        if(nid->variables[idx]) {
+          if(arrayp(nid->variables[idx]))
+            nid->variables[idx] += ({ val });
+          else
+            nid->variables[idx] = ({ nid->variables[idx], val });
+        } else {
+          nid->variables[idx] = val;
+        }
       }
     }
   }
@@ -309,16 +309,16 @@ string parse( RequestID id )
     foreach(raw_cookies / "\n", string raw_cookie) {
       string c_idx, c_val;
       if( sscanf( raw_cookie, "%s=%s", c_idx, c_val) == 2) {
-	faked_cookies += ([ c_idx : c_val ]);
+        faked_cookies += ([ c_idx : c_val ]);
       }      
     }
     if( sizeof(faked_cookies) ) {
       if( nid->cookies && sizeof(indices(nid->cookies)) ) {
-	foreach(nid->cookies; string c_idx; string c_val )
-	  faked_cookies[c_idx] = c_val;
-	nid->cookies = faked_cookies;
+        foreach(nid->cookies; string c_idx; string c_val )
+          faked_cookies[c_idx] = c_val;
+        nid->cookies = faked_cookies;
       } else
-	nid->cookies = faked_cookies;
+        nid->cookies = faked_cookies;
     }
   }
 
@@ -331,7 +331,7 @@ string parse( RequestID id )
     }
     else if(!nid->conf) {
       err_msg = LOCALE(31, "There is no configuration available that matches "
-		       "this URL.");
+                       "this URL.");
     }
     if (err_msg)
       return "<p><font color='red'>" + err_msg + "</font></p>" + res; 
@@ -388,10 +388,10 @@ string parse( RequestID id )
     if (trace_timetype) {
       res += format_time (hrrstart, hrvstart, endtime);
       if (int oh = nid->misc->trace_overhead) {
-	res += ", trace overhead (" + trace_timetype + "): " +
-	  Roxen.format_hrtime (oh) + "<br />\n"
-	  "Note: The trace overhead has been mostly canceled out from the " +
-	  trace_timetype + " values above.";
+        res += ", trace overhead (" + trace_timetype + "): " +
+          Roxen.format_hrtime (oh) + "<br />\n"
+          "Note: The trace overhead has been mostly canceled out from the " +
+          trace_timetype + " values above.";
       }
     }
   }

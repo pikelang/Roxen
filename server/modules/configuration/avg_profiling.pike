@@ -18,9 +18,9 @@ class DatabaseVar
 void create()
 {
   defvar ("location",
-	  Variable.Location("/avarage_profiling/", 0,
-			    "Avarage Profiling location",
-			    "The location of the Avarage Profiling Interface."));
+          Variable.Location("/avarage_profiling/", 0,
+                            "Avarage Profiling location",
+                            "The location of the Avarage Profiling Interface."));
   
   defvar( "db",
           DatabaseVar( "local",({}),0, "Database", "The database" ));
@@ -29,15 +29,15 @@ void create()
 void dump_iter( function cb )
 {
   foreach( roxen->configurations - ({ this_object() }),
-	   Configuration c )
+           Configuration c )
   {
     mapping p;
     if( (p=c->profiling_info) )
       foreach( indices( p ), string f )
       {
-	mapping i = p[f]->data;
-	foreach( indices( i ), string e )
-	  cb( c, f, e, @i[e] );
+        mapping i = p[f]->data;
+        foreach( indices( i ), string e )
+          cb( c, f, e, @i[e] );
       }
     c->profiling_info = ([]);
   }
@@ -49,21 +49,21 @@ void dump_to_db( )
 
   catch {
     DBManager.is_module_table( this_object(), query("db"),
-			       "average_profiling",
-			       "Average profiling information taken from "
-			       "the built-in profiling system in Roxen. "
-			       "Start Roxen with the define AVERAGE_PROFILNG"
-			       " to collect data.");
+                               "average_profiling",
+                               "Average profiling information taken from "
+                               "the built-in profiling system in Roxen. "
+                               "Start Roxen with the define AVERAGE_PROFILNG"
+                               " to collect data.");
     sql->query( "CREATE TABLE average_profiling ( "
-		"           session INT,"
-		"           calls   INT,"
-		"           real_ns INT,"
-		"           cpu_ns  INT,"
-		"           config  VARCHAR(30),"
-		"           file    VARCHAR(100),"
-		"           event_name  VARCHAR(100),"
-		"           event_class VARCHAR(20) )"
-	      );
+                "           session INT,"
+                "           calls   INT,"
+                "           real_ns INT,"
+                "           cpu_ns  INT,"
+                "           config  VARCHAR(30),"
+                "           file    VARCHAR(100),"
+                "           event_name  VARCHAR(100),"
+                "           event_class VARCHAR(20) )"
+              );
   };
   
   array q = sql->query( "SELECT MAX(session) as m FROM average_profiling" );
@@ -76,16 +76,16 @@ void dump_to_db( )
     session = 1;
   
   void dump_row( Configuration c, string file, string event,
-		 int realtime, int cputime, int calls )
+                 int realtime, int cputime, int calls )
   {
     array q = event / ":";
     string ev_n = q[..sizeof(q)-2]*":";
     string ev_c = q[-1];
     
     sql->query( "INSERT INTO average_profiling VALUES "
-		"(%d,%d,%d,%d,%s,%s,%s,%s)",
-		session, calls, realtime, cputime, c->query_name(),
-		file, ev_n, ev_c );
+                "(%d,%d,%d,%d,%s,%s,%s,%s)",
+                session, calls, realtime, cputime, c->query_name(),
+                file, ev_n, ev_c );
     
   };
 
@@ -122,9 +122,9 @@ array(mapping) sql2emit(array(mapping) rows)
 {
   return
     map(rows, lambda(mapping row) {
-		return mkmapping(map(indices(row), replace, "_", "-"),
-				 values(row));
-	      });
+                return mkmapping(map(indices(row), replace, "_", "-"),
+                                 values(row));
+              });
 }
 
 
@@ -142,11 +142,11 @@ array(mapping) get_events(array where, string sort, string sort_dir, string grou
     "SUM(real_ns/1000) as real_ms, round(SUM(real_ns/calls/1000), 2) as real_ms_average, "
     "SUM(cpu_ns/1000) as cpu_ms, round(SUM(cpu_ns/calls/1000), 2) as cpu_ms_average";
   string q = "SELECT session, config, file, event_name, event_class, "+
-	     (group_by? group_select: select)+" "
-	     "  FROM average_profiling "+
-	     (sizeof(w)? "WHERE " + w: "")+
-	     (group_by? " GROUP BY "+group_by:"")+
-	     (sort? " ORDER BY "+sort+" "+(sort_dir||""): "");
+             (group_by? group_select: select)+" "
+             "  FROM average_profiling "+
+             (sizeof(w)? "WHERE " + w: "")+
+             (group_by? " GROUP BY "+group_by:"")+
+             (sort? " ORDER BY "+sort+" "+(sort_dir||""): "");
   //werror("Query: %O\n", q);
   return sql->query( q );
 }
@@ -170,9 +170,9 @@ class TagEmitAPEvents
     string query(Sql.Sql db)
     {
       return sprintf("%s like '%s'", column,
-		     replace(db->quote(value),
-			     ({ "*", "?", "%", "_" }),
-			     ({ "%", "_", "\\%", "\\_" }) ));
+                     replace(db->quote(value),
+                             ({ "*", "?", "%", "_" }),
+                             ({ "%", "_", "\\%", "\\_" }) ));
     }
   }
   
@@ -183,11 +183,11 @@ class TagEmitAPEvents
     void fix_arg(string name)
     {
       if(args[name] && args[name] != "")
-	where += ({ WhereEqual(replace(name, "-", "_"), args[name]) });
+        where += ({ WhereEqual(replace(name, "-", "_"), args[name]) });
     };
     
     map(({ "config", "config", "file", "event-class", "event-name", "session"}),
-	   fix_arg);
+           fix_arg);
     
     if(sizeof(args["file-glob"]||""))
       where += ({ WhereLike("file", args["file-glob"]) });
@@ -203,7 +203,7 @@ class TagEmitAPEvents
       m_delete(args, "group-by");
     
     return sql2emit(get_events(where, args["order-by"], args["sort-dir"],
-			       args["group-by"]));
+                               args["group-by"]));
   }
 }
 
@@ -211,9 +211,9 @@ array(mapping) get_names(string column, string where)
 {
   Sql.Sql sql = DBManager.get( query( "db" ) );
   string q = "SELECT DISTINCT "+column+" as name "
-	     "  FROM average_profiling "+
-	     (where? " WHERE " + where + " ": "")+
-	     "  ORDER BY "+column+" ";
+             "  FROM average_profiling "+
+             (where? " WHERE " + where + " ": "")+
+             "  ORDER BY "+column+" ";
   return sql->query(q);
 }
 
@@ -241,9 +241,9 @@ mapping find_file (string f, RequestID id)
   <if variable='var.pages > 1'>
     <for from='1' to='&var.pages;' step='1' variable='var.page'>
       <if variable='var.page == &form.page;'>
-  	<b>[&var.page;]</b>
+        <b>[&var.page;]</b>
       </if><else>
-  	<a href='&page.path;?session=&form.session;&amp;config=&form.config;&amp;file=&form.file;&amp;event-class=&form.event-class;&amp;event-name=&form.event-name;&amp;order-by=&form.order-by;&amp;sort-dir=&form.sort-dir;&amp;page=&var.page;'>[&var.page;]</a>
+        <a href='&page.path;?session=&form.session;&amp;config=&form.config;&amp;file=&form.file;&amp;event-class=&form.event-class;&amp;event-name=&form.event-name;&amp;order-by=&form.order-by;&amp;sort-dir=&form.sort-dir;&amp;page=&var.page;'>[&var.page;]</a>
       </else>&nbsp;
     </for>
   </if>
@@ -253,18 +253,18 @@ mapping find_file (string f, RequestID id)
   <table border='0' cellpadding='1' cellspacing='0' width='100%' bgcolor='#dee2eb'>
       <tr nowrap='nowrap'>
         <td bgcolor='#dee2eb' nowrap='nowrap' valign='bottom'>
-	  &nbsp;<gtext fontsize='12' font='franklin gothic demi'
-	               bgcolor='dee2eb'>&args.title;</gtext></td>
+          &nbsp;<gtext fontsize='12' font='franklin gothic demi'
+                       bgcolor='dee2eb'>&args.title;</gtext></td>
       </tr>
       <tr>
         <td>
- 	  <table bgcolor='#ffffff' cellspacing='0' cellpadding='3'
-	         border='0' width='100%'>
+          <table bgcolor='#ffffff' cellspacing='0' cellpadding='3'
+                 border='0' width='100%'>
             <tr>
-	      <td><contents/></td>
-	    </tr>
-	  </table>
-	</td>
+              <td><contents/></td>
+            </tr>
+          </table>
+        </td>
       </tr>
     </table>
 </define>
@@ -283,124 +283,124 @@ mapping find_file (string f, RequestID id)
   <form>
     <table cellspacing='0' cellpadding='0' border='0'>
       <tr>
-  	<td><b>Session:</b></td>
-  	<td>
-  	  <default name='session' value='&form.session;'>
-  	    <select name='session'>
-  	      <option value=''>-- All --</option>
-  	      <emit source='ap-names' column='session'>
-  		<option value='&_.name;'>&_.name;</option>
-  	      </emit>
-  	    </select>
-  	  </default>
-  	</td>
+        <td><b>Session:</b></td>
+        <td>
+          <default name='session' value='&form.session;'>
+            <select name='session'>
+              <option value=''>-- All --</option>
+              <emit source='ap-names' column='session'>
+                <option value='&_.name;'>&_.name;</option>
+              </emit>
+            </select>
+          </default>
+        </td>
   
-  	<td><b>Configuration:</b></td>
-  	<td>
-  	  <default name='config' value='&form.config;'>
-  	    <select name='config'>
-  	      <option value=''>-- All --</option>
-  	      <emit source='ap-names' column='config'>
-  		<option value='&_.name;'>&_.name;</option>
-  	      </emit>
-  	    </select>
-  	  </default>
-  	</td>
+        <td><b>Configuration:</b></td>
+        <td>
+          <default name='config' value='&form.config;'>
+            <select name='config'>
+              <option value=''>-- All --</option>
+              <emit source='ap-names' column='config'>
+                <option value='&_.name;'>&_.name;</option>
+              </emit>
+            </select>
+          </default>
+        </td>
       </tr>
   
       <tr>
-  	<!--
-  	<td><b>File:</b></td>
-  	<td>
-  	  <default name='file' value='&form.file;'>
-  	    <select name='file'>
-  	      <option value=''>-- All --</option>
-  	      <emit source='ap-names' column='file'>
-  		<option value='&_.name;'>&_.name;</option>
-  	      </emit>
-  	    </select>
-  	  </default>
-  	</td>
-  	-->
-  	<td><b>File glob:</b></td>
-  	<td colspan='3'>
-  	  <input type='text' name='file-glob' value='&form.file-glob;' size='80'/>
-  	</td>
+        <!--
+        <td><b>File:</b></td>
+        <td>
+          <default name='file' value='&form.file;'>
+            <select name='file'>
+              <option value=''>-- All --</option>
+              <emit source='ap-names' column='file'>
+                <option value='&_.name;'>&_.name;</option>
+              </emit>
+            </select>
+          </default>
+        </td>
+        -->
+        <td><b>File glob:</b></td>
+        <td colspan='3'>
+          <input type='text' name='file-glob' value='&form.file-glob;' size='80'/>
+        </td>
       </tr>
   
       <tr>
-  	<td><b>Event Class:</b></td>
-  	<td>
-  	  <default name='event-class' value='&form.event-class;'>
-  	    <select name='event-class'>
-  	      <option value=''>-- All --</option>
-  	      <emit source='ap-names' column='event_class'>
-  		<option value='&_.name;'>&_.name;</option>
-  	      </emit>
-  	    </select>
-  	  </default>
-  	</td>
+        <td><b>Event Class:</b></td>
+        <td>
+          <default name='event-class' value='&form.event-class;'>
+            <select name='event-class'>
+              <option value=''>-- All --</option>
+              <emit source='ap-names' column='event_class'>
+                <option value='&_.name;'>&_.name;</option>
+              </emit>
+            </select>
+          </default>
+        </td>
   
-  	<td><b>Event Name:</b></td>
-  	<td>
-  	  <default name='event-name' value='&form.event-name;'>
-  	    <select name='event-name'>
-  	      <option value=''>-- All --</option>
-  	      <if sizeof='form.event-class == 0'>
-  		<emit source='ap-names' column='event_name'>
-  		  <option value='&_.name;'>&_.name;</option>
-  		</emit>
-  	      </if>
-  	      <else>
-  		<emit source='ap-names' column='event_name'
-  		      where=\"event_class = '&form.event-class;'\">
-  		  <option value='&_.name;'>&_.name;</option>
-  		</emit>
-  	      </else>
-  	    </select>
-  	  </default>
-  	</td>
+        <td><b>Event Name:</b></td>
+        <td>
+          <default name='event-name' value='&form.event-name;'>
+            <select name='event-name'>
+              <option value=''>-- All --</option>
+              <if sizeof='form.event-class == 0'>
+                <emit source='ap-names' column='event_name'>
+                  <option value='&_.name;'>&_.name;</option>
+                </emit>
+              </if>
+              <else>
+                <emit source='ap-names' column='event_name'
+                      where=\"event_class = '&form.event-class;'\">
+                  <option value='&_.name;'>&_.name;</option>
+                </emit>
+              </else>
+            </select>
+          </default>
+        </td>
       </tr>
   
       <tr>
-  	<td><b>Sort by:</b></td>
-  	<td>
-  	  <default name='order-by' value='&form.order-by;'>
-  	    <select name='order-by'>
-  	      <option value='real-ms'>Real</option>
-  	      <option value='cpu-ms'>CPU</option>
-  	      <option value='calls'>Calls</option>
-  	      <option value='session'>Session</option>
-  	      <option value='config'>Configuration</option>
-  	      <option value='file'>File</option>
-  	      <option value='event-class'>Event Class</option>
-  	      <option value='event-name'>Event Name</option>
-  	    </select>
-  	  </default>
-  	</td>
-  	<td><b>Direction:</b></td>
-  	<td>
-  	  <default name='sort-dir' value='&form.sort-dir;'>
-  	    <select name='sort-dir'>
-  	      <option value='DESC'>Descending</option>
-  	      <option value='ASC'>Ascending</option>
-  	    </select>
-  	  </default>
-  	</td>
+        <td><b>Sort by:</b></td>
+        <td>
+          <default name='order-by' value='&form.order-by;'>
+            <select name='order-by'>
+              <option value='real-ms'>Real</option>
+              <option value='cpu-ms'>CPU</option>
+              <option value='calls'>Calls</option>
+              <option value='session'>Session</option>
+              <option value='config'>Configuration</option>
+              <option value='file'>File</option>
+              <option value='event-class'>Event Class</option>
+              <option value='event-name'>Event Name</option>
+            </select>
+          </default>
+        </td>
+        <td><b>Direction:</b></td>
+        <td>
+          <default name='sort-dir' value='&form.sort-dir;'>
+            <select name='sort-dir'>
+              <option value='DESC'>Descending</option>
+              <option value='ASC'>Ascending</option>
+            </select>
+          </default>
+        </td>
       </tr>
   
       <tr>
-  	<td><b>Group by:</b></td>
-  	<td>
-  	  <default name='group-by' value='&form.group-by;'>
-  	    <select name='group-by'>
-  	      <option value=''>-- None --</option>
-  	      <option value='file'>File</option>
-  	      <option value='event-class'>Event Class</option>
-  	      <option value='event-name'>Event Name</option>
-  	    </select>
-  	  </default>
-  	</td>
+        <td><b>Group by:</b></td>
+        <td>
+          <default name='group-by' value='&form.group-by;'>
+            <select name='group-by'>
+              <option value=''>-- None --</option>
+              <option value='file'>File</option>
+              <option value='event-class'>Event Class</option>
+              <option value='event-name'>Event Name</option>
+            </select>
+          </default>
+        </td>
       </tr>
   
     </table>
@@ -473,62 +473,62 @@ mapping find_file (string f, RequestID id)
     <pager/>
     <table cellspacing='0'>
       <tr bgcolor='#dee2eb'>
-  	<if variable='var.show-session'>
-  	  <td><b>Session</b>&nbsp;</td>
-  	</if>
-  	<if variable='var.show-config'>
-  	  <td><b>Configuration</b>&nbsp;</td>
-  	</if>
-  	<if variable='var.show-file'>
-  	  <td><b>File</b>&nbsp;</td>
-  	</if>
-  	<if variable='var.show-event-class'>
-  	  <td><b>Event&nbsp;Class</b>&nbsp;</td>
-  	</if>
-  	<if variable='var.show-event-name'>
-  	  <td><b>Event&nbsp;Name</b>&nbsp;</td>
-  	</if>
-  	<td><b>Calls</b>&nbsp;</td>
-  	<td><b>Real&nbsp;(ms)</b>&nbsp;</td>
-  	<td><b>Av.&nbsp;Real&nbsp;(ms)</b>&nbsp;</td>
-  	<td><b>CPU&nbsp;(ms)</b>&nbsp;</td>
-  	<td><b>Av.&nbsp;CPU&nbsp;(ms)</b></td>
+        <if variable='var.show-session'>
+          <td><b>Session</b>&nbsp;</td>
+        </if>
+        <if variable='var.show-config'>
+          <td><b>Configuration</b>&nbsp;</td>
+        </if>
+        <if variable='var.show-file'>
+          <td><b>File</b>&nbsp;</td>
+        </if>
+        <if variable='var.show-event-class'>
+          <td><b>Event&nbsp;Class</b>&nbsp;</td>
+        </if>
+        <if variable='var.show-event-name'>
+          <td><b>Event&nbsp;Name</b>&nbsp;</td>
+        </if>
+        <td><b>Calls</b>&nbsp;</td>
+        <td><b>Real&nbsp;(ms)</b>&nbsp;</td>
+        <td><b>Av.&nbsp;Real&nbsp;(ms)</b>&nbsp;</td>
+        <td><b>CPU&nbsp;(ms)</b>&nbsp;</td>
+        <td><b>Av.&nbsp;CPU&nbsp;(ms)</b></td>
       </tr>
     
       <set variable='var.bgcolor' value='#dee2eb'/>
       <emit source='ap-events' ::='&var.emit-args;'
-  	    maxrows='50'
-  	    rowinfo='var.rows'
-  	    maxrows='&var.maxrows;'
-  	    skiprows='&var.skiprows;'
-  	    remainderinfo='var.remainder'>
-  	<if variable='var.bgcolor == white'>
-  	  <set variable='var.bgcolor' value='#dee2eb'/>
-  	</if><else>
-  	  <set variable='var.bgcolor' value='white'/>
-  	</else>
-  	<tr bgcolor='&var.bgcolor;'>
-  	  <if variable='var.show-session'>
-  	    <td>&_.session;</td>
-  	  </if>
-  	  <if variable='var.show-config'>
-  	    <td>&_.config;</td>
-  	  </if>
-  	  <if variable='var.show-file'>
-  	    <td>&_.file;</td>
-  	  </if>
-  	  <if variable='var.show-event-class'>
-  	    <td>&_.event-class;</td>
-  	  </if>
-  	  <if variable='var.show-event-name'>
-  	    <td>&_.event-name;</td>
-  	  </if>
-  	  <td align='right'>&_.calls;</td>
-  	  <td align='right'>&_.real-ms;</td>
-  	  <td align='right'>&_.real-ms-average;</td>
-  	  <td align='right'>&_.cpu-ms;</td>
-  	  <td align='right'>&_.cpu-ms-average;</td>
-  	</tr>
+            maxrows='50'
+            rowinfo='var.rows'
+            maxrows='&var.maxrows;'
+            skiprows='&var.skiprows;'
+            remainderinfo='var.remainder'>
+        <if variable='var.bgcolor == white'>
+          <set variable='var.bgcolor' value='#dee2eb'/>
+        </if><else>
+          <set variable='var.bgcolor' value='white'/>
+        </else>
+        <tr bgcolor='&var.bgcolor;'>
+          <if variable='var.show-session'>
+            <td>&_.session;</td>
+          </if>
+          <if variable='var.show-config'>
+            <td>&_.config;</td>
+          </if>
+          <if variable='var.show-file'>
+            <td>&_.file;</td>
+          </if>
+          <if variable='var.show-event-class'>
+            <td>&_.event-class;</td>
+          </if>
+          <if variable='var.show-event-name'>
+            <td>&_.event-name;</td>
+          </if>
+          <td align='right'>&_.calls;</td>
+          <td align='right'>&_.real-ms;</td>
+          <td align='right'>&_.real-ms-average;</td>
+          <td align='right'>&_.cpu-ms;</td>
+          <td align='right'>&_.cpu-ms-average;</td>
+        </tr>
       </emit>
     </table>
     
@@ -547,12 +547,12 @@ string status()
   string res = "";
   res += "Database: "+query("db")+"<br />\n";
   res += "Interface: <a href=\""+query("location")+"\">"+
-	 query("location")+"</a><br /><br />\n";
+         query("location")+"</a><br /><br />\n";
 
   res += "<font size=\"+1\"><b>Statistics</b></font>"
-	 "<table><tr><td><b>Configuration</b></td><td><b>Pages</b></td></tr>";
+         "<table><tr><td><b>Configuration</b></td><td><b>Pages</b></td></tr>";
   foreach( roxen->configurations - ({ this_object() }), Configuration c )
     res += "<tr><td>"+c->query_name()+"</td>"
-	   "<td align=\"right\">"+sizeof(indices(c->profiling_info))+"</td></tr>";
+           "<td align=\"right\">"+sizeof(indices(c->profiling_info))+"</td></tr>";
   return res+"</table>";
 }

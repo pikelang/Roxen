@@ -14,10 +14,10 @@ inherit "roxen-module://filesystem";
 constant cvs_version = "$Id$";
 
 LocaleString module_name = LOCALE(67,"JavaScript Support: The Yahoo! User "
-				    "Interface Library");
+                                    "Interface Library");
 LocaleString module_doc =
 LOCALE(68,"This sets The Yahoo! User Interface Library (YUI) as a virtual file system "
-	 "of your site.");
+         "of your site.");
 
 string module_dir = combine_path(__FILE__, "../");
 string yui_root_dir = combine_path(getenv("VARDIR") || "../var", "yui/");
@@ -30,7 +30,7 @@ void tar_extract(string tar_file, string dest_dir) {
   };
   if (err) {
     report_debug("%s: Extracting tar file %s failed: %O\n.", module_name, tar_file,
-		 describe_backtrace(err));
+                 describe_backtrace(err));
   }
 }
 
@@ -56,7 +56,7 @@ void setup_yui() {
   foreach(indices(missing_versions), string ver) {
 #ifdef RUN_SELF_TEST
     report_notice("Self-test detected: Skipping extraction of "
-		  "YUI version " + ver + ".\n");
+                  "YUI version " + ver + ".\n");
 #else
     report_notice("Will extract YUI version "+ ver+".\n");
     tar_extract(combine_path(module_dir,"yui-"+ver+".tar"), yui_root_dir);
@@ -85,7 +85,7 @@ void set_invisible(string var)
     v->set_invisibility_check_callback(
       lambda(RequestID id, Variable.Variable var)
       {
-	return 1;
+        return 1;
       });
     v->set_flags(v->get_flags() & ~VAR_INITIAL);
   }
@@ -184,7 +184,7 @@ mixed find_file( string f, RequestID id )
   if (!m) return 0;
 
   id->set_response_header ("Cache-Control",
-			   sprintf ("public, max-age=%d", EXPIRE_TIME));
+                           sprintf ("public, max-age=%d", EXPIRE_TIME));
 
   RAISE_CACHE(EXPIRE_TIME);
   PROTO_CACHE();
@@ -196,9 +196,9 @@ void create()
   ::create();
 
   defvar("mountpoint", "/yui/", LOCALE(15,"Mount point"),
-	 TYPE_LOCATION,
-	 LOCALE(16,"Where the module will be mounted in the site's virtual "
-		"file system."));
+         TYPE_LOCATION,
+         LOCALE(16,"Where the module will be mounted in the site's virtual "
+                "file system."));
 
   set("searchpath", yui_root_dir);
   set_invisible("searchpath");

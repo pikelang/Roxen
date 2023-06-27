@@ -31,10 +31,10 @@ constant module_type = MODULE_EXPERIMENTAL;
 //! API functions for all of the module types they are hybrids of.
 
 LocaleString module_doc_locale = LOCALE(2,"This module does nothing, but its "
-				  "inlined documentation gets imported "
-				  "into the roxen programmer manual. "
-				  "You really don't want to add this "
-				  "module to your virtual server, promise!");
+                                  "inlined documentation gets imported "
+                                  "into the roxen programmer manual. "
+                                  "You really don't want to add this "
+                                  "module to your virtual server, promise!");
 //! The documentation string that will end up in the administration
 //! interface view of the module just below the module name. Also shows
 //! up in the more verbose add module views.
@@ -111,9 +111,9 @@ LocaleString info( Configuration conf )
   string mp = query_internal_location();
   
   return sprintf(LOCALE(6,"This string overrides the documentation string "
-			"given in module_doc[_locale], but only once the "
-			"module is added to a server. The module's internal "
-			"mountpoint is found at <tt>%s</tt>"), mp );
+                        "given in module_doc[_locale], but only once the "
+                        "module is added to a server. The module's internal "
+                        "mountpoint is found at <tt>%s</tt>"), mp );
 }
 
 LocaleString check_variable(string variable, mixed set_to)

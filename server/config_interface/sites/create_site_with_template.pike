@@ -46,7 +46,7 @@ string|mapping parse( RequestID id )
   if (!id->variables->site_template ||
       search(id->variables->site_template, "site_templates")!=-1 ) {
     foreach( glob("*" SITE_TEMPLATES "*.x",
-		   indices(id->variables) ), string t )
+                   indices(id->variables) ), string t )
     {
       t = t[..sizeof(t)-3];
       id->real_variables->site_template = ({ t });
@@ -56,9 +56,9 @@ string|mapping parse( RequestID id )
 
   License.LicenseVariable license =
     License.LicenseVariable(getenv("ROXEN_LICENSEDIR") || "../license/", 0,
-			    "License file",
-			    "Use this license file for the new configuration.",
-			    0, 1);
+                            "License file",
+                            "Use this license file for the new configuration.",
+                            0, 1);
   license->set_path("license");
   if(id->variables[license->path()])
     license->set_from_form(id);
@@ -100,7 +100,7 @@ string|mapping parse( RequestID id )
                                                     id), id);
     }
     return sprintf(base,"<input name='site_template' type='hidden' "
-		   "value='"+get_site_template(id)+"' />\n", q);
+                   "value='"+get_site_template(id)+"' />\n", q);
   }
 
   roxenloader.ErrorContainer e = roxenloader.ErrorContainer( );
@@ -109,14 +109,14 @@ string|mapping parse( RequestID id )
   array sts = ({});
   array(string) templates = ({});
   foreach(({ "." }) + roxenloader->package_directories,
-	  string pkg_dir) {
+          string pkg_dir) {
     string template_dir = combine_path(pkg_dir, SITE_TEMPLATES);
     array(string) sts = get_dir(template_dir);
     if (!sts) continue;
     templates += map(glob( "*.pike", sts),
-		     lambda(string st, string template_dir) {
-		       return template_dir + st;
-		     }, template_dir);
+                     lambda(string st, string template_dir) {
+                       return template_dir + st;
+                     }, template_dir);
   }
 
   foreach( templates, string st ) {
@@ -125,8 +125,8 @@ string|mapping parse( RequestID id )
       object q;
       p = (program)(st);
       if(!p) {
-	report_error("Template \""+st+"\" failed to compile.\n");
-	continue;
+        report_error("Template \""+st+"\" failed to compile.\n");
+        continue;
       }
       q = p();
       if( q->site_template )
@@ -146,42 +146,42 @@ string|mapping parse( RequestID id )
           group = q[ "group_"+id->misc->cf_locale ];
         else
           group = q->group;
-	
-	string button;
-	if(q->locked && !(license->get_key() && q->unlocked(license->get_key())))
-	  button =
-	    "<gbutton width='400' "
-	    "         icon_src='&usr.padlock;' "
-	    "         align_icon='right'"
-	    "         state='disabled'>"
-	    + Roxen.html_encode_string(name) +
-	    "</gbutton>\n";
-	else
-	  button =
-	    "<cset variable='var.url'>"
-	    "<gbutton-url width='400' "
-	    "             icon_src='&usr.next;' "
-	    "             align_icon='right'>"
-	    + Roxen.html_encode_string(name) +
-	    "</gbutton-url></cset>"
-	    "<input border='0' type='image' src='&var.url;' name='"+st+"' />\n";
-	
-	//  Build a sort identifier on the form "999|Group name|template name"
-	//  where 999 is a number which orders the groups. The group name is
-	//  the only string which the user will see. All templates which don't
-	//  contain a number will default to position 500.
-	string sort_id = group || "Roxen WebServer";
-	if (!has_value(sort_id, "|"))
-	  sort_id = "500|" + sort_id;
-	sort_id += "|" + name;
+        
+        string button;
+        if(q->locked && !(license->get_key() && q->unlocked(license->get_key())))
+          button =
+            "<gbutton width='400' "
+            "         icon_src='&usr.padlock;' "
+            "         align_icon='right'"
+            "         state='disabled'>"
+            + Roxen.html_encode_string(name) +
+            "</gbutton>\n";
+        else
+          button =
+            "<cset variable='var.url'>"
+            "<gbutton-url width='400' "
+            "             icon_src='&usr.next;' "
+            "             align_icon='right'>"
+            + Roxen.html_encode_string(name) +
+            "</gbutton-url></cset>"
+            "<input border='0' type='image' src='&var.url;' name='"+st+"' />\n";
+        
+        //  Build a sort identifier on the form "999|Group name|template name"
+        //  where 999 is a number which orders the groups. The group name is
+        //  the only string which the user will see. All templates which don't
+        //  contain a number will default to position 500.
+        string sort_id = group || "Roxen WebServer";
+        if (!has_value(sort_id, "|"))
+          sort_id = "500|" + sort_id;
+        sort_id += "|" + name;
         sts += ({ ({ sort_id, name,
-		     button + "<blockquote>" + doc + "</blockquote>" }) });
+                     button + "<blockquote>" + doc + "</blockquote>" }) });
       }
     };
     if (err) {
       report_error(sprintf("Template %O failed:\n"
-			   "%s\n",
-			   st, describe_backtrace(err)));
+                           "%s\n",
+                           st, describe_backtrace(err)));
     }
   }
 
@@ -192,8 +192,8 @@ string|mapping parse( RequestID id )
     string group = (q[0] / "|")[1];
     if (group != last_group) {
       res +=
-	"<br>"
-	"<h3>" + group + "</h3>\n";
+        "<br>"
+        "<h3>" + group + "</h3>\n";
       last_group = group;
     }
     res += q[2] + "\n\n\n";
@@ -219,8 +219,8 @@ string|mapping parse( RequestID id )
     
     if( pre )
       pre = "<font size='+1' color='&usr.warncolor;'><pre>"+
-	    Roxen.html_encode_string( pre )+
-	    "</pre></font>";
+            Roxen.html_encode_string( pre )+
+            "</pre></font>";
     else
       pre = "";
     

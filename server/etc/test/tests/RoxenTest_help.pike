@@ -23,7 +23,7 @@ int test_module_info(ModuleInfo mi)
 }
 
 void check_compilation_errors (string log, mixed err,
-			       function cb, array args, int st)
+                               function cb, array args, int st)
 {
   if (err)
     report_test_failure (err, cb, args, st);
@@ -39,8 +39,8 @@ void run_tests( Configuration c )
   test( roxen.enable_configuration, "helptestserver" );
 
   c = test_generic( check_is_configuration,
-		    roxen.find_configuration,
-		    "helptestserver" );
+                    roxen.find_configuration,
+                    "helptestserver" );
 
   if( !c )  {
     report_error( "Failed to find test configuration\n");
@@ -64,9 +64,9 @@ void run_tests( Configuration c )
   foreach(modules, ModuleInfo m) {
     test_generic(check_true, test_module_info, m);
     if( (< "roxen_test", "config_tags", "update",
-	   "compat", "configtablist", "flik", "lpctag",
-	   "ximg", "userdb", "htmlparse", "directories2",
-	   "fastdir" >)[m->sname] )
+           "compat", "configtablist", "flik", "lpctag",
+           "ximg", "userdb", "htmlparse", "directories2",
+           "fastdir" >)[m->sname] )
       continue;
     current_test++;
     new += ({ m->sname });
@@ -80,13 +80,13 @@ void run_tests( Configuration c )
 
   // Make a list of all tags and PI:s
   array tags=map(indices(c->rxml_tag_set->get_tag_names()),
-		 lambda(string tag) {
-		   if(tag[..3]=="!--#" || !has_value(tag, "#"))
-		     return tag;
-		   return "";
-		 } ) - ({ "" });
+                 lambda(string tag) {
+                   if(tag[..3]=="!--#" || !has_value(tag, "#"))
+                     return tag;
+                   return "";
+                 } ) - ({ "" });
   tags += map(indices(c->rxml_tag_set->get_proc_instr_names()),
-	      lambda(string tag) { return "?"+tag; } );
+              lambda(string tag) { return "?"+tag; } );
 
   RequestID id = roxen.InternalRequestID( );
   id->set_url( "http://localhost:80/" ); //  Will clear id->conf

@@ -21,14 +21,14 @@ array get_choice_list( )
     //  Some modules apparently send in a configration reference instead of
     //  a function pointer when calling set_configuration_pointer().
     report_warning("Incorrect usage of Variable.DatabaseChoice:\n\n%s",
-		   describe_backtrace(backtrace()));
+                   describe_backtrace(backtrace()));
     return ({ " none" });
   }
   return ({ " none" }) + sort(DBManager.list( config() ));
 }
 
 protected void create(string default_value, void|int flags,
-		      void|LocaleString std_name, void|LocaleString std_doc)
+                      void|LocaleString std_name, void|LocaleString std_doc)
 {
   ::create( default_value, ({}), flags, std_name, std_doc );
 }

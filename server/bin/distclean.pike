@@ -16,17 +16,17 @@ void clean(string path) {
   if(file_stat(path+".distignore")) {
     string ignore = Stdio.read_file(path+".distignore");
     globs = map(ignore/"\n",
-		lambda(string in) {
-		  if(sizeof(in) && in[0]=='#')
-		    in="";
-		  return String.trim_whites(in);
-		}) - ({""});
+                lambda(string in) {
+                  if(sizeof(in) && in[0]=='#')
+                    in="";
+                  return String.trim_whites(in);
+                }) - ({""});
     my_rm(path+".distignore");
   }
   foreach(get_dir(path), string file) {
     foreach(globs, string g)
       if( glob(g, file) )
-	my_rm(path+file);
+        my_rm(path+file);
     Stdio.Stat s = file_stat(path+file);
     if(s && s[1]==-2)
       clean(path+file+"/");

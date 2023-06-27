@@ -10,16 +10,16 @@ void main(int argc, array argv)
     switch( (int)argv[4] )
     {
       case 1:
-	break;
+        break;
       case 2:
-	sep = "\n";
-	break;
+        sep = "\n";
+        break;
       case 3:
-	psize = 1;
-	break;
+        psize = 1;
+        break;
       case 4:
-	psize = 10;
-	break;
+        psize = 10;
+        break;
     }
   }
 

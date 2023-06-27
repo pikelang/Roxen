@@ -52,7 +52,7 @@ void start(int x, Configuration conf)
   }
 
   mixed exc = catch(servlet = Servlet.servlet(query("classname"),
-					      query("codebase")-({""})));
+                                              query("codebase")-({""})));
   status_info="";
   if(exc)
   {
@@ -67,19 +67,19 @@ void start(int x, Configuration conf)
 string status()
 {
   return (servlet?
-	  servlet->info() || "<i>No servlet information available</i>" :
-	  "<font color=red>Servlet not loaded</font>"+"<br>"+
-	  status_info);
+          servlet->info() || "<i>No servlet information available</i>" :
+          "<font color=red>Servlet not loaded</font>"+"<br>"+
+          status_info);
 }
 
 string query_name()
 {
   if(query("ex"))
     return sprintf("Servlet %s handling extension %s",
-		   query("classname"), query("ext")*", ");
+                   query("classname"), query("ext")*", ");
   else
     return sprintf("Servlet %s mounted on %s",
-		   query("classname"), query("location"));
+                   query("classname"), query("location"));
 }
 
 class RXMLParseWrapper
@@ -202,13 +202,13 @@ class ClassPathList
       if( !s )
         warn += value+" does not exist\n";
       else if( s[ ST_SIZE ] == -2 )
-	;
+        ;
       else if( !(f->open( value, "r" )) )
         warn += "Can't read "+value+"\n";
       else {
-	if( f->read(2) != "PK" )
-	  warn += value+" is not a JAR file\n";
-	f->close();
+        if( f->read(2) != "PK" )
+          warn += value+" is not a JAR file\n";
+        f->close();
       }
     }
     if( strlen( warn ) )
@@ -225,33 +225,33 @@ array(string) query_file_extensions()
 void create()
 {
   defvar("ex", 0, "File extension servlet", TYPE_FLAG,
-	 "Use a servlet mapping based on file extension rather than "
-	 "path location.");
+         "Use a servlet mapping based on file extension rather than "
+         "path location.");
 
   defvar("location", "/servlet/NONE", "Servlet location", TYPE_LOCATION,
-	 "This is where the servlet will be inserted in the "
-	 "namespace of your server.", 0,
-	 lambda() { return query("ex"); });
+         "This is where the servlet will be inserted in the "
+         "namespace of your server.", 0,
+         lambda() { return query("ex"); });
 
   defvar("ext", ({}), "Servlet extensions", TYPE_STRING_LIST,
          "All files ending with these extensions, will be handled by "+
-	 "this servlet.", 0,
-	 lambda() { return !query("ex"); });
+         "this servlet.", 0,
+         lambda() { return !query("ex"); });
   
   defvar("codebase", ClassPathList( ({"servlets"}), 0, "Class path",
-				    "Any number of directories and/or JAR "
-				    "files from which to load the servlet "
-				    "and its support classes.") );
+                                    "Any number of directories and/or JAR "
+                                    "files from which to load the servlet "
+                                    "and its support classes.") );
   
   defvar("classname", "NONE", "Class name", TYPE_STRING,
-	 "The name of the servlet class to use.");
+         "The name of the servlet class to use.");
 
   defvar("parameters", "", "Parameters", TYPE_TEXT,
-	 "Parameters for the servlet on the form "
-	 "<tt><i>name</i>=<i>value</i></tt>, one per line.");
+         "Parameters for the servlet on the form "
+         "<tt><i>name</i>=<i>value</i></tt>, one per line.");
 
   defvar("rxml", 0, "Parse RXML in servlet output", TYPE_FLAG|VAR_MORE,
-	 "If this is set, the output from the servlet handled by this "
+         "If this is set, the output from the servlet handled by this "
          "module will be RXML parsed. NOTE: No data will be returned to the "
          "client until the output is fully parsed.");
 }

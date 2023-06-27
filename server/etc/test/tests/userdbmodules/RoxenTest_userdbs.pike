@@ -11,8 +11,8 @@ void verify_user_list( array list, RoxenModule m )
       throw( sprintf("User %O; Expected user object, got %O\n",u,uid) );
     foreach( uid->groups(), mixed grp )
       if( !stringp( grp ) )
-	throw(sprintf("Found %O in group list for %O, "
-		      "expected array of strings\n", grp, u ));
+        throw(sprintf("Found %O in group list for %O, "
+                      "expected array of strings\n", grp, u ));
   }
 }
 
@@ -29,12 +29,12 @@ void lookup_threaded( array f, RoxenModule m )
     {
       mixed err;
       if( err = catch {
-	array grps = map( uid->groups(), m->find_group );
-	foreach( grps, object q )
-	  if( !objectp( q ) || !q->name )
-	    failed = sprintf( "Expected group, got %O\n", q );
+        array grps = map( uid->groups(), m->find_group );
+        foreach( grps, object q )
+          if( !objectp( q ) || !q->name )
+            failed = sprintf( "Expected group, got %O\n", q );
       } )
-	failed = err;
+        failed = err;
     }
   };
 
@@ -62,13 +62,13 @@ void verify_compat_userinfo( Configuration c, array list )
 
     if( sizeof( ui ) != 7 )
       throw( sprintf( "Expected array of size 7, got array of size %d\n",
-		      sizeof(ui ) ) );
+                      sizeof(ui ) ) );
 
     //  Mac OS X 10.5 returns system users with a "_" prefix even if queried
     //  for the non-prefixed name so we'll look the other way when comparing.
     if( (ui[0] - "_") != (s - "_") )
       throw(sprintf("Got different user (0) from userinfo than given (%O!=%O)",
-		    ui[0],s ));
+                    ui[0],s ));
 
 
     if( !stringp( ui[1] ) )
@@ -98,11 +98,11 @@ void verify_compat_user_from_uid( Configuration c, array list )
 
     if( sizeof( ui ) != 7 )
       throw( sprintf( "Expected array of size 7, got array of size %d\n",
-		      sizeof(ui ) ) );
+                      sizeof(ui ) ) );
 
     if( ui[2] != u->uid() )
       throw(sprintf("Got different user (0) from userinfo than given (%O!=%O)",
-		    ui[0],u->uid() ));
+                    ui[0],u->uid() ));
 
 
     if( !stringp( ui[1] ) )
@@ -132,8 +132,8 @@ void run_tests( Configuration c )
   
 
   c = test_generic( check_is_configuration,
-		    roxen.find_configuration,
-		    "usertestconfig" );
+                    roxen.find_configuration,
+                    "usertestconfig" );
 
   if( !c )  {
     report_error( "Failed to find test configuration\n");
@@ -174,7 +174,7 @@ void run_tests( Configuration c )
   
 
   foreach( ({ "A Random String", 10, "\4711\4712\4713" }),
-	   mixed value )
+           mixed value )
   {
     test_equal( value, u->set_var, 0, "v", value );
 

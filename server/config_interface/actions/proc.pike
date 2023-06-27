@@ -11,7 +11,7 @@ constant action="status";
 
 string name= LOCALE(63, "Extended process status");
 string doc = LOCALE(65, 
-		    "Shows detailed process status on Solaris 2.5 and later.");
+                    "Shows detailed process status on Solaris 2.5 and later.");
 
 void create()
 {
@@ -75,9 +75,9 @@ string process_map2(string in)
   if(sscanf(((in/"\n")[-2]/" "-({""}))[2..]*" ",
             "%[^ ] %[^ ] %[^ ] %[^ ]",kbytes,resident,shared,priv)==4)
     return sprintf("%d kb; %d kb "+LOCALE(66,"shared")+
-		   ", %d kb "+LOCALE(76,"private")+
-		   ", %d kb "+LOCALE(77,"resident"),
-		   (int)kbytes,(int)shared,(int)priv,(int)resident);
+                   ", %d kb "+LOCALE(76,"private")+
+                   ", %d kb "+LOCALE(77,"resident"),
+                   (int)kbytes,(int)shared,(int)priv,(int)resident);
   return "Failed to parse output from pmap.";
 }
 
@@ -91,11 +91,11 @@ string format_proc_line(string in, int ipid)
   if(strlen(pre))pre=" "+pre[1..];
   if(search(in,"/proc/")==-1)
     return (pre+
-	    "<a href='?class=&amp;form.class;&amp;action=proc.pike&amp;pid="+pid+"&amp;unique="+time()+"&amp;&usr.set-wiz-id;'>"+
-	    (ipid==pid?"<b>":"")+
-	    html_encode_string(in)+
-	    (ipid==pid?"</b>":"")+
-	    "</a>\n");
+            "<a href='?class=&amp;form.class;&amp;action=proc.pike&amp;pid="+pid+"&amp;unique="+time()+"&amp;&usr.set-wiz-id;'>"+
+            (ipid==pid?"<b>":"")+
+            html_encode_string(in)+
+            (ipid==pid?"</b>":"")+
+            "</a>\n");
   return "";
 }
 
@@ -108,23 +108,23 @@ string cred(object id)
   string r = "", s;
   int uid, gid;
   if(sscanf(proc("cred",id->variables->pid), "%*d:\te/r/suid=%d  "
-	    "e/r/sgid=%d\n\tgroups:%s\n", uid, gid, s) != 4)
+            "e/r/sgid=%d\n\tgroups:%s\n", uid, gid, s) != 4)
     return "-<br />";
   array groups = ((s||"")/" ") - ({ "" });
 #if constant(getgrgid)
   for(int i = 0; i < sizeof(groups); i++)
     groups[i] = (getgrgid((int)groups[i]) || ({ (string)groups[i] }))[0];
   return sprintf("e/r/suid: %s<br />e/r/sgid: %s<br />"+
-		 LOCALE(78,"groups:")+" %s\n",
-		 (getpwuid(uid) || ({ (string)uid }))[0],
-		 (getgrgid(gid) || ({ (string)gid }))[0],
-		 String.implode_nicely(groups, LOCALE(79, "and")));
+                 LOCALE(78,"groups:")+" %s\n",
+                 (getpwuid(uid) || ({ (string)uid }))[0],
+                 (getgrgid(gid) || ({ (string)gid }))[0],
+                 String.implode_nicely(groups, LOCALE(79, "and")));
 #else
   return sprintf("e/r/suid: %s<br />e/r/sgid: %d<br />"+
-		 LOCALE(78,"groups:")+" %s\n",
-		 (getpwuid(uid) || ({ (string)uid }))[0],
-		 gid,
-		 String.implode_nicely(groups, LOCALE(79, "and")));
+                 LOCALE(78,"groups:")+" %s\n",
+                 (getpwuid(uid) || ({ (string)uid }))[0],
+                 gid,
+                 String.implode_nicely(groups, LOCALE(79, "and")));
 #endif /* constant(getgrgid) */
 }
 
@@ -137,19 +137,19 @@ mixed parse(object id)
     map = process_map2(map);
 
   string tree = Array.map(proc("tree -a",(int)id->variables->pid)/"\n",format_proc_line,
-			  (int)id->variables->pid||getpid())*"";
+                          (int)id->variables->pid||getpid())*"";
 
   return ("<font size='+1'>"+ 
-	  sprintf(LOCALE(80,"Process Tree for %d"),
-		  (int)id->variables->pid||getpid())+"</font><pre>\n"+
-	  tree+
-	  "</pre><font size='+1'>"+
-	  sprintf(LOCALE(81,"Misc status for %d"), 
-		  (int)id->variables->pid||getpid())+
-	  "</font><pre>"+LOCALE(82,"Memory Usage:")+" "+map+"\n\n"+
-	  LOCALE(83,"Credentials:")+"<br />"+cred(id)+"\n"+
-	  LOCALE(84,"Current working directory:")+" "+
-	  ((proc("wdx",id->variables->pid)/":")[1..]*":")+
+          sprintf(LOCALE(80,"Process Tree for %d"),
+                  (int)id->variables->pid||getpid())+"</font><pre>\n"+
+          tree+
+          "</pre><font size='+1'>"+
+          sprintf(LOCALE(81,"Misc status for %d"), 
+                  (int)id->variables->pid||getpid())+
+          "</font><pre>"+LOCALE(82,"Memory Usage:")+" "+map+"\n\n"+
+          LOCALE(83,"Credentials:")+"<br />"+cred(id)+"\n"+
+          LOCALE(84,"Current working directory:")+" "+
+          ((proc("wdx",id->variables->pid)/":")[1..]*":")+
 //	  "Stack: "+(proc("stack",id->variables->pid)/":")[1..]*":"+
-	  "</pre><p><cf-ok/></p>");
+          "</pre><p><cf-ok/></p>");
 }

@@ -109,7 +109,7 @@ InputPath=.\roxenmsg.mc
 InputName=roxenmsg
 
 BuildCmds= \
-	mc $(InputPath)
+        mc $(InputPath)
 
 "$(InputName).rc" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
@@ -128,7 +128,7 @@ InputPath=.\roxenmsg.mc
 InputName=roxenmsg
 
 BuildCmds= \
-	mc $(InputPath)
+        mc $(InputPath)
 
 "$(InputName).rc" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)

@@ -35,19 +35,19 @@ void create()
   definvisvar("log", "", TYPE_TEXT_FIELD);
 
   defvar("nLog",
-	 RegexpList( ({ }), 0,
-		     "No logging for",
-		     "All files whose (virtual)filename match the pattern above "
-		     "will be excluded from logging. This is a regular expression"
-		     ) );
+         RegexpList( ({ }), 0,
+                     "No logging for",
+                     "All files whose (virtual)filename match the pattern above "
+                     "will be excluded from logging. This is a regular expression"
+                     ) );
 
   defvar("Log",
-	 RegexpList( ({ ".*" }), 0,
-		     "Logging for",
-		     "All files whose (virtual)filename match the pattern above "
-		     "will be logged, unless they match any of the 'No logging for'"
-		     "patterns. This is a regular expression"
-		     ) );
+         RegexpList( ({ ".*" }), 0,
+                     "Logging for",
+                     "All files whose (virtual)filename match the pattern above "
+                     "will be logged, unless they match any of the 'No logging for'"
+                     "patterns. This is a regular expression"
+                     ) );
 }
 
 string make_regexp(array from)

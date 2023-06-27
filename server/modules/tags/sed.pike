@@ -57,8 +57,8 @@ constant module_doc =
 Unix sed command.";
 
 array sedreplace(string s,object re,string with,
-		 array whatin,int first,int lastmod,
-		 multiset flags)
+                 array whatin,int first,int lastmod,
+                 multiset flags)
 {
    array a;
    string w=0;
@@ -72,17 +72,17 @@ array sedreplace(string s,object re,string with,
       array wa;
       wa=sedreplace(a[0],re,with,whatin,first,lastmod,flags);
       if (wa)
-	 if (!flags["g"])
-	    return ({wa[0],wa[1]+s[strlen(a[0])..]});
-	 else
-	    pr=wa[0],w=wa[1];
+         if (!flags["g"])
+            return ({wa[0],wa[1]+s[strlen(a[0])..]});
+         else
+            pr=wa[0],w=wa[1];
       else
-	 w=a[0];
+         w=a[0];
    }
 
    string t=
       replace(with,whatin[..sizeof(a)-first+lastmod-1],
-	      a[first..sizeof(a)+lastmod-1]);
+              a[first..sizeof(a)+lastmod-1]);
 
    if (flags["p"]) pr+=({t});
 
@@ -91,15 +91,15 @@ array sedreplace(string s,object re,string with,
    {
       if (lastmod)
       {
-	 array wa;
-	 wa=sedreplace(a[-1],re,with,whatin,first,lastmod,flags);
-	 if (wa)
-	 {
-	    pr+=wa[0];
-	    s+=wa[1];
-	 }
-	 else
-	    s+=a[-1];
+         array wa;
+         wa=sedreplace(a[-1],re,with,whatin,first,lastmod,flags);
+         if (wa)
+         {
+            pr+=wa[0];
+            s+=wa[1];
+         }
+         else
+            s+=a[-1];
       }
    }
    else
@@ -109,39 +109,39 @@ array sedreplace(string s,object re,string with,
 };
 
 array scan_for_linenumber(string cmd,
-			  array(string) in,
-			  int n)
+                          array(string) in,
+                          int n)
 {
    int x;
    string what;
    object re;
 
    while (cmd!="" && (cmd[0]>='0' && cmd[0]<='9')
-	  || cmd[0]=='/' || cmd[0]=='+' || cmd[0]=='-')
+          || cmd[0]=='/' || cmd[0]=='+' || cmd[0]=='-')
    {
       if (cmd[0]>='0' && cmd[0]<='9')
       {
-	 sscanf(cmd,"%d%s",n,cmd);
-	 n--;
+         sscanf(cmd,"%d%s",n,cmd);
+         n--;
       }
       else if (cmd[0]=='+')
       {
-	 sscanf(cmd,"+%d%s",x,cmd);
-	 n+=x;
+         sscanf(cmd,"+%d%s",x,cmd);
+         n+=x;
       }
       else if (cmd[0]=='-')
       {
-	 sscanf(cmd,"-%d%s",x,cmd);
-	 n-=x;
+         sscanf(cmd,"-%d%s",x,cmd);
+         n-=x;
       }
       else if (sscanf(cmd,"/%s/%s",what,cmd)==2)
       {
-	 re=Regexp(what);
-	 while (n<sizeof(in))
-	 {
-	    if (re->match(in[n])) break;
-	    n++;
-	 }
+         re=Regexp(what);
+         while (n<sizeof(in))
+         {
+            if (re->match(in[n])) break;
+            n++;
+         }
       }
       else break;
    }
@@ -172,9 +172,9 @@ array execute_sed(array(string) e,array(string) in,int suppress)
       if (cmd[0..1]==",$") { cmd=cmd[2..]; stop=sizeof(in)-1; }
       else if (sscanf(cmd,",%s",cmd))
       {
-	 a1=scan_for_linenumber(cmd,in,start);
-	 stop=a1[0];
-	 cmd=a1[1];
+         a1=scan_for_linenumber(cmd,in,start);
+         stop=a1[0];
+         cmd=a1[1];
       }
 
       if (stop>sizeof(in)-1) stop=sizeof(in)-1;
@@ -183,114 +183,114 @@ array execute_sed(array(string) e,array(string) in,int suppress)
       if (cmd=="") continue;
       switch (cmd[0])
       {
-	 case 's':
-	    div=cmd[1..1];
-	    if (div=="%") div="%%";
-	    inflags="";
-	    if (sscanf(cmd,"%*c"+div+"%s"+div+"%s"+div+"%s",
-		       what,with,inflags)<3) continue;
-	    flags=aggregate_multiset(@(inflags/""));
-	
-	    int first=0,lastmod=0;
-	    if (what!="") // fix the regexp for working split
-	    {
-	       if (what[0]!='^') what="^(.*)"+what,first=1;
-	       if (what[-1]!='$') what=what+"(.*)$",lastmod=-1;
-	    }
-	    re=Regexp(what);
+         case 's':
+            div=cmd[1..1];
+            if (div=="%") div="%%";
+            inflags="";
+            if (sscanf(cmd,"%*c"+div+"%s"+div+"%s"+div+"%s",
+                       what,with,inflags)<3) continue;
+            flags=aggregate_multiset(@(inflags/""));
+        
+            int first=0,lastmod=0;
+            if (what!="") // fix the regexp for working split
+            {
+               if (what[0]!='^') what="^(.*)"+what,first=1;
+               if (what[-1]!='$') what=what+"(.*)$",lastmod=-1;
+            }
+            re=Regexp(what);
 
-	    while (start<=stop)
-	    {
-	       array sa=sedreplace(in[start],re,with,whatin,
-				   first,lastmod,flags);
+            while (start<=stop)
+            {
+               array sa=sedreplace(in[start],re,with,whatin,
+                                   first,lastmod,flags);
 
-	       if (sa)
-	       {
-		  in[start]=sa[1];
-		  print+=sa[0];
-		  if (compat_level < 5.0 && !flags["g"]) break;
-	       }
-	       start++;
-	    }
-	
-	    break;
+               if (sa)
+               {
+                  in[start]=sa[1];
+                  print+=sa[0];
+                  if (compat_level < 5.0 && !flags["g"]) break;
+               }
+               start++;
+            }
+        
+            break;
 
-	 case 'y':
-	    div=cmd[1..1];
-	    if (div=="%") div="%%";
-	    inflags="";
-	    if (sscanf(cmd,"%*c"+div+"%s"+div+"%s"+div+"%s",
-		       what,with,inflags)<3) continue;
-	    if (strlen(what)!=strlen(with))
-	    {
-	       what=what[0..strlen(with)-1];
-	       with=with[0..strlen(what)-1];
-	    }
-	
-	    a1=what/"",a2=with/"";
+         case 'y':
+            div=cmd[1..1];
+            if (div=="%") div="%%";
+            inflags="";
+            if (sscanf(cmd,"%*c"+div+"%s"+div+"%s"+div+"%s",
+                       what,with,inflags)<3) continue;
+            if (strlen(what)!=strlen(with))
+            {
+               what=what[0..strlen(with)-1];
+               with=with[0..strlen(what)-1];
+            }
+        
+            a1=what/"",a2=with/"";
 
-	    while (start<=stop)
-	    {
-	       in[start]=replace(in[start],a1,a2);
-	       start++;
-	    }
-	    break;
+            while (start<=stop)
+            {
+               in[start]=replace(in[start],a1,a2);
+               start++;
+            }
+            break;
 
-	 case 'G': // insert hold space
-	    in=in[..start-1]+hold+in[start..];
-	    if (stop>=start) stop+=sizeof(hold);
-	    break;
+         case 'G': // insert hold space
+            in=in[..start-1]+hold+in[start..];
+            if (stop>=start) stop+=sizeof(hold);
+            break;
 
-	 case 'a': // insert line
-	    in=in[..start-1]+({cmd[1..]})+in[start..];
-	    if (stop>=start) stop++;
-	    break;
+         case 'a': // insert line
+            in=in[..start-1]+({cmd[1..]})+in[start..];
+            if (stop>=start) stop++;
+            break;
 
-	 case 'c': // change
-	    in=in[..start-1]+({cmd[1..]})+in[stop+1..];
-	    stop=start;
-	    break;
+         case 'c': // change
+            in=in[..start-1]+({cmd[1..]})+in[stop+1..];
+            stop=start;
+            break;
 
-	 case 'd': // delete
-	    in=in[..start-1]+in[stop+1..];
-	    stop=start;
-	    break;
+         case 'd': // delete
+            in=in[..start-1]+in[stop+1..];
+            stop=start;
+            break;
 
-	 case 'D': // delete first line
-	    in=in[..start-1]+in[start+1..];
-	    stop=start;
-	    break;
+         case 'D': // delete first line
+            in=in[..start-1]+in[start+1..];
+            stop=start;
+            break;
 
-	 case 'h': // copy
-	    hold=in[start..stop];
-	    break;
+         case 'h': // copy
+            hold=in[start..stop];
+            break;
 
-	 case 'H': // appending copy
-	    hold+=in[start..stop];
-	    break;
-	
-	 case 'i': // print text
-	    print+=({cmd[1..]});
-	    break;
+         case 'H': // appending copy
+            hold+=in[start..stop];
+            break;
+        
+         case 'i': // print text
+            print+=({cmd[1..]});
+            break;
 
-	 case 'l': // print space
-	    print+=in[start..stop];
-	    break;
+         case 'l': // print space
+            print+=in[start..stop];
+            break;
 
-	 case 'P': // print all
-	    print+=in;
-	    break;
+         case 'P': // print all
+            print+=in;
+            break;
 
-	 case 'p': // print first
-	    print+=in[..0];
-	    break;
+         case 'p': // print first
+            print+=in[..0];
+            break;
 
-	 case 'q': // quit
-	    if (!suppress) return print+in;
-	    return print;
+         case 'q': // quit
+            if (!suppress) return print+in;
+            return print;
 
-	 default:
-	    // error? just ignore for now
+         default:
+            // error? just ignore for now
       }
    }
    if (!suppress) return print+in;
@@ -304,33 +304,33 @@ string container_sed(string tag,mapping m,string cont,object id)
    compat_level = (float) my_configuration()->query("compat_level");
 
    parse_html(cont,
-	      (["source":lambda(string tag,mapping m,mapping c,object id)
-			 {
-			    if (m->variable)
-			      c->data = RXML_CONTEXT->user_get_var (m->variable) || "";
-			    else if (m->cookie) {
-			       c->data=id->cookie[m->cookie]||"";
-			    } else
-			       c->data="";
-			    if (m->rxml) c->data=Roxen.parse_rxml(c->data,id);
-			 },
-		"destination":lambda(string tag,mapping m,mapping c,object id)
-			 {
-			    if (m->variable) c->destvar=m->variable;
-			    else if (m->cookie) c->destcookie=m->cookie;
-			    else c->nodest=1;
-			 },
-	      ]),
-	      (["e":lambda(string tag,mapping m,string cont,mapping c,
-			   object id)
-		    { if (m->rxml) c->e+=({Roxen.parse_rxml(cont,id)});
-		       else c->e+=({cont}); },
-		"raw":lambda(string tag,mapping m,string cont,mapping c)
-		       { c->data=cont; },
-		"rxml":lambda(string tag,mapping m,string cont,mapping c,
-			      object id)
-		       { c->data=Roxen.parse_rxml(cont,id); },
-	      ]),c,id);
+              (["source":lambda(string tag,mapping m,mapping c,object id)
+                         {
+                            if (m->variable)
+                              c->data = RXML_CONTEXT->user_get_var (m->variable) || "";
+                            else if (m->cookie) {
+                               c->data=id->cookie[m->cookie]||"";
+                            } else
+                               c->data="";
+                            if (m->rxml) c->data=Roxen.parse_rxml(c->data,id);
+                         },
+                "destination":lambda(string tag,mapping m,mapping c,object id)
+                         {
+                            if (m->variable) c->destvar=m->variable;
+                            else if (m->cookie) c->destcookie=m->cookie;
+                            else c->nodest=1;
+                         },
+              ]),
+              (["e":lambda(string tag,mapping m,string cont,mapping c,
+                           object id)
+                    { if (m->rxml) c->e+=({Roxen.parse_rxml(cont,id)});
+                       else c->e+=({cont}); },
+                "raw":lambda(string tag,mapping m,string cont,mapping c)
+                       { c->data=cont; },
+                "rxml":lambda(string tag,mapping m,string cont,mapping c,
+                              object id)
+                       { c->data=Roxen.parse_rxml(cont,id); },
+              ]),c,id);
 
    if (!c->data) return "<!-- sed command missing data -->";
 
@@ -352,7 +352,7 @@ string container_sed(string tag,mapping m,string cont,object id)
    {
       if (m->prepend) d += RXML_CONTEXT->user_get_var (c->destvar) || "";
       if (m->apppend || m->append)
-	d = (RXML_CONTEXT->user_get_var (c->destvar) || "") + d;
+        d = (RXML_CONTEXT->user_get_var (c->destvar) || "") + d;
       RXML_CONTEXT->user_set_var (c->destvar, d);
    }
    else if (c->destcookie)
@@ -362,7 +362,7 @@ string container_sed(string tag,mapping m,string cont,object id)
       // for compatibility. /mast
       if (m->prepend) d += RXML_CONTEXT->user_get_var (c->destvar) || "";
       if (m->apppend || m->append)
-	d = (RXML_CONTEXT->user_get_var (c->destvar) || "") + d;
+        d = (RXML_CONTEXT->user_get_var (c->destvar) || "") + d;
       // NOTE: The following line messes up for the protocol cache,
       //       since we have no idea if it overwrites a cookie that
       //       has been used earlier.
@@ -389,9 +389,9 @@ constant tagdoc=([
   <attr name='prepend'></attr>
 
   ", 
-       	   (["e":#"<desc type='cont'>
-	     <p>The edit command to apply to the input. It is possible to control
-	        which lines that will be affected by using 
+           (["e":#"<desc type='cont'>
+             <p>The edit command to apply to the input. It is possible to control
+                which lines that will be affected by using 
                 <tag>e</tag>[<i>first line</i>],[<i>last line</i>][<i>command</i>]<tag>/e</tag>.
                 It is possible to use relative line numbers using '+' and '-' or 
                 using regexp by start and end the regexp with '/'</p>
@@ -405,52 +405,52 @@ constant tagdoc=([
   </sed>
 </ex>
              </p>
-	     <list type=\"dl\">
-	       <item name='D'><p>Delete first line in space</p></item>
-	       <item name='G'><p>Insert hold space</p></item>
-	       <item name='H'><p>Append current space to hold space</p></item>
-	       <item name='P'><p>Print current data</p></item>
-	       <item name='a'><p>Insert.</p> 
+             <list type=\"dl\">
+               <item name='D'><p>Delete first line in space</p></item>
+               <item name='G'><p>Insert hold space</p></item>
+               <item name='H'><p>Append current space to hold space</p></item>
+               <item name='P'><p>Print current data</p></item>
+               <item name='a'><p>Insert.</p> 
                               <p>Usage: <b>a</b>[<i>string</i>]</p></item>
-	       <item name='c'><p>Change current space.</p> 
-	                      <p>Usage: <b>c</b>[<i>string</i>]</p></item>
-	       <item name='d'><p>Delete current space</p></item>
-	       <item name='h'><p>Copy current space to hold space</p></item>
-	       <item name='i'><p>Print string</p>
-	                      <p>Usage: <b>i</b>[<i>string</i>]</p></item>
-	       <item name='l'><p>Print current space</p></item>
-	       <item name='p'><p>Print first line in data</p></item>
-	       <item name='q'><p>Quit evaluating</p></item>
-	       <item name='s'><p>Replace. Replaces the first match on each
+               <item name='c'><p>Change current space.</p> 
+                              <p>Usage: <b>c</b>[<i>string</i>]</p></item>
+               <item name='d'><p>Delete current space</p></item>
+               <item name='h'><p>Copy current space to hold space</p></item>
+               <item name='i'><p>Print string</p>
+                              <p>Usage: <b>i</b>[<i>string</i>]</p></item>
+               <item name='l'><p>Print current space</p></item>
+               <item name='p'><p>Print first line in data</p></item>
+               <item name='q'><p>Quit evaluating</p></item>
+               <item name='s'><p>Replace. Replaces the first match on each
                                 line unless the flag <i>g</i> is active, in
                                 which case all matches will be replaced.
                                 In 4.5 and earlier compat mode the
                                 replacement will terminate after the first
                                 matching line (unless <i>g</i> is active).</p>
-	                      <p>Usage: <b>s/</b>[<i>regexp</i>]<b>/</b>[<i>with</i>]<b>/</b>[<i>x</i>]</p></item>
-	       <item name='y'><p>Replace chars</p>
-	                      <p>Usage: <b>y/</b>[<i>chars</i>]<b>/</b>[<i>chars</i>]<b>/</b></p></item></list></desc>
-	     <attr name='rxml'><p>Run through RXML parser before edit</p></attr>"
-	   ,
-	   "source":#"<desc type='cont'><p>Tells which source to read from if
+                              <p>Usage: <b>s/</b>[<i>regexp</i>]<b>/</b>[<i>with</i>]<b>/</b>[<i>x</i>]</p></item>
+               <item name='y'><p>Replace chars</p>
+                              <p>Usage: <b>y/</b>[<i>chars</i>]<b>/</b>[<i>chars</i>]<b>/</b></p></item></list></desc>
+             <attr name='rxml'><p>Run through RXML parser before edit</p></attr>"
+           ,
+           "source":#"<desc type='cont'><p>Tells which source to read from if
                         <tag>raw</tag> or <tag>rxml</tag>is not used. Must be 
-			either variable or cookie.</p></desc>
+                        either variable or cookie.</p></desc>
 
-			<attr name='variable' value='variable'></attr>
-			<attr name='cookie' value='cookie'></attr>
-			<attr name='rxml'><p>Run through RXML parser 
-			                  before edit</p></attr>",
-	   
-	   "destination":#"<desc type='cont'><p>Tells which destination to 
+                        <attr name='variable' value='variable'></attr>
+                        <attr name='cookie' value='cookie'></attr>
+                        <attr name='rxml'><p>Run through RXML parser 
+                                          before edit</p></attr>",
+           
+           "destination":#"<desc type='cont'><p>Tells which destination to 
                              store the edited string if other than screen. Must
                              be either variable or cookie.</p></desc>
 
-			     <attr name='variable' value='variable'></attr>
-			     <attr name='cookie' value='cookie'></attr>",
+                             <attr name='variable' value='variable'></attr>
+                             <attr name='cookie' value='cookie'></attr>",
 
-	   "raw":#"<desc type='cont'><p>Raw, unparsed data.</p></desc>",
-	   
-	   "rxml":#"<desc type='cont'><p>Data run through RXML parser before 
+           "raw":#"<desc type='cont'><p>Raw, unparsed data.</p></desc>",
+           
+           "rxml":#"<desc type='cont'><p>Data run through RXML parser before 
                       edited.</p></desc>"]),
   }),
 ]);

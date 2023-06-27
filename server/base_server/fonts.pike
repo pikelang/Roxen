@@ -162,7 +162,7 @@ protected Font get_font_3(string f, int size, int bold, int italic)
   Font fnt;
   foreach( font_handlers, FontHandler fh )
     if( fh->has_font( f,size ) &&
-	(fnt = fh->open(f,size,bold,italic)))
+        (fnt = fh->open(f,size,bold,italic)))
       return fnt;
   return 0;
 }
@@ -182,7 +182,7 @@ protected Font get_font_2(string f, int size, int bold, int italic)
       // it to avoid compatibility trouble (although that's unlikely).
       f2 = replace (f2, " ", "_");
       if (Font fnt = get_font_3 (f2, size, bold, italic))
-	return fnt;
+        return fnt;
     }
   }
 
@@ -197,7 +197,7 @@ protected Font get_font_2(string f, int size, int bold, int italic)
 }
 
 Font get_font(string f, int size, int bold, int italic,
-	      string justification, float|int xspace, float|int yspace)
+              string justification, float|int xspace, float|int yspace)
 {
   f = lower_case( f );
   Font fnt = get_font_2 (f, size, bold, italic);
@@ -205,7 +205,7 @@ Font get_font(string f, int size, int bold, int italic,
     fnt = get_font_2 (roxen->query ("default_font"), size, bold, italic);
     if (!fnt) {
       report_error("Failed to load the default font (%O)\n",
-		   roxen->query("default_font"));
+                   roxen->query("default_font"));
       return 0;
     }
   }
@@ -298,7 +298,7 @@ Font resolve_font(string f, string|void justification)
   }
 
   return get_font(f, size, bold, italic,
-		  justification||"left",xspace, 0.0);
+                  justification||"left",xspace, 0.0);
 }
 
 protected string verify_font_3 (string font, int size)
@@ -354,7 +354,7 @@ string verify_font(string font, int size)
 
   string a,b;
   foreach( ({ "bold", "normal", "black", "light", "italic", "slant",
-	      "compressed", "spaced", "center", "right", "left" }), string mod)
+              "compressed", "spaced", "center", "right", "left" }), string mod)
     if(sscanf(font, "%s "+mod+"%s", a,b)==2)
       font = a+" "+b;
 
@@ -420,7 +420,7 @@ protected void create()
     };
     if (err) {
       report_error(sprintf("Failed to initialize font handler %s:\n"
-			   "%s\n", fh, describe_backtrace(err)));
+                           "%s\n", fh, describe_backtrace(err)));
     }
   }
   report_debug("Done [%.1fms]\n", (gethrtime()-h)/1000.0 );

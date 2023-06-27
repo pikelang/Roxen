@@ -22,7 +22,7 @@ int main(int argc, array(string) argv)
   if (attrs->countryName)
     name += ({ (["countryName":asn1_printable_string(attrs->countryName)]) });
   foreach( ({ "stateOrProvinceName", "localityName", "organizationName",
-	      "organizationUnitName", "commonName" }), attr)
+              "organizationUnitName", "commonName" }), attr)
   {
     if (attrs[attr])
       /* UTF8String is the recommended type. But it seems that
@@ -30,9 +30,9 @@ int main(int argc, array(string) argv)
        * suffice, we use latin1 but call it TeletexString (since at
        * least netscape expects things that way). */
       name += ({ ([ attr : (asn1_printable_valid (attrs[attr]) ?
-			    asn1_printable_string :
-			    asn1_broken_teletex_string)
-		    (attrs[attr]) ]) });
+                            asn1_printable_string :
+                            asn1_broken_teletex_string)
+                    (attrs[attr]) ]) });
   }
 
   Crypto.RSA rsa = Crypto.RSA();

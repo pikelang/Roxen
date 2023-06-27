@@ -10,38 +10,38 @@ mapping|string parse( RequestID id )
 
   if (id->variables["ok.x"]) {
     mixed err = catch {
-	foreach(db->query("SELECT id FROM db_schedules")->id,
-		string schedule) {
-	  string var;
-	  if ((var = id->variables["period-" + schedule])) {
-	    array(string) segments = var/":";
-	    int period;
-	    int offset;
-	    if (sizeof(segments) == 2) {
-	      period = (int)segments[0];
-	      offset = (int)segments[1] +
-		(int)id->variables["time-" + schedule];
-	    }
-	    int generations = (int)id->variables["generations-" + schedule];
-	    string method = id->variables["method-" + schedule];
-	    string dir = id->variables["directory-" + schedule];
-	    db->query("UPDATE db_schedules "
-		      "   SET period = %d, "
-		      "       offset = %d, "
-		      "       generations = %d, "
-		      "       method = %s, "
-		      "       dir = %s "
-		      " WHERE id = %s",
-		      period, offset, generations, method, dir, schedule);
-	    DBManager.start_backup_timer((int)schedule, period, offset);
-	  }
-	  if (id->variables["schedule-" + schedule]) {
-	    db->query("UPDATE db_schedules "
-		      "   SET schedule = %s "
-		      " WHERE id = %s",
-		      id->variables["schedule-" + schedule], schedule);
-	  }
-	}
+        foreach(db->query("SELECT id FROM db_schedules")->id,
+                string schedule) {
+          string var;
+          if ((var = id->variables["period-" + schedule])) {
+            array(string) segments = var/":";
+            int period;
+            int offset;
+            if (sizeof(segments) == 2) {
+              period = (int)segments[0];
+              offset = (int)segments[1] +
+                (int)id->variables["time-" + schedule];
+            }
+            int generations = (int)id->variables["generations-" + schedule];
+            string method = id->variables["method-" + schedule];
+            string dir = id->variables["directory-" + schedule];
+            db->query("UPDATE db_schedules "
+                      "   SET period = %d, "
+                      "       offset = %d, "
+                      "       generations = %d, "
+                      "       method = %s, "
+                      "       dir = %s "
+                      " WHERE id = %s",
+                      period, offset, generations, method, dir, schedule);
+            DBManager.start_backup_timer((int)schedule, period, offset);
+          }
+          if (id->variables["schedule-" + schedule]) {
+            db->query("UPDATE db_schedules "
+                      "   SET schedule = %s "
+                      " WHERE id = %s",
+                      id->variables["schedule-" + schedule], schedule);
+          }
+        }
       };
     if (err) master()->handle_error(err);
   }
@@ -50,7 +50,7 @@ mapping|string parse( RequestID id )
     db->query("INSERT INTO db_schedules (id, period) VALUES (NULL, 0)");
     int new_id = db->master_sql->insert_id();
     db->query("UPDATE db_schedules SET schedule = %s where id = %d",
-	      sprintf((string)_(1117, "Schedule #%d"), new_id-1), new_id);
+              sprintf((string)_(1117, "Schedule #%d"), new_id-1), new_id);
   }
 
   string res =
@@ -64,26 +64,26 @@ mapping|string parse( RequestID id )
     "</th><th></th></tr>\n";
 
   foreach(db->query("SELECT id, schedule, period, offset, dir, "
-		    "       generations, method "
-		    "  FROM db_schedules "
-		    " ORDER BY id ASC"), mapping(string:string) schedule) {
+                    "       generations, method "
+                    "  FROM db_schedules "
+                    " ORDER BY id ASC"), mapping(string:string) schedule) {
 
     if (schedule->id != "1") {
       if (id->variables["delete-" + schedule->id + ".x"]) {
-	db->query("UPDATE dbs SET schedule_id = NULL WHERE schedule_id = %s",
-		  schedule->id);
-	db->query("DELETE FROM db_schedules WHERE id = %s", schedule->id);
-	continue;
+        db->query("UPDATE dbs SET schedule_id = NULL WHERE schedule_id = %s",
+                  schedule->id);
+        db->query("DELETE FROM db_schedules WHERE id = %s", schedule->id);
+        continue;
       }
       res += "<tr><td colspan='6'><hr></td></tr>"
-	"<tr><td><input size='10em' name='schedule-" + schedule->id + "' "
-	"value='" + Roxen.html_encode_string(schedule->schedule) + "' />"
-	"</td>";
+        "<tr><td><input size='10em' name='schedule-" + schedule->id + "' "
+        "value='" + Roxen.html_encode_string(schedule->schedule) + "' />"
+        "</td>";
     } else {
       res += "<tr><td colspan='6'><hr></td></tr>"
-	"<tr><td>"
-	"<b>" + Roxen.html_encode_string(schedule->schedule) +"</b>"
-	"</td>\n";
+        "<tr><td>"
+        "<b>" + Roxen.html_encode_string(schedule->schedule) +"</b>"
+        "</td>\n";
     }
 
     int period = (int)schedule->period;
@@ -91,16 +91,16 @@ mapping|string parse( RequestID id )
     if (period) offset %= period;
     int day = offset/86400;
     int hour = (offset/3600)%24;
-	res +=
+        res +=
       "<td><default name='period-" + schedule->id + "' value='" +
       (schedule->period?(schedule->period + ":" + (day*86400)):"") +
       "'><select name='period-" + schedule->id + "'>\n"
       "<option value=''>" + _(482, "Never") + "</option>\n";
     foreach(_(1032, "Sundays,Mondays,Tuesdays,Wednesdays,Thursdays,"
-	      "Fridays,Saturdays")/","; int dayno; string day) {
+              "Fridays,Saturdays")/","; int dayno; string day) {
       res += sprintf("<option value='%d:%d'>%s</option>\n",
-		     86400*7, (((dayno + 3)%7)*86400),
-		     Roxen.html_encode_string(day));
+                     86400*7, (((dayno + 3)%7)*86400),
+                     Roxen.html_encode_string(day));
     }
 #ifdef YES_I_KNOW_WHAT_I_AM_DOING
     res += "<option value='60:0'>Every Minute</option>\n"
@@ -144,23 +144,23 @@ mapping|string parse( RequestID id )
       "</td><td align='right'>";
     if (schedule->id != "1") {
       res += "<submit-gbutton2 name='delete-" + schedule->id + "'>" +
-	_(227, "Delete") + "</submit-gbutton2>";
+        _(227, "Delete") + "</submit-gbutton2>";
     } else {
       res += "<submit-gbutton2 name='new'>" + _(1118, "New") + "</submit-gbutton2>";
     }
     res += "</td></tr>\n";
     if (schedule->id == "1") {
       res += "<tr><td>&nbsp;</td><td colspan='4'>" +
-	_(1040, "Note: This schedule is also used to schedule backups for "
-	  "Roxen's internal databases.") +
-	"</td><td>&nbsp;</td></tr>\n";
+        _(1040, "Note: This schedule is also used to schedule backups for "
+          "Roxen's internal databases.") +
+        "</td><td>&nbsp;</td></tr>\n";
     }
   }
 
   res += "<tr><td colspan='6'><hr></td></tr>"
     "<tr><td align='left'><cf-cancel href='/dbs/'/></td><td colspan='4'>" +
     sprintf((string)_(1119, "Default directory: %s"),
-	    Roxen.html_encode_string(roxen_path("$VARDIR/backup/"))) +
+            Roxen.html_encode_string(roxen_path("$VARDIR/backup/"))) +
     "</td><td align='right'>"
     "<submit-gbutton2 name='ok'> "+_("bA","Save")+" </submit-gbutton2></td>\n"
     "</tr>\n"

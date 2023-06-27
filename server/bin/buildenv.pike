@@ -28,51 +28,51 @@ class Environment
     foreach(f->read()/"\n", string line)
       if (sscanf(line-"\r", "%[A-Za-z0-9_]=%s", var, def)==2)
       {
-	string pre, post, sep = ":";
+        string pre, post, sep = ":";
 
-	// Get rid of quotes.
-	if (has_prefix(def, "\"") && has_suffix(def, "\"")) {
-	  def = def[1..sizeof(def)-2];
-	}
+        // Get rid of quotes.
+        if (has_prefix(def, "\"") && has_suffix(def, "\"")) {
+          def = def[1..sizeof(def)-2];
+        }
 
-	/* The line is on one of the following formats:
-	 *
-	 * var=DEF				==> DEF
-	 * var=${var}${var:+SEP}POST		==> SEP, POST
-	 * var=PRE${var:+SEP}${var}		==> PRE, SEP
-	 * var=PRE${var:+SEP}${var}SEPPOST	==> PRE, SEP, POST
-	 */
+        /* The line is on one of the following formats:
+         *
+         * var=DEF				==> DEF
+         * var=${var}${var:+SEP}POST		==> SEP, POST
+         * var=PRE${var:+SEP}${var}		==> PRE, SEP
+         * var=PRE${var:+SEP}${var}SEPPOST	==> PRE, SEP, POST
+         */
 
-	if(2==sscanf(def, "%s${"+var+"}%s", pre, post) ||
-	   2==sscanf(def, "%s$"+var+"%s", pre, post))
-	{
-	  if (pre=="")
-	    pre = 0;
-	  else if (pre[-1]==':')
-	    pre = pre[..sizeof(pre)-2];
-	  else
-	    sscanf(pre, "%s${" + var + ":+%s}", pre, sep);
-	  if (post=="")
-	    post = 0;
-	  else if (has_prefix(post, sep))
-	    post = post[sizeof(sep)..];
-	  else 
-	    sscanf(post, "${" + var + ":+%s}%s", sep, post);
-	  env[var] = ({ pre, 0, post, sep });
-	}
-	else
-	  env[var] = ({ 0, def, 0, ":" });
+        if(2==sscanf(def, "%s${"+var+"}%s", pre, post) ||
+           2==sscanf(def, "%s$"+var+"%s", pre, post))
+        {
+          if (pre=="")
+            pre = 0;
+          else if (pre[-1]==':')
+            pre = pre[..sizeof(pre)-2];
+          else
+            sscanf(pre, "%s${" + var + ":+%s}", pre, sep);
+          if (post=="")
+            post = 0;
+          else if (has_prefix(post, sep))
+            post = post[sizeof(sep)..];
+          else 
+            sscanf(post, "${" + var + ":+%s}%s", sep, post);
+          env[var] = ({ pre, 0, post, sep });
+        }
+        else
+          env[var] = ({ 0, def, 0, ":" });
 
-	werror("Read definition for %s: %O\n"
-	       "%O\n",
-	       var, line, env[var]);
+        werror("Read definition for %s: %O\n"
+               "%O\n",
+               var, line, env[var]);
       }
       else if (sscanf(line, "export %s", var))
-	foreach((replace(var, ({"\t","\r"}),({" "," "}))/" ")-({""}), string v)
-	  exports[v] = 1;
+        foreach((replace(var, ({"\t","\r"}),({" "," "}))/" ")-({""}), string v)
+          exports[v] = 1;
     foreach(indices(env), string e)
       if (!exports[e])
-	m_delete(env, e);
+        m_delete(env, e);
     oldenv = copy_value(env);
   }
 
@@ -92,19 +92,19 @@ class Environment
       array(string) v = env[var];
       if (v && (v[0]||v[1]||v[2]))
       {
-	f->write(var+"=\"");
-	if(v[1])
-	  f->write((v[0]? v[0]+v[3]:"")+v[1]+(v[2]? v[3]+v[2]:""));
-	else if (!v[0])
-	  // Append only
-	  f->write("${"+var+"}${"+var+":+" + v[3] + "}"+v[2]);
-	else if (!v[2])
-	  // Prepend only
-	  f->write(v[0]+"${"+var+":+" + v[3] + "}${"+var+"}");
-	else
-	  // Prepend and append
-	  f->write(v[0]+"${"+var+":+" + v[3] + "}${"+var+"}"+v[3]+v[2]);
-	f->write("\"\nexport "+var+"\n");
+        f->write(var+"=\"");
+        if(v[1])
+          f->write((v[0]? v[0]+v[3]:"")+v[1]+(v[2]? v[3]+v[2]:""));
+        else if (!v[0])
+          // Append only
+          f->write("${"+var+"}${"+var+":+" + v[3] + "}"+v[2]);
+        else if (!v[2])
+          // Prepend only
+          f->write(v[0]+"${"+var+":+" + v[3] + "}${"+var+"}");
+        else
+          // Prepend and append
+          f->write(v[0]+"${"+var+":+" + v[3] + "}${"+var+"}"+v[3]+v[2]);
+        f->write("\"\nexport "+var+"\n");
       }
     }
     f->close();
@@ -130,7 +130,7 @@ class Environment
       v = env[var] = ({ 0, 0, 0, ":" });
     foreach(val/v[3], string comp)
       if ((!v[2]) || search(v[2]/v[3], comp)<0)
-	v[2] = (v[2]? v[2]+v[3]:"")+comp;
+        v[2] = (v[2]? v[2]+v[3]:"")+comp;
   }
 
   void prepend(string var, string val)
@@ -140,7 +140,7 @@ class Environment
       v = env[var] = ({ 0, 0, 0, ":" });
     foreach(val/v[3], string comp)
       if ((!v[0]) || search(v[0]/v[3], comp)<0)
-	v[0] = comp+(v[0]? v[3]+v[0]:"");
+        v[0] = comp+(v[0]? v[3]+v[0]:"");
   }
 
   void set(string var, string val)
@@ -215,7 +215,7 @@ void main(int argc, array argv)
   if (!Stdio.is_dir(localdir))
   { if (!Stdio.is_dir("bin") || !Stdio.is_dir("modules"))
     { write("   "+argv[0]+": "
-	    "should be run in the Roxen 'server' directory.\n");
+            "should be run in the Roxen 'server' directory.\n");
       exit(1);
     }
     if (!mkdir(localdir, 0775))

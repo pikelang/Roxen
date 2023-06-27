@@ -121,21 +121,21 @@ class FSGarb
 
       string dirs = dirname(rel);
       if (sizeof(dirs)) {
-	if (Stdio.mkdirhier(quarantine + dirs)) {
-	  // Try again with the directory existing.
-	  if (mv(path, quarantine + rel)) {
+        if (Stdio.mkdirhier(quarantine + dirs)) {
+          // Try again with the directory existing.
+          if (mv(path, quarantine + rel)) {
             rm_and_parent_cleanup(path, 1);
             return 1;
           }
-	}
+        }
       }
 
       // Different filesystems?
       if (Stdio.cp(path, quarantine + rel)) {
-	return rm_and_parent_cleanup(path, 1);
+        return rm_and_parent_cleanup(path, 1);
       }
       werror("FSGC: Failed to copy file %O to %O: %s.\n",
-	     path, quarantine + rel, strerror(errno()));
+             path, quarantine + rel, strerror(errno()));
       return 0;
     } else {
       return rm_and_parent_cleanup(path, 0);
@@ -145,13 +145,13 @@ class FSGarb
   void check_threshold()
   {
     GC_WERR("FSGC: Checking thresholds...\n"
-	    "      total_size: %d max_size: %d\n"
-	    "      num_files: %d max_files: %d\n",
-	    total_size, max_size,
-	    num_files, max_files);
+            "      total_size: %d max_size: %d\n"
+            "      num_files: %d max_files: %d\n",
+            total_size, max_size,
+            num_files, max_files);
 
     while ((max_size && (total_size > max_size)) ||
-	   (max_files && (num_files > max_files))) {
+           (max_files && (num_files > max_files))) {
       GC_WERR("FSGC: Filesystem limits exceeded forcing early removal.\n");
       if (!zap_one_file()) break;
     }
@@ -181,7 +181,7 @@ class FSGarb
       monitor_queue->adjust(m);
     } else {
       GC_WERR("Failed to delete file %O: %s\n",
-	      m->path, strerror(errno()));
+              m->path, strerror(errno()));
       // Restore the state in case the file is altered externally.
       m->st->size = bytes;
       m->st->isreg = 1;
@@ -208,33 +208,33 @@ class FSGarb
     inherit basic::Monitor;
 
     protected void create(string path,
-			  MonitorFlags flags,
-			  int max_dir_check_interval,
-			  int file_interval_factor,
-			  int stable_time)
+                          MonitorFlags flags,
+                          int max_dir_check_interval,
+                          int file_interval_factor,
+                          int stable_time)
     {
       ::create(path, flags, max_dir_check_interval,
-	       file_interval_factor, stable_time);
+               file_interval_factor, stable_time);
       GC_WERR("%O->create(%O, %O, %O, %O, %O)\n",
-	      this_object(), path, flags, max_dir_check_interval,
-	      file_interval_factor, stable_time);
+              this_object(), path, flags, max_dir_check_interval,
+              file_interval_factor, stable_time);
     }
 
     void check_for_release(int mask, int flags)
     {
       GC_WERR("%O->check_for_relase(0x%x, 0x%x)\n",
-	      this_object(), mask, flags);
+              this_object(), mask, flags);
       ::check_for_release(mask, flags);
       if (!monitors[path]) {
-	// We've been relased.
-	// Make sure to update our parent (if any) soon.
-	array a = path/"/";
-	Monitor m = monitors[canonic_path(a[..sizeof(a)-2]*"/")];
-	if (m) {
-	  GC_WERR("Waking up our parent dir: %O\n", m);
-	  m->next_poll = time(1)-1;
-	  monitor_queue->adjust(m);
-	}
+        // We've been relased.
+        // Make sure to update our parent (if any) soon.
+        array a = path/"/";
+        Monitor m = monitors[canonic_path(a[..sizeof(a)-2]*"/")];
+        if (m) {
+          GC_WERR("Waking up our parent dir: %O\n", m);
+          m->next_poll = time(1)-1;
+          monitor_queue->adjust(m);
+        }
       }
     }
 
@@ -245,13 +245,13 @@ class FSGarb
       last_change = st->mtime;
 
       if (st->isreg) {
-	num_files++;
-	total_size += st->size;
+        num_files++;
+        total_size += st->size;
 
-	// Register us for threadhold-based deletion.
-	handle_lookup[path] = pending_gc->push(st_to_pri(st), this);
+        // Register us for threadhold-based deletion.
+        handle_lookup[path] = pending_gc->push(st_to_pri(st), this);
 
-	check_threshold();
+        check_threshold();
       }
     }
 
@@ -260,11 +260,11 @@ class FSGarb
     {
       int delta = max_dir_check_interval || basic::max_dir_check_interval;
       if (!next_poll) {
-	// Attempt to distribute polls evenly at startup.
-	delta = 1 + random(delta);
-	if (st) {
-	  last_change = st->mtime;
-	}
+        // Attempt to distribute polls evenly at startup.
+        delta = 1 + random(delta);
+        if (st) {
+          last_change = st->mtime;
+        }
       }
 
       ::update(st);
@@ -273,24 +273,24 @@ class FSGarb
       // to scan as frequently as the default implementation.
 
       if (last_change <= time(1)) {
-	// Time until stable.
-	int d = last_change + (stable_time || basic::stable_time) - time(1);
+        // Time until stable.
+        int d = last_change + (stable_time || basic::stable_time) - time(1);
 
-	GC_WERR("%O: last: %s, d: %d, delta: %d\n",
-		this_object(), ctime(last_change) - "\n", d, delta);
-	if (d < 0) d = 1;
-	if (d < delta) delta = d;
+        GC_WERR("%O: last: %s, d: %d, delta: %d\n",
+                this_object(), ctime(last_change) - "\n", d, delta);
+        if (d < 0) d = 1;
+        if (d < delta) delta = d;
       }
       next_poll = time(1) + (delta || 1);
       GC_WERR("%O->update(%O) ==> next: %s\n",
-	      this_object(), st, ctime(next_poll) - "\n");
+              this_object(), st, ctime(next_poll) - "\n");
       monitor_queue->adjust(this);
     }
 
     protected string _sprintf(int c)
     {
       return sprintf("FSGarb.Monitor(%O, %O, last: %d, next: %s, st: %O)",
-		     path, flags, last_change, ctime(next_poll) - "\n", st);
+                     path, flags, last_change, ctime(next_poll) - "\n", st);
     }
 
     int(0..1) check(MonitorFlags|void flags)
@@ -300,53 +300,53 @@ class FSGarb
     }
 
     int(0..1) status_change(Stdio.Stat old_st, Stdio.Stat st,
-			    MonitorFlags old_flags, MonitorFlags flags)
+                            MonitorFlags old_flags, MonitorFlags flags)
     {
       GC_WERR("Status change %O(0x%x) ==> %O(0x%x) for %O!\n",
-	      old_st, old_flags, st, flags, this_object());
+              old_st, old_flags, st, flags, this_object());
       int res = ::status_change(old_st, st, old_flags, flags);
       if (st->isdir && (flags & MF_RECURSE)) {
-	foreach(files, string file) {
-	  file = canonic_path(Stdio.append_path(path, file));
-	  if (!monitors[file]) {
-	    // Lost update due to race-condition:
-	    //
-	    //   Exist ==> Deleted ==> Exists
-	    //
-	    // with no update of directory inbetween.
-	    //
-	    // Create the lost submonitor again.
-	    res = 1;
-	    monitor(file, old_flags | MF_AUTO | MF_HARD,
-		    max_dir_check_interval,
-		    file_interval_factor,
-		    stable_time);
-	    monitors[file]->check();
-	  }
-	}
+        foreach(files, string file) {
+          file = canonic_path(Stdio.append_path(path, file));
+          if (!monitors[file]) {
+            // Lost update due to race-condition:
+            //
+            //   Exist ==> Deleted ==> Exists
+            //
+            // with no update of directory inbetween.
+            //
+            // Create the lost submonitor again.
+            res = 1;
+            monitor(file, old_flags | MF_AUTO | MF_HARD,
+                    max_dir_check_interval,
+                    file_interval_factor,
+                    stable_time);
+            monitors[file]->check();
+          }
+        }
       }
 
       num_files += st->isreg - old_st->isreg;
 
       if (old_st->isreg) {
-	total_size -= old_st->size;
+        total_size -= old_st->size;
 
-	if (!st->isreg) {
-	  remove_pending(this);
-	}
+        if (!st->isreg) {
+          remove_pending(this);
+        }
       }
       if (st->isreg) {
-	total_size += st->size;
+        total_size += st->size;
 
-	// Register us for threshold-based deletion.
-	if (!old_st->isreg) {
-	  handle_lookup[path] = pending_gc->push(st_to_pri(st), this);
-	} else {
-	  object handle = handle_lookup[path];
-	  if (handle && (st_to_pri(st) != st_to_pri(old_st))) {
-	    pending_gc->adjust_pri(handle, st_to_pri(st));
-	  }
-	}
+        // Register us for threshold-based deletion.
+        if (!old_st->isreg) {
+          handle_lookup[path] = pending_gc->push(st_to_pri(st), this);
+        } else {
+          object handle = handle_lookup[path];
+          if (handle && (st_to_pri(st) != st_to_pri(old_st))) {
+            pending_gc->adjust_pri(handle, st_to_pri(st));
+          }
+        }
       }
 
       check_threshold();
@@ -358,13 +358,13 @@ class FSGarb
       GC_WERR("File %O %O created (%O).\n", path, st, this_object());
 
       if (st->isreg) {
-	num_files++;
-	total_size += st->size;
+        num_files++;
+        total_size += st->size;
 
-	// Register us for threshold-based deletion.
-	handle_lookup[path] = pending_gc->push(st_to_pri(st), this);
+        // Register us for threshold-based deletion.
+        handle_lookup[path] = pending_gc->push(st_to_pri(st), this);
 
-	check_threshold();
+        check_threshold();
       }
     }
 
@@ -373,12 +373,12 @@ class FSGarb
       GC_WERR("File %O %O deleted (%O).\n", path, old_st, this_object());
 
       if (old_st->isreg) {
-	num_files--;
-	total_size -= old_st->size;
+        num_files--;
+        total_size -= old_st->size;
 
-	remove_pending(this);
+        remove_pending(this);
 
-	check_threshold();
+        check_threshold();
       }
     }
   }
@@ -401,8 +401,8 @@ class FSGarb
   }
 
   protected void create(string modid, string path, int max_age,
-			int|void max_size, int|void max_files,
-			string|void quarantine,
+                        int|void max_size, int|void max_files,
+                        string|void quarantine,
                         int(0..1)|void cleanup_parent_dirs)
   {
     GC_WERR("FSGC: Max age: %d\n", max_age);
@@ -420,7 +420,7 @@ class FSGarb
 
     if (quarantine) {
       if (sizeof(quarantine)) {
-	quarantine = canonic_path(quarantine);
+        quarantine = canonic_path(quarantine);
       }
       this::quarantine = quarantine;
     }
@@ -457,7 +457,7 @@ class FSGarb
   }
 
   void reconfigure(int new_max_age, int|void new_max_size,
-		   int|void new_max_files)
+                   int|void new_max_files)
   {
     if (!zero_type(new_max_size)) {
       GC_WERR("FSGC: New max size: %d\n", new_max_size);
@@ -473,11 +473,11 @@ class FSGarb
       int old_stable_time = stable_time;
       set_max_dir_check_interval(stable_time = new_max_age);
       if (stable_time < old_stable_time) {
-	// We need to adjust the scan times for the monitors.
-	foreach(values(monitors), Monitor m) {
-	  m->next_poll = 0;
-	  m->update(m->st);
-	}
+        // We need to adjust the scan times for the monitors.
+        foreach(values(monitors), Monitor m) {
+          m->next_poll = 0;
+          m->update(m->st);
+        }
       }
     }
 
@@ -499,9 +499,9 @@ class FSGarb
   array(Stdio.Stat) get_stats()
   {
     return filter(values(monitors)->st,
-		  lambda(Stdio.Stat st) {
-		    return st && st->isreg;
-		  });
+                  lambda(Stdio.Stat st) {
+                    return st && st->isreg;
+                  });
   }
 
   void clear()
@@ -557,25 +557,25 @@ void meta_fsgc()
       max_sleep = limit(1, next_start - now, max_sleep);
 
       if ((next_start - now) > 600) {
-	// FSGC not expected to run for at least 10 minutes.
-	// Zap the state and let it reinitialize when
-	// it starts again.
-	stop_fsgcs();
+        // FSGC not expected to run for at least 10 minutes.
+        // Zap the state and let it reinitialize when
+        // it starts again.
+        stop_fsgcs();
 
-	fsgcs_halted = 1;
+        fsgcs_halted = 1;
       }
     } else {
       if (fsgcs_halted) {
-	start_fsgcs();
+        start_fsgcs();
 
-	fsgcs_halted = 0;
+        fsgcs_halted = 0;
       }
 
       // FSGC Allowed to run.
       max_sleep = 60;
       foreach(fsgarbs; string id; FSGarb g) {
-	int seconds = g && g->check();
-	if (seconds < max_sleep) max_sleep = seconds;
+        int seconds = g && g->check();
+        if (seconds < max_sleep) max_sleep = seconds;
       }
       if (max_sleep < 1) max_sleep = 1;
     }
@@ -613,14 +613,14 @@ class FSGarbWrapper(string id)
 }
 
 FSGarbWrapper register_fsgarb(string modid, string path, int max_age,
-			      int|void max_size, int|void max_files,
-			      string|void quarantine,
+                              int|void max_size, int|void max_files,
+                              string|void quarantine,
                               int(0..1)|void cleanup_parent_dirs)
 {
   if ((path == "") || (path == "/") || (max_age <= 0)) return 0;
   string id = modid + "\0" + path + "\0" + gethrtime();
   FSGarb g = FSGarb(modid, path, max_age, max_size, max_files,
-		    quarantine, cleanup_parent_dirs);
+                    quarantine, cleanup_parent_dirs);
   fsgarbs[id] = g;
   GC_WERR("FSGC: Register garb on %O ==> id: %O\n", path, id);
   return FSGarbWrapper(id);

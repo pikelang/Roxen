@@ -139,11 +139,11 @@ class CacheStream ( Stdio.File file, string fname, int new )
     {
       if(file->seek(0)!=0)
       {
-	CACHE_WERR("load_headers - compat seek failed");
-	return 0;
+        CACHE_WERR("load_headers - compat seek failed");
+        return 0;
       }
       if(load_headers_compat())
-	return 1;
+        return 1;
 
       CACHE_WERR("load_headers ("+QUERY(cachedir)+fname+"): "+err[0]);
       return 0;
@@ -179,7 +179,7 @@ class CacheStream ( Stdio.File file, string fname, int new )
     }
 
     if(!((file->seek(0) == 0) &&
-	 file->write(head)))
+         file->write(head)))
     {
       report_debug("save headers - failed\n");
       return 0;
@@ -192,7 +192,7 @@ class CacheStream ( Stdio.File file, string fname, int new )
     if(objectp(file))
     {
       if(new)
-	catch(rm(rfile)); // roxen might be gone
+        catch(rm(rfile)); // roxen might be gone
       catch(destruct(file)); // 'file' might be gone
     }
   }
@@ -240,9 +240,9 @@ class Cache
   void reinit(string basename)
   {
     command("create", QUERY(cachedir), basename,
-	    QUERY(garb_min_garb), QUERY(cache_size),
-	    QUERY(cache_max_num_files), QUERY(cache_minimum_left),
-	    QUERY(cache_gc_logfile));
+            QUERY(garb_min_garb), QUERY(cache_size),
+            QUERY(cache_max_num_files), QUERY(cache_minimum_left),
+            QUERY(cache_gc_logfile));
   }
 
   /*
@@ -293,7 +293,7 @@ class Cache
     };
     if (err) {
       report_error(sprintf("Error initiating garbage-collector:\n"
-			   "%s\n", describe_backtrace(err)));
+                           "%s\n", describe_backtrace(err)));
     }
     return;
   }
@@ -353,7 +353,7 @@ public void reinit_garber()
   if(Stdio.file_size(QUERY(cachedir)+"logs")>-2)
   {
     report_error("Cache directory ("+QUERY(cachedir)+") cannot be"
-		 " accessed.\nCaching disabled.\n");
+                 " accessed.\nCaching disabled.\n");
     SET(cache,0);
     return;
   }
@@ -502,9 +502,9 @@ CacheStream cache_file(string cl, string entry)
      ((int)cf->headers["content-length"] > (stat[ST_SIZE] - cf->headers->headers_size)))
   {
     CACHE_WERR(name+": low content-length="+cf->headers["content-length"]+
-	       ", headers_size="+cf->headers->headers_size+
-	       ", ST_SIZE="+stat[ST_SIZE]+
-	       ", returncode="+cf->headers[" returncode"]);
+               ", headers_size="+cf->headers->headers_size+
+               ", ST_SIZE="+stat[ST_SIZE]+
+               ", returncode="+cf->headers[" returncode"]);
     destruct(cf);
     return 0;
   }
@@ -514,8 +514,8 @@ CacheStream cache_file(string cl, string entry)
     if(!Roxen.is_modified(cf->headers["expires"], time(1)))
     {
       CACHE_WERR("refresh(expired): " + name + "(" + entry +
-		 "), " + age(stat[ST_CTIME]) +
-		 ", expires: " + cf->headers["expires"]);
+                 "), " + age(stat[ST_CTIME]) +
+                 ", expires: " + cf->headers["expires"]);
       destruct(cf);
       return 0;
     }
@@ -524,11 +524,11 @@ CacheStream cache_file(string cl, string entry)
   {
     if(QUERY(cache_check_last_modified) &&
        Roxen.is_modified(cf->headers["last-modified"],
-		   stat[ST_CTIME] - time(1) + stat[ST_CTIME]))
+                   stat[ST_CTIME] - time(1) + stat[ST_CTIME]))
     {
       CACHE_WERR("refresh(last-modified): " + name + "(" + entry +
-		 "), " + age(stat[ST_CTIME]) +
-		 ", last-modified: " + cf->headers["last-modified"]);
+                 "), " + age(stat[ST_CTIME]) +
+                 ", last-modified: " + cf->headers["last-modified"]);
       destruct(cf);
       return 0;
     }
@@ -538,7 +538,7 @@ CacheStream cache_file(string cl, string entry)
     if((stat[ST_CTIME] + cache->last_resort) < time(1))
     {
       CACHE_WERR("refresh(last resort=" + cache->last_resort + "): " + name +
-		 "(" + entry + "), " + age(stat[ST_CTIME]));
+                 "(" + entry + "), " + age(stat[ST_CTIME]));
       destruct(cf);
       return 0;
     }
@@ -576,16 +576,16 @@ CacheStream create_cache_file(string cl, string entry)
 
     for(i=10; i>=0; i--) {
       if(fd=open(rfile, "rwcx"))
-	break;
+        break;
 
       if(i>1) {
-	rfile = rfile + "+";
-	CACHE_WERR(rfile + "(" + entry + "): Retry open new cachefile");
+        rfile = rfile + "+";
+        CACHE_WERR(rfile + "(" + entry + "): Retry open new cachefile");
       } else {
-	// Remove this file to have a chance to clean away next time.
-	rm(rfile);
-	CACHE_WERR(rfile + "(" + entry + "): retry failed (file removed)");
-	return 0;
+        // Remove this file to have a chance to clean away next time.
+        rm(rfile);
+        CACHE_WERR(rfile + "(" + entry + "): retry failed (file removed)");
+        return 0;
       }
     }
   }
@@ -636,8 +636,8 @@ void default_check_cache_file(CacheStream stream)
     stream->file->close();
     mv(stream->rfile, stream->rfiledone);
     cache->accessed(stream->fname+".done",
-		    (QUERY(cache_size) || QUERY(cache_max_num_files))?
-		    stat[ST_SIZE]:0);
+                    (QUERY(cache_size) || QUERY(cache_max_num_files))?
+                    stat[ST_SIZE]:0);
     stream->new = 0;
   }
   destruct(stream);
@@ -676,8 +676,8 @@ void http_check_cache_file(CacheStream cachef)
         (tc_stat = tc->stat()) &&
         (tc_stat[ST_SIZE]>=0) &&
         (tc_stat[ST_MTIME]+120<stat[ST_MTIME])) {
-	CACHE_WERR(tocheck + ": cleaned away");
-	rm(tocheck);
+        CACHE_WERR(tocheck + ": cleaned away");
+        rm(tocheck);
       }
 #ifdef CACHE_DEBUG
       else  CACHE_WERR(tocheck + ": not cleaned away");
@@ -695,12 +695,12 @@ void http_check_cache_file(CacheStream cachef)
         rmold(cachef->rfiledone);
 #ifdef CACHE_DEBUG
         CACHE_WERR(cachef->rfiledone+"("+cachef->headers->name+"): "+
-		   age(fstat[ST_CTIME])+", 304-delete-last-modified: "+
-		   cachef->headers["last-modified"]);
+                   age(fstat[ST_CTIME])+", 304-delete-last-modified: "+
+                   cachef->headers["last-modified"]);
       } else {
         CACHE_WERR(cachef->rfiledone+"("+cachef->headers->name+"): "+
-		   age(fstat[ST_CTIME])+", 304-last-modified: "+
-		   cachef->headers["last-modified"]);
+                   age(fstat[ST_CTIME])+", 304-last-modified: "+
+                   cachef->headers["last-modified"]);
 #endif
       }
     }
@@ -716,20 +716,20 @@ void http_check_cache_file(CacheStream cachef)
   if(cachef->headers[" returncode"] == 200) {
     if(cachef->headers["content-length"]) {
       if((int)cachef->headers["content-length"] <=0)
-	DELETE_AND_RETURN();
+        DELETE_AND_RETURN();
     } else if(QUERY(cache_keep_without_content_length)) {
       if((cachef->headers["content-type"] != "text/html") ||
-	 ((cachef->file->tell() > cachef->headers->headers_size) &&
-	  (cachef->file->seek(cachef->headers->headers_size) !=
-	   cachef->headers->headers_size)))
-	DELETE_AND_RETURN();
+         ((cachef->file->tell() > cachef->headers->headers_size) &&
+          (cachef->file->seek(cachef->headers->headers_size) !=
+           cachef->headers->headers_size)))
+        DELETE_AND_RETURN();
 
       string tocheck = lower_case(cachef->file->read(500000));
 
       if((search(tocheck, "<html>") == -1) ||
-	 ((search(tocheck, "</html>") == -1) &&
-	  (search(tocheck, "</body>") == -1)))
-	DELETE_AND_RETURN();
+         ((search(tocheck, "</html>") == -1) &&
+          (search(tocheck, "</body>") == -1)))
+        DELETE_AND_RETURN();
     }
   }
   if(!cachef->headers["content-length"])
@@ -739,7 +739,7 @@ void http_check_cache_file(CacheStream cachef)
   if(cachef->headers["expires"]&&
      !Roxen.is_modified(cachef->headers["expires"], time(1))) {
     CACHE_WERR(cachef->rfile + "(" + cachef->headers->name +
-	       "): already expired " + cachef->headers["expires"]);
+               "): already expired " + cachef->headers["expires"]);
     DELETE_AND_RETURN();
   }
 
@@ -753,9 +753,9 @@ void http_check_cache_file(CacheStream cachef)
   if((int)cachef->headers["content-length"] >
      (stat[ST_SIZE] - cachef->headers->headers_size)) {
     CACHE_WERR(cachef->rfile + "(" + cachef->headers->name +
-	       "): low content-length=" + cachef->headers["content-length"] +
-	       ", headers_size=" + cachef->headers->headers_size +
-	       ", ST_SIZE=" + stat[ST_SIZE]);
+               "): low content-length=" + cachef->headers["content-length"] +
+               ", headers_size=" + cachef->headers->headers_size +
+               ", ST_SIZE=" + stat[ST_SIZE]);
     DELETE_AND_RETURN();
   }
 

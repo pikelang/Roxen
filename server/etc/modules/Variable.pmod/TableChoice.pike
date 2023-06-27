@@ -9,10 +9,10 @@ array(string) get_choice_list( )
 }
 
 void create( string default_value,
-	     void|int flags,
-	     void|LocaleString std_name,
-	     void|LocaleString std_doc,
-	     .Variable _dbchoice )
+             void|int flags,
+             void|LocaleString std_name,
+             void|LocaleString std_doc,
+             .Variable _dbchoice )
 {
   ::create( default_value, ({}), flags, std_name, std_doc );
   db = _dbchoice;

@@ -431,9 +431,9 @@ function selectFirstInputField(focus_only)
     for (var i = 0; i < inputs.length; i++) {
       var inp = inputs[i];
       if ((inp.type == "text" || inp.type == "password" || inp.type == "search") &&
-	  !inp.disabled && !inp.className.match('no_select')) {
-	first_input = inp;
-	break;
+          !inp.disabled && !inp.className.match('no_select')) {
+        first_input = inp;
+        break;
       }
     }
     
@@ -442,8 +442,8 @@ function selectFirstInputField(focus_only)
     var first_textarea = null;
     for (var i = 0; i < textareas.length; i++) {
       if (!textareas[i].disabled) {
-	first_textarea = textareas[i];
-	break;
+        first_textarea = textareas[i];
+        break;
       }
     }
     
@@ -453,7 +453,7 @@ function selectFirstInputField(focus_only)
     if (first) {
       first.focus();
       if (!focus_only)
-	first.select();
+        first.select();
     }
   }
 }

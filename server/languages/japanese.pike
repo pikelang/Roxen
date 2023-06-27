@@ -11,8 +11,8 @@ inherit "abstract.pike";
 constant cvs_version = "$Id$";
 constant _id = ({ "ja", "japanese", "日本語" });
 constant _aliases =  ({ "jp", "japanese", "nihongo" /* To keep Peter Evans happy */,
-			"日本語",
-			"kj", "kanji", /* For backward compatibility */
+                        "日本語",
+                        "kj", "kanji", /* For backward compatibility */
 });
 
 constant implode_conjunction = "と";
@@ -129,7 +129,7 @@ string short_month(int num)
 string day(int num)
 {
   return ({ "日", "月", "火", "水", "木", "金", "土" })[ num - 1 ]+
-	    "曜日";
+            "曜日";
 }
 
 string short_day(int num)

@@ -373,7 +373,7 @@ protected string format_ldap_error (Connection conn)
 {
   if (string srv_err = conn->server_error_string())
     return sprintf ("%s (%s)", srv_err,
-		    Protocols.LDAP.ldap_error_strings[conn->error_number()]);
+                    Protocols.LDAP.ldap_error_strings[conn->error_number()]);
   else
     return Protocols.LDAP.ldap_error_strings[conn->error_number()];
 }
@@ -402,15 +402,15 @@ mapping(string:array(int|string)) read_attrs(string attrs, int op, string arg_na
     int fields = sscanf (attrs, WS"(%[-A-Za-z0-9.]"WS":"WS"%s", name, attrs);
     if (fields < 2) {
       if (sscanf (attrs, WS"%*c") == 1)
-	break;			// At the end.
+        break;			// At the end.
       else
-	RXML.parse_error ("Expected '(' at the start of %O in the %O argument.\n",
-			  EXCERPT (attrs), arg_name);
+        RXML.parse_error ("Expected '(' at the start of %O in the %O argument.\n",
+                          EXCERPT (attrs), arg_name);
     }
     if (name == "" || fields < 5)
       RXML.parse_error ("Expected attribute name followed by ':' "
-			"at the start of %O in the %O argument.\n",
-			EXCERPT (attrs), arg_name);
+                        "at the start of %O in the %O argument.\n",
+                        EXCERPT (attrs), arg_name);
 
     RXML.Context ctx = RXML_CONTEXT;
     array(int|string) value = res[name] || (op >= 0 ? ({op}) : ({}));
@@ -421,115 +421,115 @@ mapping(string:array(int|string)) read_attrs(string attrs, int op, string arg_na
     else {
     parse_values:
       while (1) {
-	switch (firstchar) {
+        switch (firstchar) {
 
-	  case "\"": {		// Newstyle string literal.
-	    string lit;
+          case "\"": {		// Newstyle string literal.
+            string lit;
 #if __PIKE_VERSION__ >= 7.6
-	    if (sscanf (attrs, "%O"WS"%s", lit, attrs) < 3)
-	      RXML.parse_error ("String at the start of %O in the %O argument isn't "
-				"terminated.\n", EXCERPT (attrs), arg_name);
+            if (sscanf (attrs, "%O"WS"%s", lit, attrs) < 3)
+              RXML.parse_error ("String at the start of %O in the %O argument isn't "
+                                "terminated.\n", EXCERPT (attrs), arg_name);
 #else
-	    // Older pikes doesn't have %O in sscanf.
-	    string tmp = attrs[1..];
-	    lit = "";
-	    while (1) {
-	      sscanf (tmp, "%[^\"\\]%s", string val, tmp);
-	      lit += val;
-	      if (sscanf (tmp, "\""WS"%s", tmp) == 2) break;
-	      int escchar;
-	      if (sscanf (tmp, "\\%c%s", escchar, tmp) != 2)
-		RXML.parse_error ("String at the start of %O in the %O argument isn't "
-				  "terminated.\n", EXCERPT (attrs), arg_name);
-	      string char = (['\'': "'", '"': "\"", '\\': "\\", 'b': "\b",
-			      'f': "\f", 'n': "\n", 'r': "\r", 't': "\t",
-			      'v': "\v",
-			      // Unsupported. Use pike >= 7.6.
-			      '0': "", '1': "", '2': "", '3': "", '4': "",
-			      '5': "", '6': "", '7': "", '8': "", '9': "",
-			      'x': "", 'u': ""])[escchar];
-	      if (char == "") {
-		tmp = sprintf ("\\%c%s", escchar, tmp);
-		RXML.parse_error ("Escape sequence at the start of %O in the %O "
-				  "argument isn't supported in this version.\n",
-				  EXCERPT (tmp), arg_name);
-	      }
-	      if (char)
-		lit += char;
-	      else
-		lit += sprintf ("%c", escchar);
-	    }
-	    attrs = tmp;
+            // Older pikes doesn't have %O in sscanf.
+            string tmp = attrs[1..];
+            lit = "";
+            while (1) {
+              sscanf (tmp, "%[^\"\\]%s", string val, tmp);
+              lit += val;
+              if (sscanf (tmp, "\""WS"%s", tmp) == 2) break;
+              int escchar;
+              if (sscanf (tmp, "\\%c%s", escchar, tmp) != 2)
+                RXML.parse_error ("String at the start of %O in the %O argument isn't "
+                                  "terminated.\n", EXCERPT (attrs), arg_name);
+              string char = (['\'': "'", '"': "\"", '\\': "\\", 'b': "\b",
+                              'f': "\f", 'n': "\n", 'r': "\r", 't': "\t",
+                              'v': "\v",
+                              // Unsupported. Use pike >= 7.6.
+                              '0': "", '1': "", '2': "", '3': "", '4': "",
+                              '5': "", '6': "", '7': "", '8': "", '9': "",
+                              'x': "", 'u': ""])[escchar];
+              if (char == "") {
+                tmp = sprintf ("\\%c%s", escchar, tmp);
+                RXML.parse_error ("Escape sequence at the start of %O in the %O "
+                                  "argument isn't supported in this version.\n",
+                                  EXCERPT (tmp), arg_name);
+              }
+              if (char)
+                lit += char;
+              else
+                lit += sprintf ("%c", escchar);
+            }
+            attrs = tmp;
 #endif
-	    value += ({lit});
-	    break;
-	  }
+            value += ({lit});
+            break;
+          }
 
-	  case "'": {		// Oldstyle string literal.
-	    string lit;
-	    if (sscanf (attrs, "'%[^']'"WS"%s", lit, attrs) < 3)
-	      RXML.parse_error ("String at the start of %O in the %O argument isn't "
-				"terminated.\n", EXCERPT (attrs), arg_name);
-	    value += ({lit});
-	    break;
-	  }
+          case "'": {		// Oldstyle string literal.
+            string lit;
+            if (sscanf (attrs, "'%[^']'"WS"%s", lit, attrs) < 3)
+              RXML.parse_error ("String at the start of %O in the %O argument isn't "
+                                "terminated.\n", EXCERPT (attrs), arg_name);
+            value += ({lit});
+            break;
+          }
 
-	  case ",":		// Extra comma.
-	    break;
+          case ",":		// Extra comma.
+            break;
 
-	  default: {		// RXML variable.
-	    // Allow letters, digits, and the chars '.', '-', '_',
-	    // ':'. Since there are many letters and digits in
-	    // unicode, we instead deny only the ASCII chars outside
-	    // this set of chars.
-	    sscanf (attrs, "%[^\0-,/;-@[-^`{-\177]"WS"%s", string varref, string tmp);
-	    array(string|int) splitted = ctx->parse_user_var (varref, 1);
-	    if (splitted[0] == 1)
-	      RXML.parse_error ("Invalid attribute value "
-				"at the start of %O in the %O argument.\n",
-				EXCERPT (attrs), arg_name);
-	    attrs = tmp;
+          default: {		// RXML variable.
+            // Allow letters, digits, and the chars '.', '-', '_',
+            // ':'. Since there are many letters and digits in
+            // unicode, we instead deny only the ASCII chars outside
+            // this set of chars.
+            sscanf (attrs, "%[^\0-,/;-@[-^`{-\177]"WS"%s", string varref, string tmp);
+            array(string|int) splitted = ctx->parse_user_var (varref, 1);
+            if (splitted[0] == 1)
+              RXML.parse_error ("Invalid attribute value "
+                                "at the start of %O in the %O argument.\n",
+                                EXCERPT (attrs), arg_name);
+            attrs = tmp;
 
-	    mixed varval = ctx->get_var (splitted[1..], splitted[0]);
+            mixed varval = ctx->get_var (splitted[1..], splitted[0]);
 
-	    // Coerce the value to an array to be concatenated with value.
+            // Coerce the value to an array to be concatenated with value.
 #if 0
-	    // Is this a good idea?
-	    if (mappingp (varval))
-	      varval = values (varval);
-	    else
+            // Is this a good idea?
+            if (mappingp (varval))
+              varval = values (varval);
+            else
 #endif
-	      if (multisetp (varval))
-		varval = indices (varval);
-	    if (!arrayp (varval))
-	      varval = ({varval});
-	    value += map (
-	      varval,
-	      lambda (mixed v) {
-		if (mixed err = catch {return (string) v;})
-		  RXML.run_error ("Failed to convert %s in the value of %O "
-				  "specified in the %O argument to a string: %s\n",
-				  RXML.utils.format_short (v),
-				  varref, arg_name, describe_error (err));
-	      });
-	    break;
-	  }
-	}
+              if (multisetp (varval))
+                varval = indices (varval);
+            if (!arrayp (varval))
+              varval = ({varval});
+            value += map (
+              varval,
+              lambda (mixed v) {
+                if (mixed err = catch {return (string) v;})
+                  RXML.run_error ("Failed to convert %s in the value of %O "
+                                  "specified in the %O argument to a string: %s\n",
+                                  RXML.utils.format_short (v),
+                                  varref, arg_name, describe_error (err));
+              });
+            break;
+          }
+        }
 
-	sscanf (attrs, "%1s"WS"%s", firstchar, string tmp);
-	switch (firstchar) {
-	  case ")":
-	    attrs = tmp;
-	    break parse_values;
-	  case ",":
-	    attrs = tmp;
-	    firstchar = attrs[..0];
-	    break;
-	  default:
-	    RXML.parse_error ("Expected ',' or ')' "
-			      "at the start of %O in the %O argument.\n",
-			      EXCERPT (attrs), arg_name);
-	}
+        sscanf (attrs, "%1s"WS"%s", firstchar, string tmp);
+        switch (firstchar) {
+          case ")":
+            attrs = tmp;
+            break parse_values;
+          case ",":
+            attrs = tmp;
+            firstchar = attrs[..0];
+            break;
+          default:
+            RXML.parse_error ("Expected ',' or ')' "
+                              "at the start of %O in the %O argument.\n",
+                              EXCERPT (attrs), arg_name);
+        }
       }
     }
 
@@ -565,7 +565,7 @@ mapping(string:array(mixed))|int read_attrs(string attrs, int opval, void|string
   foreach(attrs / "(", string tmp)
     if (sizeof(tmp)) { // without empty '()'
       if ((ix = search(tmp, ":")) < 1) // missed ':' or is first char
-	continue;
+        continue;
       //atypes[cnt] = (tmp / ":")[0];
       atypes[cnt] = tmp[..(ix-1)];
       //tmparr = tmp[(sizeof(atypes[cnt])+1)..] / ",";
@@ -573,10 +573,10 @@ mapping(string:array(mixed))|int read_attrs(string attrs, int opval, void|string
       vcnt = sizeof(tmparr); // + 1;
       tmpvals = allocate(vcnt+flg);
       for (ix=0; ix<vcnt; ix++) {
-	tmpvals[ix+flg] = (sscanf(tmparr[ix], "'%s'", aval))? aval : "";
+        tmpvals[ix+flg] = (sscanf(tmparr[ix], "'%s'", aval))? aval : "";
       }
       if(flg)
-	tmpvals[0] = opval;
+        tmpvals[0] = opval;
       avals[cnt] = tmpvals;
       cnt++;
     } // if
@@ -594,7 +594,7 @@ mapping(string:array(mixed))|int read_attrs(string attrs, int opval, void|string
 #endif
 
 protected void join_attrvals (mapping(string:array) into,
-			      mapping(string:array) from)
+                              mapping(string:array) from)
 {
   foreach (indices (from), string attr)
     if (into[attr])
@@ -658,75 +658,75 @@ int|array(mapping(string:string|array(string))) do_ldap_op (
   switch (op) {
     case "add":
       if (!args->attr && !args["add-attr"])
-	RXML.parse_error ("\"attr\" or \"add-attr\" argument required "
-			  "for \"add\" operation.\n");
+        RXML.parse_error ("\"attr\" or \"add-attr\" argument required "
+                          "for \"add\" operation.\n");
       if (string attr = args->attr)
-	attrvals = read_attrs (attr, -1, "attr");
+        attrvals = read_attrs (attr, -1, "attr");
       if (string add_attr = args["add-attr"]) {
-	mapping(string:array) add_attrs = read_attrs (add_attr, -1, "add-attr");
-	if (attrvals)
-	  join_attrvals (attrvals, add_attrs);
-	else
-	  attrvals = add_attrs;
+        mapping(string:array) add_attrs = read_attrs (add_attr, -1, "add-attr");
+        if (attrvals)
+          join_attrvals (attrvals, add_attrs);
+        else
+          attrvals = add_attrs;
       }
       break;
 
     case "modify":
     case "replace": {
       mapping(string:array) add_attrs = args["add-attr"] ?
-	read_attrs (args["add-attr"], Protocols.LDAP.MODIFY_ADD,
-		    "add-attr") : ([]);
+        read_attrs (args["add-attr"], Protocols.LDAP.MODIFY_ADD,
+                    "add-attr") : ([]);
       attrvals = args["replace-attr"] ?
-	read_attrs (args["replace-attr"], Protocols.LDAP.MODIFY_REPLACE,
-		    "replace-attr") : ([]);
+        read_attrs (args["replace-attr"], Protocols.LDAP.MODIFY_REPLACE,
+                    "replace-attr") : ([]);
       mapping(string:array) delete_attrs = args["delete-attr"] ?
-	read_attrs (args["delete-attr"], Protocols.LDAP.MODIFY_DELETE,
-		    "delete-attr") : ([]);
+        read_attrs (args["delete-attr"], Protocols.LDAP.MODIFY_DELETE,
+                    "delete-attr") : ([]);
 
       if (string attr = args->attr) {
-	mapping(string:array) attrs1, attrs2;
-	if (op == "modify") {
-	  attrs1 = add_attrs;
-	  attrs2 = read_attrs (attr, Protocols.LDAP.MODIFY_ADD, "attr");
-	}
-	else {
-	  attrs1 = attrvals;
-	  attrs2 = read_attrs (attr, Protocols.LDAP.MODIFY_REPLACE, "attr");
-	}
-	join_attrvals (attrs1, attrs2);
+        mapping(string:array) attrs1, attrs2;
+        if (op == "modify") {
+          attrs1 = add_attrs;
+          attrs2 = read_attrs (attr, Protocols.LDAP.MODIFY_ADD, "attr");
+        }
+        else {
+          attrs1 = attrvals;
+          attrs2 = read_attrs (attr, Protocols.LDAP.MODIFY_REPLACE, "attr");
+        }
+        join_attrvals (attrs1, attrs2);
       }
       else
-	if (!args["add-attr"] && !args["replace-attr"] && !args["delete-attr"])
-	  RXML.parse_error ("No attribute argument specified. Use at least one of "
-			    "\"add-attr\", \"replace-attr\" or \"delete-attr\".\n");
+        if (!args["add-attr"] && !args["replace-attr"] && !args["delete-attr"])
+          RXML.parse_error ("No attribute argument specified. Use at least one of "
+                            "\"add-attr\", \"replace-attr\" or \"delete-attr\".\n");
 
       foreach (indices (add_attrs), string attr) {
-	if (delete_attrs[attr])
-	  RXML.parse_error ("Attribute %O found in both "
-			    "\"add-attr\" and \"delete-attr\".\n", attr);
-	else if (array repl = attrvals[attr])
-	  attrvals[attr] = repl + add_attrs[attr][1..];
-	else
-	  attrvals[attr] = add_attrs[attr];
+        if (delete_attrs[attr])
+          RXML.parse_error ("Attribute %O found in both "
+                            "\"add-attr\" and \"delete-attr\".\n", attr);
+        else if (array repl = attrvals[attr])
+          attrvals[attr] = repl + add_attrs[attr][1..];
+        else
+          attrvals[attr] = add_attrs[attr];
       }
 
       foreach (indices (delete_attrs), string attr) {
-	if (array repl = attrvals[attr]) {
+        if (array repl = attrvals[attr]) {
 #ifdef DEBUG
-	  if (repl[0] != Protocols.LDAP.MODIFY_REPLACE) error ("Oops..\n");
+          if (repl[0] != Protocols.LDAP.MODIFY_REPLACE) error ("Oops..\n");
 #endif
-	  attrvals[attr] = ({Protocols.LDAP.MODIFY_REPLACE}) +
-	    // NB: This doesn't use the proper equality matchers
-	    // according to the attribute syntax.
-	    (repl[1..] - delete_attrs[attr][1..]);
-	}
-	else
-	  attrvals[attr] = delete_attrs[attr];
+          attrvals[attr] = ({Protocols.LDAP.MODIFY_REPLACE}) +
+            // NB: This doesn't use the proper equality matchers
+            // according to the attribute syntax.
+            (repl[1..] - delete_attrs[attr][1..]);
+        }
+        else
+          attrvals[attr] = delete_attrs[attr];
       }
 
       if (!sizeof (attrvals))
-	// Nothing to do.
-	return 1;
+        // Nothing to do.
+        return 1;
       break;
     }
   }
@@ -758,10 +758,10 @@ int|array(mapping(string:string|array(string))) do_ldap_op (
   if (mixed error =
       catch (con = Protocols.LDAP.get_connection(@connection_args)))
     connection_error (status, "Couldn't connect to LDAP server: %s",
-		      describe_error (error));
+                      describe_error (error));
   if (con->error_number())
     connection_error (status, "Failed to bind to LDAP server: %s",
-		      format_ldap_error (con));
+                      format_ldap_error (con));
   status->last_connect_time = time();
   status->status_msg = "Connected with LDAPv" + con->get_protocol_version();
 
@@ -770,59 +770,59 @@ int|array(mapping(string:string|array(string))) do_ldap_op (
   switch (op) {
     case "search": {
       if(args->basedn)
-	con->set_basedn(args->basedn);
+        con->set_basedn(args->basedn);
 
       if (string scope = args["search-scope"]) {
-	if (!(<"base", "one", "sub">)[scope])
-	  RXML.parse_error ("Unknown scope %O.\n", scope);
-	con->set_scope (scope);
+        if (!(<"base", "one", "sub">)[scope])
+          RXML.parse_error ("Unknown scope %O.\n", scope);
+        con->set_scope (scope);
       }
 
       object filter;
       string filter_arg = args["search-filter"];
       if (mixed error = catch {
-	    if (filter_arg)
-	      filter = con->make_filter (filter_arg);
-	    else {
-	      filter = con->get_default_filter();
-	      if (!filter)
-		RXML.parse_error ("No filter specified.\n");
-	    }
-	  }) {
-	if (objectp (error) && error->is_ldap_filter_error)
-	  RXML.parse_error ("Parse error in %s: %s\n",
-			    filter_arg ?
-			    "\"search-filter\" argument" : "default filter",
-			    error->error_message);
-	else
-	  throw (error);
+            if (filter_arg)
+              filter = con->make_filter (filter_arg);
+            else {
+              filter = con->get_default_filter();
+              if (!filter)
+                RXML.parse_error ("No filter specified.\n");
+            }
+          }) {
+        if (objectp (error) && error->is_ldap_filter_error)
+          RXML.parse_error ("Parse error in %s: %s\n",
+                            filter_arg ?
+                            "\"search-filter\" argument" : "default filter",
+                            error->error_message);
+        else
+          throw (error);
       }
 
       array(string) attr_list;
       if (args->attrs)
-	attr_list = map (args->attrs / ",",
-			 String.trim_all_whites) - ({""});
+        attr_list = map (args->attrs / ",",
+                         String.trim_all_whites) - ({""});
 
       Connection.result res =
-	con->search (filter, attr_list, !!args["no-values"], 0,
-		     (args["lower-attrs"] &&
-		      Protocols.LDAP.SEARCH_LOWER_ATTRS) |
-		     (args["array-values"] &&
-		      Protocols.LDAP.SEARCH_MULTIVAL_ARRAYS_ONLY));
+        con->search (filter, attr_list, !!args["no-values"], 0,
+                     (args["lower-attrs"] &&
+                      Protocols.LDAP.SEARCH_LOWER_ATTRS) |
+                     (args["array-values"] &&
+                      Protocols.LDAP.SEARCH_MULTIVAL_ARRAYS_ONLY));
 
       if (res) {
-	result = ({});
-	for (mapping(string:string|array(string)) entry;
-	     entry = res->fetch(); res->next())
-	  result += ({entry});
+        result = ({});
+        for (mapping(string:string|array(string)) entry;
+             entry = res->fetch(); res->next())
+          result += ({entry});
 
 #if 0
-	if(args->rowinfo) {
-	  int rows;
-	  if(arrayp(result)) rows=sizeof(result);
-	  if(objectp(result)) rows=result->num_rows();
-	  RXML.user_set_var(args->rowinfo, rows);
-	}
+        if(args->rowinfo) {
+          int rows;
+          if(arrayp(result)) rows=sizeof(result);
+          if(objectp(result)) rows=result->num_rows();
+          RXML.user_set_var(args->rowinfo, rows);
+        }
 #endif
       }
       break;
@@ -844,7 +844,7 @@ int|array(mapping(string:string|array(string))) do_ldap_op (
 
   if (!result || con->error_number())
     connection_error (status, "LDAP operation %s failed: %s\n",
-		      op, format_ldap_error (con));
+                      op, format_ldap_error (con));
 
   Protocols.LDAP.return_connection (con);
 
@@ -868,63 +868,63 @@ class TagLDAPplugin {
       mapping(string:mixed) some_entry = res[0];
 
       if (m["no-values"]) {
-	foreach (res, mapping(string:string|array(string)) entry)
-	  foreach (indices (entry), string attr)
-	    if (attr != "dn")
-	      entry[attr] = attr;
+        foreach (res, mapping(string:string|array(string)) entry)
+          foreach (indices (entry), string attr)
+            if (attr != "dn")
+              entry[attr] = attr;
       }
 
       else {
-	mapping(string:string) lc_attrs =
-	  !m["lower-attrs"] &&
-	  mkmapping (map (indices (some_entry), lower_case), indices (some_entry));
+        mapping(string:string) lc_attrs =
+          !m["lower-attrs"] &&
+          mkmapping (map (indices (some_entry), lower_case), indices (some_entry));
 
-	// Split labeledURI values.
-	if (lc_attrs ? lc_attrs->labeleduri : some_entry->labeleduri) {
-	  // Assumes the server doesn't change around the casing in different entries.
-	  string orig_attr = lc_attrs ? lc_attrs->labeleduri : "labeleduri";
-	  foreach (res, mapping(string:string|array(string)) elem) {
-	    // Note: labeledURI is not single-valued.
-	    elem->labeleduriuri =
-	      Array.map(elem[orig_attr],
-			lambda(string el1) {
-			  sscanf (el1, "%[^ ]", el1);
-			  return el1;
-			});
-	    elem->labeledurilabel =
-	      Array.map(elem[orig_attr],
-			lambda(string el1) {
+        // Split labeledURI values.
+        if (lc_attrs ? lc_attrs->labeleduri : some_entry->labeleduri) {
+          // Assumes the server doesn't change around the casing in different entries.
+          string orig_attr = lc_attrs ? lc_attrs->labeleduri : "labeleduri";
+          foreach (res, mapping(string:string|array(string)) elem) {
+            // Note: labeledURI is not single-valued.
+            elem->labeleduriuri =
+              Array.map(elem[orig_attr],
+                        lambda(string el1) {
+                          sscanf (el1, "%[^ ]", el1);
+                          return el1;
+                        });
+            elem->labeledurilabel =
+              Array.map(elem[orig_attr],
+                        lambda(string el1) {
 #if 0
-			  // FIXME: Compat.
-			  string rv = el1;
-			  if (sizeof(el1/" ")>1) rv = (el1/" ")[1..]*" ";
-			  return rv;
+                          // FIXME: Compat.
+                          string rv = el1;
+                          if (sizeof(el1/" ")>1) rv = (el1/" ")[1..]*" ";
+                          return rv;
 #else
-			  sscanf (el1, "%*[^ ]%*[ ]%s", el1);
-			  return el1;
+                          sscanf (el1, "%*[^ ]%*[ ]%s", el1);
+                          return el1;
 #endif
-			});
-	  }
-	}
+                        });
+          }
+        }
       }
 
       string split = !m["array-values"] && (m->split || "\0");
 
       array(string)|string attr_list =
-	indices (some_entry)
+        indices (some_entry)
 #if 1
-	// FIXME: Compat.
-	- ({"dn", "labeleduriuri", "labeledurilabel"})
+        // FIXME: Compat.
+        - ({"dn", "labeleduriuri", "labeledurilabel"})
 #endif
-	;
+        ;
       if (split) attr_list *= split;
 
       foreach (res, mapping(string:string|array(string)) elem) {
-	if (split) {
-	  foreach (indices (elem), string attr)
-	    elem[attr] *= split;
-	}
-	elem->_attributes = attr_list;
+        if (split) {
+          foreach (indices (elem), string attr)
+            elem[attr] *= split;
+        }
+        elem->_attributes = attr_list;
       }
     }
 
@@ -969,8 +969,8 @@ string query_provides()
 void create()
 {
   defvar ("server", "ldap://localhost/??sub",
-	  "Default server URL", TYPE_STRING,
-	  #"\
+          "Default server URL", TYPE_STRING,
+          #"\
 The default LDAP URL that will be used if no <i>host</i> attribute is
 given to the tags.
 
@@ -981,14 +981,14 @@ href=\"http://community.roxen.com/developers/idocs/rfc/rfc2255.html\">RFC
 2255</a> for details.");
 
   defvar ("binddn", "",
-	  "Default bind DN", TYPE_STRING,
-	  #"\
+          "Default bind DN", TYPE_STRING,
+          #"\
 The bind DN that will be used with the \"Default server URL\" if it
 doesn't specify any \"bindname\" extension.");
 
   defvar ("password", "",
-	  "Default password", TYPE_STRING,
-	  #"\
+          "Default password", TYPE_STRING,
+          #"\
 The password that will be used with the \"Default server URL\".");
 }
 
@@ -1005,15 +1005,15 @@ string status()
 
     foreach (indices (connection_status), string url)
       res += "<dt><strong>" + Roxen.html_encode_string (url) + "</strong></dt>\n"
-	"<dd><table border='0'>\n"
-	"<tr><td>Status</td>"
-	"<td>&nbsp;" + connection_status[url]->status_msg + "</td></tr>\n"
-	"<tr><td>Open connections</td>"
-	"<td>&nbsp;" + Protocols.LDAP.num_connections (url) + "</td></tr>\n"
-	"<tr><td>Time of last query</td>"
-	"<td>&nbsp;" + Roxen.html_encode_string (
-	  ctime (connection_status[url]->last_connect_time)) + "</td></tr>\n"
-	"</table></dd>\n";
+        "<dd><table border='0'>\n"
+        "<tr><td>Status</td>"
+        "<td>&nbsp;" + connection_status[url]->status_msg + "</td></tr>\n"
+        "<tr><td>Open connections</td>"
+        "<td>&nbsp;" + Protocols.LDAP.num_connections (url) + "</td></tr>\n"
+        "<tr><td>Time of last query</td>"
+        "<td>&nbsp;" + Roxen.html_encode_string (
+          ctime (connection_status[url]->last_connect_time)) + "</td></tr>\n"
+        "</table></dd>\n";
 
     return res + "</dl>\n";
   }

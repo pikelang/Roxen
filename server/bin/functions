@@ -93,8 +93,8 @@ fullpath() {
     IFS=:
     for path in $PATH ; do
       if [ -x "$path/$1" ] ; then
-	full="$path/$1"
-	break
+        full="$path/$1"
+        break
       fi
     done
     ( test "x$full" != "x" && echo "$full" ) || echo "$1"
@@ -117,7 +117,7 @@ change_owner( ) {
       dp "Changing ownership of $a to $uid:$gid"
       if chown -R "$uid" "$a" 2>/dev/null ; then
         if  chgrp -R "$gid" "$a" 2>/dev/null ; then
-	  :
+          :
         else
           dp "Group change failed"
         fi

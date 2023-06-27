@@ -86,6 +86,6 @@ public interface SimpleTagCaller {
    * @return           the result of handling the tag
    */
   public String tagCalled(String tag, Map args, String contents,
-			  RoxenRequest id, Frame frame);
+                          RoxenRequest id, Frame frame);
 
 }

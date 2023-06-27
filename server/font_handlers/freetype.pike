@@ -63,19 +63,19 @@ protected void build_font_names_cache( )
             new_ttf_font_names_cache[f] = ([]);
           new_ttf_font_names_cache[f][ translate_ttf_style(n->style) ]
                                    = combine_path(dir+"/",fname);
-	  if (n->ps_name && n->ps_name != f)
-	  {
-	    // Insert an alias name based on the ps_name
-	    // attribute for compatibility with Roxen 4.5
-	    // which used an older version of FreeType (2.1.9)
-	    // where the ps_name was used as family_name.
-	    string family_alias = lower_case(n->ps_name);
-	    string style_alias = translate_ttf_style("Regular");
-	    if (!new_ttf_font_names_cache[family_alias])
-	      new_ttf_font_names_cache[family_alias] = ([]);
-	    new_ttf_font_names_cache[family_alias][style_alias]
-	                           = combine_path(dir+"/",fname);
-	  }
+          if (n->ps_name && n->ps_name != f)
+          {
+            // Insert an alias name based on the ps_name
+            // attribute for compatibility with Roxen 4.5
+            // which used an older version of FreeType (2.1.9)
+            // where the ps_name was used as family_name.
+            string family_alias = lower_case(n->ps_name);
+            string style_alias = translate_ttf_style("Regular");
+            if (!new_ttf_font_names_cache[family_alias])
+              new_ttf_font_names_cache[family_alias] = ([]);
+            new_ttf_font_names_cache[family_alias][style_alias]
+                                   = combine_path(dir+"/",fname);
+          }
         }
       }
     }
@@ -124,10 +124,10 @@ class FTFont
 #ifdef FREETYPE_FIX_BROKEN_METRICS
     foreach(chars, mapping c)
       if(!c->ascender && !c->descender && !c->height) {
-	int oversampling = roxen->query("font_oversampling") ? 2 : 1;
-	c->ascender=(int)(size*0.98*oversampling);
-	c->descender=(int)(size*-0.23*oversampling);
-	c->height=(int)(size*1.39*oversampling);
+        int oversampling = roxen->query("font_oversampling") ? 2 : 1;
+        c->ascender=(int)(size*0.98*oversampling);
+        c->descender=(int)(size*-0.23*oversampling);
+        c->height=(int)(size*1.39*oversampling);
       }
 #endif
      
@@ -135,9 +135,9 @@ class FTFont
 
     for( i = 0; i<sizeof( chars ); i++ )
       if( !chars[i] )
-	tx[ i ] = 0;
+        tx[ i ] = 0;
       else if( !tx[i] )
-	tx[ i ] = 20;
+        tx[ i ] = 20;
 
     tx  -= ({ 0 });
     chars  -= ({ 0 });
@@ -162,13 +162,13 @@ class FTFont
       w += (int)(chars[i]->advance*x_spacing + kerning[i+1])+(fake_bold>0?1:0);
 
     w += (int) ((chars[-1]->img->xsize() || chars[-1]->advance * x_spacing) +
-		chars[-1]->x);
+                chars[-1]->x);
     ys = chars[0]->ascender-chars[0]->descender;
     int overshoot = do_overshoot ? max(ys, @map(chars, lambda(mapping m) 
-						       {return m->y-m->descender;})) - ys
+                                                       {return m->y-m->descender;})) - ys
                                  : 0 ; 
     line_height = (int)chars[0]->height;
-			   
+                           
     res = Image.Image( w, ys + overshoot );
 
     if( x_spacing < 0 )
@@ -178,7 +178,7 @@ class FTFont
     res->setcolor( 0,128,200 );
     res->line( 0,0 + overshoot, res->xsize()-1, 0 + overshoot );
     res->line( 0,ys+chars[0]->descender + overshoot, res->xsize()-1,
-	       ys+chars[0]->descender + overshoot );
+               ys+chars[0]->descender + overshoot );
     res->line( 0,res->ysize()-1 + overshoot, res->xsize()-1, res->ysize()-1 + overshoot );
 #endif
     for( int i = 0; i<sizeof( chars); i++ )
@@ -186,9 +186,9 @@ class FTFont
       mapping c = chars[i];
 #ifdef FREETYPE_RENDER_DEBUG
        res->paste_alpha_color( c->img->copy()->clear( 100,100,100 ),
- 			      ({255,255,255}),
- 			      xp+c->x,
- 			      ys+c->descender-c->y + overshoot );
+                              ({255,255,255}),
+                              xp+c->x,
+                              ys+c->descender-c->y + overshoot );
 #endif
       res->paste_alpha_color( c->img, ({255,255,255}),
                               xp+c->x,
@@ -196,10 +196,10 @@ class FTFont
       xp += (int)(c->advance*x_spacing) + kerning[i+1]+(fake_bold>0?1:0);
     }  
     return ([ "overshoot":overshoot, 
-	      "ascender":chars[0]->ascender,
-	      "descender":chars[0]->descender,
-	      "height":chars[0]->height,
-	      "img":res ]);
+              "ascender":chars[0]->ascender,
+              "descender":chars[0]->descender,
+              "height":chars[0]->height,
+              "img":res ]);
   }
   protected Image.Image write_row( string text ) {
     return (Image.Image)((low_write_row(0, text))->img);
@@ -221,14 +221,14 @@ class FTFont
       what = ({ what });
     int oversampling = _oversampling || (roxen->query("font_oversampling") ? 2 : 1);
     if (mixed err = catch {
-	if( oversampling != 1 )
-	  face->set_size( 0, size * oversampling );
-	else
-	  face->set_size( 0, size );
+        if( oversampling != 1 )
+          face->set_size( 0, size * oversampling );
+        else
+          face->set_size( 0, size );
       }) {
       // set_size can fail like this for bitmap fonts.
       if (describe_error (err) != "Failed to set size: invalid pixel size\n")
-	throw (err);
+        throw (err);
     }
     if( !sizeof( what ) )
       return ([ "img" : Image.Image( 1,height() ) ]);
@@ -245,9 +245,9 @@ class FTFont
     array(Image.Image) res = res_with_info->img;
 
     Image.Image rr = Image.Image( max(0,@res->xsize()),
-				  (int)(res[0]->ysize()+
-					abs(line_height*(sizeof(res)-1)
-					    *y_spacing) ));
+                                  (int)(res[0]->ysize()+
+                                        abs(line_height*(sizeof(res)-1)
+                                            *y_spacing) ));
 
     float start;
     if( y_spacing < 0 ) {
@@ -274,8 +274,8 @@ class FTFont
       object r2 = Image.Image( rr->xsize()+2, rr->ysize() );
       object r3 = rr*0.3;
       for( int i = 0; i<=fake_bold; i++ )
-	for( int j = 0; j<=fake_bold; j++ )
-	  r2->paste_alpha_color( r3,  255, 255, 255, i, j-2 );
+        for( int j = 0; j<=fake_bold; j++ )
+          r2->paste_alpha_color( r3,  255, 255, 255, i, j-2 );
       rr = r2->paste_alpha_color( rr, 255,255,255, 1, -1 );
     }
     rr->setcolor( 0,0,0 );
@@ -284,19 +284,19 @@ class FTFont
     if( oversampling != 1 )
       rr = rr->scale(1.0 / oversampling);
     return ([ "oversampling" : oversampling,
-	      "overshoot" : overshoot / oversampling,
-	      "ascender": res_with_info[0]->ascender / oversampling,
-	      "descender": res_with_info[0]->descender / oversampling,
-	      "height": res_with_info[0]->height / oversampling,
-	      "img" : rr, 
+              "overshoot" : overshoot / oversampling,
+              "ascender": res_with_info[0]->ascender / oversampling,
+              "descender": res_with_info[0]->descender / oversampling,
+              "height": res_with_info[0]->height / oversampling,
+              "img" : rr, 
     ]);
   }
 
   string _sprintf() {
     if (face)
       if (mapping(string:mixed) info = face->info())
-	return sprintf ("FTFont(%s, %s)",
-			info->family || "?", info->style_name || "?");
+        return sprintf ("FTFont(%s, %s)",
+                        info->family || "?", info->style_name || "?");
     return "FTFont()";
   }
 

@@ -25,7 +25,7 @@ class RemoteFunctionCall
       data += server->read(4000,1);
       CHECK_IO_ERROR (server, "reading");
       if(!strlen(data))
-	error("Remote RPC server closed connection.\n");
+        error("Remote RPC server closed connection.\n");
     }
     sscanf(data, "%4c%s", len,data);
     if(strlen(data) < len) {
@@ -42,7 +42,7 @@ class RemoteFunctionCall
     /* Build a new RPC function call object and return it... */
     else if(data[0]==3)
       return object_program(this_object())( 0, data[1], server, lock, master )
-	->call;
+        ->call;
 
     if(data[0]) return data[1];
     error("Remote error: "+data[1]);
@@ -56,8 +56,8 @@ class RemoteFunctionCall
       server->write(sprintf("%4c%s", strlen(v), v));
       CHECK_IO_ERROR (server, "writing");
       if(server->read(1) != "!") {
-	CHECK_IO_ERROR (server, "reading");
-	error("server->subtract_refs("+cl+") failed\n");
+        CHECK_IO_ERROR (server, "reading");
+        error("server->subtract_refs("+cl+") failed\n");
       }
     }
   }
@@ -89,7 +89,7 @@ mixed `->(string id)
 }
 
 void create(string|object ip, int port, string cl,
-	    int|string|void lck, void|string key, int|void not_again)
+            int|string|void lck, void|string key, int|void not_again)
 {
   if(stringp(lck))
   {
@@ -104,7 +104,7 @@ void create(string|object ip, int port, string cl,
   } else {
     if(!server->connect(ip, port))
       error("Failed to connect to RPC server at %s:%d: %s\n",
-	    ip, port, strerror (server->errno()));
+            ip, port, strerror (server->errno()));
   }
 
   while(!not_again)

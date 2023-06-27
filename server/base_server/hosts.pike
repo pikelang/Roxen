@@ -45,10 +45,10 @@ mapping lookup_funs=([IP_TO_HOST:dns->ip_to_host,HOST_TO_IP:dns->host_to_ip]);
     else if(sizeof(entry = H / "." ) == 4){				\
       int isip = 1;							\
       foreach(entry, string s)						\
-	if((string)((int)s) != s)					\
-	  isip = 0;							\
+        if((string)((int)s) != s)					\
+          isip = 0;							\
       if(isip)								\
-	{CODE;}								\
+        {CODE;}								\
     }									\
   }while(0)
 

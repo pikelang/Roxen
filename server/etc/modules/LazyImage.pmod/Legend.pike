@@ -40,27 +40,27 @@ protected
     for( int i = 0; i<sizeof( text_images ); i++ )
     {
       Image.Image r = Image.Image( height+text_images[i]->xsize() + 4,
-				   text_images[i]->ysize()+4, bgcolor );
+                                   text_images[i]->ysize()+4, bgcolor );
       Image.Image a = Image.Image( height+text_images[i]->xsize() + 4,
-				   text_images[i]->ysize()+4 );
-	
+                                   text_images[i]->ysize()+4 );
+        
       a=a->paste_alpha_color( text_images[i], 255,255,255,  height+4, 2 );
       r=r->setcolor( @fgcolor->rgb() );
       r=r->box( height+4,2,
-		height+4+text_images[i]->xsize()-1,
-		2+text_images[i]->ysize()-1 );
+                height+4+text_images[i]->xsize()-1,
+                2+text_images[i]->ysize()-1 );
 
       if( args["square-border"] )
       {
-	square=square->clear( parse_color( args["square-border"] ) );
-	square=square->box( 1,1,height-2,height-2,
-			    parse_color(labels[i]->color) );
+        square=square->clear( parse_color( args["square-border"] ) );
+        square=square->box( 1,1,height-2,height-2,
+                            parse_color(labels[i]->color) );
       }
       else
-	square=square->clear(  parse_color( labels[i]->color ) );
+        square=square->clear(  parse_color( labels[i]->color ) );
       r=r->paste( square, 0,(a->ysize()-square->ysize())/2 );
       a=a->paste( square->clear(255,255,255),
-		  0,(a->ysize()-square->ysize())/2 );
+                  0,(a->ysize()-square->ysize())/2 );
       if( a->xsize() > mxs ) mxs = a->xsize();
       if( a->ysize() > mys ) mys = a->ysize();
       text_images[i] = ({ a, r });
@@ -74,16 +74,16 @@ protected
       int i;
       while( i < sizeof( labels ) )
       {
-	for( int j =0; j<col; j++,i++ )
-	{
-	  if( i>=sizeof( labels ) )  break;
-	  text_images[i] = ({xp, yp, text_images[i] });
-	  xp += mxs+5;
-	  if( xp > xs ) xs = xp;
-	}
-	xp = 0;
-	yp += mys;
-	if( yp > ys ) ys = yp;
+        for( int j =0; j<col; j++,i++ )
+        {
+          if( i>=sizeof( labels ) )  break;
+          text_images[i] = ({xp, yp, text_images[i] });
+          xp += mxs+5;
+          if( xp > xs ) xs = xp;
+        }
+        xp = 0;
+        yp += mys;
+        if( yp > ys ) ys = yp;
       }
     }
     xs+=5;
@@ -103,7 +103,7 @@ protected
     if( args->border )
     {
       i = Image.Image( i->xsize()+2, i->ysize()+2,
-		       translate_color( args->border ));
+                       translate_color( args->border ));
       a = i->copy();
       a = a->setcolor( 255,255,255);
       a = a->box( 1,1,a->xsize()-2,a->ysize()-2 );
@@ -115,26 +115,26 @@ protected
     {
       switch( args->background )
       {
-	case "100%":
-	case "solid":
-	  background = Image.Layer( )
-	    ->set_image(i->copy()->clear( bgcolor ),
-			a->copy()->clear( 255,255,255 ) );
-	  break;
-	default:
-	  int aa;
-	  if( aa=(int)args->background )
-	  {
-	    aa = (aa*255)/100;
-	    if( aa > 255 )
-	      aa = 255;
-	    background = Image.Layer( )
-	      ->set_image(i->copy()->clear( bgcolor ),
-			  a->copy()->clear( aa,aa,aa ) );
-	    break;
-	  }
-	case "none":
-	case "0%":
+        case "100%":
+        case "solid":
+          background = Image.Layer( )
+            ->set_image(i->copy()->clear( bgcolor ),
+                        a->copy()->clear( 255,255,255 ) );
+          break;
+        default:
+          int aa;
+          if( aa=(int)args->background )
+          {
+            aa = (aa*255)/100;
+            if( aa > 255 )
+              aa = 255;
+            background = Image.Layer( )
+              ->set_image(i->copy()->clear( bgcolor ),
+                          a->copy()->clear( aa,aa,aa ) );
+            break;
+          }
+        case "none":
+        case "0%":
       }
     }
     xp = translate_coordinate( args->xoffset, background||border||lab,layers );

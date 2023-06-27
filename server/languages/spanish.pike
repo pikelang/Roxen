@@ -51,12 +51,12 @@ string date(int timestamp, mapping|void m)
   }
   if(m["full"])
     return ctime(timestamp)[11..15]+", "
-	+ t1["mday"] + " de "  + month(t1["mon"]+1)
-      	+ " de " +(t1["year"]+1900);
+        + t1["mday"] + " de "  + month(t1["mon"]+1)
+        + " de " +(t1["year"]+1900);
 
   if(m["date"])
     return t1["mday"] + " de "  + month(t1["mon"]+1)
-      	+ " de " +(t1["year"]+1900);
+        + " de " +(t1["year"]+1900);
 
   if(m["time"])
     return ctime(timestamp)[11..15];
@@ -98,7 +98,7 @@ string number(int num)
    case 80: return "ochenta";
    case 90: return "noventa";
    case 21..29: 
-	return "veinti"+number(num-20);
+        return "veinti"+number(num-20);
    case 31..39: case 41..49:
    case 51..59: case 61..69: case 71..79: 
    case 81..89: case 91..99:  

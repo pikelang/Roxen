@@ -73,7 +73,7 @@ inherit "module";
 // is an 'alt' text, display it, if not, simply return an empty string
 
 string simpletag_fnord(string tag_name, mapping arguments, string contents,
-		       RequestID id )
+                       RequestID id )
 {
   if (id->prestate->fnord)
     return contents;
@@ -88,9 +88,9 @@ constant module_type = MODULE_TAG|MODULE_EXPERIMENTAL;
 LocaleString module_name = LOCALE(1,"Fnord!");
 LocaleString module_doc  =
   LOCALE(2,"Adds an extra container tag, &lt;fnord&gt; that's supposed "
-	 "to make things invisible unless the \"fnord\" prestate is present."
-	 "<p>This module is here as an example of how to write a "
-	 "very simple RXML-parsing module.</p>" );
+         "to make things invisible unless the \"fnord\" prestate is present."
+         "<p>This module is here as an example of how to write a "
+         "very simple RXML-parsing module.</p>" );
 
 
 // Last, but not least, we want a documentation that can be integrated in the

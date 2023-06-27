@@ -29,7 +29,7 @@ class RoxenServletContext implements ServletContext
     new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z", Locale.US);
   static {
     dateformat.setCalendar(Calendar.getInstance(TimeZone.getTimeZone("GMT"),
-						Locale.US));
+                                                Locale.US));
   }
 
   Hashtable attributes = new Hashtable();
@@ -53,12 +53,12 @@ class RoxenServletContext implements ServletContext
 
       public boolean hasMoreElements()
       {
-	return false;
+        return false;
       }
 
       public Object nextElement()
       {
-	throw new NoSuchElementException();
+        throw new NoSuchElementException();
       }
 
     };
@@ -74,12 +74,12 @@ class RoxenServletContext implements ServletContext
 
       public boolean hasMoreElements()
       {
-	return false;
+        return false;
       }
 
       public Object nextElement()
       {
-	throw new NoSuchElementException();
+        throw new NoSuchElementException();
       }
 
     };

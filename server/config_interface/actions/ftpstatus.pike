@@ -12,8 +12,8 @@ constant action = "status";
 
 string name= LOCALE(49, "Current FTP sessions");
 string doc = LOCALE(50, 
-		    "List all active FTP sessions and what files they are "
-		    "currently transferring.");
+                    "List all active FTP sessions and what files they are "
+                    "currently transferring.");
 
 protected string describe_ftp(object ftp)
 {
@@ -38,13 +38,13 @@ protected string describe_ftp(object ftp)
       int b;
       res += "<td>"+(b=ftp->curr_pipe->bytes_sent())+" bytes";
       if(ftp->file && ftp->file->len && ftp->file->len!=0x7fffffff)
-	res += sprintf(" (%1.1f%%)", (100.0*b)/ftp->file->len);
+        res += sprintf(" (%1.1f%%)", (100.0*b)/ftp->file->len);
       res += "</td>";
     } else if(ftp->my_fd) {
       int b;
       res += "<td>"+(b=ftp->my_fd->bytes_received())+" bytes";
       if(ftp->misc->len && ftp->misc->len!=0x7fffffff)
-	res += sprintf(" (%1.1f%%)", (100.0*b)/ftp->misc->len);
+        res += sprintf(" (%1.1f%%)", (100.0*b)/ftp->misc->len);
       res += "</td>";
     }
   } else

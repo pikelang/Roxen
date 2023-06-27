@@ -7,9 +7,9 @@ constant cvs_version = "$Id$";
 constant module_type = MODULE_FILTER|MODULE_EXPERIMENTAL;
 constant module_name = "RefDoc for MODULE_FILTER";
 constant module_doc = "This module does nothing, but its inlined "
-		      "documentation gets imported into the roxen "
-		      "programmer manual. You hardly want to add "
-		      "this module to your virtual servers.";
+                      "documentation gets imported into the roxen "
+                      "programmer manual. You hardly want to add "
+                      "this module to your virtual servers.";
 mapping last_seen;
 int handled;
 int seen;
@@ -54,7 +54,7 @@ mapping|void filter(mapping|void result, RequestID id)
 string status()
 {
   return sprintf("Received <b>%d</b> requests, of which <b>%d</b> were "
-		 "touched by the module. Last seen request's result "
-		 "mapping: <pre>%s</pre>",
-		 seen, handled, Roxen.html_encode_string(sprintf("%O", last_seen)));
+                 "touched by the module. Last seen request's result "
+                 "mapping: <pre>%s</pre>",
+                 seen, handled, Roxen.html_encode_string(sprintf("%O", last_seen)));
 }

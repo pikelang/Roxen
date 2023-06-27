@@ -121,28 +121,28 @@ array verify_access( RequestID id )
             // Don't allow symlinks from directories not owned by the
             // same user as the file itself.
             // Assume that symlinks from directories owned by users 0-9
-	    // are safe.
-	    // Assume that top-level symlinks are safe.
+            // are safe.
+            // Assume that top-level symlinks are safe.
             if (!a || (a[1] == -4) ||
                 (b && (b[5] != us[5]) && (b[5] >= 10)) ||
                 !query("allow_symlinks")) {
               error("CGI: Bad symlink or device encountered: \"%s\"\n", fname);
-	    }
-	    /* This point is only reached if a[1] == -3.
-	     * ie symlink encountered, and query("allow_symlinks") == 1.
-	     */
+            }
+            /* This point is only reached if a[1] == -3.
+             * ie symlink encountered, and query("allow_symlinks") == 1.
+             */
 
-	    // Stat what the symlink points to.
-	    // NB: This can be fooled if root is stupid enough to symlink
-	    //     to something the user can move.
-	    a = file_stat(fname);
-	    if (!a || a[1] == -4) {
-	      error("CGI: Bad symlink or device encountered: \"%s\"\n",
-		    fname);
-	    }
+            // Stat what the symlink points to.
+            // NB: This can be fooled if root is stupid enough to symlink
+            //     to something the user can move.
+            a = file_stat(fname);
+            if (!a || a[1] == -4) {
+              error("CGI: Bad symlink or device encountered: \"%s\"\n",
+                    fname);
+            }
           }
-	  b = a;
-	}
+          b = a;
+        }
         fname += "/";
       }
       us = ({ us[5], us[6] }); // Yes, there is a reason for not having [5..6]
@@ -217,7 +217,7 @@ class Wrapper
     int nelems = tofd->write( buffer );
 
     DWERR(sprintf("Wrapper::write_callback(): write(%O) => %d",
-		    buffer, nelems));
+                    buffer, nelems));
 
     if( nelems < 0 )
       // if nelems == 0, network buffer is full. We still want to continue.
@@ -228,15 +228,15 @@ class Wrapper
       buffer = buffer[nelems..];
       if(close_when_done && !strlen(buffer)) {
         destroy();
-	return;
+        return;
       }
 
       // If the buffer just went below the low watermark, let it refill.
       if (buffer_high && strlen(buffer) < buffer_low &&
-	  strlen(buffer)+nelems >= buffer_low && callback_disabled)
+          strlen(buffer)+nelems >= buffer_low && callback_disabled)
       {
-	fromfd->set_nonblocking( read_callback, 0, close_callback );
-	callback_disabled = 0;
+        fromfd->set_nonblocking( read_callback, 0, close_callback );
+        callback_disabled = 0;
       }
     }
   }
@@ -318,12 +318,12 @@ class Wrapper
     {
       void read_cb(mixed id, string s)
       {
-	DWERR(sprintf("Wrapper::tofd->read_cb(%O, %O)", id, s));
+        DWERR(sprintf("Wrapper::tofd->read_cb(%O, %O)", id, s));
       }
       void destroy()
       {
-	DWERR(sprintf("Wrapper::tofd->read_cb Zapped from:"
-			"%s\n", describe_backtrace(backtrace())));
+        DWERR(sprintf("Wrapper::tofd->read_cb Zapped from:"
+                        "%s\n", describe_backtrace(backtrace())));
       }
     }()->read_cb;
 #else /* !CGI_DEBUG */
@@ -435,9 +435,9 @@ class CGIWrapper
       if(!header || !value)
       {
         // Heavy DWIM. For persons who forget about headers altogether.
-	if (mid->method != "HEAD") {
-	  post += h+"\n";
-	}
+        if (mid->method != "HEAD") {
+          post += h+"\n";
+        }
         continue;
       }
       header = String.trim_whites(header);
@@ -464,9 +464,9 @@ class CGIWrapper
          break;
 
        case "connection":
-	 con_received=1;
-	 result += header+": "+value+"\r\n";
-	 break;
+         con_received=1;
+         result += header+": "+value+"\r\n";
+         break;
 
        default:
          result += header+": "+value+"\r\n";
@@ -496,27 +496,27 @@ class CGIWrapper
       // Check if there's a \n\n instead.
       pos = search(headers, "\n\n");
       if(pos == -1) {
-	// Still haven't found the end of the headers.
+        // Still haven't found the end of the headers.
 
-	if(strlen(headers) > MAXHEADERLEN)
-	{
-	  DWERR("CGIWrapper::parse_headers()::Incorrect Headers");
-	  output( LONGHEADER );
-	  close_when_done = 1;
-	  mode++;
-	  done();
-	  return 1;
+        if(strlen(headers) > MAXHEADERLEN)
+        {
+          DWERR("CGIWrapper::parse_headers()::Incorrect Headers");
+          output( LONGHEADER );
+          close_when_done = 1;
+          mode++;
+          done();
+          return 1;
 //	  destroy( );
-	}
-	return 0;
+        }
+        return 0;
       }
       skip = 2;
     } else {
       // Check if there's a \n\n before the \r\n\r\n.
       int pos2 = search(headers[..pos], "\n\n");
       if(pos2 != -1) {
-	pos = pos2;
-	skip = 2;
+        pos = pos2;
+        skip = 2;
       }
     }
     string tmphead = headers;
@@ -573,19 +573,19 @@ class NTOpenCommand
     array(string) res;
     if (repsrc) {
       res = map(line, replace, repsrc,
-		(({file})+args+
-		 (sizeof(args)+1>=sizeof(repsrc)? ({}) :
-		  allocate(sizeof(repsrc)-sizeof(args)-1, "")))
-		[..sizeof(repsrc)-1]);
+                (({file})+args+
+                 (sizeof(args)+1>=sizeof(repsrc)? ({}) :
+                  allocate(sizeof(repsrc)-sizeof(args)-1, "")))
+                [..sizeof(repsrc)-1]);
       if(starpos>=0)
-	res = res[..starpos-1]+args+res[starpos+1..];
+        res = res[..starpos-1]+args+res[starpos+1..];
     } else {
       // Check for #!
       string s = Stdio.read_file(file, 0, 1);
       if (s && has_prefix(s, "#!")) {
-	res = Process.split_quoted_string(s[2..]) + ({ file }) + args;
+        res = Process.split_quoted_string(s[2..]) + ({ file }) + args;
       } else {
-	error(sprintf("CGI: Unknown filetype %O\n", file));
+        error(sprintf("CGI: Unknown filetype %O\n", file));
       }
     }
     return res;
@@ -608,10 +608,10 @@ class NTOpenCommand
       starpos = search(line, "%*");
       int i=-1, n=0;
       do {
-	int t;
-	i = search(cmd, "%", i+1);
-	if(i>=0 && sscanf(cmd[i+1..], "%d", t)==1 && t>n)
-	  n=t;
+        int t;
+        i = search(cmd, "%", i+1);
+        if(i>=0 && sscanf(cmd[i+1..], "%d", t)==1 && t>n)
+          n=t;
       } while(i>=0);
       for( int i = 0; i<n; i++ )
         cmd = replace( cmd, "\"%"+i+"\"", "%"+i );
@@ -711,13 +711,13 @@ class CGIScript
   void kill_script()
   {
     DWERR(sprintf("CGIScript::kill_script()"
-		    "next_kill: %d\n", next_kill));
+                    "next_kill: %d\n", next_kill));
 
     if(pid && !pid->status())
     {
       int signum = 9;
       if (next_kill < sizeof(kill_signals)) {
-	signum = kill_signals[next_kill++];
+        signum = kill_signals[next_kill++];
       }
       if(pid->kill)  // Pike 0.7, for roxen 1.4 and later
         pid->kill(signum);
@@ -760,30 +760,30 @@ class CGIScript
 #if UNIX
     ;{ string s;
        if(sizeof(s=query("chroot")))
-	 options->chroot = s;
+         options->chroot = s;
      }
     if(!getuid())
     {
       if (uid >= 0) {
-	options->uid = uid;
+        options->uid = uid;
       } else {
-	// Some OS's (HPUX) have negative uids in /etc/passwd,
-	// but don't like them in setuid() et al.
-	// Remap them to the old 16bit uids.
-	options->uid = 0xffff & uid;
+        // Some OS's (HPUX) have negative uids in /etc/passwd,
+        // but don't like them in setuid() et al.
+        // Remap them to the old 16bit uids.
+        options->uid = 0xffff & uid;
 
-	if (options->uid <= 10) {
-	  // Paranoia
-	  options->uid = 65534;
-	}
+        if (options->uid <= 10) {
+          // Paranoia
+          options->uid = 65534;
+        }
       }
       if (gid >= 0) {
-	options->gid = gid;
+        options->gid = gid;
       } else {
-	// Some OS's (HPUX) have negative gids in /etc/passwd,
-	// but don't like them in setgid() et al.
-	// Remap them to the old 16bit gids.
-	options->gid = 0xffff & gid;
+        // Some OS's (HPUX) have negative gids in /etc/passwd,
+        // but don't like them in setgid() et al.
+        // Remap them to the old 16bit gids.
+        options->gid = 0xffff & gid;
 
 // 	if (options->gid <= 10) {
 // 	  // Paranoia
@@ -870,7 +870,7 @@ class CGIScript
       extn = "."+lower_case(reverse(extn));
       object ntopencmd = nt_opencommands[extn];
       if(!ntopencmd || ntopencmd->expired())
-	ntopencmd = NTOpenCommand(extn);
+        ntopencmd = NTOpenCommand(extn);
       nt_opencommand = ntopencmd->open;
     }
 #endif
@@ -908,10 +908,10 @@ class CGIScript
     // Protect against execution of arbitrary code in broken bash.
     foreach(environment; string e; string v) {
       if (has_prefix(v, "() {")) {
-	report_warning("CGI: Function definition in environment variable:\n"
-		       "CGI: %O=%O\n",
-		       e, v);
-	environment[e] = " " + v;
+        report_warning("CGI: Function definition in environment variable:\n"
+                       "CGI: %O=%O\n",
+                       e, v);
+        environment[e] = " " + v;
       }
     }
   }
@@ -977,10 +977,10 @@ mapping handle_file_extension(object o, string e, RequestID id)
       return 0;
     else
       return Roxen.http_low_answer(500, "<title>CGI - File Not Executable</title>"
-			     "<h1>CGI Error - File Not Executable</h1><b>"
-			     "The script you tried to run is not executable."
-			     "Please contact the server administrator about "
-			     "this problem.</b>");
+                             "<h1>CGI Error - File Not Executable</h1><b>"
+                             "The script you tried to run is not executable."
+                             "Please contact the server administrator about "
+                             "this problem.</b>");
 
 #endif
   NOCACHE();
@@ -1011,17 +1011,17 @@ int|object(Stdio.File)|mapping find_file( string f, RequestID id )
       return Stdio.File(real_file(f, id), "r");
     report_notice( "CGI: "+real_file(f,id)+" is not executable\n");
     return Roxen.http_low_answer(500, "<title>CGI Error - Script Not Executable</title>"
-			   "<h1>CGI Error - Script Not Executable</h1> <b>"
-			   "The script you tried to run is not executable. "
-			   "Please contact the server administrator about "
-			   "this problem.</b>");
+                           "<h1>CGI Error - Script Not Executable</h1> <b>"
+                           "The script you tried to run is not executable. "
+                           "Please contact the server administrator about "
+                           "this problem.</b>");
   }
 #endif
   if(stat[1] < 0)
     if(!query("ls"))
       return Roxen.http_low_answer(403, "<title>CGI Directory Listing "
-			     "Disabled</title><h1>Listing of CGI directories "
-			     "is disabled.</h1>");
+                             "Disabled</title><h1>Listing of CGI directories "
+                             "is disabled.</h1>");
     else
       return -1;
   if(!strlen(f) || f[-1] == '/')
@@ -1050,120 +1050,120 @@ int run_as_user_enabled() { return (getuid() || !query("user")); }
 void create(Configuration conf)
 {
   defvar("env", Variable.Flag(0, VAR_MORE, "Pass environment variables",
-	 "If this is set, all environment variables roxen has will be "
+         "If this is set, all environment variables roxen has will be "
          "passed to CGI scripts, not only those defined in the CGI/1.1 standard. "
-	 "This includes PATH. For a quick test, try this script with "
-	 "and without this variable set:"
-	 "<pre>"
-	 "#!/bin/sh\n\n"
+         "This includes PATH. For a quick test, try this script with "
+         "and without this variable set:"
+         "<pre>"
+         "#!/bin/sh\n\n"
          "echo Content-type: text/plain\n"
-	 "echo ''\n"
-	 "env\n"
-	 "</pre>"));
+         "echo ''\n"
+         "env\n"
+         "</pre>"));
 
   defvar("rxml", Variable.Flag(0, VAR_MORE, "Parse RXML in CGI-scripts",
-	 "If this is set, the output from CGI-scripts handled by this "
+         "If this is set, the output from CGI-scripts handled by this "
          "module will be RXMl parsed. NOTE: No data will be returned to the "
          "client until the CGI-script is fully parsed."));
 
   defvar("extra_env", Variable.Text("", VAR_MORE, "Extra environment variables",
-	 "Extra variables to be sent to the script, format:<pre>"
-	 "NAME=value\n"
-	 "NAME=value\n"
-	 "</pre>Please note that normal CGI variables will override these."));
+         "Extra variables to be sent to the script, format:<pre>"
+         "NAME=value\n"
+         "NAME=value\n"
+         "</pre>Please note that normal CGI variables will override these."));
 
   defvar("roxen_env",
-	 Variable.Flag(1, VAR_MORE, "Extended environment variables",
-	   "<p>Pass extra enviroment variables to simplify "
-	   "cgi script authoring.</p>\n"
-	   "<table><tr><th align='left'>For each:</th>"
-	   "<th align='left'>Environment variable</th>"
-	   "<th align='left'>Notes</th></tr>\n"
-	   "<tr><td>Cookie</td>"
-	   "<td><tt>COOKIE_<i>cookiename</i>=<i>cookievalue</i></tt></td>"
-	   "<td>&nbsp;</td></tr>\n"
-	   "<tr><td>Variable</td>"
-	   "<td><tt>VAR_<i>variablename</i>=<i>variablename</i></tt></td>"
-	   "<td>Multiple values are separated with <tt>'#'</tt>.</td></tr>"
-	   "<tr><td>Variable</td>"
-	   "<td><tt>QUERY_<i>variablename</i>=<i>variablename</i></tt></td>"
-	   "<td>Multiple values are separated with "
-	   "<tt>' '</tt> (space).</td></tr>\n"
-	   "<tr><td>Prestate</td>"
-	   "<td><tt>PRESTATE_<i>x</i>=true</tt></td>"
-	   "<td>&nbsp;</td></tr>\n"
-	   "<tr><td>Config</td>"
-	   "<td><tt>CONFIG_<i>x</i>=true</tt></td>"
-	   "<td>&nbsp;</td></tr>\n"
-	   "<tr><td>Supports flag</td>"
-	   "<td><tt>SUPPORTS_<i>x</i>=true</tt></td>"
-	   "<td>&nbsp;</td></tr>\n"
-	   "</table>"));
+         Variable.Flag(1, VAR_MORE, "Extended environment variables",
+           "<p>Pass extra enviroment variables to simplify "
+           "cgi script authoring.</p>\n"
+           "<table><tr><th align='left'>For each:</th>"
+           "<th align='left'>Environment variable</th>"
+           "<th align='left'>Notes</th></tr>\n"
+           "<tr><td>Cookie</td>"
+           "<td><tt>COOKIE_<i>cookiename</i>=<i>cookievalue</i></tt></td>"
+           "<td>&nbsp;</td></tr>\n"
+           "<tr><td>Variable</td>"
+           "<td><tt>VAR_<i>variablename</i>=<i>variablename</i></tt></td>"
+           "<td>Multiple values are separated with <tt>'#'</tt>.</td></tr>"
+           "<tr><td>Variable</td>"
+           "<td><tt>QUERY_<i>variablename</i>=<i>variablename</i></tt></td>"
+           "<td>Multiple values are separated with "
+           "<tt>' '</tt> (space).</td></tr>\n"
+           "<tr><td>Prestate</td>"
+           "<td><tt>PRESTATE_<i>x</i>=true</tt></td>"
+           "<td>&nbsp;</td></tr>\n"
+           "<tr><td>Config</td>"
+           "<td><tt>CONFIG_<i>x</i>=true</tt></td>"
+           "<td>&nbsp;</td></tr>\n"
+           "<tr><td>Supports flag</td>"
+           "<td><tt>SUPPORTS_<i>x</i>=true</tt></td>"
+           "<td>&nbsp;</td></tr>\n"
+           "</table>"));
 
   defvar("location", Variable.Location("/cgi-bin/", 0, "CGI-bin path",
-	 "This is where the module will be inserted in the "
-	 "namespace of your server. The module will, per default, also"
-	 " service one or more extensions, from anywhere in the "
-	 "namespace."));
+         "This is where the module will be inserted in the "
+         "namespace of your server. The module will, per default, also"
+         " service one or more extensions, from anywhere in the "
+         "namespace."));
 
   defvar("searchpath", Variable.Directory("NONE/", VAR_INITIAL, "Search path",
-	 "This is where the module will find the CGI scripts in the <b>real</b> "
-	 "file system."));
+         "This is where the module will find the CGI scripts in the <b>real</b> "
+         "file system."));
 
   defvar("ls", Variable.Flag(0, 0, "Allow listing of cgi-bin directory",
-	 "If set, the users can get a listing of all files in the CGI-bin "
-	 "directory."));
+         "If set, the users can get a listing of all files in the CGI-bin "
+         "directory."));
 
   defvar("ex", Variable.Flag(1, 0, "Handle *.cgi",
-	 "Also handle all '.cgi' files as CGI-scripts, as well "
-	 " as files in the cgi-bin directory. This emulates the behaviour "
-	 "of the Apache server (the extensions to handle can be set in the "
-	 "CGI-script extensions variable)."));
+         "Also handle all '.cgi' files as CGI-scripts, as well "
+         " as files in the cgi-bin directory. This emulates the behaviour "
+         "of the Apache server (the extensions to handle can be set in the "
+         "CGI-script extensions variable)."));
 
   defvar("ext", Variable.StringList(({ "cgi",
 #ifdef __NT__
-	   "exe",
+           "exe",
 #endif
-	 }), 0, "CGI-script extensions",
+         }), 0, "CGI-script extensions",
          "All files ending with these extensions, will be parsed as "+
-	 "CGI-scripts."));
+         "CGI-scripts."));
 
   defvar("stderr", Variable.StringChoice("main log file",
-	 ({ "main log file", "custom log file", "browser" }), 0,
-	 "Log CGI errors to...",
-	 "By changing this variable you can select where error messages "
-	 "(which means all text written to stderr) from "
-	 "CGI scripts should be sent. By default they will be written to the "
-	 "main log file - logs/debug/[name-of-configdir].1. You can also "
-	 "choose to send the error messages to a special log file or to the "
-	 "browser.\n"));
+         ({ "main log file", "custom log file", "browser" }), 0,
+         "Log CGI errors to...",
+         "By changing this variable you can select where error messages "
+         "(which means all text written to stderr) from "
+         "CGI scripts should be sent. By default they will be written to the "
+         "main log file - logs/debug/[name-of-configdir].1. You can also "
+         "choose to send the error messages to a special log file or to the "
+         "browser.\n"));
 
   defvar("cgilog", GLOBVAR(logdirprefix)+
-	 Roxen.short_name(conf? conf->name:".")+"/cgi.log",
-	 "Log file", TYPE_STRING,
-	 "Where to log errors from CGI scripts. You can also choose to send "
-	 "the errors to the browser or to the main Roxen log file. "
-	 " Some substitutions of the file name will be done to allow "
-	 "automatic rotating:"
-	 "<pre>"
-	 "%y    Year  (i.e. '1997')\n"
-	 "%m    Month (i.e. '08')\n"
-	 "%d    Date  (i.e. '10' for the tenth)\n"
-	 "%h    Hour  (i.e. '00')\n</pre>", 0,
-	 lambda() { return (query("stderr") != "custom log file"); });
+         Roxen.short_name(conf? conf->name:".")+"/cgi.log",
+         "Log file", TYPE_STRING,
+         "Where to log errors from CGI scripts. You can also choose to send "
+         "the errors to the browser or to the main Roxen log file. "
+         " Some substitutions of the file name will be done to allow "
+         "automatic rotating:"
+         "<pre>"
+         "%y    Year  (i.e. '1997')\n"
+         "%m    Month (i.e. '08')\n"
+         "%d    Date  (i.e. '10' for the tenth)\n"
+         "%h    Hour  (i.e. '00')\n</pre>", 0,
+         lambda() { return (query("stderr") != "custom log file"); });
 
   defvar("rawauth", Variable.Flag(0, VAR_MORE, "Raw user info",
-	 "If set, the raw, unparsed, user info will be sent to the script, "
-	 " in the HTTP_AUTHORIZATION environment variable. This is not "
-	 "recommended, but some scripts need it. Please note that this "
-	 "will give the scripts access to the password used."));
+         "If set, the raw, unparsed, user info will be sent to the script, "
+         " in the HTTP_AUTHORIZATION environment variable. This is not "
+         "recommended, but some scripts need it. Please note that this "
+         "will give the scripts access to the password used."));
 
   defvar("clearpass", Variable.Flag(0, VAR_MORE, "Send decoded password",
-	 "If set, the variable REMOTE_PASSWORD will be set to the decoded "
-	 "password value."));
+         "If set, the variable REMOTE_PASSWORD will be set to the decoded "
+         "password value."));
 
   defvar("cgi_tag", Variable.Flag(1, 0, "Provide the <cgi> and <runcgi> tags",
-	 "If set, the &lt;cgi&gt; and &lt;runcgi&gt; tags will be available."));
+         "If set, the &lt;cgi&gt; and &lt;runcgi&gt; tags will be available."));
 
   defvar("priority", "normal", "Limits: Priority", TYPE_STRING_LIST,
          "The priority, in somewhat general terms (for portability, this works on "
@@ -1185,88 +1185,88 @@ void create(Configuration conf)
            );
 #if UNIX
   defvar("noexec", Variable.Flag(1, 0, "Treat non-executable"
-				 " files as ordinary files",
-	 "If this flag is set, non-executable files will be returned "
-	 "as normal files to the client. Otherwise an error message "
-	 "will be returned."));
+                                 " files as ordinary files",
+         "If this flag is set, non-executable files will be returned "
+         "as normal files to the client. Otherwise an error message "
+         "will be returned."));
 
   defvar("warn_root_cgi", 1, "Warn for CGIs executing as root", TYPE_FLAG,
-  	 "If this flag is set, a warning will be issued to the event and "
-	 " debug log when a script is run as the root user. This will "
-	 "only happend if the 'Run scripts as' variable is set to root (or 0)",
-	 0, getuid);
+         "If this flag is set, a warning will be issued to the event and "
+         " debug log when a script is run as the root user. This will "
+         "only happend if the 'Run scripts as' variable is set to root (or 0)",
+         0, getuid);
 
   defvar("chroot", Variable.String("", VAR_MORE, "Chroot path",
-	 "This is the path that is chrooted to before running a program. "
-	 "No chrooting is done if left empty."));
+         "This is the path that is chrooted to before running a program. "
+         "No chrooting is done if left empty."));
 
   defvar("runuser", "nobody", "Run scripts as", TYPE_STRING,
-	 "If you start roxen as root, and this variable is set, CGI scripts "
-	 "will be run as this user. You can use either the user name or the "
-	 "UID. Note however, that if you don't have a working user database "
-	 "enabled, only UID's will work correctly. If unset, scripts will "
-	 "be run as nobody.", 0, getuid);
+         "If you start roxen as root, and this variable is set, CGI scripts "
+         "will be run as this user. You can use either the user name or the "
+         "UID. Note however, that if you don't have a working user database "
+         "enabled, only UID's will work correctly. If unset, scripts will "
+         "be run as nobody.", 0, getuid);
 
   defvar("user", 1, "Run user scripts as owner", TYPE_FLAG,
-	 "If set, scripts in the home-dirs of users will be run as the "
-	 "user. This overrides the Run scripts as variable.", 0, getuid);
+         "If set, scripts in the home-dirs of users will be run as the "
+         "user. This overrides the Run scripts as variable.", 0, getuid);
 
   defvar("setgroups", Variable.Flag(1, 0, "Set the supplementary"
-				    " group access list",
-	 "If set, the supplementary group access list will be set for "
-	 "the CGI scripts. This can slow down CGI-scripts significantly "
-	 "if you are using eg NIS+. If not set, the supplementary group "
-	 "access list will be cleared."));
+                                    " group access list",
+         "If set, the supplementary group access list will be set for "
+         "the CGI scripts. This can slow down CGI-scripts significantly "
+         "if you are using eg NIS+. If not set, the supplementary group "
+         "access list will be cleared."));
 
   defvar("allow_symlinks", 1, "Allow symlinks", TYPE_FLAG,
-	 "If set, allows symbolic links to binaries owned by the directory "
-	 "owner. Other symlinks are still disabled.<br>\n"
-	 "NOTE: This option only has effect if scripts are run as owner.",
-	 0, run_as_user_enabled);
+         "If set, allows symbolic links to binaries owned by the directory "
+         "owner. Other symlinks are still disabled.<br>\n"
+         "NOTE: This option only has effect if scripts are run as owner.",
+         0, run_as_user_enabled);
 
   defvar("nice", Variable.Int(0, VAR_MORE, "Limits: Nice value",
-	 "The nice level to use when running scripts. "
-	 "20 is nicest, and 0 is the most aggressive available to "
-	 "normal users. Defining the Nice value to anyting but 0 will override"
+         "The nice level to use when running scripts. "
+         "20 is nicest, and 0 is the most aggressive available to "
+         "normal users. Defining the Nice value to anyting but 0 will override"
          " the 'Priority' setting."));
 
   defvar("coresize", Variable.Int(0, VAR_MORE, "Limits: Core dump size",
-	 "The maximum size of a core-dump, in 512 byte blocks. "
-	 "-2 is unlimited."));
+         "The maximum size of a core-dump, in 512 byte blocks. "
+         "-2 is unlimited."));
 
   defvar("maxtime", Variable.IntChoice(60, ({ -2, 10, 30, 60, 120, 240 }),
-				       VAR_MORE, "Limits: Maximum CPU time",
-				       "The maximum CPU time the script might "
-				       "use in seconds. -2 is unlimited."));
+                                       VAR_MORE, "Limits: Maximum CPU time",
+                                       "The maximum CPU time the script might "
+                                       "use in seconds. -2 is unlimited."));
 
   defvar("datasize", Variable.Int(-2, VAR_MORE, "Limits: Memory size",
-	 "The maximum size of the memory used, in Kb. -2 is unlimited."));
+         "The maximum size of the memory used, in Kb. -2 is unlimited."));
 
   defvar("filesize", Variable.Int(-2, VAR_MORE, "Limits: Maximum file size",
-	 "The maximum size of any file created, in 512 byte blocks. -2 "
-	 "is unlimited."));
+         "The maximum size of any file created, in 512 byte blocks. -2 "
+         "is unlimited."));
 
   defvar("open_files", Variable.IntChoice(64, ({ 64,128,256,512,1024,2048 }),
-					  VAR_MORE, "Limits: Maximum "
-					  "number of open files",
-	 "The maximum number of files the script can keep open at any time. "
+                                          VAR_MORE, "Limits: Maximum "
+                                          "number of open files",
+         "The maximum number of files the script can keep open at any time. "
          "It is not possible to set this value over the system maximum. "
          "On most systems, there is no limit, but some unix systems still "
          "have a static filetable (Linux and *BSD, basically)."));
 
   defvar("stack", Variable.Int(-2, VAR_MORE, "Limits: Stack size",
-	 "The maximum size of the stack used, in kilobytes. -2 is unlimited."));
+         "The maximum size of the stack used, in kilobytes. -2 is unlimited."));
 #endif
 
   defvar("kill_call_out", Variable.IntChoice(0, ({ 0, 1, 2, 3, 4, 5, 7, 10, 15 }),
-					     VAR_MORE, "Limits: Time "
-					     "before killing scripts",
-	 "The maximum real time the script might run in minutes before it's "
-	 "killed. 0 means unlimited."));
+                                             VAR_MORE, "Limits: Time "
+                                             "before killing scripts",
+         "The maximum real time the script might run in minutes before it's "
+         "killed. 0 means unlimited."));
   defvar("max_buffer", 64, "Limits: Output buffer",
-	 TYPE_INT|VAR_MORE,
-	 "Maximum size of the output buffer in kilo bytes. "
-	 "0 means unlimited.");
+         TYPE_INT|VAR_MORE,
+         "Maximum size of the output buffer in kilo bytes. "
+         "0 means unlimited.");
 }
 
 int|string container_runcgi( string tag, mapping args, string cont, RequestID id )

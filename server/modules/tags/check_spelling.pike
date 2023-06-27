@@ -23,7 +23,7 @@ array(string) query_provides()
 mapping(string:function) query_action_buttons()
 {
   return ([ "Rebuild Custom Dictionaries" :
-	    lambda() { sync_extra_dicts(1); } ]);
+            lambda() { sync_extra_dicts(1); } ]);
 }
 
 
@@ -42,54 +42,54 @@ mapping find_internal(string f, RequestID id)
 void create() {
   defvar("spellchecker",
 #ifdef __NT__
-	 lambda() {
-	   catch {
-	     // RegGetValue() throws if the key isn't found.
-	     return replace(RegGetValue(HKEY_LOCAL_MACHINE,
-					"SOFTWARE\\Aspell",
-					"Path") + "\\aspell.exe", "\\", "/");
-	   };
-	   // Reasonable default.
-	   return "C:/Program Files/Aspell/bin/aspell.exe";
-	 }(),
+         lambda() {
+           catch {
+             // RegGetValue() throws if the key isn't found.
+             return replace(RegGetValue(HKEY_LOCAL_MACHINE,
+                                        "SOFTWARE\\Aspell",
+                                        "Path") + "\\aspell.exe", "\\", "/");
+           };
+           // Reasonable default.
+           return "C:/Program Files/Aspell/bin/aspell.exe";
+         }(),
 #else
-	 "/usr/bin/aspell",
+         "/usr/bin/aspell",
 #endif
-	 "Spell checker", TYPE_STRING,
+         "Spell checker", TYPE_STRING,
          "Spell checker program to use.");
 
   defvar("dictionary", "american", "Default dictionary", TYPE_STRING,
          "The default dictionary used, when not specified in the "
-	 "&lt;spell&gt; tag.");
+         "&lt;spell&gt; tag.");
 
   defvar("extra_dicts", ({ }), "Custom dictionaries",
-	 TYPE_FILE_LIST,
-	 "Paths to custom dictionary files. These should be plain-text "
-	 "files with one word on each line. NOTE: Filenames must include "
-	 "a valid language code before the file suffix, e.g. "
-	 "<tt>mywords.en.txt</tt> or <tt>mywords.en_US.txt</tt>. "
-	 "The plain-text files must also use UTF-8 encoding if you enable "
-	 "the UTF-8 support in the setting below.");
+         TYPE_FILE_LIST,
+         "Paths to custom dictionary files. These should be plain-text "
+         "files with one word on each line. NOTE: Filenames must include "
+         "a valid language code before the file suffix, e.g. "
+         "<tt>mywords.en.txt</tt> or <tt>mywords.en_US.txt</tt>. "
+         "The plain-text files must also use UTF-8 encoding if you enable "
+         "the UTF-8 support in the setting below.");
 
   defvar("run_together_langs", "sv", "Languages with run-together words",
-	 TYPE_STRING,
-	 "A comma-separated list of language codes where run-together words "
-	 "are considered valid. This behavior is useful in languages such as "
-	 "Swedish but not appropriate for English.");
+         TYPE_STRING,
+         "A comma-separated list of language codes where run-together words "
+         "are considered valid. This behavior is useful in languages such as "
+         "Swedish but not appropriate for English.");
   
   defvar("report", "popup", "Default report type", TYPE_STRING_LIST,
          "The default report type used, when not specified in the "
-	 "&lt;spell&gt; tag.",
+         "&lt;spell&gt; tag.",
          ({ "popup","table" }) );
 
   defvar("prestate", "", "Prestate",TYPE_STRING,
          "If specified, only check spelling in the &lt;spell&gt; tag "
-	 "when this prestate is present.");
+         "when this prestate is present.");
 
   defvar("use_utf8", 1, "Enable UTF-8 support",
-	 TYPE_FLAG,
-	 "If set takes advantage of UTF-8 support in Aspell. NOTE: Requires "
-	 "Aspell version 0.60 or later.");
+         TYPE_FLAG,
+         "If set takes advantage of UTF-8 support in Aspell. NOTE: Requires "
+         "Aspell version 0.60 or later.");
 
 }
 
@@ -102,11 +102,11 @@ string status()
   foreach (get_extra_dicts(); string ed_path; string pd_path) {
     ed_res +=
       ({ "<li>" + Roxen.html_encode_string(ed_path) +
-	 " <span style='color: #888'>&ndash;</span> " +
-	 (pd_path ?
-	  "<span style='color: green'>OK</span>" :
-	  "<span style='color: red'>Error</span>") +
-	 "</li>" });
+         " <span style='color: #888'>&ndash;</span> " +
+         (pd_path ?
+          "<span style='color: green'>OK</span>" :
+          "<span style='color: red'>Error</span>") +
+         "</li>" });
   }
   if (sizeof(ed_res)) {
     return
@@ -130,7 +130,7 @@ string get_processed_dict_path(string extra_dict)
     lower_case(String.string2hex(Crypto.MD5.hash(extra_dict)));
   return
     combine_path(getcwd(),
-		 roxen_path("$VARDIR/check_spelling/" + ed_hash + ".dict"));
+                 roxen_path("$VARDIR/check_spelling/" + ed_hash + ".dict"));
 }
 
 string|void get_extra_dict_language(string ed_path)
@@ -157,14 +157,14 @@ mapping(string:string) get_extra_dicts(void|int(0..1) include_empty)
       //  Processed dictionary
       string pd_path = get_processed_dict_path(ed_path);
       if (Stdio.Stat pd_stat = file_stat(pd_path)) {
-	//  Don't include zero-byte placeholders that we only keep to
-	//  avoid re-converting broken source files unless caller wants
-	//  them.
-	if (pd_stat->size || include_empty)
-	  res[ed_path] = pd_path;
+        //  Don't include zero-byte placeholders that we only keep to
+        //  avoid re-converting broken source files unless caller wants
+        //  them.
+        if (pd_stat->size || include_empty)
+          res[ed_path] = pd_path;
       } else if (include_empty) {
-	//  Not yet processed but a valid candidate
-	res[ed_path] = pd_path;
+        //  Not yet processed but a valid candidate
+        res[ed_path] = pd_path;
       }
     }
   }
@@ -225,7 +225,7 @@ int process_extra_dict(string ed_path, string pd_path)
     in_data = in_data[bom_data[1]..];
     if (bom_data[0] != "utf-8") {
       if (Charset.Decoder dec = Charset.decoder(bom_data[0]))
-	in_data = string_to_utf8(dec->feed(in_data)->drain());
+        in_data = string_to_utf8(dec->feed(in_data)->drain());
     }
   }
   in_data = replace(in_data, ({ "\r\n", "\r" }), ({ "\n", "\n" }) );
@@ -260,14 +260,14 @@ void sync_extra_dicts(void|int force_rebuild)
       //  Compare to stat of our derived file
       Stdio.Stat pd_stat = file_stat(pd_path);
       if (force_rebuild || !pd_stat || (ed_stat->mtime >= pd_stat->mtime)) {
-	int err = process_extra_dict(ed_path, pd_path);
-	if (err) {
-	  //  Write a zero-byte file in case of failed conversion. This
-	  //  means we can avoid re-converting it but still skip it when
-	  //  we gather all extra dictionaries.
-	  rm(pd_path);
-	  Stdio.write_file(pd_path, "");
-	}
+        int err = process_extra_dict(ed_path, pd_path);
+        if (err) {
+          //  Write a zero-byte file in case of failed conversion. This
+          //  means we can avoid re-converting it but still skip it when
+          //  we gather all extra dictionaries.
+          rm(pd_path);
+          Stdio.write_file(pd_path, "");
+        }
       }
     }
   }
@@ -303,8 +303,8 @@ string do_spell(string q, mapping args, string content,RequestID id)
   text=replace(text,({"\n","\r"}),({" "," "}));
   text=Array.everynth((replace(text,">","<")/"<"),2)*" ";
   text=replace(text,
-	       ({ ".",",",":",";","\t","!","|","?","(",")","\"" }),
-	       ({ "", "", "", "", "",  "", "", "", "", "", ""   }) );
+               ({ ".",",",":",";","\t","!","|","?","(",")","\"" }),
+               ({ "", "", "", "", "",  "", "", "", "", "", ""   }) );
   array(string) words=text/" ";
   words-=({"-",""});
 
@@ -461,12 +461,12 @@ string run_spellcheck(string|array(string) words, void|string dict)
   }
   Process.Process p =
     Process.Process(({ query("spellchecker"), "-a" }) +
-		    (use_run_together ? ({ "-C" })       : ({ }) ) +
-		    (use_utf8 ? ({ "--encoding=utf-8" }) : ({ }) ) +
-		    (stringp(words) ? ({ "-H" })         : ({ }) ) +
-		    (dict           ? ({ "-d", dict })   : ({ }) ) +
-		    ed_args,
-		    ([ "stdin":file2,"stdout":file4 ]));
+                    (use_run_together ? ({ "-C" })       : ({ }) ) +
+                    (use_utf8 ? ({ "--encoding=utf-8" }) : ({ }) ) +
+                    (stringp(words) ? ({ "-H" })         : ({ }) ) +
+                    (dict           ? ({ "-d", dict })   : ({ }) ) +
+                    ed_args,
+                    ([ "stdin":file2,"stdout":file4 ]));
 
   string text = stringp(words) ?
                " "+words /* Extra space to ignore aspell commands
@@ -505,22 +505,22 @@ array spellcheck(array(string) words,string dict)
     string word,suggestions;
     for(i=1;i<sizeof(ispell_data)-1 && row<sizeof(words);i++) {
       if(!sizeof(ispell_data[i])){ // next row
-	row++;
-	pos=0;
+        row++;
+        pos=0;
       }
       else {
         switch(ispell_data[i][0]) {
         case '&': // misspelled, suggestions
           sscanf(ispell_data[i],"& %s %*d %d:%s",word,pos2,suggestions);
-	  res += ({ ({ words[row],suggestions }) });;
+          res += ({ ({ words[row],suggestions }) });;
           pos=pos2-1+sizeof(word);
           break;
-	case '#': //misspelled
-	  sscanf(ispell_data[i],"# %s %d",word,pos2);
-	  res += ({ ({ words[row],"-" }) });
-	  pos=pos2-1+sizeof(word);
-	  break;
-	}
+        case '#': //misspelled
+          sscanf(ispell_data[i],"# %s %d",word,pos2);
+          res += ({ ({ words[row],"-" }) });
+          pos=pos2-1+sizeof(word);
+          break;
+        }
       }
     }
     return res;
@@ -547,35 +547,35 @@ class TagEmitSpellcheck {
       string s = run_spellcheck(text, dict);
       if(!s)
       {
-	if(args["error"])
-	  RXML.user_set_var(args["error"], "checkfailed");
-	return ({});
+        if(args["error"])
+          RXML.user_set_var(args["error"], "checkfailed");
+        return ({});
       }
       foreach(s/"\n", string line)
       {
-	line -= "\r";   // Needed for aspell on Windows.
-	if(!sizeof(line))
-	  continue;
+        line -= "\r";   // Needed for aspell on Windows.
+        if(!sizeof(line))
+          continue;
 
-	switch(line[0])
-	{
-	  case '*':
-	    // FIXME: Optimisation: Make aspell not send this!
-	    continue;
-	    
-	  case '&':
-	    if(sscanf(line, "& %s %*d %d: %s", string word, int offset, string suggestions) == 4)
-	      entries += ({ ([ "word":word,
-			       "offset":offset-1 /* For extra space (see above)! */,
-			       "suggestions":suggestions ]) });
-	    continue;
-	    
-	  case '#':
-	    if(sscanf(line, "# %s %d", string word, int offset) == 2)
-	      entries += ({ ([ "word":word,
-			       "offset":offset-1 /* For extra space (see above)! */ ]) });
-	    continue;
-	}
+        switch(line[0])
+        {
+          case '*':
+            // FIXME: Optimisation: Make aspell not send this!
+            continue;
+            
+          case '&':
+            if(sscanf(line, "& %s %*d %d: %s", string word, int offset, string suggestions) == 4)
+              entries += ({ ([ "word":word,
+                               "offset":offset-1 /* For extra space (see above)! */,
+                               "suggestions":suggestions ]) });
+            continue;
+            
+          case '#':
+            if(sscanf(line, "# %s %d", string word, int offset) == 2)
+              entries += ({ ([ "word":word,
+                               "offset":offset-1 /* For extra space (see above)! */ ]) });
+            continue;
+        }
       }
     }
 

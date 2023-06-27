@@ -22,11 +22,11 @@ class HeaderTokenizer
   {
     for(;;) {
       while(pos<len && header.charAt(pos)<=' ')
-	pos++;
+        pos++;
       if(pos<len && header.charAt(pos)=='(')
-	skipComment();
+        skipComment();
       else
-	break;
+        break;
     }
   }
   
@@ -68,9 +68,9 @@ class HeaderTokenizer
     int p0=++pos;
     while(pos<len && header.charAt(pos)!='"')
       if(header.charAt(pos)=='\\')
-	pos+=2;
+        pos+=2;
       else
-	pos++;
+        pos++;
     if(pos>=len)
       throw new IllegalArgumentException ("header: "+header);
     String v = header.substring(p0, pos++);

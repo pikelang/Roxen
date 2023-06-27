@@ -10,8 +10,8 @@ constant action = "debug_info";
 
 LocaleString name= LOCALE(1,"Pike memory usage information");
 LocaleString doc = LOCALE(2,
-		    "Show some information about how Pike is using the "
-		    "memory it has allocated. Mostly useful for developers.");
+                    "Show some information about how Pike is using the "
+                    "memory it has allocated. Mostly useful for developers.");
 
 int creation_date = time();
 
@@ -37,10 +37,10 @@ string render_table(mapping last_usage, mapping mem_usage)
     {
       int factor = 1;
       if (has_prefix(f, "num_free_")) {
-	factor = -1;
+        factor = -1;
       }
       if(f!="num_total")
-	mem_usage->num_total += mem_usage[f];
+        mem_usage->num_total += mem_usage[f];
 
       string bn = f[4..sizeof(f)-2]+"_bytes";
       mem_usage->total_bytes += factor*mem_usage[ bn ];
@@ -51,22 +51,22 @@ string render_table(mapping last_usage, mapping mem_usage)
       int cmp = factor*mem_usage[bn]/60;
 
       if (!diff) {
-	// Look at the count diff instead.
-	diff = mem_usage[f]-last_usage[f];
-	cmp = mem_usage[f]/60;
+        // Look at the count diff instead.
+        diff = mem_usage[f]-last_usage[f];
+        cmp = mem_usage[f]/60;
       }
 
       if(diff < cmp)
-	col="&usr.warncolor;";
+        col="&usr.warncolor;";
       if(diff == 0)
-	col="&usr.fgcolor;";
+        col="&usr.fgcolor;";
       if(diff < 0)
-	col="&usr.fade4;";
+        col="&usr.fade4;";
 
       if( bn == "tota_bytes" )
         bn = "total_bytes";
       table += ({ ({
-	col, f[4..], mem_usage[f], mem_usage[f]-last_usage[f],
+        col, f[4..], mem_usage[f], mem_usage[f]-last_usage[f],
         sprintf( "%.1f",mem_usage[bn]/1024.0),
         sprintf( "%.1f",(mem_usage[bn]-last_usage[bn])/1024.0 ),
       }) });
@@ -136,19 +136,19 @@ mixed page_0( object id )
     if (p == this_program && obj == this_object()) this_found = 1;
     if (p) {
       p = functionp (p) && Function.defined (p) ||
-	programp (p) && Program.defined (p) ||
-	p;
+        programp (p) && Program.defined (p) ||
+        p;
       catch {
-	// Paranoia catch.
-	refs[p] += Debug.refs(obj) - 2; // obj and stack.
-	mem[p] += Pike.count_memory (-1, obj);
+        // Paranoia catch.
+        refs[p] += Debug.refs(obj) - 2; // obj and stack.
+        mem[p] += Pike.count_memory (-1, obj);
       };
       if (++numobjs[p] <= 50) {
 #if 0
-	if (stringp (p) && has_suffix (p, "my-file.pike:4711"))
-	  _locate_references (obj);
+        if (stringp (p) && has_suffix (p, "my-file.pike:4711"))
+          _locate_references (obj);
 #endif
-	allobj[p] += ({obj});
+        allobj[p] += ({obj});
       }
     }
     else
@@ -165,11 +165,11 @@ mixed page_0( object id )
   foreach (allobj; string|program prog; array objs)
     for (int i = 0; i < sizeof (objs); i++) {
       if (catch {
-	  // The object might have become destructed since the walk above.
-	  // Just ignore it in that case.
-	  objs[i] = !zero_type (objs[i]) && sprintf ("%O", objs[i]);
-	})
-	objs[i] = 0;
+          // The object might have become destructed since the walk above.
+          // Just ignore it in that case.
+          objs[i] = !zero_type (objs[i]) && sprintf ("%O", objs[i]);
+        })
+        objs[i] = 0;
     }
 
   mapping(string:int) mem_usage_afterwards = _memory_usage();
@@ -188,14 +188,14 @@ mixed page_0( object id )
     "<p>";
   if (id->real_variables->gc || id->real_variables["gc.x"])
     res += sprintf (LOCALE(169, "The garbage collector freed %d of %d things (%d%%)."),
-		    gc_freed, gc_freed + num_things_afterwards,
-		    gc_freed * 100 / (gc_freed + num_things_afterwards));
+                    gc_freed, gc_freed + num_things_afterwards,
+                    gc_freed * 100 / (gc_freed + num_things_afterwards));
   else
     res += sprintf (LOCALE(170, "%d seconds since last garbage collection, "
-			   "%d%% of the interval is consumed."),
-		    time() - gc_status->last_gc,
-		    (gc_status->num_allocs + 1) * 100 /
-		    (gc_status->alloc_threshold + 1));
+                           "%d%% of the interval is consumed."),
+                    time() - gc_status->last_gc,
+                    (gc_status->num_allocs + 1) * 100 /
+                    (gc_status->alloc_threshold + 1));
 
   res += "</p>\n";
 
@@ -220,12 +220,12 @@ mixed page_0( object id )
     res += "<p><font color='&usr.warncolor;'>" + LOCALE(175, "Warning") + ":</font> ";
     if (mem_usage_afterwards->num_objects != mem_usage->num_objects)
       res += LOCALE(176, "Number of objects changed during object walkthrough "
-		    "(probably due to automatic gc call) - "
-		    "the list below is not complete.");
+                    "(probably due to automatic gc call) - "
+                    "the list below is not complete.");
     else
       res += sprintf (LOCALE(177, "The object walkthrough visited %d of %d objects - "
-			     "the list below is not accurate."),
-		      walked_objects, mem_usage->num_objects);
+                             "the list below is not accurate."),
+                      walked_objects, mem_usage->num_objects);
     res += "</p>\n";
   }
 
@@ -266,28 +266,28 @@ mixed page_0( object id )
     if (sizeof (objs) > 2 || abs (change) > 2) {
       string progstr;
       if (stringp (prog)) {
-	if (has_prefix (prog, cwd))
-	  progstr = prog[sizeof (cwd)..];
-	else if (has_prefix (prog, roxenloader.server_dir + "/"))
-	  progstr = prog[sizeof (roxenloader.server_dir + "/")..];
-	else
-	  progstr = prog;
+        if (has_prefix (prog, cwd))
+          progstr = prog[sizeof (cwd)..];
+        else if (has_prefix (prog, roxenloader.server_dir + "/"))
+          progstr = prog[sizeof (roxenloader.server_dir + "/")..];
+        else
+          progstr = prog;
       }
       else progstr = "?";
 
       string color;
       if (no_save_numobjs) {
-	change = "N/A";
-	color = same_color;
+        change = "N/A";
+        color = same_color;
       }
       else {
-	if (change > 0) color = inc_color, change = "+" + change;
-	else if (change < 0) color = dec_color;
-	else color = same_color;
+        if (change > 0) color = inc_color, change = "+" + change;
+        else if (change < 0) color = dec_color;
+        else color = same_color;
       }
 
       table[i] = ({ color, progstr, objstr,
-		    numobjs[prog], change, refs[prog], mem[prog] });
+                    numobjs[prog], change, refs[prog], mem[prog] });
     }
     else table[i] = 0;
   }
@@ -297,10 +297,10 @@ mixed page_0( object id )
     if (entry[0] > 2) {
       string progstr;
       if (stringp (prog)) {
-	if (has_prefix (prog, cwd))
-	  progstr = prog[sizeof (cwd)..];
-	else
-	  progstr = prog;
+        if (has_prefix (prog, cwd))
+          progstr = prog[sizeof (cwd)..];
+        else
+          progstr = prog;
       }
       else progstr = "";
       table += ({({dec_color, progstr, entry[1], 0, -entry[0], 0, 0})});
@@ -309,11 +309,11 @@ mixed page_0( object id )
   }
 
   table = Array.sort_array (table - ({0}),
-			    lambda (array a, array b) {
-			      return a[3] < b[3] || a[3] == b[3] && (
-				a[2] < b[2] || a[2] == b[2] && (
-				  a[1] < b[1]));
-			    });
+                            lambda (array a, array b) {
+                              return a[3] < b[3] || a[3] == b[3] && (
+                                a[2] < b[2] || a[2] == b[2] && (
+                                  a[1] < b[1]));
+                            });
 
   roxen->set_var("__num_clones", save_numobjs);
 
@@ -335,9 +335,9 @@ mixed page_0( object id )
   foreach (table, array entry)
     res += "<tr>" +
       TCELL ("class='td-left'", entry[0],
-	     replace (Roxen.html_encode_string (trim_path(entry[1])), " ", "\0240")) +
+             replace (Roxen.html_encode_string (trim_path(entry[1])), " ", "\0240")) +
       TCELL ("class='td-left'", entry[0],
-	     replace (Roxen.html_encode_string (entry[2]), " ", "\0240")) +
+             replace (Roxen.html_encode_string (entry[2]), " ", "\0240")) +
       TCELL ("class='td-right'", entry[0], entry[5]) +
       TCELL ("class='td-right'", entry[0], entry[3]) +
       TCELL ("class='td-right'", entry[0], entry[4]) +
@@ -353,9 +353,9 @@ mixed page_0( object id )
   foreach (sort (indices (gc_status)), string field)
     res += "<tr>" +
       TCELL ("class='td-left'", "&usr.fgcolor;",
-	     Roxen.html_encode_string (field)) +
+             Roxen.html_encode_string (field)) +
       TCELL ("class='td-left'", "&usr.fgcolor;",
-	     Roxen.html_encode_string (gc_status[field])) +
+             Roxen.html_encode_string (gc_status[field])) +
       "</tr>\n";
   res += "</table></p>\n"
     "<p><font size='-1'>" + LOCALE(401, #"\

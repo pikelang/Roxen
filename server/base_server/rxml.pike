@@ -38,12 +38,12 @@ protected class RXMLTagSet
     int i = search (imported, Roxen.entities_tag_set);
 #ifdef DEBUG
     if (i < 0) error ("Module list does not contain "
-		      "Roxen.entities_tag_set: %O\n", imported);
+                      "Roxen.entities_tag_set: %O\n", imported);
     {
       int j = search (imported, Roxen.entities_tag_set, i + 1);
       if (j != -1)
-	error ("Module list matches Roxen.entities_tag_set "
-	       "more than once (at %d and %d): %O\n", i, j, imported);
+        error ("Module list matches Roxen.entities_tag_set "
+               "more than once (at %d and %d): %O\n", i, j, imported);
     }
 #endif
 
@@ -97,34 +97,34 @@ protected class RXMLTagSet
     // that uses id->misc->defines after the rxml evaluation.
     if (mapping defines = id->misc->defines) {
       if (defines != misc) {
-	if (defines->rxml_misc) {
-	  SIMPLE_TRACE_ENTER (owner, "Preparing for nested RXML parse - "
-			      "moving away existing id->misc->defines");
-	  ctx->id_defines = defines;
-	}
-	else
-	  SIMPLE_TRACE_ENTER (owner, "Preparing for top level RXML parse - "
-			      "replacing id->misc->defines");
+        if (defines->rxml_misc) {
+          SIMPLE_TRACE_ENTER (owner, "Preparing for nested RXML parse - "
+                              "moving away existing id->misc->defines");
+          ctx->id_defines = defines;
+        }
+        else
+          SIMPLE_TRACE_ENTER (owner, "Preparing for top level RXML parse - "
+                              "replacing id->misc->defines");
 
-	// These settings ought to be in id->misc but are in this
-	// mapping for historical reasons.
-	misc->language = defines->language;
-	misc->present_languages = defines->present_languages;
+        // These settings ought to be in id->misc but are in this
+        // mapping for historical reasons.
+        misc->language = defines->language;
+        misc->present_languages = defines->present_languages;
 
         if (defines->theme_language)
           misc->theme_language = defines->theme_language;
 
-	id->misc->defines = misc;
+        id->misc->defines = misc;
       }
       else
-	SIMPLE_TRACE_ENTER (owner, "Preparing for %s RXML parse - "
-			    "id->misc->defines is already the same as "
-			    "RXML_CONTEXT->misc",
-			    defines->rxml_misc ? "nested" : "top level");
+        SIMPLE_TRACE_ENTER (owner, "Preparing for %s RXML parse - "
+                            "id->misc->defines is already the same as "
+                            "RXML_CONTEXT->misc",
+                            defines->rxml_misc ? "nested" : "top level");
     }
     else {
       SIMPLE_TRACE_ENTER (owner, "Preparing for top level RXML parse - "
-			  "initializing id->misc->defines");
+                          "initializing id->misc->defines");
       id->misc->defines = misc;
     }
     misc->rxml_misc = 1;
@@ -132,21 +132,21 @@ protected class RXMLTagSet
     if (censor_request) {
       id->rawauth = 0;
       if (string auth = id->realauth) {
-	if (sscanf (auth, "%[^:]%*c", auth) == 2)
-	  id->realauth = auth + ":"; // Let's keep the username.
-	else
-	  id->realauth = 0;
+        if (sscanf (auth, "%[^:]%*c", auth) == 2)
+          id->realauth = auth + ":"; // Let's keep the username.
+        else
+          id->realauth = 0;
       }
 
       if (m_delete (id->request_headers, "authorization")) {
-	string raw = id->raw;
-	int i = search (lower_case (raw), "authorization:");
-	if (i >= 0) {
-	  id->raw = raw[..i - 1];
-	  // Buglet: This doesn't handle header continuations.
-	  int j = search (raw, "\n", i);
-	  if (j >= 0) id->raw += raw[j + 1..];
-	}
+        string raw = id->raw;
+        int i = search (lower_case (raw), "authorization:");
+        if (i >= 0) {
+          id->raw = raw[..i - 1];
+          // Buglet: This doesn't handle header continuations.
+          int j = search (raw, "\n", i);
+          if (j >= 0) id->raw += raw[j + 1..];
+        }
       }
 
       // The Proxy-Authorization header has already been removed from
@@ -174,7 +174,7 @@ protected class RXMLTagSet
     mapping extra_heads = ctx->get_scope ("header");
 #ifdef DEBUG
     if ((extra_heads != misc[" _extra_heads"]) ||
-	(misc[" _extra_heads"] != id->misc->moreheads))
+        (misc[" _extra_heads"] != id->misc->moreheads))
       // Someone has probably replaced either of these mappings, which
       // should never be done since they'll get out of synch then.
       // Most likely it's some old code that has replaced
@@ -182,15 +182,15 @@ protected class RXMLTagSet
       // intentionally propagate the scope mapping here, so that the
       // error is more likely to be discovered.
       report_warning ("Warning: The \"header\" scope %O and "
-		      "RXML_CONTEXT->misc[\" _extra_heads\"] %O "
-		      "and id->misc->moreheads %O "
-		      "aren't the same mapping.\n",
-		      extra_heads, misc[" _extra_heads"], id->misc->moreheads);
+                      "RXML_CONTEXT->misc[\" _extra_heads\"] %O "
+                      "and id->misc->moreheads %O "
+                      "aren't the same mapping.\n",
+                      extra_heads, misc[" _extra_heads"], id->misc->moreheads);
 #endif
 
     if (mapping orig_defines = ctx->id_defines) {
       SIMPLE_TRACE_LEAVE ("Finishing nested RXML parse - "
-			  "restoring old id->misc->defines");
+                          "restoring old id->misc->defines");
 
       // Somehow it seems like these values are stored in the wrong place.. :P
       if (int v = misc[" _error"]) orig_defines[" _error"] = v;
@@ -199,7 +199,7 @@ protected class RXMLTagSet
     }
     else {
       SIMPLE_TRACE_LEAVE ("Finishing top level RXML parse - "
-			  "leaving id->misc->defines");
+                          "leaving id->misc->defines");
       m_delete (misc, "rxml_misc");
     }
 
@@ -233,8 +233,8 @@ int old_rxml_compat;
 // is no longer parsed multiple times.
 
 string parse_rxml(string what, RequestID id,
-		  void|Stdio.File file,
-		  void|mapping defines )
+                  void|Stdio.File file,
+                  void|mapping defines )
 // Note: Don't use this function to do recursive parsing inside an
 // rxml parse session. The RXML module provides several different ways
 // to accomplish that.
@@ -251,8 +251,8 @@ string parse_rxml(string what, RequestID id,
       orig_dont_cache_result = ctx->frame->flags & RXML.FLAG_DONT_CACHE_RESULT;
 #ifdef RXML_PCODE_UPDATE_DEBUG
     report_debug ("%O: Saved p-code update count %d before parse_rxml "
-		  "with inherited context\n",
-		  ctx, orig_state_updated);
+                  "with inherited context\n",
+                  ctx, orig_state_updated);
 #endif
   }
   else {
@@ -268,7 +268,7 @@ string parse_rxml(string what, RequestID id,
     if (!id->misc->moreheads) id->misc->moreheads = ([]);
     if (!defines[" _extra_heads"])
       ctx->add_scope ("header",
-		      defines[" _extra_heads"] = id->misc->moreheads);
+                      defines[" _extra_heads"] = id->misc->moreheads);
     if (!defines[" _stat"] && id->misc->stat)
       defines[" _stat"] = id->misc->stat;
   }
@@ -296,8 +296,8 @@ string parse_rxml(string what, RequestID id,
   if (orig_state_updated >= 0) {
 #ifdef RXML_PCODE_UPDATE_DEBUG
     report_debug ("%O: Restoring p-code update count from %d to %d "
-		  "after parse_rxml with inherited context\n",
-		  ctx, ctx->state_updated, orig_state_updated);
+                  "after parse_rxml with inherited context\n",
+                  ctx, ctx->state_updated, orig_state_updated);
 #endif
     ctx->state_updated = orig_state_updated;
     if (ctx->frame && !orig_dont_cache_result)
@@ -316,7 +316,7 @@ string parse_rxml(string what, RequestID id,
 #endif
     if (objectp (err) && err->thrown_at_unwind)
       error ("Can't handle RXML parser unwinding in "
-	     "compatibility mode (error=%O).\n", err);
+             "compatibility mode (error=%O).\n", err);
     else throw (err);
   }
 
@@ -325,11 +325,11 @@ string parse_rxml(string what, RequestID id,
 
 #define COMPAT_TAG_TYPE \
   function(string,mapping(string:string),RequestID,void|Stdio.File,void|mapping: \
-	   string|array(int|string))
+           string|array(int|string))
 
 #define COMPAT_CONTAINER_TYPE \
   function(string,mapping(string:string),string,RequestID,void|Stdio.File,void|mapping: \
-	   string|array(int|string))
+           string|array(int|string))
 
 class CompatTag
 {
@@ -357,7 +357,7 @@ class CompatTag
     array do_enter (RequestID id)
     {
       if (args->preparse)
-	content_type = content_type (RXML.PXml);
+        content_type = content_type (RXML.PXml);
     }
 
     array do_return (RequestID id)
@@ -367,8 +367,8 @@ class CompatTag
       if (!content) content = "";
       if (stringp (fn)) return ({fn});
       if (!fn) {
-	result_type = result_type (RXML.PNone);
-	return ({propagate_tag()});
+        result_type = result_type (RXML.PNone);
+        return ({propagate_tag()});
       }
 
       mapping defines = RXML_CONTEXT->misc;
@@ -376,33 +376,33 @@ class CompatTag
 
       string|array(string) result;
       if (flags & RXML.FLAG_EMPTY_ELEMENT)
-	result = fn (name, args, id, source_file, defines);
+        result = fn (name, args, id, source_file, defines);
       else {
-	if(args->trimwhites) content = String.trim_all_whites(content);
-	result = fn (name, args, content, id, source_file, defines);
+        if(args->trimwhites) content = String.trim_all_whites(content);
+        result = fn (name, args, content, id, source_file, defines);
       }
 
       if (arrayp (result)) {
-	result_type = result_type (RXML.PNone);
-	if (sizeof (result) && result[0] == 1) {
-	  [string pname, mapping(string:string) pargs, string pcontent] =
-	    (result[1..] + ({0, 0, 0}))[..2];
-	  if (!pname || pname == name)
-	    return ({!pargs && !pcontent ? propagate_tag () :
-		     propagate_tag (pargs || args, pcontent || content)});
-	  else
-	    return ({RXML.make_unparsed_tag (
-		       pname, pargs || args, pcontent || content)});
-	}
-	else return result;
+        result_type = result_type (RXML.PNone);
+        if (sizeof (result) && result[0] == 1) {
+          [string pname, mapping(string:string) pargs, string pcontent] =
+            (result[1..] + ({0, 0, 0}))[..2];
+          if (!pname || pname == name)
+            return ({!pargs && !pcontent ? propagate_tag () :
+                     propagate_tag (pargs || args, pcontent || content)});
+          else
+            return ({RXML.make_unparsed_tag (
+                       pname, pargs || args, pcontent || content)});
+        }
+        else return result;
       }
       else if (result) {
-	if (args->noparse) result_type = result_type (RXML.PNone);
-	return ({result});
+        if (args->noparse) result_type = result_type (RXML.PNone);
+        return ({result});
       }
       else {
-	result_type = result_type (RXML.PNone);
-	return ({propagate_tag()});
+        result_type = result_type (RXML.PNone);
+        return ({propagate_tag()});
       }
     }
   }
@@ -415,11 +415,11 @@ class GenericTag {
   int flags;
 
   function(string,mapping(string:string),string,RequestID,RXML.Frame:
-	   array|string) _do_return;
+           array|string) _do_return;
 
   void create(string _name, int _flags,
-	      function(string,mapping(string:string),string,RequestID,RXML.Frame:
-		       array|string) __do_return) {
+              function(string,mapping(string:string),string,RequestID,RXML.Frame:
+                       array|string) __do_return) {
     name=_name;
     flags=_flags;
     _do_return=__do_return;
@@ -434,9 +434,9 @@ class GenericTag {
       // Note: args may be zero here since this function is inherited
       // by GenericPITag.
       if (flags & RXML.FLAG_POSTPARSE)
-	result_type = result_type (RXML.PXml);
+        result_type = result_type (RXML.PXml);
       if (!(flags & RXML.FLAG_STREAM_CONTENT))
-	piece = content || "";
+        piece = content || "";
       array|string res = _do_return(name, args, piece, id, this_object());
       return stringp (res) ? ({res}) : res;
     }
@@ -448,8 +448,8 @@ class GenericPITag
   inherit GenericTag;
 
   void create (string _name, int _flags,
-	       function(string,mapping(string:string),string,RequestID,RXML.Frame:
-			array|string) __do_return)
+               function(string,mapping(string:string),string,RequestID,RXML.Frame:
+                        array|string) __do_return)
   {
     ::create (_name, _flags | RXML.FLAG_PROC_INSTR, __do_return);
     content_type = RXML.t_text;
@@ -468,31 +468,31 @@ void add_parse_module (RoxenModule mod)
       mappingp (defs = mod->query_tag_callers()) &&
       sizeof (defs))
     tag_set->add_tags (map (indices (defs),
-			    lambda (string name) {
-			      return CompatTag (name, 1, defs[name]);
-			    }));
+                            lambda (string name) {
+                              return CompatTag (name, 1, defs[name]);
+                            }));
 
   if (mod->query_container_callers &&
       mappingp (defs = mod->query_container_callers()) &&
       sizeof (defs))
     tag_set->add_tags (map (indices (defs),
-			    lambda (string name) {
-			      return CompatTag (name, 0, defs[name]);
-			    }));
+                            lambda (string name) {
+                              return CompatTag (name, 0, defs[name]);
+                            }));
 
   if (mod->query_simpletag_callers &&
       mappingp (defs = mod->query_simpletag_callers()) &&
       sizeof (defs))
     tag_set->add_tags(Array.map(indices(defs),
-				lambda(string tag){ return GenericTag(tag, @defs[tag]); }));
+                                lambda(string tag){ return GenericTag(tag, @defs[tag]); }));
 
   if (mod->query_simple_pi_tag_callers &&
       mappingp (defs = mod->query_simple_pi_tag_callers()) &&
       sizeof (defs))
     tag_set->add_tags (map (indices (defs),
-			    lambda (string name) {
-			      return GenericPITag (name, @defs[name]);
-			    }));
+                            lambda (string name) {
+                              return GenericPITag (name, @defs[name]);
+                            }));
 
   if (search (rxml_tag_set->imported, tag_set) < 0) {
 #ifdef THREADS

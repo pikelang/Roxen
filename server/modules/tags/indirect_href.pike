@@ -16,12 +16,12 @@ inherit "module";
 void create()
 {
   defvar( "hrefs", "roxen     = http://www.roxen.com\n"
-	  "community = http://community.roxen.com", "Indirect hrefs",
-	  TYPE_TEXT_FIELD, "The URL database with the syntax:<br>\n"
-	  "[name] = [URL]\n" );
+          "community = http://community.roxen.com", "Indirect hrefs",
+          TYPE_TEXT_FIELD, "The URL database with the syntax:<br>\n"
+          "[name] = [URL]\n" );
   /*
   defvar( "tagname", "ai", "Tag name", TYPE_STRING,
-	  "The name of the tag." );
+          "The name of the tag." );
   */
 }
 
@@ -49,7 +49,7 @@ void start()
   if (lines = ([string]query( "hrefs" )-" "-"\t") /"\n")
     foreach (lines, string line)
       if (sscanf( line, "%s=%s", variable, value ) >= 2)
-	hrefs[ variable ] = value;
+        hrefs[ variable ] = value;
 }
 
 class TagAI {
@@ -68,14 +68,14 @@ class TagAI {
     inherit RXML.Frame;
     array do_return() {
       if(!args->name || !sizeof(hrefs)) {
-	result = content;
-	return 0;
+        result = content;
+        return 0;
       }
 
       if(!(hrefs->random) && args->name=="random")
-	args->href=values(hrefs)[random(sizeof(hrefs))];
+        args->href=values(hrefs)[random(sizeof(hrefs))];
       else
-	args->href=hrefs[args->name];
+        args->href=hrefs[args->name];
       m_delete([mapping(string:string)]args, "name");
 
       result = Roxen.make_container("a", [mapping(string:string)]args, [string]content);

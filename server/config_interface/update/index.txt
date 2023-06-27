@@ -98,9 +98,9 @@
   <cv-obox title="&var.title;">
     <table cellpadding="4">
       <tr>
-	<td nowrap="nowrap"><b><translate id="14">Description</translate></b></td>
-	<td nowrap="nowrap"><b><translate id="15">Size</translate></b></td>
-	<td nowrap="nowrap"><b><translate id="16">Downloaded</translate></b></td>
+        <td nowrap="nowrap"><b><translate id="14">Description</translate></b></td>
+        <td nowrap="nowrap"><b><translate id="15">Size</translate></b></td>
+        <td nowrap="nowrap"><b><translate id="16">Downloaded</translate></b></td>
      </tr>
      &var.dip:none;
     </table>
@@ -113,9 +113,9 @@
   <cv-obox title="&var.title;">
     <table cellpadding="4">
       <tr>
-	<td nowrap="nowrap"><b><translate id="14">Description</translate></b></td>
-	<td nowrap="nowrap"><b><translate id="15">Size</translate></b></td>
-	<td nowrap="nowrap"></td>
+        <td nowrap="nowrap"><b><translate id="14">Description</translate></b></td>
+        <td nowrap="nowrap"><b><translate id="15">Size</translate></b></td>
+        <td nowrap="nowrap"></td>
       </tr>
       &var.dp:none;
     </table>

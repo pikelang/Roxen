@@ -22,10 +22,10 @@ string format_time(int t)
 {
   string res;
   foreach(({ ({ 604800, LOCALE(1095, "1 week"), LOCALE(1096, "%d weeks") }),
-	     ({ 86400, LOCALE(1097, "1 day"), LOCALE(1098, "%d days") }),
-	     ({ 3600, LOCALE(1099, "1 hour"), LOCALE(1100, "%d hours") }),
-	     ({ 60, LOCALE(1101, "1 minute"), LOCALE(1102, "%d minutes") }),
-	  }), [ int unit, string singular, string plural ]) {
+             ({ 86400, LOCALE(1097, "1 day"), LOCALE(1098, "%d days") }),
+             ({ 3600, LOCALE(1099, "1 hour"), LOCALE(1100, "%d hours") }),
+             ({ 60, LOCALE(1101, "1 minute"), LOCALE(1102, "%d minutes") }),
+          }), [ int unit, string singular, string plural ]) {
     if (t < unit) continue;
     int c = t/unit;
     string frag;
@@ -41,7 +41,7 @@ string format_time(int t)
 
 // Linear histogram
 string lin_histogram(string|object title, int num_buckets,
-		     array(int) value_set, int max)
+                     array(int) value_set, int max)
 {
   int num_files = sizeof(value_set) || 1;
   max++;
@@ -87,21 +87,21 @@ string lin_histogram(string|object title, int num_buckets,
     // fill-color: #808080 | #f2f1eb
     y_pos = max_height - height;
     res += sprintf(LOCALE(1104, "<rect x='%d' y='%d'"
-			     " width='10' height='%d'"
-			     " style='fill:%s;'>\n"
-			     "  <title>%s: %s - %s\n%f&#37; (%d)</title>\n"
-			     "</rect>\n"
-			     "<rect x='%d' y='0'"
-			     " width='10' height='%d'"
-			     " style='fill:%s;'>\n"
-			     "  <title>%s: %s - %s\n%f&#37; (%d)</title>\n"
-			     "</rect>\n"),
-		   x_pos, y_pos, height, fill_color,
-		   Roxen.html_encode_string(title),
-		   format_time(min_val), format_time(max_val+1), percent, count,
-		   x_pos, y_pos, bg_color,
-		   Roxen.html_encode_string(title),
-		   format_time(min_val), format_time(max_val+1), percent, count);
+                             " width='10' height='%d'"
+                             " style='fill:%s;'>\n"
+                             "  <title>%s: %s - %s\n%f&#37; (%d)</title>\n"
+                             "</rect>\n"
+                             "<rect x='%d' y='0'"
+                             " width='10' height='%d'"
+                             " style='fill:%s;'>\n"
+                             "  <title>%s: %s - %s\n%f&#37; (%d)</title>\n"
+                             "</rect>\n"),
+                   x_pos, y_pos, height, fill_color,
+                   Roxen.html_encode_string(title),
+                   format_time(min_val), format_time(max_val+1), percent, count,
+                   x_pos, y_pos, bg_color,
+                   Roxen.html_encode_string(title),
+                   format_time(min_val), format_time(max_val+1), percent, count);
 
     x_pos = x_pos + 12;
     max_width = max_width + 12;
@@ -109,15 +109,15 @@ string lin_histogram(string|object title, int num_buckets,
 
   // Using svg
   return sprintf("<svg width='%d' height='%d'"
-		 "     viewPort='0 0 %d %d' version='1.1'"
-		 "     xmlns='http://www.w3.org/2000/svg'>",
-		 max_width, max_height,
-		 max_width, max_height) + res + "</svg>";
+                 "     viewPort='0 0 %d %d' version='1.1'"
+                 "     xmlns='http://www.w3.org/2000/svg'>",
+                 max_width, max_height,
+                 max_width, max_height) + res + "</svg>";
 }
 
 // Exponential histogram
 string exp_histogram(string|object title, int num_buckets,
-		     array(int) value_set, int max)
+                     array(int) value_set, int max)
 {
   sort(value_set);
   int chunk_sz = 1024;
@@ -161,19 +161,19 @@ string exp_histogram(string|object title, int num_buckets,
     // y_pos = vertical pos of bar, origin at upper left corner
     y_pos = max_height - height;
     res += sprintf(LOCALE(1068, "<rect x='%d' y='%d'"
-			     " width='10' height='%d'"
-			     " style='fill:%s;'>\n"
-			     "  <title>%s: %d - %d KB\n%f&#37; (%d)</title>\n"
-			     "</rect>\n"
-			     "<rect x='%d' y='0'"
-			     " width='10' height='%d'"
-			     " style='fill:%s;'>\n"
-			     "  <title>%s: %d - %d KB\n%f&#37; (%d)</title>\n"
-			     "</rect>\n"),
-		   x_pos, y_pos, height, fill_color,
-		   Roxen.html_encode_string(title), min, max, percent, count,
-		   x_pos, y_pos, bg_color,
-		   Roxen.html_encode_string(title), min, max, percent, count);
+                             " width='10' height='%d'"
+                             " style='fill:%s;'>\n"
+                             "  <title>%s: %d - %d KB\n%f&#37; (%d)</title>\n"
+                             "</rect>\n"
+                             "<rect x='%d' y='0'"
+                             " width='10' height='%d'"
+                             " style='fill:%s;'>\n"
+                             "  <title>%s: %d - %d KB\n%f&#37; (%d)</title>\n"
+                             "</rect>\n"),
+                   x_pos, y_pos, height, fill_color,
+                   Roxen.html_encode_string(title), min, max, percent, count,
+                   x_pos, y_pos, bg_color,
+                   Roxen.html_encode_string(title), min, max, percent, count);
 
     min = max; // sz
     x_pos = x_pos + 12;
@@ -182,10 +182,10 @@ string exp_histogram(string|object title, int num_buckets,
 
   // Using svg
   return sprintf("<svg width='%d' height='%d'"
-		 "     viewPort='0 0 %d %d' version='1.1'"
-		 "     xmlns='http://www.w3.org/2000/svg'>",
-		 max_width, max_height,
-		 max_width, max_height) + res + "</svg>";
+                 "     viewPort='0 0 %d %d' version='1.1'"
+                 "     xmlns='http://www.w3.org/2000/svg'>",
+                 max_width, max_height,
+                 max_width, max_height) + res + "</svg>";
 }
 
 string parse(RequestID id)
@@ -223,14 +223,14 @@ string parse(RequestID id)
     mapping(string:int) lt = localtime(starttime);
     warning = LOCALE(0, "HALTED: The filesystem garbage collector will resume at:") +
       sprintf(" %04d-%02d-%02d %02d:%02d",
-	      lt->year + 1900, lt->mon + 1, lt->mday,
-	      lt->hour, lt->min);
+              lt->year + 1900, lt->mon + 1, lt->mday,
+              lt->hour, lt->min);
   } else if (stoptime >= 0) {
     mapping(string:int) lt = localtime(stoptime);
     warning = LOCALE(0, "The filesystem garbage collector will halt at:") +
       sprintf(" %04d-%02d-%02d %02d:%02d",
-	      lt->year + 1900, lt->mon + 1, lt->mday,
-	      lt->hour, lt->min);
+              lt->year + 1900, lt->mon + 1, lt->mday,
+              lt->hour, lt->min);
   }
 #endif
 
@@ -246,44 +246,44 @@ string parse(RequestID id)
 
     if (g->modid != modid) {
       if (modid) {
-	res +=
-	  "    </table>\n"
-	  "  </td>\n"
-	  "</tr>\n";
+        res +=
+          "    </table>\n"
+          "  </td>\n"
+          "</tr>\n";
       }
       modid = g->modid;
       RoxenModule mod = Roxen.get_module(modid);
       string name = Roxen.html_encode_string(modid);
       if (mod) {
-	Configuration conf = mod->my_configuration();
-	string curl = replace(conf->name, " ", "%20") + "/";
-	string mname = Roxen.get_modfullname(mod);
+        Configuration conf = mod->my_configuration();
+        string curl = replace(conf->name, " ", "%20") + "/";
+        string mname = Roxen.get_modfullname(mod);
 
-	string mgroup = "zz_misc";
-	if (sscanf(mname, "%s:%*s", mgroup) != 2)
-	  mgroup = "zz_misc";
-	if (mgroup == "zz_misc") mgroup = LOCALE(525, "Other");
+        string mgroup = "zz_misc";
+        if (sscanf(mname, "%s:%*s", mgroup) != 2)
+          mgroup = "zz_misc";
+        if (mgroup == "zz_misc") mgroup = LOCALE(525, "Other");
 
-	string murl = curl +
-	  Roxen.http_encode_invalids(mgroup) + "!0/" +
-	  replace(mod->sname(), "#", "!") + "/?section=Status";
+        string murl = curl +
+          Roxen.http_encode_invalids(mgroup) + "!0/" +
+          replace(mod->sname(), "#", "!") + "/?section=Status";
 
-	name = sprintf("<a href='/sites/site.html/%s&amp;&usr.set-wiz-id;'>%s</a>/"
-		       "<a href='/sites/site.html/%s&amp;&usr.set-wiz-id;'>%s</a>",
-		       Roxen.html_encode_string(curl),
-		       replace(Roxen.html_encode_string(conf->query_name()),
-			       " ", "&nbsp;"),
-		       Roxen.html_encode_string(murl),
-		       replace(Roxen.get_modfullname(mod),
-			       " ", "&nbsp;"));
+        name = sprintf("<a href='/sites/site.html/%s&amp;&usr.set-wiz-id;'>%s</a>/"
+                       "<a href='/sites/site.html/%s&amp;&usr.set-wiz-id;'>%s</a>",
+                       Roxen.html_encode_string(curl),
+                       replace(Roxen.html_encode_string(conf->query_name()),
+                               " ", "&nbsp;"),
+                       Roxen.html_encode_string(murl),
+                       replace(Roxen.get_modfullname(mod),
+                               " ", "&nbsp;"));
       }
       res +=
-	"<tr><td><h3>" +
-	sprintf(LOCALE(1105, "Registered by %s"), name) +
-	"</h3></td></tr>\n"
-	"<tr>\n"
-	"  <td>\n"
-	"    <table class='entry'>\n";
+        "<tr><td><h3>" +
+        sprintf(LOCALE(1105, "Registered by %s"), name) +
+        "</h3></td></tr>\n"
+        "<tr>\n"
+        "  <td>\n"
+        "    <table class='entry'>\n";
     }
 
     array(Stdio.Stat) stats = g->get_stats();
@@ -296,46 +296,46 @@ string parse(RequestID id)
       if (st->mtime < local_min_mtime) local_min_mtime = st->mtime;
     }
     string sizes = exp_histogram(LOCALE(377, "Size"),
-				 20, stats->size, local_max_size);
+                                 20, stats->size, local_max_size);
     // divide time in minutes.
     string ages = lin_histogram(LOCALE(1070, "Age"),
-				20, map(stats->mtime, `-, local_min_mtime),
-				g->max_age || time(1) - local_min_mtime);
+                                20, map(stats->mtime, `-, local_min_mtime),
+                                g->max_age || time(1) - local_min_mtime);
 
     res +=
       sprintf("      <tr>"
-	      "        <th>&nbsp;</th>\n"
+              "        <th>&nbsp;</th>\n"
               "        <th class='path' colspan='3'><tt>%s</tt></th>"
               "      </tr>\n"
-	      "      <tr>\n"
-	      "        <th style='width: 0%%'>&nbsp;</th>\n"
-	      "        <th>%s</th>\n"
-	      "        <th>%s</th>\n"
-	      "        <th>%s</th>\n"
-	      "      </tr>\n"
-	      "      <tr class='sub-table'>\n"
-	      "        <td>&nbsp;</td>\n"
-	      "        <td class='status'>\n"
-	      "            " +
-	      LOCALE(1071, "%d files <span class='dim'>(max: %d)</span>") +
+              "      <tr>\n"
+              "        <th style='width: 0%%'>&nbsp;</th>\n"
+              "        <th>%s</th>\n"
+              "        <th>%s</th>\n"
+              "        <th>%s</th>\n"
+              "      </tr>\n"
+              "      <tr class='sub-table'>\n"
+              "        <td>&nbsp;</td>\n"
+              "        <td class='status'>\n"
+              "            " +
+              LOCALE(1071, "%d files <span class='dim'>(max: %d)</span>") +
               "<br/>\n"
-	      "            " +
-	      LOCALE(1106, "%d KiB <span class='dim'>(max: %d)</span>") +
+              "            " +
+              LOCALE(1106, "%d KiB <span class='dim'>(max: %d)</span>") +
               "<br/>\n"
-	      "            Age limit: %s\n"
-	      "        </td>\n"
-	      "        <td>\n%s</td>\n"
-	      "        <td>\n%s</td>\n"
-	      "      </tr>\n",
-	      Roxen.html_encode_string(g->root), // Mount point
-	      LOCALE(228, "Status"),
-	      LOCALE(1107, "File age distribution"),
-	      LOCALE(1108, "File size distribution"),
-	      g->num_files, g->max_files, // files
-	      (g->total_size/size_unit), (g->max_size/size_unit), // size (KiB)
-	      age, // age (seconds or minutes)
-	      ages, // age distribution histogram
-	      sizes); // size distribution histogram
+              "            Age limit: %s\n"
+              "        </td>\n"
+              "        <td>\n%s</td>\n"
+              "        <td>\n%s</td>\n"
+              "      </tr>\n",
+              Roxen.html_encode_string(g->root), // Mount point
+              LOCALE(228, "Status"),
+              LOCALE(1107, "File age distribution"),
+              LOCALE(1108, "File size distribution"),
+              g->num_files, g->max_files, // files
+              (g->total_size/size_unit), (g->max_size/size_unit), // size (KiB)
+              age, // age (seconds or minutes)
+              ages, // age distribution histogram
+              sizes); // size distribution histogram
   }
   if (modid) {
     res +=

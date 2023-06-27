@@ -14,12 +14,12 @@ void run_tests( Configuration c )
   
 
   c1 = test_generic( check_is_configuration,
-		     roxen.find_configuration,
-		     "dbtest1" );
+                     roxen.find_configuration,
+                     "dbtest1" );
 
   c2 = test_generic( check_is_configuration,
-		     roxen.get_configuration,
-		     "dbtest2" );
+                     roxen.get_configuration,
+                     "dbtest2" );
 
   if( !c2 || !c1 )  {
     report_error( "Failed to find test configurations\n");
@@ -68,22 +68,22 @@ void run_tests( Configuration c )
   test_equal( ({}), sql_ro->query, "SELECT * from testtable" );
 
   test_error( sql_ro->query,
-	      "INSERT INTO testtable (foo, bin) VALUES ('bar', 'x')" );
+              "INSERT INTO testtable (foo, bin) VALUES ('bar', 'x')" );
   
   test( sql_rw->query,
-	"INSERT INTO testtable (foo, bin) VALUES ('åäö', 'åäö')" );
+        "INSERT INTO testtable (foo, bin) VALUES ('åäö', 'åäö')" );
   test( sql_rw->query,
-	"INSERT INTO testtable (foo, bin) VALUES ('åäö€uro', 'åäö€uro')" );
+        "INSERT INTO testtable (foo, bin) VALUES ('åäö€uro', 'åäö€uro')" );
 
   array rows = test_not_equal( ({}),
-			       sql_ro->query,
-			       "SELECT * FROM  testtable WHERE foo='åäö'" );
+                               sql_ro->query,
+                               "SELECT * FROM  testtable WHERE foo='åäö'" );
   test_true( `==, "åäö", rows[0]["foo"] );
   test_true( `==, string_to_utf8 ("åäö"), rows[0]["bin"] );
 
   rows = test_not_equal( ({}),
-			 sql_ro->query,
-			 "SELECT * FROM  testtable WHERE foo='åäö€uro'" );
+                         sql_ro->query,
+                         "SELECT * FROM  testtable WHERE foo='åäö€uro'" );
   test_true( `==, "åäö€uro", rows[0]["foo"] );
   test_true( `==, string_to_utf8 ("åäö€uro"), rows[0]["bin"] );
 

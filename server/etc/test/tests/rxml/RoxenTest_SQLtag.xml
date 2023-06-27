@@ -6,11 +6,11 @@
 <test>
   <rxml>
     <sqlquery db="local"
-	      query="CREATE TABLE __test (
-		       id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-		       a VARCHAR(255),
-		       b VARBINARY(255)
-		     ) CHARSET latin1"/>
+              query="CREATE TABLE __test (
+                       id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                       a VARCHAR(255),
+                       b VARBINARY(255)
+                     ) CHARSET latin1"/>
     &page.last-true;
   </rxml>
   <result>1</result>
@@ -19,7 +19,7 @@
 <test>
   <rxml>
     <sqlquery db="local"
-	      query="INSERT INTO __test (a) VALUES ('&foo.bar:mysql;')"/>
+              query="INSERT INTO __test (a) VALUES ('&foo.bar:mysql;')"/>
     <emit source="sql" db="local" query="SELECT count(*) AS n FROM __test">
       &_.n;
     </emit>
@@ -38,7 +38,7 @@
 <test>
   <rxml>
     <sqlquery db="local" mysql-insert-id="var.id"
-	      query="INSERT INTO __test (a) VALUES ('hopp')"/>
+              query="INSERT INTO __test (a) VALUES ('hopp')"/>
   &page.last-true;:&var.id;
   </rxml>
   <result>1:2</result>
@@ -63,7 +63,7 @@
 <test>
   <rxml type="string">
     <emit source="sql" db="local" query="SELECT id FROM __test"
-	  rowinfo="var.row">
+          rowinfo="var.row">
       &_.id;|&_.a;|&var.row;:
     </emit>
     &var.row;
@@ -74,7 +74,7 @@
 <test>
   <rxml type="array">
     <emit source="sql" db="local" query="SELECT id FROM __test"
-	  maxrows="1" remainderinfo="var.rem">
+          maxrows="1" remainderinfo="var.rem">
       &_.id;
     </emit>
     &var.rem;
@@ -196,11 +196,11 @@
   <rxml type="array">
     <sqlquery db="local" query="DELETE FROM __test"/>
     <sqlquery db="local"
-	      query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
+              query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
     <sqlquery db="local"
-	      query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
+              query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
     <emit source="sql" db="local"
-	  query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test">
+          query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test">
       &_.a; &_.al; &_.b; &_.bl;
     </emit>
   </rxml>
@@ -218,11 +218,11 @@
   <rxml type="array">
     <sqlquery db="local" query="DELETE FROM __test"/>
     <sqlquery db="local" charset="cp1252, latin1"
-	      query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
+              query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
     <sqlquery db="local" charset="cp1252, latin1"
-	      query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
+              query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
     <emit source="sql" db="local" charset="cp1252, latin1"
-	  query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test">
+          query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test">
       &_.a; &_.al; &_.b; &_.bl;
     </emit>
   </rxml>
@@ -236,11 +236,11 @@
   <rxml type="array">
     <sqlquery db="local" query="DELETE FROM __test"/>
     <sqlquery db="local" charset="broken-unicode"
-	      query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
+              query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
     <sqlquery db="local" charset="broken-unicode"
-	      query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
+              query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
     <emit source="sql" db="local" charset="broken-unicode"
-	  query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test">
+          query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test">
       &_.a; &_.al; &_.b; &_.bl;
     </emit>
   </rxml>
@@ -255,11 +255,11 @@
   <rxml type="array">
     <sqlquery db="local" query="DELETE FROM __test"/>
     <sqlquery db="local" charset="unicode"
-	      query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
+              query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
     <sqlquery db="local" charset="unicode"
-	      query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
+              query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
     <emit source="sql" db="local" charset="unicode"
-	  query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test">
+          query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test">
       &_.a; &_.al; &_.b; &_.bl;
     </emit>
   </rxml>
@@ -274,11 +274,11 @@
   <rxml type="array">
     <sqlquery db="local" query="DELETE FROM __test"/>
     <sqlquery db="local" charset="utf8"
-	      query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
+              query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
     <sqlquery db="local" charset="utf8"
-	      query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
+              query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
     <emit source="sql" db="local" charset="utf8"
-	  query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test">
+          query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test">
       &_.a; &_.al; &_.b; &_.bl;
     </emit>
   </rxml>
@@ -292,12 +292,12 @@
   <rxml type="array">
     <sqlquery db="local" query="DELETE FROM __test"/>
     <sqlquery db="local" charset="utf8"
-	      query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
+              query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
     <sqlquery db="local" charset="utf8"
-	      query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
+              query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
     <emit source="sql" db="local" charset="utf8"
-	  query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test"
-	  binary-result="b">
+          query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test"
+          binary-result="b">
       &_.a; &_.al; &_.b; &_.bl;
     </emit>
   </rxml>
@@ -311,12 +311,12 @@
   <rxml type="array">
     <sqlquery db="local" query="DELETE FROM __test"/>
     <sqlquery db="local" charset="utf8"
-	      query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
+              query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
     <sqlquery db="local" charset="utf8"
-	      query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
+              query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
     <emit source="sql" db="local" charset="utf8"
-	  query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test"
-	  binary-result="a, b">
+          query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test"
+          binary-result="a, b">
       &_.a; &_.al; &_.b; &_.bl;
     </emit>
   </rxml>
@@ -330,12 +330,12 @@
   <rxml type="array">
     <sqlquery db="local" query="DELETE FROM __test"/>
     <sqlquery db="local" charset="utf8"
-	      query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
+              query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
     <sqlquery db="local" charset="utf8"
-	      query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
+              query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
     <emit source="sql" db="local" charset="utf8"
-	  query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test"
-	  binary-result="">
+          query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test"
+          binary-result="">
       &_.a; &_.al; &_.b; &_.bl;
     </emit>
   </rxml>
@@ -351,13 +351,13 @@
     <set variable="var.a" value="aå€"/>
     <set variable="var.b" value="bå"/>
     <sqlquery db="local" charset="none, utf8"
-	      query="INSERT INTO __test (a, b)
-		     VALUES ('&var.a:utf8;', '&var.a:utf8;')"/>
+              query="INSERT INTO __test (a, b)
+                     VALUES ('&var.a:utf8;', '&var.a:utf8;')"/>
     <sqlquery db="local" charset="none, utf8"
-	      query="INSERT INTO __test (a, b)
-		     VALUES ('&var.b:utf8;', '&var.b:utf8;')"/>
+              query="INSERT INTO __test (a, b)
+                     VALUES ('&var.b:utf8;', '&var.b:utf8;')"/>
     <emit source="sql" db="local" charset="none, utf8"
-	  query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test">
+          query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test">
       &_.a; &_.al; &_.b; &_.bl;
     </emit>
   </rxml>
@@ -373,9 +373,9 @@
     <sqlquery db="local" query="INSERT INTO __test (a) VALUES (NULL), ('')"/>
     <emit source="sql" db="local" query="SELECT NULL as v">
       <emit source="sql" db="local"
-	    query="SELECT id FROM __test WHERE a&lt;=>:value"
-	    bindings="value=_.v">
-	[&_.id;]
+            query="SELECT id FROM __test WHERE a&lt;=>:value"
+            bindings="value=_.v">
+        [&_.id;]
       </emit>
     </emit>
   </rxml>

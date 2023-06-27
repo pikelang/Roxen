@@ -31,7 +31,7 @@ int flno=1;
 void create()
 {
    defvar("gc_time", 300, "GC time", TYPE_INT|VAR_MORE,
-	 "Time between gc loop. (It doesn't run when nothing to garb, anyway.)");
+         "Time between gc loop. (It doesn't run when nothing to garb, anyway.)");
 
 }
 
@@ -43,13 +43,13 @@ void gc()
    foreach (indices(flcache),m)
    {
       if (equal(({"gc"}),indices(flcache[m])))
-	 m_delete(flcache,m);
+         m_delete(flcache,m);
       else
       {
-	 foreach (flcache[m]->gc,n)
-	    m_delete(flcache[m],n);
-	 k+=sizeof(indices(flcache[m]));
-	 flcache[m]->gc=indices(flcache[m])-({"gc"});
+         foreach (flcache[m]->gc,n)
+            m_delete(flcache[m],n);
+         k+=sizeof(indices(flcache[m]));
+         flcache[m]->gc=indices(flcache[m])-({"gc"});
       }
    }
    if (k) call_out(gc,GC_LOOP_TIME);
@@ -70,27 +70,27 @@ constant module_doc  = "<h2>Deprecated</h2>"
   "&lt;/fl&gt;</pre>";
 
 string encode_url(object id,
-		  int flno,
-		  int dest)
+                  int flno,
+                  int dest)
 {
   string url = (id->not_query/"/")[-1]+"?fl="+id->variables->fl
     +"&flc"+flno+"="+dest;
   foreach(indices(id->variables), string var)
     if(var != "fl" && var[..2] != "flc" && stringp(id->variables[var]))
       url += sprintf("&%s=%s", http_encode_url(var),
-		     http_encode_url(id->variables[var]));
+                     http_encode_url(id->variables[var]));
   return url+"#fl_"+flno;
 }
 
 string tag_fl_postparse( string tag, mapping m, string cont, object id,
-			 object file, mapping defines, object client )
+                         object file, mapping defines, object client )
 {
    if (!id->variables->fl)
       id->variables->fl=flno++;
    if (!flcache[id->not_query])
    {
       if (-1==find_call_out(gc))
-	 call_out(gc,GC_LOOP_TIME);
+         call_out(gc,GC_LOOP_TIME);
       flcache[id->not_query]=(["gc":({})]);
    }
    flcache[id->not_query]->gc-=({id->variables->fl});
@@ -100,32 +100,32 @@ string tag_fl_postparse( string tag, mapping m, string cont, object id,
    if (id->variables["flc"+m->id])
    {
       flcache[id->not_query][id->variables->fl][m->id]=
-	 (int)id->variables["flc"+m->id];
+         (int)id->variables["flc"+m->id];
    }
    else if (!flcache[id->not_query][id->variables->fl][m->id])
    {
       if (m->unfolded)
-	 flcache[id->not_query][id->variables->fl][m->id]=2;
+         flcache[id->not_query][id->variables->fl][m->id]=2;
       else
-	 flcache[id->not_query][id->variables->fl][m->id]=1;
+         flcache[id->not_query][id->variables->fl][m->id]=1;
    }
 
    if (m->title)
    if (flcache[id->not_query][id->variables->fl][m->id]==1)
    {
       return "<!--"+m->id+"-->"
-	     "<a name=\"fl_"+m->id+"\" target=\"_self\" href=\""+
-	     encode_url(id,m->id,2)+"\">"
-	     "<img width=\"20\" height=\"20\" src=\"internal-roxen-unfold\" border=\"0\" "
-	     "alt=\"--\" /></a>"+cont;
+             "<a name=\"fl_"+m->id+"\" target=\"_self\" href=\""+
+             encode_url(id,m->id,2)+"\">"
+             "<img width=\"20\" height=\"20\" src=\"internal-roxen-unfold\" border=\"0\" "
+             "alt=\"--\" /></a>"+cont;
    }
    else
    {
       return "<!--"+m->id+"-->"
-	     "<a name=\"fl_"+m->id+"\" target=\"_self\" href=\""+
-	     encode_url(id,m->id,1)+"\">"
-	     "<img width=\"20\" height=\"20\" src=\"internal-roxen-fold\" border=\"0\" "
-	     "alt=\"\/\" /></a>"+cont;
+             "<a name=\"fl_"+m->id+"\" target=\"_self\" href=\""+
+             encode_url(id,m->id,1)+"\">"
+             "<img width=\"20\" height=\"20\" src=\"internal-roxen-fold\" border=\"0\" "
+             "alt=\"\/\" /></a>"+cont;
    }
    else
    if (flcache[id->not_query][id->variables->fl][m->id]==1)
@@ -146,7 +146,7 @@ void old_rxml_warning(RequestID id, string no, string yes) {
 }
 
 string tag_fl( string tag, mapping arg, string cont,
-	       object ma, string id, mapping defines)
+               object ma, string id, mapping defines)
 {
    mapping m=(["ld":"","t":"","cont":"","count":0]);
 
@@ -169,50 +169,50 @@ string tag_fl( string tag, mapping arg, string cont,
 string recurse_parse_ftfd(string cont,mapping m,string id)
 {
    return parse_html(cont,([]),
-		(["ft":
-		  lambda(string tag,mapping arg,string cont,mapping m,string id)
-		  {
-		     string t,fold;
-		     int kinc=m->inc;
-		     int me;
-		     m->cont="";
-		     me=++m->count;
-		     t=recurse_parse_ftfd(cont,m,id);
+                (["ft":
+                  lambda(string tag,mapping arg,string cont,mapping m,string id)
+                  {
+                     string t,fold;
+                     int kinc=m->inc;
+                     int me;
+                     m->cont="";
+                     me=++m->count;
+                     t=recurse_parse_ftfd(cont,m,id);
 
-		     if (arg->folded) fold="folded";
-		     else if (arg->unfolded) fold="unfolded";
-		     else fold=m->folded;
+                     if (arg->folded) fold="folded";
+                     else if (arg->unfolded) fold="unfolded";
+                     else fold=m->folded;
 
-		     m->cont=
-			"\n<dt><fl_postparse title "+fold
-			+" id="
+                     m->cont=
+                        "\n<dt><fl_postparse title "+fold
+                        +" id="
                         +((id=="")?(string)me:(id+me))+">"
                         +t+"</fl_postparse>"
                         +m->ld
                         +m->cont;
-		     m->ld="";
-		     m->inc=kinc+1;
-		     return "";
-		  },
-		  "fd":
-		  lambda(string tag,mapping arg,string cont,mapping m,string id)
-		  {
-		     m->ld=
+                     m->ld="";
+                     m->inc=kinc+1;
+                     return "";
+                  },
+                  "fd":
+                  lambda(string tag,mapping arg,string cont,mapping m,string id)
+                  {
+                     m->ld=
                         "\n<fl_postparse contents id="
                         +((id=="")?(string)m->count:(id+m->count))+">"
-			+"<dd>"
-			+recurse_parse_ftfd(cont,m,id)
-			+"</fl_postparse>"
+                        +"<dd>"
+                        +recurse_parse_ftfd(cont,m,id)
+                        +"</fl_postparse>"
                         +m->ld;
 
-		     return "";
-		  },
-		  "fl":tag_fl]),m,id);
+                     return "";
+                  },
+                  "fl":tag_fl]),m,id);
 }
 
 mapping query_container_callers()
 {
   return ([ "fl" : tag_fl,
-	    "fl_postparse" : tag_fl_postparse]);
+            "fl_postparse" : tag_fl_postparse]);
 }
 

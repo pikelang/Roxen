@@ -27,18 +27,18 @@ protected array(string) parse_auth_header( mixed header )
     if( sscanf( header, "%[^ ] %s", a, b ) == 2 )
       switch( a )
       {
-	case "Basic":
-	case "basic":
-	  b = MIME.decode_base64( b );
-	  if( sscanf( b, "%[^:]:%s", a, b ) == 2 )
-	    return ({ a, b });
+        case "Basic":
+        case "basic":
+          b = MIME.decode_base64( b );
+          if( sscanf( b, "%[^:]:%s", a, b ) == 2 )
+            return ({ a, b });
       }
   };
   if( arrayp( header ) )
   {
     foreach( header, header )
       if( (res = handle_header( header )) && res[0] )
-	return res;
+        return res;
   }
   else
     return handle_header( header );
@@ -47,8 +47,8 @@ protected array(string) parse_auth_header( mixed header )
 
 
 protected User low_authenticate( RequestID id,
-				 string user, string password,
-				 UserDB db)
+                                 string user, string password,
+                                 UserDB db)
 {
   if( User u = db->find_user( user, id ) )
     if( u->password_authenticate( password ) )
@@ -84,7 +84,7 @@ User authenticate( RequestID id, UserDB db )
   {
     foreach( id->conf->user_databases(), UserDB db )
       if( res = low_authenticate( id, user, password, db ) )
-	break;
+        break;
   }
   else
     res = low_authenticate( id, user, password, db );

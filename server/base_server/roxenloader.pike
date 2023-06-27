@@ -76,23 +76,23 @@ Stdio.File stderr = Stdio.File("stderr");
 mapping uname()
 {
   return ([ 
-	   "machine":"NT",
-	   "release":"unknown",
-	   "sysname":"NT",
-	   "nodename":gethostname(),
-	   "version":"unknown",
-	   ]);
+           "machine":"NT",
+           "release":"unknown",
+           "sysname":"NT",
+           "nodename":gethostname(),
+           "version":"unknown",
+           ]);
 }
 #else
 mapping uname()
 {
   return ([ 
-	   "machine":"unknown",
-	   "release":"unknown",
-	   "sysname":"unknown",
-	   "nodename":gethostname(),
-	   "version":"unknown",
-	   ]);
+           "machine":"unknown",
+           "release":"unknown",
+           "sysname":"unknown",
+           "nodename":gethostname(),
+           "version":"unknown",
+           ]);
 }
 #endif
 #endif
@@ -180,20 +180,20 @@ string server_dir =
 #endif
     if (has_suffix (cwd, "/"))
       report_warning ("Warning: Server directory is a root dir "
-		      "(or getcwd() misbehaves): %O\n", cwd);
+                      "(or getcwd() misbehaves): %O\n", cwd);
 
     string check_dir (string d) {
       while (has_suffix (d, "/"))
-	d = d[..<2];
+        d = d[..<2];
 #if constant (resolvepath)
       if (resolvepath (d) == cwd)
-	return d;
+        return d;
 #else
       if (cd (d)) {
-	if (getcwd() == cwd)
-	  return d;
-	else
-	  cd (cwd);
+        if (getcwd() == cwd)
+          return d;
+        else
+          cd (cwd);
       }
 #endif
       return 0;
@@ -201,7 +201,7 @@ string server_dir =
 
     if (string env_pwd = getenv ("PWD"))
       if (string res = check_dir (env_pwd))
-	return res;
+        return res;
 
     if (string res = check_dir (combine_path (__FILE__, "../..")))
       return res;
@@ -249,7 +249,7 @@ string describe_backtrace (mixed err, void|int linewidth
   if (roxen && !silent)
     foreach (roxen->configurations, object/*(Configuration)*/ conf)
       if (object/*(RoxenModule)*/ mod = conf->get_provider ("roxen_test")) {
-	mod->background_failure();
+        mod->background_failure();
       }
 #endif
 
@@ -275,22 +275,22 @@ mixed call_out(function f, float|int delay, mixed ... args)
       string _sprintf() { return sprintf("%O", f); }
       mixed `()(mixed ... args)
       {
-	co_num_call_out++;
-	mixed err, res;
-	int start_hrtime = gethrtime();
-	float co_vtime = gauge { err = catch { res = f && f(@args); }; };
-	float co_rtime = (gethrtime() - start_hrtime)/1E6;
-	if (co_rtime >  0.01) co_num_runs_001s++;
-	if (co_rtime >  0.05) co_num_runs_005s++;
-	if (co_rtime >  0.15) co_num_runs_015s++;
-	if (co_rtime >  0.50) co_num_runs_05s++;
-	if (co_rtime >  1.00) co_num_runs_1s++;
-	if (co_rtime >  5.00) co_num_runs_5s++;
-	if (co_rtime > 15.00) co_num_runs_15s++;
-	co_acc_cpu_time += (int)(1E6*co_vtime);
-	co_acc_time += (int)(1E6*co_rtime);
-	if (err) throw(err);
-	return res;
+        co_num_call_out++;
+        mixed err, res;
+        int start_hrtime = gethrtime();
+        float co_vtime = gauge { err = catch { res = f && f(@args); }; };
+        float co_rtime = (gethrtime() - start_hrtime)/1E6;
+        if (co_rtime >  0.01) co_num_runs_001s++;
+        if (co_rtime >  0.05) co_num_runs_005s++;
+        if (co_rtime >  0.15) co_num_runs_015s++;
+        if (co_rtime >  0.50) co_num_runs_05s++;
+        if (co_rtime >  1.00) co_num_runs_1s++;
+        if (co_rtime >  5.00) co_num_runs_5s++;
+        if (co_rtime > 15.00) co_num_runs_15s++;
+        co_acc_cpu_time += (int)(1E6*co_vtime);
+        co_acc_time += (int)(1E6*co_rtime);
+        if (err) throw(err);
+        return res;
       }
     }(f), delay, @args);
 }
@@ -324,9 +324,9 @@ string format_timestamp()
     float up = time(roxen_started) - roxen_started_flt;
     if (up > 3600) {
       up_str = sprintf( "%2dd%2dh%2dm",
-			(int) up / 86400,
-			(((int) up / 3600) % 24),
-			((int) up / 60) % 60);
+                        (int) up / 86400,
+                        (((int) up / 3600) % 24),
+                        ((int) up / 60) % 60);
     } else {
       up_str = sprintf( "%2dm%4.1fs ", ((int) up / 60) % 60, up % 60);
     }
@@ -378,12 +378,12 @@ protected void low_roxen_perror(string(8bit) data)
 {
   foreach(roxen_perror_outputs; function(string(8bit):void) fun;) {
     mixed err = catch {
-	fun(data);
+        fun(data);
       };
     if (err) {
       stderr->write("Roxen perror output handler %O failed:\n"
-		    "%s\n",
-		    fun, describe_backtrace(err));
+                    "%s\n",
+                    fun, describe_backtrace(err));
     }
   }
 }
@@ -452,21 +452,21 @@ void roxen_perror(sprintf_format format, sprintf_args ... args)
     catch {
       mixed rxml_ctx = all_constants()["_cur_rxml_context"]->get();
       if(rxml_ctx)
-	usr = rxml_ctx->user_get_var("user.username");
+        usr = rxml_ctx->user_get_var("user.username");
     };
 #endif
 
     for(i=0; i < sizeof(a)-1; i++) {
 #ifdef DEBUG_LOG_SHOW_USER
       if(usr)
-	a[i] = usr + " : " + a[i];
+        a[i] = usr + " : " + a[i];
 #endif
       low_roxen_perror(format_timestamp() + a[i] + "\n");
     }
     if (!last_was_nl) {
 #ifdef DEBUG_LOG_SHOW_USER
       if(usr)
-	a[-1] = usr + " : " + a[-1];
+        a[-1] = usr + " : " + a[-1];
 #endif
       low_roxen_perror(format_timestamp() + a[-1]);
     }
@@ -493,8 +493,8 @@ int mkdirhier(string from, int|void mode)
 #if constant(chmod)
       Stdio.Stat stat = file_stat (b + a, 1);
       if (stat && stat[0] & ~mode)
-	// Race here. Not much we can do about it at this point. :/
-	catch (chmod (b+a, [int]stat[0] & mode));
+        // Race here. Not much we can do about it at this point. :/
+        catch (chmod (b+a, [int]stat[0] & mode));
 #endif
     }
     else mkdir(b+a);
@@ -521,7 +521,7 @@ function(string, int|void, int|void, void|mixed ...:void) nwrite;
 
 // Standin for nwrite until roxen is loaded.
 void early_nwrite(string s, int|void perr, int|void errtype,
-		  object|void mod, object|void conf)
+                  object|void mod, object|void conf)
 {
   report_debug(s);
 }
@@ -575,7 +575,7 @@ void init_logger()
 
   closelog();
   openlog([string]query("LogNA"),
-	  ([int]query("LogSP")*LOG_PID)|([int]query("LogCO")*LOG_CONS),
+          ([int]query("LogSP")*LOG_PID)|([int]query("LogCO")*LOG_CONS),
           res);
 #endif
 }
@@ -604,7 +604,7 @@ array(object) find_module_and_conf_for_log( array(array) q )
     if( o->is_module ) {
       if( !mod ) mod = o;
       if (!conf && functionp (mod->my_configuration))
-	conf = ([function(void:object)]mod->my_configuration)();
+        conf = ([function(void:object)]mod->my_configuration)();
     }
     if( o->is_configuration ) {
       if( !conf ) conf = o;
@@ -690,38 +690,38 @@ void report_fatal(sprintf_format message, sprintf_args ... foo)
 }
 
 void report_warning_for (object/*(Configuration|RoxenModule)*/ where,
-			 LocaleString|sprintf_format message,
-			 sprintf_args ... args)
+                         LocaleString|sprintf_format message,
+                         sprintf_args ... args)
 //! @appears report_warning_for
 //! See @[report_error_for].
 {
   if (sizeof (args)) message = sprintf (message, @args);
   nwrite (message, 0, 2,
-	  where && where->is_module && where,
-	  where && where->is_configuration && where);
+          where && where->is_module && where,
+          where && where->is_configuration && where);
 #if constant(syslog)
   if (use_syslog) syslog_report (message, LOG_WARNING);
 #endif
 }
 
 void report_notice_for (object/*(Configuration|RoxenModule)*/ where,
-			LocaleString|sprintf_format message,
-			sprintf_args ... args)
+                        LocaleString|sprintf_format message,
+                        sprintf_args ... args)
 //! @appears report_notice_for
 //! See @[report_error_for].
 {
   if (sizeof (args)) message = sprintf (message, @args);
   nwrite (message, 0, 1,
-	  where && where->is_module && where,
-	  where && where->is_configuration && where);
+          where && where->is_module && where,
+          where && where->is_configuration && where);
 #if constant(syslog)
   if (use_syslog) syslog_report (message, LOG_NOTICE);
 #endif
 }
 
 void report_error_for (object/*(Configuration|RoxenModule)*/ where,
-		       LocaleString|sprintf_format message,
-		       sprintf_args ... args)
+                       LocaleString|sprintf_format message,
+                       sprintf_args ... args)
 //! @appears report_error_for
 //! Like @[report_error], but logs the message for the given
 //! configuration or Roxen module @[where], or globally if @[where] is
@@ -730,23 +730,23 @@ void report_error_for (object/*(Configuration|RoxenModule)*/ where,
 {
   if (sizeof (args)) message = sprintf (message, @args);
   nwrite (message, 0, 3,
-	  where && where->is_module && where,
-	  where && where->is_configuration && where);
+          where && where->is_module && where,
+          where && where->is_configuration && where);
 #if constant(syslog)
   if (use_syslog) syslog_report (message, LOG_ERR);
 #endif
 }
 
 void report_fatal_for (object/*(Configuration|RoxenModule)*/ where,
-		       LocaleString|sprintf_format message,
-		       sprintf_args ... args)
+                       LocaleString|sprintf_format message,
+                       sprintf_args ... args)
 //! @appears report_fatal_for
 //! See @[report_error_for].
 {
   if (sizeof (args)) message = sprintf (message, @args);
   nwrite (message, 0, 3,
-	  where && where->is_module && where,
-	  where && where->is_configuration && where);
+          where && where->is_module && where,
+          where && where->is_configuration && where);
 #if constant(syslog)
   if (use_syslog) syslog_report (message, LOG_EMERG);
 #endif
@@ -765,7 +765,7 @@ protected void garb_sparsely_dont_log()
 }
 
 void report_warning_sparsely (LocaleString|sprintf_format message,
-			      sprintf_args ... args)
+                              sprintf_args ... args)
 //! @appears report_warning_sparsely
 //! Like @[report_warning], but doesn't repeat the same message if
 //! it's been logged in the last ten minutes. Useful in situations
@@ -782,7 +782,7 @@ void report_warning_sparsely (LocaleString|sprintf_format message,
 }
 
 void report_error_sparsely (LocaleString|sprintf_format message,
-			    sprintf_args ... args)
+                            sprintf_args ... args)
 //! @appears report_error_sparsely
 //! Like @[report_error], but doesn't repeat the same message if it's
 //! been logged in the last ten minutes. Useful in situations where an
@@ -809,7 +809,7 @@ void report_error_sparsely (LocaleString|sprintf_format message,
 //! taken as processed argument list and is sent to
 //! @[Process.Process] as-is.
 string popen(string|array(string) cmd, void|mapping env,
-	     int|void uid, int|void gid)
+             int|void uid, int|void gid)
 {
   Stdio.File f = Stdio.File(), p = f->pipe(Stdio.PROP_IPC);
 
@@ -857,8 +857,8 @@ string popen(string|array(string) cmd, void|mapping env,
 //! @appears spawne
 //! Create a process
 Process.Process spawne(string s, array(string) args, mapping|array env,
-		       Stdio.File stdin, Stdio.File stdout, Stdio.File stderr,
-		       void|string wd, void|array(int) uid)
+                       Stdio.File stdin, Stdio.File stdout, Stdio.File stderr,
+                       void|string wd, void|array(int) uid)
 {
   int u, g;
   if(uid) { u = uid[0]; g = uid[1]; }
@@ -880,8 +880,8 @@ Process.Process spawne(string s, array(string) args, mapping|array env,
 //! @appears spawn_pike
 //! Start a new Pike process with the same configuration as the current one
 Process.Process spawn_pike(array(string) args, void|string wd,
-			   Stdio.File|void stdin, Stdio.File|void stdout,
-			   Stdio.File|void stderr)
+                           Stdio.File|void stdin, Stdio.File|void stdout,
+                           Stdio.File|void stderr)
 {
   array(string) cmd = ({
 #ifndef __NT__
@@ -896,10 +896,10 @@ Process.Process spawn_pike(array(string) args, void|string wd,
   cmd += ({"--quiet","--program"}) + args;
 
   return Process.Process (cmd,
-			  (["toggle_uid":1,
-			    "stdin":stdin,
-			    "stdout":stdout,
-			    "stderr":stderr]));
+                          (["toggle_uid":1,
+                            "stdin":stdin,
+                            "stdout":stdout,
+                            "stderr":stderr]));
 }
 
 // Add a few cache control related efuns
@@ -1081,7 +1081,7 @@ int verify_password(string password, string hash)
     if ((hash == "") || crypt(password, hash)) return 1;
     if (hash[0] != '$') {
       if (hash[0] == '_') {
-	// FIXME: BSDI-style crypt(3C).
+        // FIXME: BSDI-style crypt(3C).
       }
       return 0;
     }
@@ -1262,8 +1262,8 @@ protected class Privs
 
 #ifdef PRIVS_DEBUG
     report_debug(sprintf("Privs(%O, %O, %O)\n"
-			 "privs_level: %O\n",
-			 reason, uid, gid, privs_level));
+                         "privs_level: %O\n",
+                         reason, uid, gid, privs_level));
 #endif /* PRIVS_DEBUG */
 
 #ifdef HAVE_EFFECTIVE_USER
@@ -1272,7 +1272,7 @@ protected class Privs
 #ifdef THREADS
     if (euid_egid_lock) {
       if (mixed err = catch { mutex_key = euid_egid_lock->lock(); })
-	master()->handle_error (err);
+        master()->handle_error (err);
     }
     threads_disabled = _disable_threads();
 #endif /* THREADS */
@@ -1299,7 +1299,7 @@ protected class Privs
     {
       u = getpwnam(uid);
       if(u)
-	uid = u[2];
+        uid = u[2];
     }
 
     if(u && !gid)
@@ -1309,76 +1309,76 @@ protected class Privs
     {
       if (uid && (uid != "root"))
       {
-	if (intp(uid) && (uid >= 60000))
+        if (intp(uid) && (uid >= 60000))
         {
-	  report_warning(sprintf("Privs: User %d is not in the password database.\n"
-				 "Assuming nobody.\n", uid));
-	  // Nobody.
-	  gid = gid || uid;	// Fake a gid also.
-	  u = ({ "fake-nobody", "x", uid, gid, "A real nobody", "/", "/sbin/sh" });
-	} else {
-	  error("Unknown user: "+uid+"\n");
-	}
+          report_warning(sprintf("Privs: User %d is not in the password database.\n"
+                                 "Assuming nobody.\n", uid));
+          // Nobody.
+          gid = gid || uid;	// Fake a gid also.
+          u = ({ "fake-nobody", "x", uid, gid, "A real nobody", "/", "/sbin/sh" });
+        } else {
+          error("Unknown user: "+uid+"\n");
+        }
       } else {
-	u = ({ "root", "x", 0, gid, "The super-user", "/", "/sbin/sh" });
+        u = ({ "root", "x", 0, gid, "The super-user", "/", "/sbin/sh" });
       }
     }
 
     if(LOGP)
       report_notice(LOC_M(1, "Change to %s(%d):%d privs wanted (%s), from %s"),
-		    (string)u[0], (int)uid, (int)gid,
-		    (string)reason,
-		    (string)dbt(backtrace()[-2]));
+                    (string)u[0], (int)uid, (int)gid,
+                    (string)reason,
+                    (string)dbt(backtrace()[-2]));
 
     if (u[2]) {
 #if constant(cleargroups)
       if (mixed err = catch { cleargroups(); })
-	master()->handle_error (err);
+        master()->handle_error (err);
 #endif /* cleargroups */
 #if constant(initgroups)
       if (mixed err = catch { initgroups(u[0], u[3]); })
-	master()->handle_error (err);
+        master()->handle_error (err);
 #endif
     }
     gid = gid || getgid();
     int err = (int)setegid(new_gid = gid);
     if (err < 0) {
       report_warning(LOC_M(2, "Privs: WARNING: Failed to set the "
-			   "effective group id to %d!\n"
-			   "Check that your password database is correct "
-			   "for user %s(%d),\n and that your group "
-			   "database is correct.\n"),
-		     gid, (string)u[0], (int)uid);
+                           "effective group id to %d!\n"
+                           "Check that your password database is correct "
+                           "for user %s(%d),\n and that your group "
+                           "database is correct.\n"),
+                     gid, (string)u[0], (int)uid);
       int gid2 = gid;
 #ifdef HPUX_KLUDGE
       if (gid >= 60000) {
-	/* HPUX has doesn't like groups higher than 60000,
-	 * but has assigned nobody to group 60001 (which isn't even
-	 * in /etc/group!).
-	 *
-	 * HPUX's libc also insists on filling numeric fields it doesn't like
-	 * with the value 60001!
-	 */
-	report_debug("Privs: WARNING: Assuming nobody-group.\n"
-	       "Trying some alternatives...\n");
-	// Assume we want the nobody group, and try a couple of alternatives
-	foreach(({ 60001, 65534, -2 }), gid2) {
-	  report_debug("%d... ", gid2);
-	  if (initgroups(u[0], gid2) >= 0) {
-	    if ((err = setegid(new_gid = gid2)) >= 0) {
-	      report_debug("Success!\n");
-	      break;
-	    }
-	  }
-	}
+        /* HPUX has doesn't like groups higher than 60000,
+         * but has assigned nobody to group 60001 (which isn't even
+         * in /etc/group!).
+         *
+         * HPUX's libc also insists on filling numeric fields it doesn't like
+         * with the value 60001!
+         */
+        report_debug("Privs: WARNING: Assuming nobody-group.\n"
+               "Trying some alternatives...\n");
+        // Assume we want the nobody group, and try a couple of alternatives
+        foreach(({ 60001, 65534, -2 }), gid2) {
+          report_debug("%d... ", gid2);
+          if (initgroups(u[0], gid2) >= 0) {
+            if ((err = setegid(new_gid = gid2)) >= 0) {
+              report_debug("Success!\n");
+              break;
+            }
+          }
+        }
       }
 #endif /* HPUX_KLUDGE */
       if (err < 0) {
-	report_debug("Privs: Failed\n");
-	error ("Failed to set EGID to %d\n", gid);
+        report_debug("Privs: Failed\n");
+        error ("Failed to set EGID to %d\n", gid);
       }
       report_debug("Privs: WARNING: Set egid to %d instead of %d.\n",
-	     gid2, gid);
+             gid2, gid);
       gid = gid2;
     }
     if(getgid()!=gid) setgid(gid||getgid());
@@ -1394,57 +1394,57 @@ protected class Privs
 
 #ifdef PRIVS_DEBUG
     report_debug(sprintf("Privs->destroy()\n"
-			 "privs_level: %O\n",
-			 privs_level));
+                         "privs_level: %O\n",
+                         privs_level));
 #endif /* PRIVS_DEBUG */
 
 #ifdef HAVE_EFFECTIVE_USER
     /* Check that we don't increase the privs level */
     if (p_level >= privs_level) {
       report_error(sprintf("Change back to uid#%d gid#%d from uid#%d gid#%d\n"
-			   "in wrong order! Saved level:%d Current level:%d\n"
-			   "Occurs in:\n%s\n",
-			   saved_uid, saved_gid, new_uid, new_gid,
-			   p_level, privs_level,
-			   describe_backtrace(backtrace())));
+                           "in wrong order! Saved level:%d Current level:%d\n"
+                           "Occurs in:\n%s\n",
+                           saved_uid, saved_gid, new_uid, new_gid,
+                           p_level, privs_level,
+                           describe_backtrace(backtrace())));
       return(0);
     }
     if (p_level != privs_level-1) {
       report_error(sprintf("Change back to uid#%d gid#%d from uid#%d gid#%d\n"
-			   "Skips privs level. Saved level:%d Current level:%d\n"
-			   "Occurs in:\n%s\n",
-			   saved_uid, saved_gid, new_uid, new_gid,
-			   p_level, privs_level,
-			   describe_backtrace(backtrace())));
+                           "Skips privs level. Saved level:%d Current level:%d\n"
+                           "Occurs in:\n%s\n",
+                           saved_uid, saved_gid, new_uid, new_gid,
+                           p_level, privs_level,
+                           describe_backtrace(backtrace())));
     }
     privs_level = p_level;
 
     if(LOGP) {
       if (mixed err = catch {
-	array bt = backtrace();
-	if (sizeof(bt) >= 2) {
-	  report_notice(LOC_M(3,"Change back to uid#%d gid#%d, from %s")+"\n",
-			saved_uid, saved_gid, dbt(bt[-2]));
-	} else {
-	  report_notice(LOC_M(4,"Change back to uid#%d gid#%d, "
-			      "from backend")+"\n", saved_uid, saved_gid);
-	}
-	})
-	master()->handle_error (err);
+        array bt = backtrace();
+        if (sizeof(bt) >= 2) {
+          report_notice(LOC_M(3,"Change back to uid#%d gid#%d, from %s")+"\n",
+                        saved_uid, saved_gid, dbt(bt[-2]));
+        } else {
+          report_notice(LOC_M(4,"Change back to uid#%d gid#%d, "
+                              "from backend")+"\n", saved_uid, saved_gid);
+        }
+        })
+        master()->handle_error (err);
     }
 
 #ifdef PRIVS_DEBUG
     int uid = geteuid();
     if (uid != new_uid) {
       report_debug("Privs: UID #%d differs from expected #%d\n"
-		   "%s\n",
-		   uid, new_uid, describe_backtrace(backtrace()));
+                   "%s\n",
+                   uid, new_uid, describe_backtrace(backtrace()));
     }
     int gid = getegid();
     if (gid != new_gid) {
       report_debug("Privs: GID #%d differs from expected #%d\n"
-		   "%s\n",
-		   gid, new_gid, describe_backtrace(backtrace()));
+                   "%s\n",
+                   gid, new_gid, describe_backtrace(backtrace()));
     }
 #endif /* PRIVS_DEBUG */
 
@@ -1456,7 +1456,7 @@ protected class Privs
 #endif /* cleargroups */
     if(u && (sizeof(u) > 3)) {
       if (mixed err = catch { initgroups(u[0], u[3]); })
-	master()->handle_error (err);
+        master()->handle_error (err);
     }
     setegid(saved_gid);
     seteuid(saved_uid);
@@ -1480,27 +1480,27 @@ class RoxenConcurrent
     {
       string fun;
       if (stringp(frame[2])) {
-	fun = frame[2];
+        fun = frame[2];
       } else {
-	fun = master()->describe_function(frame[2]);
+        fun = master()->describe_function(frame[2]);
       }
       return sprintf("%s(%s)",
-		     fun,
-		     master()->Describer()->
-		     describe_comma_list(frame[3..], 99999));
+                     fun,
+                     master()->Describer()->
+                     describe_comma_list(frame[3..], 99999));
     }
 
     private string describe_initiator()
     {
       foreach(reverse(backtrace()), Pike.BacktraceFrame frame) {
-	mixed fun = frame[2];
-	if (callablep(fun)) {
-	  object o = function_object(fun);
-	  if ((o == this_object()) || (object_program(o) == RoxenConcurrent)) {
-	    continue;
-	  }
-	}
-	return describe_funcall(frame);
+        mixed fun = frame[2];
+        if (callablep(fun)) {
+          object o = function_object(fun);
+          if ((o == this_object()) || (object_program(o) == RoxenConcurrent)) {
+            continue;
+          }
+        }
+        return describe_funcall(frame);
       }
       return UNDEFINED;
     }
@@ -1512,18 +1512,18 @@ class RoxenConcurrent
     {
       array call_out(function co, int t, mixed ... args)
       {
-	if (roxen && !t) {
-	  roxen->low_handle(co, @args);
-	  return 0;
-	} else {
-	  return predef::call_out(roxen->low_handle, t, co, @args);
-	}
+        if (roxen && !t) {
+          roxen->low_handle(co, @args);
+          return 0;
+        } else {
+          return predef::call_out(roxen->low_handle, t, co, @args);
+        }
       }
 
       void remove_call_out(function|array co)
       {
-	if (!co) return;
-	predef::remove_call_out(co);
+        if (!co) return;
+        predef::remove_call_out(co);
       }
     }
 
@@ -1533,7 +1533,7 @@ class RoxenConcurrent
     protected string _sprintf(int c)
     {
       if (c == 'O') {
-	return sprintf("%O(/* %s */)", object_program(this), initiator || "");
+        return sprintf("%O(/* %s */)", object_program(this), initiator || "");
       }
       return UNDEFINED;
     }
@@ -1556,7 +1556,7 @@ Roxen really_load_roxen()
     throw(err);
   }
   report_debug("\bDone [%.1fms]\n",
-	       (gethrtime()-start_time)/1000.0);
+               (gethrtime()-start_time)/1000.0);
 
   res->start_time = start_time;
   res->boot_time = start_time;
@@ -1606,7 +1606,7 @@ void load_roxen()
 //   new_master->resolv("Roxen");
 #if !constant( callablep )
   add_constant( "callablep",
-		lambda(mixed f){return functionp(f)||programp(f);});
+                lambda(mixed f){return functionp(f)||programp(f);});
 #endif
   add_constant("cd", restricted_cd());
   add_constant ("exit", trace_exit);
@@ -1681,13 +1681,13 @@ class ParseHtmlCompat
   mapping(string:string|function) m_tags, m_containers;
 
   void create (mapping(string:string|function) tags,
-	       mapping(string:string|function) containers,
-	       mixed... extra)
+               mapping(string:string|function) containers,
+               mixed... extra)
   {
     m_tags = tags;
     m_containers = containers;
     add_containers (mkmapping (indices (m_containers),
-			       ({compat_call_container}) * sizeof (m_containers)));
+                               ({compat_call_container}) * sizeof (m_containers)));
     _set_tag_callback (compat_call_tag);
     set_extra (@extra);
     case_insensitive_tag (1);
@@ -1698,8 +1698,8 @@ class ParseHtmlCompat
 }
 
 string parse_html (string data, mapping(string:function|string) tags,
-		   mapping(string:function|string) containers,
-		   mixed... args)
+                   mapping(string:function|string) containers,
+                   mixed... args)
 {
   return ParseHtmlCompat (tags, containers, @args)->finish (data)->read();
 }
@@ -1737,13 +1737,13 @@ class ParseHtmlLinesCompat
   mapping(string:string|function) m_tags, m_containers;
 
   void create (mapping(string:string|function) tags,
-	       mapping(string:string|function) containers,
-	       mixed... extra)
+               mapping(string:string|function) containers,
+               mixed... extra)
   {
     m_tags = tags;
     m_containers = containers;
     add_containers (mkmapping (indices (m_containers),
-			       ({compat_call_container_lines}) * sizeof (m_containers)));
+                               ({compat_call_container_lines}) * sizeof (m_containers)));
     _set_tag_callback (compat_call_tag_lines);
     set_extra (@extra);
     case_insensitive_tag (1);
@@ -1754,7 +1754,7 @@ class ParseHtmlLinesCompat
 }
 
 string parse_html_lines (string data, mapping tags, mapping containers,
-			 mixed... args)
+                         mixed... args)
 {
   return ParseHtmlLinesCompat (tags, containers, @args)->finish (data)->read();
 }
@@ -1787,8 +1787,8 @@ class mf
       string file = bt[-2][0];
       int line = bt[-2][1];
       mark_fd(query_fd(),
-	      sprintf("%s:%d open(%O, %O, 0%03o)",
-		      file, line, what, mode, perm||0666));
+              sprintf("%s:%d open(%O, %O, 0%03o)",
+                      file, line, what, mode, perm||0666));
     }
     return res;
   }
@@ -1866,11 +1866,11 @@ string roxen_version()
 string roxen_path( string filename )
 {
   filename = replace( filename,
-		      ({"$VVARDIR","$LOCALDIR","$LOGFILE","$SERVERDIR"}),
+                      ({"$VVARDIR","$LOCALDIR","$LOGFILE","$SERVERDIR"}),
                       ({"$VARDIR/"+roxen_version(),
                         getenv ("LOCALDIR") || "../local",
-			getenv ("LOGFILE") || "$LOGDIR/debug/default.1",
-			server_dir }) );
+                        getenv ("LOGFILE") || "$LOGDIR/debug/default.1",
+                        server_dir }) );
   if( roxen )
     filename = replace( filename, 
                         "$LOGDIR", 
@@ -1973,8 +1973,8 @@ object|void open(string filename, string mode, int|void perm)
       gc();
       // Retry...
       if(!(o->open(filename, mode, perm||0666))) {
-	destruct(o);
-	return;
+        destruct(o);
+        return;
       }
     } else {
       destruct(o);
@@ -2009,10 +2009,10 @@ void add_package(string package_dir)
       ver = "Version " + ver;
     }
     report_debug("Adding package %s (%s).\n",
-		 roxen_path (package_dir), ver);
+                 roxen_path (package_dir), ver);
   } else {
     report_debug("Adding package %s.\n",
-		 roxen_path (package_dir));
+                 roxen_path (package_dir));
   }
   package_directories += ({ package_dir });
   string sub_dir = combine_path(real_pkg_dir, "pike-modules");
@@ -2067,7 +2067,7 @@ object|void lopen(string filename, string mode, int|void perm)
     foreach(package_directories, string dir) {
       Stdio.File o;
       if (o = open(combine_path(roxen_path(dir), filename), mode, perm))
-	return o;
+        return o;
     }
   }
   return open( roxen_path(filename), mode, perm );
@@ -2080,7 +2080,7 @@ object(Stdio.Stat) lfile_stat(string filename)
     foreach(package_directories, string dir) {
       Stdio.Stat res;
       if (res = file_stat(combine_path(roxen_path(dir), filename)))
-	return res;
+        return res;
     }
   }
   return file_stat(roxen_path(filename));
@@ -2106,7 +2106,7 @@ array(string) lget_dir(string path)
       dir = combine_path(roxen_path(dir), path);
       array(string) paths = get_dir(dir);
       if (paths) {
-	res += paths;
+        res += paths;
       }
     }
     if (res) return Array.uniq(res);
@@ -2142,10 +2142,10 @@ void write_current_time()
   int t = time(1);
   mapping lt = localtime(t);
   report_debug("\n** "+sprintf("%02d-%02d-%02d %02d:%02d", lt->year+1900,
-			       lt->mon+1, lt->mday, lt->hour, lt->min)+
+                               lt->mon+1, lt->mday, lt->hour, lt->min)+
                "   pid: "+pid+"   ppid: "+getppid()+
 #if constant(geteuid)
-	       (geteuid()!=getuid()?"   euid: "+pw_name(geteuid()):"")+
+               (geteuid()!=getuid()?"   euid: "+pw_name(geteuid()):"")+
 #endif
                "   uid: "+pw_name(getuid())+"\n\n");
   call_out( write_current_time, 3600 - t % 3600 );
@@ -2158,12 +2158,12 @@ void write_current_time()
 void paranoia_throw(mixed err)
 {
   if ((arrayp(err) && ((sizeof([array]err) < 2) || !stringp(([array]err)[0]) ||
-		       !arrayp(([array]err)[1]) ||
-		       !(arrayp(([array(array)]err)[1][0])||stringp(([array(array)]err)[1][0])))) ||
+                       !arrayp(([array]err)[1]) ||
+                       !(arrayp(([array(array)]err)[1][0])||stringp(([array(array)]err)[1][0])))) ||
       (!arrayp(err) && (!objectp(err) || !([object]err)->is_generic_error))) {
     report_debug(sprintf("Warning: throwing non-error: %O\n"
-			 "From: %s\n",
-			 err, describe_backtrace(backtrace())));
+                         "From: %s\n",
+                         err, describe_backtrace(backtrace())));
   }
   throw(err);
 }
@@ -2199,28 +2199,28 @@ Roxen 6.0 should be run with Pike 8.0 or newer.
     string interface;
     Stdio.Port p = Stdio.Port();
     if (p->bind(0, 0, interface = "::1") &&
-	p->bind(0, 0, interface = "::")) {
+        p->bind(0, 0, interface = "::")) {
       add_constant("__ROXEN_SUPPORTS_IPV6__", 1);
       report_debug("Support for IPv6 enabled.\n");
     }
     else
       report_debug ("IPv6 support check failed: Could not bind %s: %s\n",
-		    interface, strerror (p->errno()));
+                    interface, strerror (p->errno()));
     destruct(p);
   })
     report_debug ("IPv6 support check failed: %s",
 #ifdef DEBUG
-		  describe_backtrace (err)
+                  describe_backtrace (err)
 #else
-		  describe_error (err)
+                  describe_error (err)
 #endif
-		 );
+                 );
 
   // (. Note: Optimal implementation. .)
   array av = copy_value( argv );
   configuration_dir =
     Getopt.find_option(av, "d",({"config-dir","configuration-directory" }),
-	     ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }), "../configurations");
+             ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }), "../configurations");
 
   remove_dumped =
     Getopt.find_option(av, "remove-dumped",({"remove-dumped", }), 0 );
@@ -2251,14 +2251,14 @@ Roxen 6.0 should be run with Pike 8.0 or newer.
       if (fname == "CVS") continue;
       fname = combine_path(dir, fname);
       if (Stdio.is_dir(roxen_path(fname))) {
-	add_package(fname);
+        add_package(fname);
       }
     }
   }
 
   string dir;
   while (stringp(dir = Getopt.find_option(av, ({}), ({ "package" }),
-					  UNDEFINED, 1))) {
+                                          UNDEFINED, 1))) {
     add_package(dir);
   }
 
@@ -2376,7 +2376,7 @@ mapping(string:string) mysql_location()
   {
     foreach(paths, string p)
       if (file_stat(p))
-	return p;
+        return p;
     return 0;
   };
 
@@ -2405,30 +2405,30 @@ mapping(string:string) mysql_location()
     foreach(data / "\n", string line) {
       line = String.trim_whites((line / "#")[0]);
       if (sizeof(line)) {
-	sscanf(line, "%[^ \t=]%*[ \t]=%*[ \t]%s", string key, string val);
-	if (key && val && sizeof(val)) {
-	  //  Check for valid key
-	  key = lower_case(key);
-	  if (!valid_keys[key]) {
-	    report_warning("mysql-location.txt: Unknown key '%s'.\n", key);
-	    continue;
-	  }
-	  
-	  //  Convert to absolute path and check for existence
-	  if (val[0] == '"' || val[0] == '\'')
-	    val = val[1..];
-	  if (sizeof(val))
-	    if (val[-1] == '"' || val[-1] == '\'')
-	      val = val[..sizeof(val) - 2];
-	  string path = combine_path(server_dir, val);
-	  if (check_paths( ({ path }) )) {
-	    res[key] = path;
-	  } else {
-	    report_warning("mysql-location.txt: "
-			   "Ignoring non-existing path for key '%s': %s\n",
-			   key, path);
-	  }
-	}
+        sscanf(line, "%[^ \t=]%*[ \t]=%*[ \t]%s", string key, string val);
+        if (key && val && sizeof(val)) {
+          //  Check for valid key
+          key = lower_case(key);
+          if (!valid_keys[key]) {
+            report_warning("mysql-location.txt: Unknown key '%s'.\n", key);
+            continue;
+          }
+          
+          //  Convert to absolute path and check for existence
+          if (val[0] == '"' || val[0] == '\'')
+            val = val[1..];
+          if (sizeof(val))
+            if (val[-1] == '"' || val[-1] == '\'')
+              val = val[..sizeof(val) - 2];
+          string path = combine_path(server_dir, val);
+          if (check_paths( ({ path }) )) {
+            res[key] = path;
+          } else {
+            report_warning("mysql-location.txt: "
+                           "Ignoring non-existing path for key '%s': %s\n",
+                           key, path);
+          }
+        }
       }
     }
   }
@@ -2443,9 +2443,9 @@ mapping(string:string) mysql_location()
       string binary = "mysqld";
 #endif
       res->mysqld =
-	check_paths( ({ combine_path(res->basedir, "libexec", binary),
-			combine_path(res->basedir, "bin", binary),
-			combine_path(res->basedir, "sbin", binary) }) );
+        check_paths( ({ combine_path(res->basedir, "libexec", binary),
+                        combine_path(res->basedir, "bin", binary),
+                        combine_path(res->basedir, "sbin", binary) }) );
     }
     
     //  Locate myisamchk
@@ -2456,9 +2456,9 @@ mapping(string:string) mysql_location()
       string binary = "myisamchk";
 #endif
       res->myisamchk =
-	check_paths( ({ combine_path(res->basedir, "libexec", binary),
-			combine_path(res->basedir, "bin", binary),
-			combine_path(res->basedir, "sbin", binary) }) );
+        check_paths( ({ combine_path(res->basedir, "libexec", binary),
+                        combine_path(res->basedir, "bin", binary),
+                        combine_path(res->basedir, "sbin", binary) }) );
     }
 
     //  Locate mysqldump
@@ -2469,9 +2469,9 @@ mapping(string:string) mysql_location()
       string binary = "mysqldump";
 #endif
       res->mysqldump =
-	check_paths( ({ combine_path(res->basedir, "libexec", binary),
-			combine_path(res->basedir, "bin", binary),
-			combine_path(res->basedir, "sbin", binary) }) );
+        check_paths( ({ combine_path(res->basedir, "libexec", binary),
+                        combine_path(res->basedir, "bin", binary),
+                        combine_path(res->basedir, "sbin", binary) }) );
     }
 
     //  Locate mysql_upgrade
@@ -2482,9 +2482,9 @@ mapping(string:string) mysql_location()
       string binary = "mysql_upgrade";
 #endif
       res->mysql_upgrade =
-	check_paths( ({ combine_path(res->basedir, "libexec", binary),
-			combine_path(res->basedir, "bin", binary),
-			combine_path(res->basedir, "sbin", binary) }) );
+        check_paths( ({ combine_path(res->basedir, "libexec", binary),
+                        combine_path(res->basedir, "bin", binary),
+                        combine_path(res->basedir, "sbin", binary) }) );
     }
   }
   
@@ -2508,8 +2508,8 @@ string query_mysql_data_dir()
     Stdio.Stat wdstat = file_stat(wd);
     Stdio.Stat shortwdstat = file_stat(shortwd);
     if (wdstat && shortwdstat &&
-	(wdstat->dev == shortwdstat->dev) &&
-	(wdstat->ino == shortwdstat->ino)) {
+        (wdstat->dev == shortwdstat->dev) &&
+        (wdstat->ino == shortwdstat->ino)) {
       // Same device and inode.
       wd = shortwd;
     }
@@ -2626,9 +2626,9 @@ protected class SQLResKey
 
   protected void create (Sql.sql_result real, SQLKey key
 #ifdef SQL_DB_TRACE
-			 , int|void trace_enabled
+                         , int|void trace_enabled
 #endif
-			 )
+                         )
   {
     this_program::real = real;
     this_program::key = key;
@@ -2661,10 +2661,10 @@ protected class SQLResKey
 #ifdef SQL_DB_TRACE
     if (trace_enabled) {
       if (arrayp(ret)) {
-	report_debug("SQL_TRACE: SqlResult: fields: ({ %{%O, %} })\n",
-		     ret->name);
+        report_debug("SQL_TRACE: SqlResult: fields: ({ %{%O, %} })\n",
+                     ret->name);
       } else {
-	report_debug("SQL_TRACE: SqlResult: fields: Fail\n");
+        report_debug("SQL_TRACE: SqlResult: fields: Fail\n");
       }
     }
 #endif
@@ -2680,9 +2680,9 @@ protected class SQLResKey
 #ifdef SQL_DB_TRACE
     if (trace_enabled) {
       if (arrayp(ret)) {
-	report_debug("SQL_TRACE: SqlResult: row: ({ %{%O, %} })\n", ret);
+        report_debug("SQL_TRACE: SqlResult: row: ({ %{%O, %} })\n", ret);
       } else {
-	report_debug("SQL_TRACE: SqlResult: row: End marker\n");
+        report_debug("SQL_TRACE: SqlResult: row: End marker\n");
       }
     }
 #endif
@@ -2727,8 +2727,8 @@ protected class SQLResKey
       if(steps<0) error("Iterator must advance a positive number of steps.\n");
       if(steps>1)
       {
-	pos += steps-1;
-	seek(steps-1);
+        pos += steps-1;
+        seek(steps-1);
       }
       next();
       return this;
@@ -2778,7 +2778,7 @@ protected class SQLResKey
       // any thread when an object is refcount garbed.
       mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
       if (!dbs_for_thread[key->db_name])
-	dbs_for_thread[key->db_name] = key->real;
+        dbs_for_thread[key->db_name] = key->real;
     }
 #if 0
     werror("Destroying %O\n", this_object());
@@ -2806,12 +2806,12 @@ protected class SQLKey
     // happen the connection is not welcome back to the pool.
     string errmsg = describe_error (err);
     if (has_prefix (errmsg, "Mysql.mysql(): Couldn't connect ") ||
-	has_prefix (errmsg, "Mysql.mysql(): Couldn't reconnect ") ||
-	has_suffix (errmsg, "(MySQL server has gone away)\n")) {
+        has_prefix (errmsg, "Mysql.mysql(): Couldn't reconnect ") ||
+        has_suffix (errmsg, "(MySQL server has gone away)\n")) {
       if (reuse_in_thread) {
-	mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
-	if (dbs_for_thread[db_name] == real)
-	  m_delete (dbs_for_thread, db_name);
+        mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
+        if (dbs_for_thread[db_name] == real)
+          m_delete (dbs_for_thread, db_name);
       }
       real = 0;
     }
@@ -2821,20 +2821,20 @@ protected class SQLKey
   array(mapping) query( string f, mixed ... args )
   {
     mixed err = catch {
-	array(mapping) ret = real->query( f, @args );
+        array(mapping) ret = real->query( f, @args );
 #ifdef SQL_DB_TRACE
-	if (trace_enabled) {
-	  report_debug("SQL_TRACE: Sql(%O)->query(%O%{, %O%}) ==>\n"
-		       "SQL_TRACE:   %O\n",
-		       db_name, f, args, ret);
-	}
+        if (trace_enabled) {
+          report_debug("SQL_TRACE: Sql(%O)->query(%O%{, %O%}) ==>\n"
+                       "SQL_TRACE:   %O\n",
+                       db_name, f, args, ret);
+        }
 #endif
-	return ret;
+        return ret;
       };
 #ifdef SQL_DB_TRACE
     if (trace_enabled) {
       report_debug("SQL_TRACE: Sql(%O)->query(%O%{, %O%}) failed:\n",
-		   db_name, f, args);
+                   db_name, f, args);
     }
 #endif
     handle_db_error (err);
@@ -2844,18 +2844,18 @@ protected class SQLKey
   {
     Sql.sql_result o;
     if (mixed err = catch {
-	o = real->big_query( f, @args );
+        o = real->big_query( f, @args );
 #ifdef SQL_DB_TRACE
-	if (trace_enabled) {
-	  report_debug("SQL_TRACE: Sql(%O)->big_query(%O%{, %O%}) ==>\n",
-		       db_name, f, args);
-	}
+        if (trace_enabled) {
+          report_debug("SQL_TRACE: Sql(%O)->big_query(%O%{, %O%}) ==>\n",
+                       db_name, f, args);
+        }
 #endif
       }) {
 #ifdef SQL_DB_TRACE
       if (trace_enabled) {
-	report_debug("SQL_TRACE: Sql(%O)->big_query(%O%{, %O%}) failed:\n",
-		     db_name, f, args);
+        report_debug("SQL_TRACE: Sql(%O)->big_query(%O%{, %O%}) failed:\n",
+                     db_name, f, args);
       }
 #endif
       handle_db_error (err);
@@ -2863,7 +2863,7 @@ protected class SQLKey
     if (reuse_in_thread) {
       mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
       if (dbs_for_thread[db_name] == real)
-	m_delete (dbs_for_thread, db_name);
+        m_delete (dbs_for_thread, db_name);
     }
 #ifdef SQL_DB_TRACE
     return [object(Sql.sql_result)] (object) SQLResKey (o, this, trace_enabled);
@@ -2892,7 +2892,7 @@ protected class SQLKey
       mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
       if (!dbs_for_thread) sql_reuse_in_thread->set (dbs_for_thread = ([]));
       if (!dbs_for_thread[db_name])
-	dbs_for_thread[db_name] = real;
+        dbs_for_thread[db_name] = real;
     }
 
 #ifdef DB_DEBUG
@@ -2902,10 +2902,10 @@ protected class SQLKey
     foreach( (array)all_wrapped_sql_objects, Sql.Sql sql )
     {
       if( sql )
-	if( sql == real )
-	  error("Fatal: This database connection is already used!\n");
-	else if( sql->master_sql == real->master_sql )
-	  error("Fatal: Internal share error: master_sql equal!\n");
+        if( sql == real )
+          error("Fatal: This database connection is already used!\n");
+        else if( sql->master_sql == real->master_sql )
+          error("Fatal: Internal share error: master_sql equal!\n");
     }
 
     all_wrapped_sql_objects[real] = 1;
@@ -2931,15 +2931,15 @@ protected class SQLKey
       // any thread when an object is refcount garbed.
       mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
       if (dbs_for_thread[db_name] == real) {
-	m_delete (dbs_for_thread, db_name);
-	if (!sizeof (dbs_for_thread)) sql_reuse_in_thread->set (0);
+        m_delete (dbs_for_thread, db_name);
+        if (!sizeof (dbs_for_thread)) sql_reuse_in_thread->set (0);
       }
     }
 
     if (!real) return;
 
     if ((real->master_sql->query_db && real->master_sql->query_db()) !=
-	real_db_name) {
+        real_db_name) {
       // The real db has changed.
       // Ie select_db() or similar has been called.
       // Do not reuse the connection.
@@ -3014,7 +3014,7 @@ protected class SQLKey
       a = (a[..<1] * "@")/":";
       string user = a[0];
       if (sizeof(a) > 1) {
-	display_name = prot + "://" + user + ":CENSORED@" + host;
+        display_name = prot + "://" + user + ":CENSORED@" + host;
       }
     }
     return sprintf( "SQLKey(%O, %O)" + OBJ_COUNT, display_name, real );
@@ -3054,18 +3054,18 @@ Sql.Sql sq_cache_get( string db_name, void|int reuse_in_thread)
 #endif
       SQLTimeout res = sql_free_list[db_name][0];
       if( sizeof( sql_free_list[ db_name ] ) > 1)
-	sql_free_list[ db_name ] = sql_free_list[db_name][1..];
+        sql_free_list[ db_name ] = sql_free_list[db_name][1..];
       else
-	m_delete( sql_free_list, db_name );
+        m_delete( sql_free_list, db_name );
       if (res) {
-	destruct(key);
-	// NB: Release the lock during connection validation. Cf [WS-28].
-	if ((db = res->get()) && db->is_open()) {
-	  key = sq_cache_lock();
-	  sql_active_list[db_name]++;
-	  break;
-	}
-	key = sq_cache_lock();
+        destruct(key);
+        // NB: Release the lock during connection validation. Cf [WS-28].
+        if ((db = res->get()) && db->is_open()) {
+          key = sq_cache_lock();
+          sql_active_list[db_name]++;
+          break;
+        }
+        key = sq_cache_lock();
       }
     }
   }
@@ -3080,32 +3080,32 @@ Sql.Sql fix_connection_charset (Sql.Sql db, string charset)
   if (object master_sql = db->master_sql) {
     if (mixed err = catch {
 
-	if (master_sql->set_charset) {
-	  if (!charset)
-	    charset = default_db_charsets[object_program (master_sql)];
+        if (master_sql->set_charset) {
+          if (!charset)
+            charset = default_db_charsets[object_program (master_sql)];
 
-	  if ((charset == "unicode" || charset == "broken-unicode") &&
-	      master_sql->get_unicode_encode_mode) {
-	    // Unicode mode requested and the sql backend seems to
-	    // support it (a better recognition flag would be nice).
-	    // Detect if it's already enabled through
-	    // get_unicode_encode_mode and get_unicode_decode_mode. It's
-	    // enabled iff both return true.
-	    if (!(master_sql->get_unicode_encode_mode() &&
-		  master_sql->get_unicode_decode_mode()))
-	      master_sql->set_charset (charset);
-	  }
+          if ((charset == "unicode" || charset == "broken-unicode") &&
+              master_sql->get_unicode_encode_mode) {
+            // Unicode mode requested and the sql backend seems to
+            // support it (a better recognition flag would be nice).
+            // Detect if it's already enabled through
+            // get_unicode_encode_mode and get_unicode_decode_mode. It's
+            // enabled iff both return true.
+            if (!(master_sql->get_unicode_encode_mode() &&
+                  master_sql->get_unicode_decode_mode()))
+              master_sql->set_charset (charset);
+          }
 
-	  else {
-	    if (master_sql->set_unicode_decode_mode &&
-		master_sql->get_unicode_decode_mode())
-	      // Ugly special case for mysql: The set_charset call does
-	      // not reset this state.
-	      master_sql->set_unicode_decode_mode (0);
-	    if (charset != master_sql->get_charset())
-	      master_sql->set_charset (charset);
-	  }
-	}
+          else {
+            if (master_sql->set_unicode_decode_mode &&
+                master_sql->get_unicode_decode_mode())
+              // Ugly special case for mysql: The set_charset call does
+              // not reset this state.
+              master_sql->set_unicode_decode_mode (0);
+            if (charset != master_sql->get_charset())
+              master_sql->set_charset (charset);
+          }
+        }
 
       })
     {
@@ -3123,15 +3123,15 @@ Sql.Sql fix_connection_charset (Sql.Sql db, string charset)
 #define FIX_CHARSET_FOR_NEW_SQL_CONN(SQLOBJ, CHARSET) do {		\
     if (object master_sql = SQLOBJ->master_sql)				\
       if (master_sql->set_charset) {					\
-	if (zero_type (default_db_charsets[object_program (master_sql)])) \
-	  default_db_charsets[object_program (master_sql)] =		\
-	    SQLOBJ->get_charset();					\
-	if (CHARSET) SQLOBJ->set_charset (CHARSET);			\
+        if (zero_type (default_db_charsets[object_program (master_sql)])) \
+          default_db_charsets[object_program (master_sql)] =		\
+            SQLOBJ->get_charset();					\
+        if (CHARSET) SQLOBJ->set_charset (CHARSET);			\
       }									\
   } while (0)
 
 Sql.Sql sq_cache_set( string db_name, Sql.Sql res,
-		      void|int reuse_in_thread, void|string charset)
+                      void|int reuse_in_thread, void|string charset)
 // Should only be called with a "virgin" Sql.Sql object that has never
 // been used or had its charset changed.
 {
@@ -3148,7 +3148,7 @@ Sql.Sql sq_cache_set( string db_name, Sql.Sql res,
  * avoided by normal users. 
 */
 Sql.Sql connect_to_my_mysql( string|int ro, void|string db,
-			     void|int reuse_in_thread, void|string charset)
+                             void|int reuse_in_thread, void|string charset)
 {
 #if 0
 #ifdef DB_DEBUG
@@ -3193,20 +3193,20 @@ protected mixed low_connect_to_my_mysql( string|int ro, void|string db )
       ro = ro?"ro":"rw";
     int t = gethrtime();
     res = Sql.Sql( replace( my_mysql_path,({"%user%", "%db%" }),
-			    ({ ro, db })),
-		   ([ "reconnect":0 ]));
+                            ({ ro, db })),
+                   ([ "reconnect":0 ]));
 #ifdef ENABLE_MYSQL_UNICODE_MODE
     if (res && res->master_sql && res->master_sql->set_unicode_decode_mode) {
       // NOTE: The following code only works on Mysql servers 4.1 and later.
       mixed err2 = catch {
-	res->master_sql->set_unicode_decode_mode(1);
+        res->master_sql->set_unicode_decode_mode(1);
 #ifdef DB_DEBUG
-	werror("Unicode decode mode enabled.\n");
+        werror("Unicode decode mode enabled.\n");
 #endif
       };
 #ifdef DB_DEBUG
       if (err2) werror ("Failed to enable unicode decode mode: %s",
-			describe_error (err2));
+                        describe_error (err2));
 #endif
     }
 #endif /* ENABLE_MYSQL_UNICODE_MODE */
@@ -3223,10 +3223,10 @@ protected mixed low_connect_to_my_mysql( string|int ro, void|string db )
 
   if (mixed err_2 = catch {
       low_connect_to_my_mysql( 0, "mysql" )
-	->query( "CREATE DATABASE "+ db );
+        ->query( "CREATE DATABASE "+ db );
     }) {
     report_warning ("Attempt to autocreate database %O failed: %s",
-		    db, describe_error (err_2));
+                    db, describe_error (err_2));
     throw (err);
   }
 
@@ -3243,9 +3243,9 @@ protected void do_tailf( int loop, string file )
     foreach( (what/"\n"), string line )
     {
       if( sscanf( line, "%*sAborted connection%*s" ) == 2 )
-	continue;
+        continue;
       if( line == "" )
-	return res+"\n";
+        return res+"\n";
       res += "\n";
       res += "mysql: "+line;
     }
@@ -3272,11 +3272,11 @@ protected void do_tailf( int loop, string file )
       if(!f) return;
       if( os < si )
       {
-	f->seek( os );
-	report_debug( mysqlify( f->read( si - os ) ) );
+        f->seek( os );
+        report_debug( mysqlify( f->read( si - os ) ) );
       }
       else
-	report_debug( mysqlify( f->read( si ) ) );
+        report_debug( mysqlify( f->read( si ) ) );
       os = tailf_info[ file ] = si;
     }
     if( loop )
@@ -3285,15 +3285,15 @@ protected void do_tailf( int loop, string file )
 }
 
 protected void low_check_mysql(string myisamchk, string datadir,
-			       array(string) args, void|Stdio.File errlog)
+                               array(string) args, void|Stdio.File errlog)
 {
   array(string) files = ({});
   foreach(get_dir(datadir) || ({}), string dir) {
     foreach(get_dir(combine_path(datadir, dir)) || ({}), string file)
       if(!file || !glob("*.myi", lower_case(file), ))
-	continue;
+        continue;
       else
-	files += ({ combine_path(datadir, dir, file) });
+        files += ({ combine_path(datadir, dir, file) });
   }
 
   if(!sizeof(files))
@@ -3308,21 +3308,21 @@ protected void low_check_mysql(string myisamchk, string datadir,
   report_debug("Checking MySQL tables with %O...\n", args*" ");
   mixed err = catch {
       Process.Process(({ myisamchk,
-			 "--defaults-file=" + query_mysql_config_file(datadir),
-		      }) + args + sort(files),
-		      ([
-			"stdin":devnull,
-			"stdout":errlog,
-			"stderr":errlog
-		      ]))->wait();
+                         "--defaults-file=" + query_mysql_config_file(datadir),
+                      }) + args + sort(files),
+                      ([
+                        "stdin":devnull,
+                        "stdout":errlog,
+                        "stderr":errlog
+                      ]))->wait();
     };
   if(err)
     werror(describe_backtrace(err));
 }
 
 Process.Process low_start_mysql( string datadir,
-				 string uid,
-				 void|int log_queries_to_stdout)
+                                 string uid,
+                                 void|int log_queries_to_stdout)
 {
   void rotate_log(string path)
   {
@@ -3341,13 +3341,13 @@ Process.Process low_start_mysql( string datadir,
   //  Start by verifying the mysqld version
   string version_fatal_error = 0;
   string version = popen(({ mysql_location->mysqld,
-			    "--version", "--no-defaults",
-			 }));
+                            "--version", "--no-defaults",
+                         }));
   if (!version) {
     version_fatal_error =
       sprintf("Unable to determine MySQL version with this command:\n\n"
-	      "  %s --version --no-defaults\n\n",
-	      mysql_location->mysqld);
+              "  %s --version --no-defaults\n\n",
+              mysql_location->mysqld);
   } else {
     //  Parse version string
     string orig_version = version;
@@ -3357,10 +3357,10 @@ Process.Process low_start_mysql( string datadir,
       // avoid possible false matches.
       version = version[sizeof (mysql_location->mysqld)..];
     if (sscanf(lower_case(version), "%*s  ver %[0-9.]%s",
-	       mysql_version, trailer) < 2) {
+               mysql_version, trailer) < 2) {
       version_fatal_error =
-	  sprintf("Failed to parse MySQL version string - got %q from:\n"
-		  "%O\n\n", version, orig_version);
+          sprintf("Failed to parse MySQL version string - got %q from:\n"
+                  "%O\n\n", version, orig_version);
 #ifndef YES_I_KNOW_WHAT_I_AM_DOING
     } else {
       array(string) good_versions = mysql_good_versions;
@@ -3368,59 +3368,59 @@ Process.Process low_start_mysql( string datadir,
       array(string) bad_versions = mysql_bad_versions;
       mysql_product_name = "MySQL";
       if (has_prefix(trailer, "-mariadb")) {
-	mysql_product_name = "MariaDB";
-	good_versions = mariadb_good_versions;
-	maybe_versions = mariadb_maybe_versions;
-	bad_versions = mariadb_bad_versions;
+        mysql_product_name = "MariaDB";
+        good_versions = mariadb_good_versions;
+        maybe_versions = mariadb_maybe_versions;
+        bad_versions = mariadb_bad_versions;
       }
       //  Determine if version is acceptable
       if (has_value(glob(good_versions[*], mysql_version), 1)) {
-	//  Everything is fine
+        //  Everything is fine
       } else if (has_value(glob(maybe_versions[*], mysql_version), 1)) {
-	if (has_value(glob(bad_versions[*], mysql_version), 1)) {
-	  version_fatal_error =
-	    sprintf("This version of %s (%s) is known to not work "
-		    "with Roxen:\n\n"
-		    "  %s\n",
-		    mysql_product_name, mysql_version, orig_version);
-	} else {
-	  //  Don't allow unless user gives special define
+        if (has_value(glob(bad_versions[*], mysql_version), 1)) {
+          version_fatal_error =
+            sprintf("This version of %s (%s) is known to not work "
+                    "with Roxen:\n\n"
+                    "  %s\n",
+                    mysql_product_name, mysql_version, orig_version);
+        } else {
+          //  Don't allow unless user gives special define
 #ifdef ALLOW_UNSUPPORTED_MYSQL
-	  report_debug("\nWARNING: Forcing Roxen to run with unsupported "
-		       "%s version (%s).\n",
-		       mysql_product_name, mysql_version);
+          report_debug("\nWARNING: Forcing Roxen to run with unsupported "
+                       "%s version (%s).\n",
+                       mysql_product_name, mysql_version);
 #else
-	  version_fatal_error =
-	    sprintf("This version of %s (%s) is not officially supported "
-		    "with Roxen.\n"
-		    "If you want to override this restriction, use this "
-		    "option:\n\n"
-		    "  -DALLOW_UNSUPPORTED_MYSQL\n\n",
-		    mysql_product_name, mysql_version);
+          version_fatal_error =
+            sprintf("This version of %s (%s) is not officially supported "
+                    "with Roxen.\n"
+                    "If you want to override this restriction, use this "
+                    "option:\n\n"
+                    "  -DALLOW_UNSUPPORTED_MYSQL\n\n",
+                    mysql_product_name, mysql_version);
 #endif
-	}
+        }
       } else {
-	//  Version not recognized (maybe too old or too new) so bail out
-	version_fatal_error =
-	  sprintf("%s version %s detected:\n\n"
-		  "  %s\n", mysql_product_name, mysql_version, orig_version);
+        //  Version not recognized (maybe too old or too new) so bail out
+        version_fatal_error =
+          sprintf("%s version %s detected:\n\n"
+                  "  %s\n", mysql_product_name, mysql_version, orig_version);
       }
 #endif
 #ifdef RUN_SELF_TEST
       if (version_fatal_error) {
-	report_debug ("\n%s"
-		      "Continuing anyway in self test mode.\n\n",
-		      version_fatal_error);
-	version_fatal_error = 0;
+        report_debug ("\n%s"
+                      "Continuing anyway in self test mode.\n\n",
+                      version_fatal_error);
+        version_fatal_error = 0;
       }
 #endif
     }
   }
   if (version_fatal_error) {
     report_debug("\n%s"
-		 "Roxen cannot run unknown/unsupported versions for data\n"
+                 "Roxen cannot run unknown/unsupported versions for data\n"
                  "integrity reasons and will therefore terminate.\n\n",
-		 version_fatal_error);
+                 version_fatal_error);
     exit(1);
   }
 
@@ -3440,20 +3440,20 @@ Process.Process low_start_mysql( string datadir,
   
   // Default arguments.
   array(string) args = ({
-		  "--defaults-file="+datadir+"/my.cfg",
+                  "--defaults-file="+datadir+"/my.cfg",
 #ifdef __NT__
                   // Use pipes with default name "MySQL" unless --socket is set
-		  "--socket="+replace(datadir, ":", "_") + "/pipe",
-		  "--enable-named-pipe",
+                  "--socket="+replace(datadir, ":", "_") + "/pipe",
+                  "--enable-named-pipe",
 #else
-		  "--socket="+datadir+"/socket",
-		  "--pid-file="+pid_file,
+                  "--socket="+datadir+"/socket",
+                  "--pid-file="+pid_file,
 #endif
-		  has_prefix(version, "5.1.")?
-		  "--skip-locking":"--skip-external-locking",
-		  "--skip-name-resolve",
-		  "--basedir=" + mysql_location->basedir,
-		  "--datadir="+datadir,
+                  has_prefix(version, "5.1.")?
+                  "--skip-locking":"--skip-external-locking",
+                  "--skip-name-resolve",
+                  "--basedir=" + mysql_location->basedir,
+                  "--datadir="+datadir,
   });
 
   // Set up the environment variables, and
@@ -3474,17 +3474,17 @@ Process.Process low_start_mysql( string datadir,
 
   string normalized_mysql_version =
     map(mysql_version/".",
-	lambda(string d) {
-	  return ("000" + d)[<2..];
-	}) * ".";
+        lambda(string d) {
+          return ("000" + d)[<2..];
+        }) * ".";
 
   if(!env->ROXEN_MYSQL_SLOW_QUERY_LOG || 
      env->ROXEN_MYSQL_SLOW_QUERY_LOG != "0") {
     rotate_log(slow_query_log);
     if (normalized_mysql_version > "005.006.") {
       args += ({
-	"--slow-query-log-file="+slow_query_log+".1",
-	"--slow-query-log",
+        "--slow-query-log-file="+slow_query_log+".1",
+        "--slow-query-log",
       });
     } else {
       // NB: Deprecated in MySQL 5.1.29 and removed in MySQL 5.6.1.
@@ -3496,8 +3496,8 @@ Process.Process low_start_mysql( string datadir,
   if (log_queries_to_stdout) {
     if (normalized_mysql_version > "005.006.") {
       args += ({
-	"--general-log-file=/dev/stdout",
-	"--general-log",
+        "--general-log-file=/dev/stdout",
+        "--general-log",
       });
     } else {
       // NB: Deprecated in MySQL 5.1.29 and removed in MySQL 5.6.1.
@@ -3508,21 +3508,21 @@ Process.Process low_start_mysql( string datadir,
   // Create the configuration file.
   int force = !file_stat( query_mysql_config_file(datadir) );
   string cfg_file = (Stdio.read_bytes(query_mysql_config_file(datadir)) ||
-		     "[mysqld]\n"
-		     "max_allowed_packet = 128M\n"
-		     "net_buffer_length = 8K\n"
-		     "query-cache-type = 2\n"
-		     "query-cache-size = 32M\n"
-		     "default-storage-engine = MYISAM\n"
-		     "innodb-data-file-path=ibdata1:10M:autoextend\n"
+                     "[mysqld]\n"
+                     "max_allowed_packet = 128M\n"
+                     "net_buffer_length = 8K\n"
+                     "query-cache-type = 2\n"
+                     "query-cache-size = 32M\n"
+                     "default-storage-engine = MYISAM\n"
+                     "innodb-data-file-path=ibdata1:10M:autoextend\n"
 #ifndef UNSAFE_MYSQL
-		     "local-infile = 0\n"
+                     "local-infile = 0\n"
 #endif
-		     "skip-name-resolve\n"
-		     "character-set-server=latin1\n"
-		     "collation-server=latin1_swedish_ci\n"
-		     "bind-address = "+env->MYSQL_HOST+"\n" +
-		     (uid ? "user = " + uid : "") + "\n");
+                     "skip-name-resolve\n"
+                     "character-set-server=latin1\n"
+                     "collation-server=latin1_swedish_ci\n"
+                     "bind-address = "+env->MYSQL_HOST+"\n" +
+                     (uid ? "user = " + uid : "") + "\n");
 
   string normalized_cfg_file = replace(cfg_file, "_", "-");
 
@@ -3533,15 +3533,15 @@ Process.Process low_start_mysql( string datadir,
   if (has_value(normalized_cfg_file, "set-variable=") ||
       has_value(normalized_cfg_file, "set-variable =")) {
     report_debug("Repairing pre Mysql 4.0.2 syntax in %s.\n",
-		 query_mysql_config_file(datadir));
+                 query_mysql_config_file(datadir));
     cfg_file = replace(cfg_file,
-		       ({ "set-variable=",
-			  "set-variable = ", "set-variable =",
-			  "set_variable=",
-			  "set_variable = ", "set_variable =",
-		       }),
-		       ({ "", "", "", "", "", "",
-		       }));
+                       ({ "set-variable=",
+                          "set-variable = ", "set-variable =",
+                          "set_variable=",
+                          "set_variable = ", "set_variable =",
+                       }),
+                       ({ "", "", "", "", "", "",
+                       }));
     force = 1;
   }
 
@@ -3554,26 +3554,26 @@ Process.Process low_start_mysql( string datadir,
     array a = cfg_file/"[mysqld]";
     if (sizeof(a) > 1) {
       report_debug("Adding innodb-data-file-path to %s.\n",
-		   query_mysql_config_file(datadir));
+                   query_mysql_config_file(datadir));
       int initial = 10;	// 10 MB -- The traditional setting.
       int bytes = Stdio.file_size(datadir + "/ibdata1");
       if (bytes) {
-	// ibdata1 grows in increments of 8 MB.
-	// Assumes that the initial default size won't grow to 18 MB.
-	initial = ((bytes / (1024 * 1024)) % 8) + 8;
-	if (initial < 10) initial += 8;
+        // ibdata1 grows in increments of 8 MB.
+        // Assumes that the initial default size won't grow to 18 MB.
+        initial = ((bytes / (1024 * 1024)) % 8) + 8;
+        if (initial < 10) initial += 8;
       }
       report_debug("%O\n",
-		   "ibdata1:" + initial + "M:autoextend");
+                   "ibdata1:" + initial + "M:autoextend");
       a[1] = "\n"
-	"innodb-data-file-path=ibdata1:" + initial + "M:autoextend" + a[1];
+        "innodb-data-file-path=ibdata1:" + initial + "M:autoextend" + a[1];
       cfg_file = a * "[mysqld]";
       force = 1;
     } else {
       report_warning("Mysql configuration file %s lacks\n"
-		     "InnoDB data file path entry, "
-		     "and automatic repairer failed.\n",
-		     query_mysql_config_file(datadir));
+                     "InnoDB data file path entry, "
+                     "and automatic repairer failed.\n",
+                     query_mysql_config_file(datadir));
     }
   }
 
@@ -3587,16 +3587,16 @@ Process.Process low_start_mysql( string datadir,
     array a = cfg_file/"[mysqld]";
     if (sizeof(a) > 1) {
       report_debug("Adding default character set entries to %s.\n",
-		   query_mysql_config_file(datadir));
+                   query_mysql_config_file(datadir));
       a[1] = "\n"
-	"character-set-server=latin1\n"
-	"collation-server=latin1_swedish_ci" + a[1];
+        "character-set-server=latin1\n"
+        "collation-server=latin1_swedish_ci" + a[1];
       cfg_file = a * "[mysqld]";
       force = 1;
     } else {
       report_warning("Mysql configuration file %s lacks\n"
-		     "character set entry, and automatic repairer failed.\n",
-		     query_mysql_config_file(datadir));
+                     "character set entry, and automatic repairer failed.\n",
+                     query_mysql_config_file(datadir));
     }
   }
 
@@ -3608,15 +3608,15 @@ Process.Process low_start_mysql( string datadir,
     array a = cfg_file/"[mysqld]";
     if (sizeof(a) > 1) {
       report_debug("Adding default storage engine entry to %s.\n",
-		   query_mysql_config_file(datadir));
+                   query_mysql_config_file(datadir));
       a[1] = "\n"
-	"default-storage-engine = MYISAM" + a[1];
+        "default-storage-engine = MYISAM" + a[1];
       cfg_file = a * "[mysqld]";
       force = 1;
     } else {
       report_warning("Mysql configuration file %s lacks\n"
-		     "storage engine entry, and automatic repairer failed.\n",
-		     query_mysql_config_file(datadir));
+                     "storage engine entry, and automatic repairer failed.\n",
+                     query_mysql_config_file(datadir));
     }
   }
 
@@ -3642,13 +3642,13 @@ Process.Process low_start_mysql( string datadir,
     if (sizeof(a) > 1) {
       report_debug("Adding sql_mode entry to %s/my.cfg.\n", datadir);
       a[1] = "\n"
-	"sql_mode = NO_ENGINE_SUBSTITUTION" + a[1];
+        "sql_mode = NO_ENGINE_SUBSTITUTION" + a[1];
       cfg_file = a * "[mysqld]";
       force = 1;
     } else {
       report_warning("Mysql configuration file %s/my.cfg lacks\n"
-		     "sql_mode entry, and automatic repairer failed.\n",
-		     datadir);
+                     "sql_mode entry, and automatic repairer failed.\n",
+                     datadir);
     }
   }
 
@@ -3665,19 +3665,19 @@ Process.Process low_start_mysql( string datadir,
 
   string mysql_table_check =
     Stdio.read_file(combine_path(query_configuration_dir(),
-				 "_mysql_table_check"));
+                                 "_mysql_table_check"));
   if(!mysql_table_check)
     mysql_table_check = "--force --silent --fast\n"
-			"--myisam-recover=QUICK,FORCE\n";
+                        "--myisam-recover=QUICK,FORCE\n";
   sscanf(mysql_table_check, "%s\n%s\n",
-	 string myisamchk_args, string mysqld_extra_args);
+         string myisamchk_args, string mysqld_extra_args);
   if(myisamchk_args && sizeof(myisamchk_args)) {
     if (string myisamchk = mysql_location->myisamchk)
       low_check_mysql(myisamchk, datadir, (myisamchk_args / " ") - ({ "" }),
-		      errlog);
+                      errlog);
     else {
       report_warning("No myisamchk found in %s. Tables not checked.\n",
-		     mysql_location->basedir);
+                     mysql_location->basedir);
     }
   }
 
@@ -3700,12 +3700,12 @@ Process.Process low_start_mysql( string datadir,
 
   rm(pid_file);
   Process.Process p = Process.Process( args,
-				       ([
-					 "environment":env,
-					 "stdin":devnull,
-					 "stdout":errlog,
-					 "stderr":errlog
-				       ]) );
+                                       ([
+                                         "environment":env,
+                                         "stdin":devnull,
+                                         "stdout":errlog,
+                                         "stderr":errlog
+                                       ]) );
 #ifdef __NT__
   if (p)
     Stdio.write_file(pid_file, p->pid() + "\n");
@@ -3738,7 +3738,7 @@ void start_mysql (void|int log_queries_to_stdout)
       db->query( "CREATE DATABASE IF NOT EXISTS local" );
       
       connect_to_my_mysql(0,"local")
-	->query( "CREATE TABLE precompiled_files ("
+        ->query( "CREATE TABLE precompiled_files ("
                  "id CHAR(30) NOT NULL PRIMARY KEY, "
                  "data MEDIUMBLOB NOT NULL, "
                  "mtime INT UNSIGNED NOT NULL)" );
@@ -3746,36 +3746,36 @@ void start_mysql (void|int log_queries_to_stdout)
       // At this moment new_master does not exist, and
       // DBManager can not possibly compile. :-)
       call_out( lambda(){
-		  new_master->resolv("DBManager.is_module_table")
-		    ( 0, "local", "precompiled_files",
-			 "Contains binary object code for .pike files. "
-			 "This information is used to shorten the "
-			 "boot time of Roxen by keeping the compiled "
-			 "data instead of recompiling it every time.");
-		}, 1 );
+                  new_master->resolv("DBManager.is_module_table")
+                    ( 0, "local", "precompiled_files",
+                         "Contains binary object code for .pike files. "
+                         "This information is used to shorten the "
+                         "boot time of Roxen by keeping the compiled "
+                         "data instead of recompiling it every time.");
+                }, 1 );
     }
 
     // At this moment new_master does not exist, and
     // DBManager can not possibly compile. :-)
     call_out( lambda(){
-		// Inhibit backups of the precompiled_files table.
-		new_master->resolv("DBManager.inhibit_backups")
-		  ("local", "precompiled_files");
-	      }, 1 );
+                // Inhibit backups of the precompiled_files table.
+                new_master->resolv("DBManager.inhibit_backups")
+                  ("local", "precompiled_files");
+              }, 1 );
 
     if( remove_dumped )
     {
       report_notice("Removing precompiled files\n");
       if (mixed err = catch
       {
-	db->query( "DELETE FROM local.precompiled_files" );
-	db->query( "DELETE FROM local.compiled_formats" );
-	// Clear the modules cache too since it currently doesn't
-	// depend on the module path properly.
-	db->query( "DELETE FROM local.modules" );
+        db->query( "DELETE FROM local.precompiled_files" );
+        db->query( "DELETE FROM local.compiled_formats" );
+        // Clear the modules cache too since it currently doesn't
+        // depend on the module path properly.
+        db->query( "DELETE FROM local.modules" );
       }) {
 #ifdef MYSQL_CONNECT_DEBUG
-	werror ("Error removing dumped files: %s", describe_error (err));
+        werror ("Error removing dumped files: %s", describe_error (err));
 #endif
       }
     }
@@ -3789,7 +3789,7 @@ void start_mysql (void|int log_queries_to_stdout)
                   version, (gethrtime()-st)/1000.0);
     if( (float)version < 3.23 )
       report_debug( "Warning: This is a very old MySQL. "
-		    "Please use 3.23.* or later.\n");
+                    "Please use 3.23.* or later.\n");
 
     if ((float)version > 4.0) {
       // UTF8 and explicit character set markup was added in Mysql 4.1.x.
@@ -3808,10 +3808,10 @@ void start_mysql (void|int log_queries_to_stdout)
     } else {
       do_tailf(0, err_log );
       void do_do_tailf( )
-	{
-	  call_out( do_do_tailf, 1 );
-	  do_tailf( 0, err_log  );
-	};
+        {
+          call_out( do_do_tailf, 1 );
+          do_tailf( 0, err_log  );
+        };
       call_out( do_do_tailf, 0 );
     }
   };
@@ -3832,9 +3832,9 @@ void start_mysql (void|int log_queries_to_stdout)
   if( mysql_path_is_remote )
   {
     report_debug( "******************** FATAL ******************\n"
-		  "Cannot connect to the specified MySQL server\n"
-		  "                  Aborting\n"
-		  "******************** FATAL ******************\n" );
+                  "Cannot connect to the specified MySQL server\n"
+                  "                  Aborting\n"
+                  "******************** FATAL ******************\n" );
     exit(1);
   }
 
@@ -3849,47 +3849,47 @@ void start_mysql (void|int log_queries_to_stdout)
     for (cnt = 0; cnt < 600; cnt++) {
       // Check if the mysqld process is running (it could eg be starting up).
       pid = pid ||
-	(int)String.trim_all_whites(Stdio.read_bytes(pid_file)||"");
+        (int)String.trim_all_whites(Stdio.read_bytes(pid_file)||"");
       if (pid) {
-	if (!kill(pid, 0) && errno() == System.ESRCH) {
-	  // The process has gone away.
-	  if (prev_pid == pid) {
-	    // The pid_file is stale.
-	    rm(pid_file);
-	  }
+        if (!kill(pid, 0) && errno() == System.ESRCH) {
+          // The process has gone away.
+          if (prev_pid == pid) {
+            // The pid_file is stale.
+            rm(pid_file);
+          }
 
-	  prev_pid = pid;
-	  pid = 0;	// Reread the pid file.
-	  cnt = 0;
-	  sleep(0.1);
-	  continue;
-	}
+          prev_pid = pid;
+          pid = 0;	// Reread the pid file.
+          cnt = 0;
+          sleep(0.1);
+          continue;
+        }
       } else if (prev_pid) {
-	// A new process might be taking over, give it some more time...
-	prev_pid = 0;
-	sleep(0.1);
-	continue;
+        // A new process might be taking over, give it some more time...
+        prev_pid = 0;
+        sleep(0.1);
+        continue;
       } else {
-	// No active process is claiming the pid file.
-	break;
+        // No active process is claiming the pid file.
+        break;
       }
       report_debug("Retrying to connect to local MySQL (pid: %d).\n", pid);
       if( mixed err = catch( db = connect_to_my_mysql( 0, "mysql" ) ) ) {
 #ifdef MYSQL_CONNECT_DEBUG
-	werror ("Error connecting to local MySQL: %s", describe_error (err));
+        werror ("Error connecting to local MySQL: %s", describe_error (err));
 #endif
       }
       else {
-	if (!once_mode) start_tailf();
-	connected_ok(1);
-	return;
+        if (!once_mode) start_tailf();
+        connected_ok(1);
+        return;
       }
       sleep(0.1);
     }
     if (pid && (cnt >= 600)) {
       report_error("Process %d is claiming to be MySQLd (pid file: %O),\n"
-		   "but doesn't answer to connection attempts.\n",
-		   pid, pid_file);
+                   "but doesn't answer to connection attempts.\n",
+                   pid, pid_file);
       exit(1);
     }
   }  
@@ -3932,11 +3932,11 @@ void start_mysql (void|int log_queries_to_stdout)
   Process.Process mysqld =
     low_start_mysql( mysqldir,
 #if constant(getpwuid)
-		     (getpwuid(getuid()) || ({0}))[ 0 ],
+                     (getpwuid(getuid()) || ({0}))[ 0 ],
 #else /* Ignored by the start_mysql script */
-		     0,
+                     0,
 #endif
-		     log_queries_to_stdout);
+                     log_queries_to_stdout);
 
   int repeat;
   while( 1 )
@@ -4055,7 +4055,7 @@ void do_main( int argc, array(string) argv )
 
   add_constant( "connect_to_my_mysql", connect_to_my_mysql );
   add_constant( "clear_connect_to_my_mysql_cache",
-		clear_connect_to_my_mysql_cache );  
+                clear_connect_to_my_mysql_cache );  
 
 #if !constant(thread_create)
   report_debug(#"
@@ -4261,10 +4261,10 @@ the correct system time.
   if ((__REAL_MAJOR__ != __MAJOR__) ||
       (__REAL_MINOR__ != __MINOR__)) {
     pike_ver += sprintf(" (in Pike %d.%d compat mode)",
-			__MAJOR__, __MINOR__);
+                        __MAJOR__, __MINOR__);
   }
   report_debug("-" * 65 + "\n"
-	       "Pike version:      " + pike_ver + "\n"
+               "Pike version:      " + pike_ver + "\n"
                "Product version:   " + roxen_product_name + " " + roxen_version() + "\n"
                "Operating system:  " + hostinfo + "\n");
   master()->putenv("PIKE_INCLUDE_PATH", path);
@@ -4318,9 +4318,9 @@ the correct system time.
   add_constant("perror",        roxen_perror); // For compatibility.
   add_constant("roxen_perror",  roxen_perror);
   add_constant("register_roxen_perror_output",
-	       register_roxen_perror_output);
+               register_roxen_perror_output);
   add_constant("unregister_roxen_perror_output",
-	       unregister_roxen_perror_output);
+               unregister_roxen_perror_output);
   add_constant("roxenp",        lambda() { return roxen; });
   add_constant("ST_MTIME",      ST_MTIME );
   add_constant("ST_CTIME",      ST_CTIME );
@@ -4390,7 +4390,7 @@ the correct system time.
     replace_master(new_master=[object(__builtin.__master)](((program)"etc/roxen_master.pike")()));
   }) {
     werror("Initialization of Roxen's master failed:\n"
-	   "%s\n", describe_backtrace(err));
+           "%s\n", describe_backtrace(err));
     exit(1);
   }
 
@@ -4512,10 +4512,10 @@ library should be enough.
 
   
   foreach( ({ "ANY", "XCF", "PSD", "PNG",  "BMP",  "TGA", "PCX",
-	      "XBM", "XPM", "TIFF", "ILBM", "PS", "PVR", "GIF",
-	      "JPEG", "XWD", "PNM", "RAS",  "DSI", "TIM", "HRZ",
-	      "AVS", "WBF", "WBMP", "XFace" }),
-	   string x )
+              "XBM", "XPM", "TIFF", "ILBM", "PS", "PVR", "GIF",
+              "JPEG", "XWD", "PNM", "RAS",  "DSI", "TIM", "HRZ",
+              "AVS", "WBF", "WBMP", "XFace" }),
+           string x )
     DC("Image."+x);
   DC( "Image.Image" );  DC( "Image.Font" );  DC( "Image.Colortable" );
   DC( "Image.Layer" );  DC( "Image.lay" );   DC( "Image.Color" );
@@ -4603,7 +4603,7 @@ library should be enough.
   cache->init_call_outs();
 
   report_debug("-- Total boot time %2.1f seconds ---------------------------\n",
-	       (gethrtime()-start_time)/1000000.0);
+               (gethrtime()-start_time)/1000000.0);
   write_current_time();
   if( retval > -1 )
     trace_exit( retval );

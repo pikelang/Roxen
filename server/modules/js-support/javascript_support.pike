@@ -11,7 +11,7 @@ inherit "module";
 constant module_type = MODULE_PARSER|MODULE_FILTER|MODULE_PROVIDER;
 constant module_name = "JavaScript Support: Tags";
 constant module_doc  = ("This module provides some tags to support "
-			"javascript development (i.e. Javascript popup menus).");
+                        "javascript development (i.e. Javascript popup menus).");
 
 // This module is indeed thread-safe.
 constant thread_safe = 1;
@@ -42,7 +42,7 @@ mapping find_internal(string f, RequestID id)
   if (sscanf(f, "__cb/%s/%s", string token, string path) == 2) {
     function cb = callbacks[token];
     return Roxen.http_string_answer((cb && cb(token, path, id)) || "",
-				    "application/x-javascript");
+                                    "application/x-javascript");
   }
 
   if (sscanf(f, "__ex/%s", string key) == 1) {
@@ -130,7 +130,7 @@ class JSSupport
   }
 
   void create_insert(string name, string tag_name,
-		     mapping(string:string) args)
+                     mapping(string:string) args)
   {
     inserts[name] = JSInsert(tag_name, args);
   }
@@ -160,33 +160,33 @@ string c_js_quote(string name, mapping args, string contents)
   string r = "var r = \"\";\n";
   r +=
     Array.map(replace(contents,
-		      ({ "\"", "<script", "</script>",
-			 "<SCRIPT", "</SCRIPT>" }),
-		      ({ "\\\"", "<scr\" + \"ipt", "</scr\" + \"ipt>",
-			 "<SCR\" + \"IPT", "</SCR\" + \"IPT>" }) ) / "\n",
-	      lambda(string row) {
-		//  Quote wide characters inside JavaScript var assignment
-		//  using \uXXXX form.
-		if (String.width(row) > 8) {
-		  String.Buffer b = String.Buffer(sizeof(row));
-		  for (int i = 0; i < sizeof(row); i++) {
-		    int ch = row[i];
-		    if (ch > 255)
-		      b->add(sprintf("\\u%x", ch));
-		    else
-		      b->add((string) ({ ch }) );
-		  }
-		  row = b->get();
-		}
-		return "r += \"" + row;
-	      }) * "\\n\";\n";
+                      ({ "\"", "<script", "</script>",
+                         "<SCRIPT", "</SCRIPT>" }),
+                      ({ "\\\"", "<scr\" + \"ipt", "</scr\" + \"ipt>",
+                         "<SCR\" + \"IPT", "</SCR\" + \"IPT>" }) ) / "\n",
+              lambda(string row) {
+                //  Quote wide characters inside JavaScript var assignment
+                //  using \uXXXX form.
+                if (String.width(row) > 8) {
+                  String.Buffer b = String.Buffer(sizeof(row));
+                  for (int i = 0; i < sizeof(row); i++) {
+                    int ch = row[i];
+                    if (ch > 255)
+                      b->add(sprintf("\\u%x", ch));
+                    else
+                      b->add((string) ({ ch }) );
+                  }
+                  row = b->get();
+                }
+                return "r += \"" + row;
+              }) * "\\n\";\n";
   r += "\";\ndocument.write(r);\n";
   return r;
 };
 
 private
 string container_js_write(string name, mapping args, string contents,
-			  RequestID id)
+                          RequestID id)
 {
   string c_script(string name, mapping args, string contents, mapping xargs)
   {
@@ -198,22 +198,22 @@ string container_js_write(string name, mapping args, string contents,
   // Do not js-quote contents inside a <script>-tag with the same language-arg.
   contents = parse_html(contents, ([]), ([ "script": c_script ]), args);
   contents = parse_html("<"INT_TAG">"+contents+"</"INT_TAG">",
-			([]), ([ INT_TAG: c_js_quote ]), args);
+                        ([]), ([ INT_TAG: c_js_quote ]), args);
   if (!sizeof(contents))
     return "";
   return ("<script language='"+(args->language||"javascript")+
-	  "' type='text/javascript'><!--\n"+contents+"//--></script>");
+          "' type='text/javascript'><!--\n"+contents+"//--></script>");
 }
 
 private
 string make_args_unquoted(mapping args)
 {
   return map(sort(indices(args)),
-	     lambda(string key)
-	     {
-	       string arg = replace(args[key], "\"", "'");
-	       return key + "=\"" + arg + "\"";
-	     })*" ";
+             lambda(string key)
+             {
+               string arg = replace(args[key], "\"", "'");
+               return key + "=\"" + arg + "\"";
+             })*" ";
 }
 
 private
@@ -260,7 +260,7 @@ class TagEmitJSHidePopup {
 
 // Compatibility. The tag js-link is depricated.
 private string container_js_link(string name, mapping args,
-				 string contents, RequestID id)
+                                 string contents, RequestID id)
 {
   args->onMouseOver = "clearToPopup('"+(id->misc->_popupparent||"none")+"')";
   return make_container_unquoted("a", args, contents);
@@ -268,12 +268,12 @@ private string container_js_link(string name, mapping args,
 
 private
 string container_js_popup(string name, mapping args, string contents,
-			  RequestID id)
+                          RequestID id)
 {
   // Link arguments.
   mapping largs = copy_value(args - (< "args-variable", "label", "props",
-				       "event", "name-variable",
-				       "ox", "oy", "op" >));
+                                       "event", "name-variable",
+                                       "ox", "oy", "op" >));
   // Compatibility. The arguments 'ox', 'oy' and 'op' are depricated.
   if(!args->props && (args->ox || args->oy || args->op))
   {
@@ -300,7 +300,7 @@ string container_js_popup(string name, mapping args, string contents,
     event = "onClick";
 
   largs[event] = "return showPopup(event, '"+popupname+"', '"+popupparent+
-		 "', "+args->props+");";
+                 "', "+args->props+");";
 
   string css_ident = "#" + popupname;
   string shared_css = args["shared-css-class"];
@@ -309,10 +309,10 @@ string container_js_popup(string name, mapping args, string contents,
   }
   get_jss(id)->get_insert("style")->
     add(css_ident + " {position:absolute; "
-	"left:0; top:0; visibility:hidden; "+
-	(id->supports->msie?"width:1; ":"")+
-	"z-index:"+
-	(id->misc->_popuplevel+1)+"}\n", 1);
+        "left:0; top:0; visibility:hidden; "+
+        (id->supports->msie?"width:1; ":"")+
+        "z-index:"+
+        (id->misc->_popuplevel+1)+"}\n", 1);
 
   string old_pparent = id->misc->_popupparent;
   id->misc->_popupparent = popupname;
@@ -328,7 +328,7 @@ string container_js_popup(string name, mapping args, string contents,
   string css_class = shared_css ? (" class='" + shared_css + "'") : "";
   get_jss(id)->get_insert("div")->
     add("<div id='" + popupname + "'" + css_class + ">\n"+
-	Roxen.parse_rxml(contents, id)+"</div>\n");
+        Roxen.parse_rxml(contents, id)+"</div>\n");
 
   id->misc->_popupparent = old_pparent;
   id->misc->_popuplevel--;
@@ -351,11 +351,11 @@ class TagJSInclude {
       string src = "/" + roxen->plib->get_prestate_version() +
         query_absolute_internal_location(id) + args->file;
       result =
-	"<script charset=\"iso-8859-1\" type=\"text/javascript\" "
-	"language=\"javascript\" " +
-	(args->defer ? "defer='defer' " : "") +
-	"src=\"" + src + "\">"
-	"</script>";
+        "<script charset=\"iso-8859-1\" type=\"text/javascript\" "
+        "language=\"javascript\" " +
+        (args->defer ? "defer='defer' " : "") +
+        "src=\"" + src + "\">"
+        "</script>";
       return 0;
     }
   }
@@ -388,11 +388,11 @@ class TagJSExternal
     {
       string key = Crypto.MD5()->update(string_to_utf8(content))->digest();
       if(!externals[key])
-	externals[key] = c_js_quote("", ([]), content);
+        externals[key] = c_js_quote("", ([]), content);
       return ({ "<script language=\"javascript\" type=\"text/javascript\" "
-		"src=\""+
-		query_absolute_internal_location(id)+"__ex/"+
-		MIME.encode_base64(key)+"\"></script>" });
+                "src=\""+
+                query_absolute_internal_location(id)+"__ex/"+
+                MIME.encode_base64(key)+"\"></script>" });
     }
   }
 
@@ -413,12 +413,12 @@ class TagJSDynamicPopupDiv
     array do_return(RequestID id)
     {
       if(id->supports->layer)
-	result = ("<layer id=\""+args->name+"\" "
-		  " visibility=\"hidden\" z-index:"+(args->zindex||"1")+"></layer>");
+        result = ("<layer id=\""+args->name+"\" "
+                  " visibility=\"hidden\" z-index:"+(args->zindex||"1")+"></layer>");
       else
-	result = ("<div id=\""+args->name+"\""
-		  " style=\"position:absolute; z-index:"+(args->zindex||"1")+";"
-		  " left:0; top:0; visibility:hidden;\"></div>");
+        result = ("<div id=\""+args->name+"\""
+                  " style=\"position:absolute; z-index:"+(args->zindex||"1")+";"
+                  " left:0; top:0; visibility:hidden;\"></div>");
     }
   }
 }
@@ -438,14 +438,14 @@ class TagEmitJSDynamicPopup {
   array get_dataset(mapping args, RequestID id)
   {
     return ({ ([ "event":js_dynamic_popup_event(args["name"],
-						args["src"], args["props"]) ]) });
+                                                args["src"], args["props"]) ]) });
   }
 }
 
 protected mixed c_filter_insert(Parser.HTML parser, mapping args, RequestID id)
 {
   SIMPLE_TRACE_ENTER (this_object(), "Filtering tag <js-filter-insert%s>",
-		      Roxen.make_tag_attributes (args));
+                      Roxen.make_tag_attributes (args));
   JSInsert js_insert = get_jss(id)->get_insert(args->name);
 
   if(!js_insert) {
@@ -459,7 +459,7 @@ protected mixed c_filter_insert(Parser.HTML parser, mapping args, RequestID id)
     if (!sizeof(content))
       return ({ "" });
     return ({ "<script type=\"text/javascript\" language='javascript1.2'><!--\n"+
-	      content+"//--></script>" });
+              content+"//--></script>" });
   }
 
   if(args->jswrite)
@@ -497,7 +497,7 @@ mapping filter(mapping response, RequestID id)
   }
 
   response->data = Parser.HTML()->add_tag("js-filter-insert", c_filter_insert)->
-		   set_extra(id)->finish(response->data)->read();
+                   set_extra(id)->finish(response->data)->read();
   SIMPLE_TRACE_LEAVE ("");
   return response;
 }
@@ -505,8 +505,8 @@ mapping filter(mapping response, RequestID id)
 mapping query_container_callers()
 {
   return ([ "js-popup"       : container_js_popup,
-	    "js-write"       : container_js_write,
-	    "js-link"        : container_js_link,
+            "js-write"       : container_js_write,
+            "js-link"        : container_js_link,
   ]);
 }
 

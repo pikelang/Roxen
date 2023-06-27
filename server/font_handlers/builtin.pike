@@ -80,8 +80,8 @@ Font open( string name, int size, int bold, int italic )
      if( !roxenbuiltin )
        if( mixed err = catch(roxenbuiltin = grbf()) )
 #ifdef DEBUG
-	 werror("Failed to open builtin font: %s\n",
-		describe_backtrace( err ) );
+         werror("Failed to open builtin font: %s\n",
+                describe_backtrace( err ) );
 #else
          ;
 #endif

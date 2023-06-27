@@ -42,16 +42,16 @@ string|mapping parse( RequestID id )
     {
       int ok;
       foreach( indices(q[db]), string c )
-	foreach( (roxen->configurations-({cf}))->name, string c )
-	{
-	  if( q[db][c] != DBManager.NONE )
-	  {
-	    ok=1;
-	    break;
-	  }
-	}
+        foreach( (roxen->configurations-({cf}))->name, string c )
+        {
+          if( q[db][c] != DBManager.NONE )
+          {
+            ok=1;
+            break;
+          }
+        }
       if( !ok )
-	dead += ({ db });
+        dead += ({ db });
     }
 
     // Never ever drop these.
@@ -75,20 +75,20 @@ string|mapping parse( RequestID id )
     if( sizeof( dead ) )
     {
       res += "<b>"+LOCALE(469,"Databases that will no longer be used")+
-	"</b><br />";
+        "</b><br />";
 
       res += "<blockquote>";
       
       if( sizeof( dead ) == 1 )
-	
-	res += LOCALE(470,"If you do not want to delete this database, "
-		      "uncheck the checkmark in front of it");
+        
+        res += LOCALE(470,"If you do not want to delete this database, "
+                      "uncheck the checkmark in front of it");
       else {
-	res += "<p>" +
-	  LOCALE(471,"If you do not want to delete one or more of these "
-		 "databases, uncheck the checkmark in front of the ones"
-		 " you want to keep.") +
-	  #"</p>
+        res += "<p>" +
+          LOCALE(471,"If you do not want to delete one or more of these "
+                 "databases, uncheck the checkmark in front of the ones"
+                 " you want to keep.") +
+          #"</p>
 <script type='text/javascript'>
   var check_all_toggle = 0;
   function checkAll() {
@@ -101,16 +101,16 @@ string|mapping parse( RequestID id )
   }
 </script>
 <p><a id='check_all_button' onClick='checkAll()'><gbutton>" +
-	  LOCALE(1065, "Uncheck/Check All") +
-	  "</gbutton></a></p>\n";
+          LOCALE(1065, "Uncheck/Check All") +
+          "</gbutton></a></p>\n";
       }
       res += "<ul id='checkbox_list'>";
       int n;
       foreach( dead, string d )
       {
-	res += "<li style='list-style-image: none; list-style-type: none'>"
-	  "<input name='del_db_"+d+"' id='del_db_"+d+"' type=checkbox checked=checked />"
-	  "<label for='del_db_"+d+"'>"+d+"</label></li>\n";
+        res += "<li style='list-style-image: none; list-style-type: none'>"
+          "<input name='del_db_"+d+"' id='del_db_"+d+"' type=checkbox checked=checked />"
+          "<label for='del_db_"+d+"'>"+d+"</label></li>\n";
       }
       res += "</ul>";
       res += "</blockquote>";
@@ -119,7 +119,7 @@ string|mapping parse( RequestID id )
 
 
     res += ("<input type=hidden name=site value='"+
-	    Roxen.html_encode_string(id->variables->site)+"' />");
+            Roxen.html_encode_string(id->variables->site)+"' />");
     
     res += 
       "<table width='100%'><tr width='100%'>"
@@ -135,7 +135,7 @@ string|mapping parse( RequestID id )
 
 
   report_notice(LOCALE(255, "Disabling old configuration %s")+"\n", 
-		cf->name);
+                cf->name);
 
   foreach( glob("del_db_*", indices(id->variables)), string d ) {
     d = d[7..];

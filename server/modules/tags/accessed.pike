@@ -46,18 +46,18 @@ void create(Configuration c) {
   defvar("extcount", ({  }), "Extensions to access count",
           TYPE_STRING_LIST,
          "Always count accesses to files ending with these extensions. "
-	 "By default only accessed to files that actually contain a "
-	 "<tt>&lt;accessed&gt;</tt> tag or the <tt>&amp;page.accessed;</tt> "
-	 "entity will be counted. "
-	 "<p>Note: This module must be reloaded before a change of this "
-	 "setting takes effect.</p>");
+         "By default only accessed to files that actually contain a "
+         "<tt>&lt;accessed&gt;</tt> tag or the <tt>&amp;page.accessed;</tt> "
+         "entity will be counted. "
+         "<p>Note: This module must be reloaded before a change of this "
+         "setting takes effect.</p>");
 
   defvar("restrict", 1, "Restrict reset", TYPE_FLAG,
-	 "Restrict the attribute reset "
-	 "so that the resetted file is in the same directory or below.");
+         "Restrict the attribute reset "
+         "so that the resetted file is in the same directory or below.");
 
   defvar("backend", "SQL database", "Database backend", TYPE_MULTIPLE_STRING,
-	 "Select a accessed database backend",
+         "Select a accessed database backend",
          ({ "File database", "SQL database", "Memory database" }) );
 
   string default_db = "local";
@@ -66,23 +66,23 @@ void create(Configuration c) {
 #endif
   
   defvar("db",
-	 Variable.DatabaseChoice(default_db, 0, "Database",
-				 "The database where data are stored."))->
+         Variable.DatabaseChoice(default_db, 0, "Database",
+                                 "The database where data are stored."))->
     set_invisibility_check_callback(
       lambda(RequestID id, Variable.Variable var)
       { return query("backend") != "SQL database"; });
   
   //------ File database settings
   defvar("Accesslog","$LOGDIR/"+Roxen.short_name(c?c->name:".")+"/Accessed",
-	 "Access database file", TYPE_FILE|VAR_MORE,
-	 "This file will be used to keep the database of file accesses.",
-	 0, lambda(){ return query("backend")!="File database"; } );
+         "Access database file", TYPE_FILE|VAR_MORE,
+         "This file will be used to keep the database of file accesses.",
+         0, lambda(){ return query("backend")!="File database"; } );
 
   defvar("close_db", 1, "Close inactive database",
-	 TYPE_FLAG|VAR_MORE,
-	 "If set, the accessed database will be closed if it is not used for "
-	 "8 seconds. This saves resourses on servers with many sites.",
-	 0, lambda(){ return query("backend")!="File database"; } );
+         TYPE_FLAG|VAR_MORE,
+         "If set, the accessed database will be closed if it is not used for "
+         "8 seconds. This saves resourses on servers with many sites.",
+         0, lambda(){ return query("backend")!="File database"; } );
 
 }
 
@@ -243,7 +243,7 @@ void start() {
 
 class Entity_page_accessed {
   string rxml_var_eval(RXML.Context c, string var, string scope_name,
-		       void|RXML.Type type)
+                       void|RXML.Type type)
   {
     c->id->misc->cacheable=0;
     if(!c->id->misc->accessed) {
@@ -285,11 +285,11 @@ class FileCounter {
       mkdirhier(module::query("Accesslog"));
       if(names_file=open(olf+".names", "wrca"))
       {
-	cnum=0;
-	array tmp=parse_accessed_database(names_file->read(0x7ffffff));
-	fton=tmp[0];
-	cnum=tmp[1];
-	names_file = 0;
+        cnum=0;
+        array tmp=parse_accessed_database(names_file->read(0x7ffffff));
+        fton=tmp[0];
+        cnum=tmp[1];
+        names_file = 0;
       }
     }
   }
@@ -332,11 +332,11 @@ class FileCounter {
       if(db_file_callout_id) remove_call_out(db_file_callout_id);
       database=open(module::query("Accesslog")+".db", "wrc");
       if (!database) {
-	error ("Failed to open \"%s.db\": %s\n",
-	       module::query("Accesslog"), strerror (errno()));
+        error ("Failed to open \"%s.db\": %s\n",
+               module::query("Accesslog"), strerror (errno()));
       }
       if (module::query("close_db")) {
-	db_file_callout_id = call_out(close_db_file, 9, database);
+        db_file_callout_id = call_out(close_db_file, 9, database);
       }
     }
     return key;
@@ -441,16 +441,16 @@ class SQLCounter {
 
   constant defs = ([
     "hits":({  "path VARCHAR(255) PRIMARY KEY",
-	       "hits INT UNSIGNED DEFAULT 0",
-	       "made INT UNSIGNED" }),  ]);
+               "hits INT UNSIGNED DEFAULT 0",
+               "made INT UNSIGNED" }),  ]);
   
   void create()
   {
     set_my_db( module::query("db") );
     
     if( create_sql_tables( defs,
-			   "Hits per file database for the accessed tag "
-			   "and entities", 0 ) )
+                           "Hits per file database for the accessed tag "
+                           "and entities", 0 ) )
       sql_query("INSERT INTO &hits; (path,made) VALUES ('///',"+time(1)+")" );
   }
 
@@ -467,7 +467,7 @@ class SQLCounter {
     if(cache_lookup("access_entry:"+my_configuration()->name, file))
       return;
     catch(sql_query("INSERT INTO &hits; (path,made) VALUES (%s,%d)",
-		    fix_file( file ), time(1 ) ));
+                    fix_file( file ), time(1 ) ));
     cache_set("access_entry:"+my_configuration()->name, file, 1);
   }
 
@@ -483,15 +483,15 @@ class SQLCounter {
     create_entry(file);
     if (catch
       {
-	sql_query("UPDATE &hits; SET hits=hits+"+(count||1)+" WHERE path=%s",
-		  fix_file( file ) );
+        sql_query("UPDATE &hits; SET hits=hits+"+(count||1)+" WHERE path=%s",
+                  fix_file( file ) );
       })
     {
       fail_count += count || 1;
       if (fail_count > fail_count_report_next)
       {
-	fail_count_report_next = 100 + (5 * fail_count) / 4;
-	werror("ACCESS LOGGING FAILED, FAIL COUNT: %d\n", fail_count);
+        fail_count_report_next = 100 + (5 * fail_count) / 4;
+        werror("ACCESS LOGGING FAILED, FAIL COUNT: %d\n", fail_count);
       }
     }
   }
@@ -501,14 +501,14 @@ class SQLCounter {
     array x;
     if (catch
       {
-	x = sql_query("SELECT hits FROM &hits; WHERE path=%s",
-		      fix_file( file ) );
+        x = sql_query("SELECT hits FROM &hits; WHERE path=%s",
+                      fix_file( file ) );
       })
     {
       if (fail_last_report+30 < time())
       {
-	fail_last_report = time();
-	werror("ACCESS LOG QUERY FAILED.\n");
+        fail_last_report = time();
+        werror("ACCESS LOG QUERY FAILED.\n");
       }
       return 0;
     }
@@ -592,9 +592,9 @@ string tag_accessed(string tag, mapping m, RequestID id)
 
   if(m->reset) {
     if( !query("restrict") || 
-	!m->file ||
-	!search( (dirname(Roxen.fix_relative(m->file, id))+"/")-"//",
-		 (dirname(Roxen.fix_relative(id->not_query, id))+"/")-"//" ) )
+        !m->file ||
+        !search( (dirname(Roxen.fix_relative(m->file, id))+"/")-"//",
+                 (dirname(Roxen.fix_relative(id->not_query, id))+"/")-"//" ) )
     {
       counter->reset(m->file || id->not_query);
       return "Number of counts for "+(m->file || id->not_query)+" is now 0.<br />";

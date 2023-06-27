@@ -98,7 +98,7 @@ mapping(string:int) sent_responses = ([]);
 //! @note
 //!   @[lfun::destroy()]-safe.
 private mapping|int(0..0) prepare_response(AFS.Types.ClientMessage msg_type,
-					   mapping resp, void|string tag)
+                                           mapping resp, void|string tag)
 {
   ASSERT_IF_DEBUG(mappingp(resp));
   resp->msg_type = msg_type;
@@ -117,9 +117,9 @@ private mapping|int(0..0) prepare_response(AFS.Types.ClientMessage msg_type,
 
 
 protected int(0..1) push_response_low(AFS.Types.ClientMessage msg_type,
-				      mapping resp, void|string tag,
-				      void|SubscriptionID subscription_id,
-				      void|int(0..1) do_throttle)
+                                      mapping resp, void|string tag,
+                                      void|SubscriptionID subscription_id,
+                                      void|int(0..1) do_throttle)
 {
   // Only string indexes are supported by Standards.JSON.encode().
   ASSERT_IF_DEBUG (!has_value (map (indices (resp), stringp), 0));
@@ -221,7 +221,7 @@ protected int(0..1) push_response_low(AFS.Types.ClientMessage msg_type,
 //!    throttling), the return value is 1. A message that was rejected from
 //!    sending, e.g. as being considered stale or duplicate, returns 0.
 int(0..1) push_response(AFS.Types.ClientMessage msg_type, mapping resp,
-			void|string tag, void|SubscriptionID subscription_id)
+                        void|string tag, void|SubscriptionID subscription_id)
 {
   return push_response_low(msg_type, resp, tag, subscription_id);
 }
@@ -230,8 +230,8 @@ int(0..1) push_response(AFS.Types.ClientMessage msg_type, mapping resp,
 //! Same as @[push_response] but throttles sending so that similar messages
 //! aren't delivered too rapidly.
 int(0..1) push_throttled_response(AFS.Types.ClientMessage msg_type,
-				  mapping resp, void|string tag,
-				  void|SubscriptionID subscription_id)
+                                  mapping resp, void|string tag,
+                                  void|SubscriptionID subscription_id)
 {
   //  This return value should always be 0 as throttled responses are never
   //  delivered instantly.
@@ -241,10 +241,10 @@ int(0..1) push_throttled_response(AFS.Types.ClientMessage msg_type,
 
 
 void push_error(string action,
-		string error_code,
-		string display_message,
-		mapping(string:mixed) args,
-		void|string tag)
+                string error_code,
+                string display_message,
+                mapping(string:mixed) args,
+                void|string tag)
 //! Create an error response and push it to the client response queue.
 //! An error response consists of an error_code field describing the
 //! error condition as a string identifier. This can be used to handle
@@ -368,7 +368,7 @@ array(mapping) get_responses(void|string client_poll_tag)
   //  Include a response to a pending poll
   if (client_poll_tag) {
     if (mapping poll_res =
-	prepare_response(AFS.ClientMessages.poll, ([ ]), client_poll_tag))
+        prepare_response(AFS.ClientMessages.poll, ([ ]), client_poll_tag))
       ret += ({ poll_res });
   }
 
@@ -381,12 +381,12 @@ array(mapping) get_responses(void|string client_poll_tag)
       //  If same hash has been seen too recently we compute earliest next
       //  delivery and leave the message in the queue.
       if (int last_ts = sent_responses[hash]) {
-	if (last_ts + THROTTLE_WINDOW > now) {
-	  ret[i]->_throttled = last_ts + THROTTLE_WINDOW;
-	  delayed += ({ ret[i] });
-	  ret = ret[..(i - 1)] + ret[(i + 1)..];
-	  continue;
-	}
+        if (last_ts + THROTTLE_WINDOW > now) {
+          ret[i]->_throttled = last_ts + THROTTLE_WINDOW;
+          delayed += ({ ret[i] });
+          ret = ret[..(i - 1)] + ret[(i + 1)..];
+          continue;
+        }
       }
       
       //  Item will be sent now so record the timestamp
@@ -452,7 +452,7 @@ string client_session_key;
 string session_id;
 
 protected void create(RequestID id, object _parent_obj,
-		      string _client_session_key)
+                      string _client_session_key)
 {
   my_parent_obj = _parent_obj;
   client_session_key = _client_session_key;
@@ -481,10 +481,10 @@ DECLARE_OBJ_COUNT;
 protected string _sprintf(int t)
 {
   return sprintf("ClientSession(%q, %d, %d%s)" + OBJ_COUNT,
-		 (session_id || "<no id>"),
-		 sizeof(command_responses),
-		 (int)session_ttl + time() - last_activity,
-		 (notification_id?", NOTIFY":""));
+                 (session_id || "<no id>"),
+                 sizeof(command_responses),
+                 (int)session_ttl + time() - last_activity,
+                 (notification_id?", NOTIFY":""));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -543,13 +543,13 @@ protected void send_data(void|int force)
       // We probably have a TTL callback for the poll that we no longer
       // need, so let's remove that.
       if (notification_ttl_callback) {
-	remove_call_out(notification_ttl_callback);
-	notification_ttl_callback = 0;
+        remove_call_out(notification_ttl_callback);
+        notification_ttl_callback = 0;
       }
     } else {
       //  Bring back old notification ID if a new one hasn't been set
       if (!notification_id)
-	notification_id = prev_notification_id;
+        notification_id = prev_notification_id;
     }
   }
 
@@ -627,8 +627,8 @@ mapping set_notification_id(RequestID id, string client_poll_tag, void|int ttl)
     foreach (command_responses, mapping ret) {
       earliest_send = min(earliest_send, ret->_throttled);
       if (earliest_send <= now) {
-	got_immediate_responses = 1;
-	break;
+        got_immediate_responses = 1;
+        break;
       }
     }
   }
@@ -652,8 +652,8 @@ mapping set_notification_id(RequestID id, string client_poll_tag, void|int ttl)
     int delay = earliest_send - now;
     if (send_callout) {
       if (find_call_out(send_callout) <= delay) {
-	//  Scheduled call comes first so leave it untouched
-	break reschedule_callout;
+        //  Scheduled call comes first so leave it untouched
+        break reschedule_callout;
       }
       
       //  We remove existing entry and replan it to the earlier time
@@ -670,10 +670,10 @@ mapping set_notification_id(RequestID id, string client_poll_tag, void|int ttl)
 }
 
 void add_subscription(SubscriptionID sid, AFS.Types.ClientMessage cmt,
-		      function (AFS.Types.ClientMessage,string,
-				AFS.ClientSession, mapping(string:mixed),
-				mixed...:void)/*AFS.Action.push*/ callback,
-		      mapping(string:mixed) args)
+                      function (AFS.Types.ClientMessage,string,
+                                AFS.ClientSession, mapping(string:mixed),
+                                mixed...:void)/*AFS.Action.push*/ callback,
+                      mapping(string:mixed) args)
 //! Add a subscription.
 //!
 //! @param sid
@@ -719,7 +719,7 @@ void cancel_subscription(string sid)
     if (my_parent_obj) {
       my_parent_obj->client_subscriptions[sub->cmt][sub] = 0;
       if (!sizeof(my_parent_obj->client_subscriptions[sub->cmt]))
-	my_parent_obj->client_subscriptions[sub->cmt] = 0;
+        my_parent_obj->client_subscriptions[sub->cmt] = 0;
     }
   }
 }
@@ -748,7 +748,7 @@ class Subscription
 
  //! The action callback to call when pushing data (ie @[AFS.Action.push])
  function (string/*AFS.Types.ClientMessage*/,string,AFS.ClientSession,
-	   mapping(string:mixed),mixed...:void) cb,
+           mapping(string:mixed),mixed...:void) cb,
 
  //! The subscription id for this subscription.
  SubscriptionID subscription_id,

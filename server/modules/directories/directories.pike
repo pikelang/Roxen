@@ -120,8 +120,8 @@ string status()
   if( query("default-template") && query("template") != template )
     return 
       LOCALE(3,"The directory list template is not the same as the default "
-	     "template, but the default template is used. This might be a "
-	     "residue from an old configuration file, or intentional.");
+             "template, but the default template is used. This might be a "
+             "residue from an old configuration file, or intentional.");
 }
 
 mapping query_action_buttons()
@@ -136,25 +136,25 @@ void create()
   defvar("indexfiles",
          ({ "index.html", "index.xml", "index.htm", "index.pike",
             "index.cgi" }),
-	 LOCALE(5,"Index files"), TYPE_STRING_LIST|VAR_INITIAL,
-	 LOCALE(6,"If one of these files is present in a directory, it will "
-		"be returned instead of the directory listing."));
+         LOCALE(5,"Index files"), TYPE_STRING_LIST|VAR_INITIAL,
+         LOCALE(6,"If one of these files is present in a directory, it will "
+                "be returned instead of the directory listing."));
 
   defvar("override", 0, LOCALE(7,"Allow directory index file overrides"),
          TYPE_FLAG,
-	 LOCALE(8,"If this variable is set, you can get a listing of all "
-		"files in a directory by appending '.' to the directory "
-		"name. It is <em>very</em> useful for debugging, but some"
-		" people regard it as a security hole."));
+         LOCALE(8,"If this variable is set, you can get a listing of all "
+                "files in a directory by appending '.' to the directory "
+                "name. It is <em>very</em> useful for debugging, but some"
+                " people regard it as a security hole."));
 
   defvar("default-template", 1, LOCALE(9,"Use the default template"),
          TYPE_FLAG,
          LOCALE(10,"If true, use the default directory layout template") );
 
   defvar("template", default_template, LOCALE(11,"Directorylisting template"),
-	 TYPE_TEXT,
+         TYPE_TEXT,
          LOCALE(12,"The template for directory list generation."),
-	 0,
+         0,
          lambda(){ return query("default-template"); } );
 }
 
@@ -207,10 +207,10 @@ mapping parse_directory(RequestID id)
       array s;
       if((s = id->conf->stat_file(f+file, id)) && (s[ST_SIZE] >= 0))
       {
-	id->not_query = f + file;
-	mixed got = id->conf->handle_request(id);
-	if (got && mappingp(got))
-	  return got;
+        id->not_query = f + file;
+        mixed got = id->conf->handle_request(id);
+        if (got && mappingp(got))
+          return got;
       }
     }
     // Restore the old query.
@@ -222,12 +222,12 @@ mapping parse_directory(RequestID id)
     {
       string lock=id->conf->try_get_file(f+file, id);
       if(lock) {
-	if(!sizeof(lock)) {
-	  lock =
-	    "<html><head><title>Forbidden</title></head>\n"
-	    "<body><h1>Forbidden</h1></body></html>\n";
-	}
-	return Roxen.http_string_answer(lock)+(["error":403]);
+        if(!sizeof(lock)) {
+          lock =
+            "<html><head><title>Forbidden</title></head>\n"
+            "<body><h1>Forbidden</h1></body></html>\n";
+        }
+        return Roxen.http_string_answer(lock)+(["error":403]);
       }
     }
   return Roxen.http_rxml_answer( template, id );

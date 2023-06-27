@@ -38,16 +38,16 @@ void create()
 {
   ::create();
   defvar("remap_home", 0,
-	 _(3,"Hide path to the home directory"),
-	 TYPE_FLAG|VAR_INITIAL,
-	 _(4,"If set, the user's home directory will be available "
-	  "as the root of this file system. If not set the user's home "
-	  "directory will be available as its normal path, just as on an "
-	  "ordinary FTP site."
-	  "<p>If the users home directory is <tt>/home/me/</tt> and the "
-	  "restricted file system is mounted on <tt>/ftp/</tt> the home "
-	  "directory will be available as <tt>/ftp/</tt> if this option is "
-	  "set and as <tt>/ftp/home/me/</tt> if it is not set."));
+         _(3,"Hide path to the home directory"),
+         TYPE_FLAG|VAR_INITIAL,
+         _(4,"If set, the user's home directory will be available "
+          "as the root of this file system. If not set the user's home "
+          "directory will be available as its normal path, just as on an "
+          "ordinary FTP site."
+          "<p>If the users home directory is <tt>/home/me/</tt> and the "
+          "restricted file system is mounted on <tt>/ftp/</tt> the home "
+          "directory will be available as <tt>/ftp/</tt> if this option is "
+          "set and as <tt>/ftp/home/me/</tt> if it is not set."));
 }
 
 protected string fix_slashes (string s)

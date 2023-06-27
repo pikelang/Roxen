@@ -12,15 +12,15 @@ yy"
   <rxml>
     <json-format>
       <value type="array">
-	<value>1</value>
-	<value type="int">2</value>
-	<value type="float">-3.17e-13</value>
-	<value type="mapping">
-	  <value index="str xx">abc"'def&lt;&amp;&gt;</value>
-	</value>
-	<value>&roxen.true;</value>
-	<value>&roxen.false;</value>
-	<value>&roxen.null;</value>
+        <value>1</value>
+        <value type="int">2</value>
+        <value type="float">-3.17e-13</value>
+        <value type="mapping">
+          <value index="str xx">abc"'def&lt;&amp;&gt;</value>
+        </value>
+        <value>&roxen.true;</value>
+        <value>&roxen.false;</value>
+        <value>&roxen.null;</value>
       </value>
     </json-format>
   </rxml>

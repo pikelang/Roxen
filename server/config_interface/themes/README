@@ -137,14 +137,14 @@ logo-html          <img border=0 src=&usr.logo;>
 
 toptabs-args       frame-image=&usr.toptabs-frame;
                    pagebgcolor=&usr.top-bgcolor;
-		   bgcolor=&usr.toptabs-bgcolor;
-		   font=&usr.toptabs-font;
-		   dimcolor=&usr.toptabs-dimcolor;
-		   textcolor=&usr.toptabs-dimtextcolor;
-		   seltextcolor=&usr.toptabs-seltextcolor;
-		   selcolor=&usr.toptabs-selcolor;
-		   quant=&128;
-		   &usr.toptab-extraargs;
+                   bgcolor=&usr.toptabs-bgcolor;
+                   font=&usr.toptabs-font;
+                   dimcolor=&usr.toptabs-dimcolor;
+                   textcolor=&usr.toptabs-dimtextcolor;
+                   seltextcolor=&usr.toptabs-seltextcolor;
+                   selcolor=&usr.toptabs-selcolor;
+                   quant=&128;
+                   &usr.toptab-extraargs;
 
 subtabs-args       frame-image=&usr.subtabs-frame; &usr.subtabs-extraargs;
                    bgcolor=&usr.subtabs-bgcolor; font=&usr.subtabs-font;

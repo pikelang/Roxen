@@ -328,8 +328,8 @@ text	center	right	float	economic-float	int	economic-int
   </list>
 </attr>"
 ])
-			    })
-		]);
+                            })
+                ]);
 #endif
 
 
@@ -399,16 +399,16 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
     foreach(subtitles, string s) {
       col++;
       r += "<th align=\"left\">" + (opt["interactive-sort"]?
-				    "<a href=\""+encode_url(col,opt->sortcol||0,opt->state,id) +
-				"\" id=\"nofollow-" + RXML.get_var("counter", "page") + "\">":"");
+                                    "<a href=\""+encode_url(col,opt->sortcol||0,opt->state,id) +
+                                "\" id=\"nofollow-" + RXML.get_var("counter", "page") + "\">":"");
       if(opt->nicer) {
-	mapping m = ([ "fgcolor":opt->titlecolor||"white",
-		       "bgcolor":opt->titlebgcolor||"#112266",
-		       "fontsize":opt->fontsize||"12" ]);
-	if(opt->font) m->font = opt->font;
-	if(opt->scale) m->scale = opt->scale;
-	if(opt->noxml) m->noxml = "1";
-	r += sprintf("<gtext%{ %s='%s'%}>%s</gtext>", (array)m, s);
+        mapping m = ([ "fgcolor":opt->titlecolor||"white",
+                       "bgcolor":opt->titlebgcolor||"#112266",
+                       "fontsize":opt->fontsize||"12" ]);
+        if(opt->font) m->font = opt->font;
+        if(opt->scale) m->scale = opt->scale;
+        if(opt->noxml) m->noxml = "1";
+        r += sprintf("<gtext%{ %s='%s'%}>%s</gtext>", (array)m, s);
       }
       else if(opt->nice)
         r+="<font color=\""+(opt->titlecolor||"#ffffff")+"\">"+s+"</font>";
@@ -432,7 +432,7 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
   foreach(table, array row) {
     if(opt->nice || opt->nicer)
       r += "<tr bgcolor=\"" +
-	((i++/m)%2?opt->evenbgcolor||"#ddeeff":opt->oddbgcolor||"#ffffff") + "\"";
+        ((i++/m)%2?opt->evenbgcolor||"#ddeeff":opt->oddbgcolor||"#ffffff") + "\"";
     else
       r += "<tr";
 
@@ -447,45 +447,45 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
 
       case "economic-float":
       case "float":
-	array a = s/".";
+        array a = s/".";
         if(opt->nicer || type=="economic-float"){
           font = "<font color=\"" +
             (type=="economic-float" && (int)a[0]<0 ?
-	     opt->negativecolor : opt->textcolor) +
+             opt->negativecolor : opt->textcolor) +
             "\"" +
-	    (opt->nicer?(" size=\"" + opt->size +
-			 "\" face=\"" + opt->face +
-			 "\">"):">");
+            (opt->nicer?(" size=\"" + opt->size +
+                         "\" face=\"" + opt->face +
+                         "\">"):">");
           nofont = "</font>";
-	}
+        }
 
         //The right way<tm> is to preparse the whole column and find the longest string of
         //decimals and use that to calculate the maximum width of the decimal cell, insted
         //of just saying width=30, which easily produces an ugly result.
         r += "<td align=\"right\"><table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">"
-	  "<tr><td align=\"right\">" +
+          "<tr><td align=\"right\">" +
           font + a[0] + nofont + "</td><td>" + font + "." + nofont +
-	  "</td><td align=\"left\" width=\"30\">" + font +
+          "</td><td align=\"left\" width=\"30\">" + font +
           (sizeof(a)>1?a[1]:"0") + nofont;
 
         r += "</td></tr></table>";
-	break;
+        break;
 
       case "economic-int":
       case "int":
         if(opt->nicer || type=="economic-int") {
           font = "<font color=\"" +
             (type=="economic-int" && (int)s<0 ?
-	     opt->negativecolor : opt->textcolor) +
+             opt->negativecolor : opt->textcolor) +
             "\"" +
-	    (opt->nicer?(" size=\"" + opt->size +
-			 "\" face=\"" +
-			 opt->face + "\">"):">");
+            (opt->nicer?(" size=\"" + opt->size +
+                         "\" face=\"" +
+                         opt->face + "\">"):">");
           nofont = "</font>";
-	}
+        }
 
         r += "<td align=\"right\">" + font + (string)(int)round((float)s) + nofont;
-	break;
+        break;
 
       case "num":
         type="right";
@@ -495,12 +495,12 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
       case "center":
       default:
         r += "<td align=\"" + (type!="text"?type:opt->cellalign) + "\">";
-	if(opt->nicer)
-	  r += "<font color=\"" + opt->textcolor + "\" size=\"" + opt->size +
-	    "\" face=\"" + opt->face + "\">";
+        if(opt->nicer)
+          r += "<font color=\"" + opt->textcolor + "\" size=\"" + opt->size +
+            "\" face=\"" + opt->face + "\">";
         r += s + (opt->nice||opt->nicer?"&nbsp;&nbsp;":"");
         if(opt->nicer)
-	  r += "</font>";
+          r += "</font>";
       }
 
       r += "</td>";
@@ -523,7 +523,7 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
 string _fields(string name, mapping arg, string q, mapping m)
 {
   m->fields = map(q/(arg->separator||m->cellseparator||"\t"),
-		  lambda(string field) { return String.trim_all_whites(field); });
+                  lambda(string field) { return String.trim_all_whites(field); });
   return "";
 }
 
@@ -540,21 +540,21 @@ string simpletag_tablify(string tag, mapping m, string q, RequestID id)
     m_delete(m, "cellseparator");
     if(!m->notitle) m+=(["notitle":1]);
     q=parse_html(q, ([]), (["table":lambda(string name, mapping arg, string q, mapping m) {
-				      if(arg->border) m->border=arg->border;
-				      if(arg->cellspacing) m->cellspacing=arg->cellspacing;
-				      if(arg->cellpadding) m->cellpadding=arg->cellpadding;
-				      return q;
-				    },
-			    "tr":lambda(string name, mapping arg, string q, mapping m) {
-				   return q+"\n";
-				 },
-			    "td":lambda(string name, mapping arg, string q, mapping m) {
-				   return q+"\t";
-				 },
-			    "th":lambda(string name, mapping arg, string q, mapping m) {
+                                      if(arg->border) m->border=arg->border;
+                                      if(arg->cellspacing) m->cellspacing=arg->cellspacing;
+                                      if(arg->cellpadding) m->cellpadding=arg->cellpadding;
+                                      return q;
+                                    },
+                            "tr":lambda(string name, mapping arg, string q, mapping m) {
+                                   return q+"\n";
+                                 },
+                            "td":lambda(string name, mapping arg, string q, mapping m) {
+                                   return q+"\t";
+                                 },
+                            "th":lambda(string name, mapping arg, string q, mapping m) {
                                    if(m->notitle && m->notitle==1) m_delete(m, "notitle");
-				   return q+"\t";
-				 }
+                                   return q+"\t";
+                                 }
     ]), m);
     q = replace(q, "\t\n", "\n");
   }
@@ -576,13 +576,13 @@ string simpletag_tablify(string tag, mapping m, string q, RequestID id)
   int col_min = sizeof((rows + ({({})}))[0]);
   id->misc->tmp_colmax=0;
   rows = map(rows,lambda(string r, string s){
-		    array t=r/s;
-		    if(sizeof(t)>id->misc->tmp_colmax)
-		      id->misc->tmp_colmax = sizeof(t);
-		    if (sizeof(t) < col_min)
-		      col_min = sizeof(t);
-		    return t;
-		  }, sep);
+                    array t=r/s;
+                    if(sizeof(t)>id->misc->tmp_colmax)
+                      id->misc->tmp_colmax = sizeof(t);
+                    if (sizeof(t) < col_min)
+                      col_min = sizeof(t);
+                    return t;
+                  }, sep);
 
   if(!sizeof(rows)) return "";
   if(sizeof(rows[-1])==1 && !sizeof(String.trim_all_whites(rows[-1][0])))
@@ -603,25 +603,25 @@ string simpletag_tablify(string tag, mapping m, string q, RequestID id)
     if (sortcol < col_min) {
       int num;
       if(m->fields && (sortcol+1 <= sizeof(m->fields))) {
-	switch(m->fields[sortcol]) {
-	case "num":
-	case "int":
-	case "economic-int":
-	case "float":
-	case "economic-float":
-	  rows = map(rows,
-		     lambda(array a, int c) {
-		       return ({
-			 (sizeof(a) > c) ? (float)a[c] : -1e99
-		       }) + a;
-		     }, sortcol);
-	  sortcol=0;
-	  num=1;
-	}
+        switch(m->fields[sortcol]) {
+        case "num":
+        case "int":
+        case "economic-int":
+        case "float":
+        case "economic-float":
+          rows = map(rows,
+                     lambda(array a, int c) {
+                       return ({
+                         (sizeof(a) > c) ? (float)a[c] : -1e99
+                       }) + a;
+                     }, sortcol);
+          sortcol=0;
+          num=1;
+        }
       }
       sort(column(rows, sortcol), rows);
       if(num)
-	rows = map(rows, lambda(array a) { return a[1..]; });
+        rows = map(rows, lambda(array a) { return a[1..]; });
     }
     if((int)m->sortcol<0)
       rows=reverse(rows);

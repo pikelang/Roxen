@@ -46,20 +46,20 @@ void run_tests(Configuration conf)
   ]);
 
   test_equal(([
-	       "path(": ({
-		 ({
-		   ({ "etag", "W/\"etag)\"" }),
-		   ({ "key", "key(" }),
-		   ({ "not", 0 }),
-		   ({ "key", "no)key" }),
-		 }),
-	       }),
-	       0: ({
-		 ({
-		   ({ "key", "key(" }),
-		 }),
-	       }),
-	     ]), fake_id->get_if_data);
+               "path(": ({
+                 ({
+                   ({ "etag", "W/\"etag)\"" }),
+                   ({ "key", "key(" }),
+                   ({ "not", 0 }),
+                   ({ "key", "no)key" }),
+                 }),
+               }),
+               0: ({
+                 ({
+                   ({ "key", "key(" }),
+                 }),
+               }),
+             ]), fake_id->get_if_data);
 }
 
 

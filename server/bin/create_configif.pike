@@ -39,15 +39,15 @@ class Readline
 
     private string safe_value(string r)
     {
-	if(!r)
-	{
-	    /* C-d? */
-	    werror("\nTerminal closed, exit.\n");
-	    destruct(this_object());
-	    exit(1);
-	}
-	
-	return r;
+        if(!r)
+        {
+            /* C-d? */
+            werror("\nTerminal closed, exit.\n");
+            destruct(this_object());
+            exit(1);
+        }
+        
+        return r;
     }
     
   string read(mixed ... args)
@@ -70,7 +70,7 @@ class Readline
 mapping(string:string) batch;
 
 string read_string(Readline rl, string prompt,
-		   string|void batch_symbol, string|void def)
+                   string|void batch_symbol, string|void def)
 {
   string res;
   if (batch && batch_symbol) {
@@ -144,7 +144,7 @@ Example of batch installation with interactive password entry:
 
   configdir =
    Getopt.find_option(argv, "d",({"config-dir","configuration-directory" }),
-  	              ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }),
+                      ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }),
                       "../configurations");
   int admin = has_value(argv, "-a");
 
@@ -163,14 +163,14 @@ Example of batch installation with interactive password entry:
       // Used by Win32Installer.vbs:CreateConfigInterface().
       array(string) sections = batch["__semicolon_separated__"]/";";
       if (sizeof(sections) < 6) {
-	error("Too few sections in __semicolon_separated__: %O.\n",
-	      batch["__semicolon_separated__"]);
+        error("Too few sections in __semicolon_separated__: %O.\n",
+              batch["__semicolon_separated__"]);
       }
       cd(sections[0]);				// SERVERDIR
       batch->server_name = sections[1];		// SERVER_NAME
       batch->server_url = sprintf("%s://*:%s/",
-				  sections[2],	// SERVER_PROTOCOL
-				  sections[3]);	// SERVER_PORT
+                                  sections[2],	// SERVER_PROTOCOL
+                                  sections[3]);	// SERVER_PORT
       batch->user = sections[4];			// ADM_USER
       batch->password = sections[5..]*";";	// ADM_PASS1
     }
@@ -180,12 +180,12 @@ Example of batch installation with interactive password entry:
     catch 
     {
       if( cf[-1]!='~' &&
-	  search( Stdio.read_file( configdir+"/"+cf ), 
+          search( Stdio.read_file( configdir+"/"+cf ), 
                   "'config_filesystem#0'" ) != -1 )
       {
-	string server_version = Stdio.read_file("VERSION");
-	if(server_version)
-	  Stdio.write_file(configdir+"/server_version","server-"+server_version);
+        string server_version = Stdio.read_file("VERSION");
+        if(server_version)
+          Stdio.write_file(configdir+"/server_version","server-"+server_version);
         werror("   There is already an administration interface present in "
                "this\n   server. A new one will not be created.\n");
         if(!admin++) exit( 1 );
@@ -201,7 +201,7 @@ Example of batch installation with interactive password entry:
     write( "   Creating an administrator user.\n\n" );
   else
     write( "   Creating an administration interface server in\n"+
-	   "   "+combine_path(getcwd(), configdir)+".\n");
+           "   "+combine_path(getcwd(), configdir)+".\n");
 
   do
   {
@@ -211,16 +211,16 @@ Example of batch installation with interactive password entry:
     {
       write("\n");
       do {
-	if (!sizeof(name)) name = "Administration Interface";
-	name = read_string(rl, "Server name:", "server_name", name);
-	if (batch) m_delete(batch, "server_name");
+        if (!sizeof(name)) name = "Administration Interface";
+        name = read_string(rl, "Server name:", "server_name", name);
+        if (batch) m_delete(batch, "server_name");
       } while (!sizeof(name));
 
       int port_ok;
       while( !port_ok )
       {
         string protocol = "https";
-	string host, path;
+        string host, path;
 
         port = read_string(rl, "Port URL:", "server_url", def_port);
         if( port == def_port )
@@ -242,7 +242,7 @@ Example of batch installation with interactive password entry:
              default:
                write("\n   Only http and https are supported for the "
                      "configuration interface.\n");
-	       if (batch) m_delete(batch, "protocol");
+               if (batch) m_delete(batch, "protocol");
                break;
             }
           }
@@ -263,7 +263,7 @@ Example of batch installation with interactive password entry:
            default:
              write("\n   Only http and https are supported for the "
                    "configuration interface.\n\n");
-	     if (batch) m_delete(batch, "server_url");
+             if (batch) m_delete(batch, "server_url");
              break;
           }
         }
@@ -274,33 +274,33 @@ Example of batch installation with interactive password entry:
     if (!batch || batch->password) {
       do
       {
-	user = read_string(rl, "Administrator user name:", "user", user);
-	if (batch) m_delete(batch, "user");
+        user = read_string(rl, "Administrator user name:", "user", user);
+        if (batch) m_delete(batch, "user");
       } while(((search(user, "/") != -1) || (search(user, "\\") != -1)) &&
-	      write("User name may not contain slashes.\n"));
+              write("User name may not contain slashes.\n"));
 
       do
       {
-	if(passwd2 && password)
-	  write("\n   Please select a password with one or more characters. "
-		"You will\n   be asked to type the password twice for "
-		"verification.\n\n");
-	rl->get_input_controller()->dumb=1;
-	password = read_string(rl, "Administrator password:", "password");
-	passwd2 = read_string(rl, "Administrator password (again):", "password");
-	rl->get_input_controller()->dumb=0;
-	if(batch) m_delete(batch, "password");
-	else
-	  write("\n");
+        if(passwd2 && password)
+          write("\n   Please select a password with one or more characters. "
+                "You will\n   be asked to type the password twice for "
+                "verification.\n\n");
+        rl->get_input_controller()->dumb=1;
+        password = read_string(rl, "Administrator password:", "password");
+        passwd2 = read_string(rl, "Administrator password (again):", "password");
+        rl->get_input_controller()->dumb=0;
+        if(batch) m_delete(batch, "password");
+        else
+          write("\n");
       } while(!strlen(password) || (password != passwd2));
     }
 
     if (!batch || has_prefix(lower_case(batch->ok || ""), "n")) {
       passwd2 = read_string(rl, "Are the settings above correct [Y/n]?", 0, "");
       if (has_prefix(lower_case(passwd2), "n")) {
-	// Exit batch mode and retry interactively.
-	batch = 0;
-	continue;
+        // Exit batch mode and retry interactively.
+        batch = 0;
+        continue;
       }
     }
     break;

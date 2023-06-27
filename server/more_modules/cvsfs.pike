@@ -65,14 +65,14 @@ object|array run_cvs(string prog, string dir, int with_stderr, string ...args)
       result = stdout->pipe();
     }
   return spawne(prog, args, (["PATH" : query("path") ]),
-		stdin, stdout, stderr, dir) ? result : 0;
+                stdin, stdout, stderr, dir) ? result : 0;
 }
 
 mapping parse_modules_file(string modules)
 {
   int i;
   array rows = map(replace(modules, "\t", " ") / "\n",
-		   lambda (string row) { return (row / " ") - ({""}); } ) - ({ ({}) }) ;
+                   lambda (string row) { return (row / " ") - ({""}); } ) - ({ ({}) }) ;
   return mkmapping(map(rows, lambda(array data) { return data[0]; }), rows);
 }
 
@@ -84,12 +84,12 @@ string handle_cvs_comments_etc(string data)
     {
       int end = search(data, "\n", i);
       if (end == -1)
-	{
-	  data = data[..i-1];
-	  break;
-	}
+        {
+          data = data[..i-1];
+          break;
+        }
       else
-	data = data[..i-1] + data[end..];
+        data = data[..i-1] + data[end..];
     }
   return data;
 }
@@ -123,14 +123,14 @@ string lookup_cvs_module(string prog, string root, string module)
   while (mod[index][0] == '-') /* Skip flags */
     {
       if (sizeof(mod[index]) == 1)
-	{ /* Stop processing options */
-	  index++;
-	  break;
-	}
+        { /* Stop processing options */
+          index++;
+          break;
+        }
       if ( (<'d', 'i', 'o', 'e', 's', 't', 'u'>)[mod[index][1]] )
-	index+=2;
+        index+=2;
       else
-	index++;
+        index++;
     }
   return mod[index];
 }
@@ -143,8 +143,8 @@ string locate_binary(array path, string name)
     {
       string fname = dir + "/" + name;
       if ((info = file_stat(fname))
-	  && (info[0] & 0111))
-	return fname;
+          && (info[0] & 0111))
+        return fname;
     }
   return 0;
 }
@@ -166,7 +166,7 @@ string find_binaries(array path, array|void extra)
   if (extra)
     foreach(extra, prog)
       if (!locate_binary(path, prog))
-	return ("No " + prog + " program found.");
+        return ("No " + prog + " program found.");
   return 0;
 }
 
@@ -178,7 +178,7 @@ string find_cvs_dir(string path)
   if (strlen(components[0])) {
     string name =
       lookup_cvs_module(cvs_program, query("cvsroot"),
-			components[0] );
+                        components[0] );
     if (! (name && strlen(name) ))
       return "Module not found in CVS";
     if (!file_stat(query("cvsroot") + name))
@@ -201,32 +201,32 @@ constant module_unique = 0;
 string query_name()
 {
   return sprintf("<i>%s</i> mounted on <i>%s</i>",
-		 query("cvsmodule"),
-		 query("location"));
+                 query("cvsmodule"),
+                 query("location"));
 }
 
 void create()
 {
   /* defvar()'s */
   defvar("location", "/CVS", "Mount point", TYPE_LOCATION,
-	 "This is where the module will be inserted in the "
-	 "name space of your server.");
+         "This is where the module will be inserted in the "
+         "name space of your server.");
   defvar("cvsroot", getenv("CVSROOT") || "/usr/local/cvs",
-	 "CVS repository", TYPE_DIR, "Where CVS stores its files.");
+         "CVS repository", TYPE_DIR, "Where CVS stores its files.");
   defvar("path", "/usr/bin:/usr/local/bin:/usr/gnu/bin", "Path for locating binaries",
-	 TYPE_STRING, "Colon separated list of directories to search for the cvs "
-	 "and rcs binaries.");
+         TYPE_STRING, "Colon separated list of directories to search for the cvs "
+         "and rcs binaries.");
   defvar("cvsmodule", "NONE", "CVS (sub)module", TYPE_STRING,
-	 "There are two ways to specify which directory tree in\n"
-	 "the repository is to be mounted:\n"
-	 "<dl><dt><tt>module/subdirectory</tt></dt>\n"
-	 "<dd>where <tt>module</tt> is a module "
-	 "defined in the CVS repository, and <tt>subdirectory</tt> "
-	 "is a (possibly empty) path to a subdirectory of the module.</dd>\n"
-	 "<dt><tt>/path</tt></dt>\n"
-	 "<dd>where <tt>path</tt> is the full path to a directory,\n"
-	 "starting at the cvs root. I.e., the module database\n"
-	 "in the CVS repository is not used.</dl>\n");
+         "There are two ways to specify which directory tree in\n"
+         "the repository is to be mounted:\n"
+         "<dl><dt><tt>module/subdirectory</tt></dt>\n"
+         "<dd>where <tt>module</tt> is a module "
+         "defined in the CVS repository, and <tt>subdirectory</tt> "
+         "is a (possibly empty) path to a subdirectory of the module.</dd>\n"
+         "<dt><tt>/path</tt></dt>\n"
+         "<dd>where <tt>path</tt> is the full path to a directory,\n"
+         "starting at the cvs root. I.e., the module database\n"
+         "in the CVS repository is not used.</dl>\n");
 }
 
 #if !efun(_static_modules)
@@ -248,7 +248,7 @@ string|void check_variable(string name, string value)
   }
   case "path":
     return find_binaries(value / ":",
-			 ({"rcs", "co"}) );
+                         ({"rcs", "co"}) );
   default:
     return 0;
   }
@@ -309,7 +309,7 @@ object|mapping|int find_file(string name, object id)
   if (cvs_module_path && sizeof(cvs_module_path)) {
     name = secure_path(name);
     string fname = combine_path(query("cvsroot"),
-				cvs_module_path + "/" + name);
+                                cvs_module_path + "/" + name);
     int is_text = 0;
 
     CVSFS_WERR("Real file '" + fname + "'");
@@ -320,36 +320,36 @@ object|mapping|int find_file(string name, object id)
       is_text = prestates->raw;
 
       if (stringp(prestates->revision)) {
-	extra_args += ({ "-r"+prestates->revision });
+        extra_args += ({ "-r"+prestates->revision });
       }
 
       if (prestates->log) {
-	f = run_cvs(rlog_program, 0, 0,
-		    @extra_args, fname + ",v" );
-	is_text = 1;
+        f = run_cvs(rlog_program, 0, 0,
+                    @extra_args, fname + ",v" );
+        is_text = 1;
       } else if (stringp(prestates->diff) &&
-		 stringp(prestates->revision)) {
+                 stringp(prestates->revision)) {
 
-	extra_args += ({ "-r"+prestates->diff });
+        extra_args += ({ "-r"+prestates->diff });
 
-	f = run_cvs(rcsdiff_program, 0, 0,
-		    @extra_args, fname + ",v" );
-	is_text = 1;
+        f = run_cvs(rcsdiff_program, 0, 0,
+                    @extra_args, fname + ",v" );
+        is_text = 1;
       } else {
-	f = run_cvs(cvs_program, 0, 0,
-		    "-d", query("cvsroot"), "checkout", "-p",
-		    @extra_args,
-		    combine_path(cvs_module_path + "/" + name, "."));
+        f = run_cvs(cvs_program, 0, 0,
+                    "-d", query("cvsroot"), "checkout", "-p",
+                    @extra_args,
+                    combine_path(cvs_module_path + "/" + name, "."));
       }
       if (f)
-	accesses++;
+        accesses++;
       return is_text ? http_file_answer(f, "text/plain") : f;
     }
     else {
       Stat arr = file_stat(fname + "/.");
       if (arr && (arr[1] < 0)) {
-	CVSFS_WERR("\"" + fname + "\" is a directory.");
-	return -1;
+        CVSFS_WERR("\"" + fname + "\" is a directory.");
+        return -1;
       }
     }
   }
@@ -372,7 +372,7 @@ array find_dir(string name, object id)
 {
   Stat info;
   string fname = combine_path(query("cvsroot"),
-			      cvs_module_path + "/" + secure_path(name));
+                              cvs_module_path + "/" + secure_path(name));
 
   if (cvs_module_path
       && (info = file_stat(fname))
@@ -380,10 +380,10 @@ array find_dir(string name, object id)
     {
       array dir = get_dir(fname);
       if (dir)
-	dir = map(dir, lambda(string entry) {
-	  return (entry[strlen(entry)-2..] == ",v")
-	    ? entry[..strlen(entry)-3] : entry;
-	});
+        dir = map(dir, lambda(string entry) {
+          return (entry[strlen(entry)-2..] == ",v")
+            ? entry[..strlen(entry)-3] : entry;
+        });
       return dir - ({ "Attic" });
     }
   return 0;

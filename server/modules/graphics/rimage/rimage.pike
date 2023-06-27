@@ -106,7 +106,7 @@ Image.Layer set_channel( Image.Layer in, string channel, Image.Image from )
 }
 
 mixed internal_tag_image(string t, mapping m, int line,
-			 object id, Image.Layer this)
+                         object id, Image.Layer this)
 {
   string c = m->channel||"image";
   mixed r = plugin_for( t )( m, this, c, id, this_object() );
@@ -114,7 +114,7 @@ mixed internal_tag_image(string t, mapping m, int line,
 }
 
 string internal_parse_layer(string t, mapping m, string c, int line,
-			    object id, mapping res)
+                            object id, mapping res)
 {
   Image.Layer l = Image.Layer();
 
@@ -180,7 +180,7 @@ mapping cached_image(string hmm, object id)
   {
     catch {
       return cache_set("rimage:"+id->conf->name, (string)hmm,
-		       decode_value(Stdio.read_bytes(query("cache-dir")+hmm)));
+                       decode_value(Stdio.read_bytes(query("cache-dir")+hmm)));
     };
     rm(query("cache-dir")+hmm);
   }

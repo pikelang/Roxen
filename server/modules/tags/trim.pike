@@ -11,7 +11,7 @@ constant module_doc  = "Tag for trimming strings.";
 void create(Configuration conf)
 {
   set_module_creator("Based on code contributed by "
-		     "Pontus Östlund, &lt;spam@poppa.se&gt;.");
+                     "Pontus Östlund, &lt;spam@poppa.se&gt;.");
 }
 
 
@@ -44,13 +44,13 @@ class TagTrim
         result = rtrim(result || content, args->char);
 
       if (!args->left && !args->right)
-	result = trim(content, args->char);
+        result = trim(content, args->char);
       
       if (args->center) {
         if (!args->length)
           RXML.parse_error("Missing required attribute \"length\".");
         result = ctrim(result || content, (int)args->length, args->words,
-		       args->glue);
+                       args->glue);
       }
       
       return 0;
@@ -111,10 +111,10 @@ string ctrim(string in, int len, int cut_between_words, string|void glue)
     int pos;
     if (in[sizeof(left)] != ' ')
       if ((pos = search(reverse(left), " ")) > -1)
-	left = left[..sizeof(left) - pos - 2];
+        left = left[..sizeof(left) - pos - 2];
     if (in[sizeof(in) - sizeof(right) - 1] != ' ')
       if ((pos = search(right, " ")) > -1)
-	right = right[pos + 1..];
+        right = right[pos + 1..];
   }
   
   return left + glue + right;

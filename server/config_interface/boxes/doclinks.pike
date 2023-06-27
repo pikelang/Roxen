@@ -25,51 +25,51 @@ string parse( RequestID id )
   void add_doc_link(string doc_path, string title) {
     if (exists(doc_path)) {
       string s = "<a href='" + (doc_path - "index.html") + "'>"
-	"<font size='-1'>" + title + "</font>"
-	"</a>";
+        "<font size='-1'>" + title + "</font>"
+        "</a>";
       if (list_style)
-	docs +=
-	  "<li style='margin-left: -0.9em; margin-right: 0.9em;'>"+
-	  s+"</br></li>\n";
+        docs +=
+          "<li style='margin-left: -0.9em; margin-right: 0.9em;'>"+
+          s+"</br></li>\n";
       else
-	docs +=
-	  "<tr><td valign='top'>"+s+"</td></tr>\n";
+        docs +=
+          "<tr><td valign='top'>"+s+"</td></tr>\n";
     }
   };
   
   foreach( ({ "docs/roxen/5.2/" }), string rpath )
   {
     add_doc_link(rpath + "content_editor_manual/index.xml",
-		 _(524, "Content Editor"));
+                 _(524, "Content Editor"));
 
     add_doc_link(rpath + "web_developer_manual/index.xml",
-		 _(514, "Web Developer"));
+                 _(514, "Web Developer"));
 
     add_doc_link(rpath + "administrator_manual/index.xml",
-		 _(516, "Administrator"));
+                 _(516, "Administrator"));
 
     add_doc_link(rpath + "system_developer_manual_java/index.xml",
-		 _(390, "System Developer (Java)"));
+                 _(390, "System Developer (Java)"));
 
     add_doc_link(rpath + "system_developer_manual/index.xml",
-		 _(515, "System Developer (Pike)"));
+                 _(515, "System Developer (Pike)"));
 
     add_doc_link(rpath + "forms_and_response_module/index.xml",
-		 _(517, "Forms And Response Module"));
+                 _(517, "Forms And Response Module"));
 
     add_doc_link(rpath + "forum_manual/index.xml",
-		 _(523, "Forum Module"));
+                 _(523, "Forum Module"));
     
     add_doc_link(rpath + "tutorial/index.xml",
-		 _(519, "Tutorials"));
+                 _(519, "Tutorials"));
 
     add_doc_link(rpath + "faq/main/index.xml",
-		 _(458, "FAQ"));  }
+                 _(458, "FAQ"));  }
 
   foreach( ({"docs/pike/7.1/","docs/pike/7.0/" }), string ppath )
   {
     add_doc_link(ppath + "tutorial/index.xml",
-		 _(396, "Pike Tutorial"));
+                 _(396, "Pike Tutorial"));
   }
 
   if( docs == "" )

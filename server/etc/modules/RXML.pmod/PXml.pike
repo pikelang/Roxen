@@ -29,21 +29,21 @@ constant name = "xml";
 #define EmptyTagFunc							\
   function(:int(1..1)|string|array)|					\
   function(Parser.HTML,mapping(string:string):				\
-	   int(1..1)|string|array)
+           int(1..1)|string|array)
 
 #define EmptyTagDef string|array|EmptyTagFunc
 
 #define ContainerFunc							\
   function(:int(1..1)|string|array)|					\
   function(Parser.HTML,mapping(string:string),string:			\
-	   int(1..1)|string|array)
+           int(1..1)|string|array)
 
 #define ContainerDef string|array|ContainerFunc
 
 #define QuoteTagFunc							\
   function(:int(1..1)|string|array)|					\
   function(Parser.HTML,string:						\
-	   int(1..1)|string|array)
+           int(1..1)|string|array)
 
 #define QuoteTagDef string|array|QuoteTagFunc
 
@@ -62,7 +62,7 @@ constant name = "xml";
 /*protected*/ this_program _low_add_container (string name, ContainerDef tdef)
   {return [object(this_program)] low_parser::add_container (name, tdef);}
 /*protected*/ this_program _low_add_quote_tag (string beg, QuoteTagDef tdef,
-					       string end)
+                                               string end)
   {return [object(this_program)] low_parser::add_quote_tag (beg, tdef, end);}
 protected this_program _low_clone (mixed... args)
   {return [object(this_program)] low_parser::clone (@args);}
@@ -73,7 +73,7 @@ string current_input() {return low_parser::current();}
 constant reset = 0;
 
 protected void set_quote_tag_cbs (QuoteTagDef unknown_pi_tag_cb,
-				  QuoteTagDef cdata_cb)
+                                  QuoteTagDef cdata_cb)
 {
   add_quote_tag ("!--", .utils.p_xml_comment_cb, "--");
   add_quote_tag ("?", unknown_pi_tag_cb, "?");
@@ -81,7 +81,7 @@ protected void set_quote_tag_cbs (QuoteTagDef unknown_pi_tag_cb,
 }
 
 this_program clone (RXML.Context ctx, RXML.Type type, RXML.PCode p_code,
-		    RXML.TagSet tag_set)
+                    RXML.TagSet tag_set)
 {
 #ifdef OLD_RXML_COMPAT
   int new_not_compat = !(ctx && ctx->id && ctx->id->conf->old_rxml_compat);
@@ -161,28 +161,28 @@ protected void create (
 #ifdef OLD_RXML_COMPAT
       if (not_compat) {
 #endif
-	foreach (tlist, RXML.Tag tag)
-	  if (!(tag->plugin_name || tag->flags & RXML.FLAG_NO_PREFIX)) {
-	    string name = prefix + ":" + [string] tag->name;
-	    if (tag->flags & RXML.FLAG_PROC_INSTR)
-	      add_quote_tag ("?" + name, tag->_p_xml_handle_pi_tag, "?");
-	    else
-	      add_tag (name, 0), add_container (name, tag->_p_xml_handle_tag);
-	  }
+        foreach (tlist, RXML.Tag tag)
+          if (!(tag->plugin_name || tag->flags & RXML.FLAG_NO_PREFIX)) {
+            string name = prefix + ":" + [string] tag->name;
+            if (tag->flags & RXML.FLAG_PROC_INSTR)
+              add_quote_tag ("?" + name, tag->_p_xml_handle_pi_tag, "?");
+            else
+              add_tag (name, 0), add_container (name, tag->_p_xml_handle_tag);
+          }
 #ifdef OLD_RXML_COMPAT
       }
       else
-	foreach (tlist, RXML.Tag tag)
-	  if (!(tag->plugin_name || tag->flags & RXML.FLAG_NO_PREFIX)) {
-	    string name = prefix + ":" + [string] tag->name;
-	    if (tag->flags & RXML.FLAG_PROC_INSTR)
-	      add_quote_tag ("?" + name, tag->_p_xml_handle_pi_tag, "?");
-	    else
-	      if (tag->flags & RXML.FLAG_EMPTY_ELEMENT)
-		add_tag (name, tag->_p_xml_handle_tag), add_container (name, 0);
-	      else
-		add_tag (name, 0), add_container (name, tag->_p_xml_handle_tag);
-	  }
+        foreach (tlist, RXML.Tag tag)
+          if (!(tag->plugin_name || tag->flags & RXML.FLAG_NO_PREFIX)) {
+            string name = prefix + ":" + [string] tag->name;
+            if (tag->flags & RXML.FLAG_PROC_INSTR)
+              add_quote_tag ("?" + name, tag->_p_xml_handle_pi_tag, "?");
+            else
+              if (tag->flags & RXML.FLAG_EMPTY_ELEMENT)
+                add_tag (name, tag->_p_xml_handle_tag), add_container (name, 0);
+              else
+                add_tag (name, 0), add_container (name, tag->_p_xml_handle_tag);
+          }
 #endif
     }
 
@@ -190,33 +190,33 @@ protected void create (
     if (not_compat) {
 #endif
       foreach (tlist, RXML.Tag tag)
-	if (!tag->plugin_name &&
-	    (!tset->prefix_req || tag->flags & RXML.FLAG_NO_PREFIX)) {
-	  string name = [string] tag->name;
-	  if (tag->flags & RXML.FLAG_PROC_INSTR)
-	    add_quote_tag ("?" + name, tag->_p_xml_handle_pi_tag, "?");
-	  else
-	    if ((tag->flags & (RXML.FLAG_COMPAT_PARSE|RXML.FLAG_EMPTY_ELEMENT)) ==
-		(RXML.FLAG_COMPAT_PARSE|RXML.FLAG_EMPTY_ELEMENT))
-	      add_tag (name, tag->_p_xml_handle_tag), add_container (name, 0);
-	    else
-	      add_tag (name, 0), add_container (name, tag->_p_xml_handle_tag);
-	}
+        if (!tag->plugin_name &&
+            (!tset->prefix_req || tag->flags & RXML.FLAG_NO_PREFIX)) {
+          string name = [string] tag->name;
+          if (tag->flags & RXML.FLAG_PROC_INSTR)
+            add_quote_tag ("?" + name, tag->_p_xml_handle_pi_tag, "?");
+          else
+            if ((tag->flags & (RXML.FLAG_COMPAT_PARSE|RXML.FLAG_EMPTY_ELEMENT)) ==
+                (RXML.FLAG_COMPAT_PARSE|RXML.FLAG_EMPTY_ELEMENT))
+              add_tag (name, tag->_p_xml_handle_tag), add_container (name, 0);
+            else
+              add_tag (name, 0), add_container (name, tag->_p_xml_handle_tag);
+        }
 #ifdef OLD_RXML_COMPAT
     }
     else
       foreach (tlist, RXML.Tag tag)
-	if (!tag->plugin_name &&
-	    (!tset->prefix_req || tag->flags & RXML.FLAG_NO_PREFIX)) {
-	  string name = [string] tag->name;
-	  if (tag->flags & RXML.FLAG_PROC_INSTR)
-	    add_quote_tag ("?" + name, tag->_p_xml_handle_pi_tag, "?");
-	  else
-	    if (tag->flags & RXML.FLAG_EMPTY_ELEMENT)
-	      add_tag (name, tag->_p_xml_handle_tag), add_container (name, 0);
-	    else
-	      add_tag (name, 0), add_container (name, tag->_p_xml_handle_tag);
-	}
+        if (!tag->plugin_name &&
+            (!tset->prefix_req || tag->flags & RXML.FLAG_NO_PREFIX)) {
+          string name = [string] tag->name;
+          if (tag->flags & RXML.FLAG_PROC_INSTR)
+            add_quote_tag ("?" + name, tag->_p_xml_handle_pi_tag, "?");
+          else
+            if (tag->flags & RXML.FLAG_EMPTY_ELEMENT)
+              add_tag (name, tag->_p_xml_handle_tag), add_container (name, 0);
+            else
+              add_tag (name, 0), add_container (name, tag->_p_xml_handle_tag);
+        }
 #endif
   }
 
@@ -239,13 +239,13 @@ protected void create (
     _set_entity_callback (.utils.p_xml_entity_cb);
     if (type->free_text)
       set_quote_tag_cbs (
-	.utils.return_zero,
-	// Decode CDATA sections if the type doesn't have xml syntax.
-	type->entity_syntax ? .utils.return_zero : .utils.p_xml_cdata_cb);
+        .utils.return_zero,
+        // Decode CDATA sections if the type doesn't have xml syntax.
+        type->entity_syntax ? .utils.return_zero : .utils.p_xml_cdata_cb);
     else
       set_quote_tag_cbs (
-	.utils.unknown_pi_tag_error,
-	type->handle_literals ? .utils.p_xml_cdata_cb : .utils.invalid_cdata_error);
+        .utils.unknown_pi_tag_error,
+        type->handle_literals ? .utils.p_xml_cdata_cb : .utils.invalid_cdata_error);
 #ifdef OLD_RXML_COMPAT
   }
   else {
@@ -258,7 +258,7 @@ protected void create (
 }
 
 protected void initialize (RXML.Context ctx, RXML.Type type,
-			   RXML.PCode p_code, RXML.TagSet tag_set)
+                           RXML.PCode p_code, RXML.TagSet tag_set)
 {
   TagSetParser::initialize (ctx, type, p_code, tag_set);
 
@@ -285,8 +285,8 @@ void add_value (mixed val)
   else {
     if (value != RXML.nil)
       RXML.parse_error (
-	"Cannot append another value %s to non-sequential type %s.\n",
-	.utils.format_short (val), type->name);
+        "Cannot append another value %s to non-sequential type %s.\n",
+        .utils.format_short (val), type->name);
     value = val;
   }
 }
@@ -309,20 +309,20 @@ void drain_output()
     case LITERALS:
     case LITERALS_P_CODE:
       if (mixed err = catch {
-	string literal = String.trim_all_whites (low_parser::read());
-	if (sizeof (literal)) {
-	  mixed newval;
-	  if (type->sequential)
-	    value = value + (value = 0, newval = type->encode (literal));
-	  else {
-	    if (value != RXML.nil)
-	      RXML.parse_error (
-		"Cannot append another value %s to non-sequential type %s.\n",
-		.utils.format_short (literal), type->name);
-	    value = newval = type->encode (literal);
-	  }
-	  if (p_code) p_code->add (context, newval, newval);
-	}
+        string literal = String.trim_all_whites (low_parser::read());
+        if (sizeof (literal)) {
+          mixed newval;
+          if (type->sequential)
+            value = value + (value = 0, newval = type->encode (literal));
+          else {
+            if (value != RXML.nil)
+              RXML.parse_error (
+                "Cannot append another value %s to non-sequential type %s.\n",
+                .utils.format_short (literal), type->name);
+            value = newval = type->encode (literal);
+          }
+          if (p_code) p_code->add (context, newval, newval);
+        }
       }) context->handle_exception (err, this_object(), p_code);
       break;
 
@@ -331,11 +331,11 @@ void drain_output()
       string literal = low_parser::read();
       sscanf (literal, "%[ \t\n\r]", string ws);
       if (literal != ws)
-	context->handle_exception (
-	  catch (RXML.parse_error (
-		   "Free text %s is not allowed in context of type %s.\n",
-		   .utils.format_short (literal), type->name)),
-	  this_object(), p_code);
+        context->handle_exception (
+          catch (RXML.parse_error (
+                   "Free text %s is not allowed in context of type %s.\n",
+                   .utils.format_short (literal), type->name)),
+          this_object(), p_code);
       break;
     }
 
@@ -375,7 +375,7 @@ int report_error (string msg, RXML.Type|void type)
       // Everything else.
       // HTML/XML-quote everything for paranoia reasons.
       msg = "<br clear=\"all\" />\n<pre>" +
-	Roxen.html_encode_string(msg) + "</pre>\n";
+        Roxen.html_encode_string(msg) + "</pre>\n";
     }
   }
   if (errmsgs) errmsgs += msg;
@@ -434,17 +434,17 @@ local void add_runtime_tag (RXML.Tag tag)
 #ifdef OLD_RXML_COMPAT
       if (not_compat)
 #endif
-	if ((tag->flags & (RXML.FLAG_COMPAT_PARSE|RXML.FLAG_EMPTY_ELEMENT)) ==
-	    (RXML.FLAG_COMPAT_PARSE|RXML.FLAG_EMPTY_ELEMENT))
-	  add_tag (name, tag->_p_xml_handle_tag), add_container (name, 0);
-	else
-	  add_tag (name, 0), add_container (name, tag->_p_xml_handle_tag);
+        if ((tag->flags & (RXML.FLAG_COMPAT_PARSE|RXML.FLAG_EMPTY_ELEMENT)) ==
+            (RXML.FLAG_COMPAT_PARSE|RXML.FLAG_EMPTY_ELEMENT))
+          add_tag (name, tag->_p_xml_handle_tag), add_container (name, 0);
+        else
+          add_tag (name, 0), add_container (name, tag->_p_xml_handle_tag);
 #ifdef OLD_RXML_COMPAT
       else
-	if (tag->flags & RXML.FLAG_EMPTY_ELEMENT)
-	  add_tag (name, tag->_p_xml_handle_tag), add_container (name, 0);
-	else
-	  add_tag (name, 0), add_container (name, tag->_p_xml_handle_tag);
+        if (tag->flags & RXML.FLAG_EMPTY_ELEMENT)
+          add_tag (name, tag->_p_xml_handle_tag), add_container (name, 0);
+        else
+          add_tag (name, 0), add_container (name, tag->_p_xml_handle_tag);
 #endif
     }
 
@@ -454,17 +454,17 @@ local void add_runtime_tag (RXML.Tag tag)
 #ifdef OLD_RXML_COMPAT
       if (not_compat)
 #endif
-	if ((tag->flags & (RXML.FLAG_COMPAT_PARSE|RXML.FLAG_EMPTY_ELEMENT)) ==
-	    (RXML.FLAG_COMPAT_PARSE|RXML.FLAG_EMPTY_ELEMENT))
-	  add_tag (name, tag->_p_xml_handle_tag), add_container (name, 0);
-	else
-	  add_tag (name, 0), add_container (name, tag->_p_xml_handle_tag);
+        if ((tag->flags & (RXML.FLAG_COMPAT_PARSE|RXML.FLAG_EMPTY_ELEMENT)) ==
+            (RXML.FLAG_COMPAT_PARSE|RXML.FLAG_EMPTY_ELEMENT))
+          add_tag (name, tag->_p_xml_handle_tag), add_container (name, 0);
+        else
+          add_tag (name, 0), add_container (name, tag->_p_xml_handle_tag);
 #ifdef OLD_RXML_COMPAT
       else
-	if (tag->flags & RXML.FLAG_EMPTY_ELEMENT)
-	  add_tag (name, tag->_p_xml_handle_tag), add_container (name, 0);
-	else
-	  add_tag (name, 0), add_container (name, tag->_p_xml_handle_tag);
+        if (tag->flags & RXML.FLAG_EMPTY_ELEMENT)
+          add_tag (name, tag->_p_xml_handle_tag), add_container (name, 0);
+        else
+          add_tag (name, 0), add_container (name, tag->_p_xml_handle_tag);
 #endif
     }
   }
@@ -487,27 +487,27 @@ local void remove_runtime_tag (string|RXML.Tag tag, void|int proc_instr)
 
     if (!tag_set->prefix_req || no_prefix)
       if (TagDef def = rt_pi_replacements && rt_pi_replacements[tag]) {
-	m_delete (rt_pi_replacements, tag);
-	add_quote_tag ("?" + tag, def, "?");
+        m_delete (rt_pi_replacements, tag);
+        add_quote_tag ("?" + tag, def, "?");
       }
     if (tag_set->prefix && !no_prefix)
       if (TagDef def = rt_pi_replacements[tag = tag_set->prefix + ":" + tag]) {
-	m_delete (rt_pi_replacements, tag);
-	add_quote_tag ("?" + tag, def, "?");
+        m_delete (rt_pi_replacements, tag);
+        add_quote_tag ("?" + tag, def, "?");
       }
   }
 
   else {
     if (!tag_set->prefix_req || no_prefix)
       if (TagDef def = rt_replacements && rt_replacements[tag]) {
-	m_delete (rt_replacements, tag);
-	add_tag (tag, def[0]), add_container (tag, def[1]);
+        m_delete (rt_replacements, tag);
+        add_tag (tag, def[0]), add_container (tag, def[1]);
       }
     if (tag_set->prefix && !no_prefix)
       if (TagDef def = rt_replacements &&
-	  rt_replacements[tag = tag_set->prefix + ":" + tag]) {
-	m_delete (rt_replacements, tag);
-	add_tag (tag, def[0]), add_container (tag, def[1]);
+          rt_replacements[tag = tag_set->prefix + ":" + tag]) {
+        m_delete (rt_replacements, tag);
+        add_tag (tag, def[0]), add_container (tag, def[1]);
       }
   }
 }
@@ -517,8 +517,8 @@ protected int master_parser;
 protected string _sprintf()
 {
   return sprintf ("RXML.PXml(%s,%O,%O)%s",
-		  master_parser ? "master" : "clone", type, tag_set,
-		  __object_marker ? "[" + __object_marker->count + "]" : "");
+                  master_parser ? "master" : "clone", type, tag_set,
+                  __object_marker ? "[" + __object_marker->count + "]" : "");
 }
 #else
 protected string _sprintf()

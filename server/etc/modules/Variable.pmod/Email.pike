@@ -34,13 +34,13 @@ array(string) verify_set( string new_value ) {
 
   domain=lower_case(domain);
   sscanf(domain,
-	 "%*[-abcdefghijklmnopqrstuvwxyz0123456789._]%s", tmp); // More characters?
+         "%*[-abcdefghijklmnopqrstuvwxyz0123456789._]%s", tmp); // More characters?
   if(sizeof(tmp))
     return ({ LOCALE(314,"The email address domain contains forbidden characters."), new_value });
 
   // RFC 5322 3.2.3 Atom: dot-atom-text.
   sscanf(lower_case(user),
-	 "%*[-abcdefghijklmnopqrstuvwxyz0123456789._+!#$%%&'*/=?^{}|]%s", tmp); // More characters?
+         "%*[-abcdefghijklmnopqrstuvwxyz0123456789._+!#$%%&'*/=?^{}|]%s", tmp); // More characters?
   if(sizeof(tmp))
     return ({ LOCALE(315,"The email address user contains forbidden characters."), new_value });
 
@@ -51,7 +51,7 @@ array(string) verify_set( string new_value ) {
 
   if(user[0]=='.')
     return ({ LOCALE(318,"The email address begins with an character that is not legal in that position."),
-	      new_value[1..] });
+              new_value[1..] });
 
 #ifdef NSERIOUS
   if(lower_case(user+domain)=="pugopugo.org")
@@ -67,7 +67,7 @@ array(string) verify_set( string new_value ) {
 #endif
      )
     return ({ sprintf(LOCALE(319,"The domain %s could not be found."),domain),
-	      new_value });
+              new_value });
   // We could perhaps take this a step further and ask the mailserver if the account is present.
 #endif /* !NO_DNS */
 
@@ -127,7 +127,7 @@ protected string|array(string) mailparser(string address)
     if(c=="(") comment_level++;
     if(c==")") {
       if(!comment_level)
-	return ({ "Mismatched parenthesis", address });
+        return ({ "Mismatched parenthesis", address });
       c="";
       comment_level--;
     }
@@ -138,8 +138,8 @@ protected string|array(string) mailparser(string address)
       in_domain=1;
     }
     if(c=="]" && !in_quote && in_domain) {
-	in_domain=0;
-	c="";
+        in_domain=0;
+        c="";
     }
     if(in_domain) c=""; // Throw away domain-literals for now.
 

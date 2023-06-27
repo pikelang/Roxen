@@ -16,11 +16,11 @@ void main(int argc, array argv)
   }
 
   write_fragmented( f,
-		    "GET "+argv[2]+" HTTP/1.0"+sep+
-		    "Connection: close"+sep+
-		    extra_headers+
-		    "User-Agent: Roxen Testscript"+sep+sep,
-		    psize );
+                    "GET "+argv[2]+" HTTP/1.0"+sep+
+                    "Connection: close"+sep+
+                    extra_headers+
+                    "User-Agent: Roxen Testscript"+sep+sep,
+                    psize );
 
   string _d = f->read();
 
@@ -38,7 +38,7 @@ void main(int argc, array argv)
 
   if (headers["location"] != argv[3]) {
     werror("Unexpected redirect location: %O != %O\n",
-	   headers["location"], argv[3]);
+           headers["location"], argv[3]);
     exit( BADHEADERS );
   }
 

@@ -23,11 +23,11 @@ LocaleString module_doc  =
     "process</p>");
 
 #define NOTE(X) ("<tr><td valign='top'><img src='/internal-roxen-err_1'></td>\n"\
-		"<td><font color='black' size='-1'>" + (X) +"</font></td></tr>")
+                "<td><font color='black' size='-1'>" + (X) +"</font></td></tr>")
 #define WARN(X) ("<tr><td valign='top'><img src='/internal-roxen-err_2'></td>\n"\
-		 "<td><font color='black' size='-1'>" + (X) +"</font></td></tr>")
+                 "<td><font color='black' size='-1'>" + (X) +"</font></td></tr>")
 #define ERR(X) ("<tr><td valign='top'><img src='/internal-roxen-err_3'></td>\n"\
-		 "<td><font color='black' size='-1'>" + (X) +"</font></td></tr>")
+                 "<td><font color='black' size='-1'>" + (X) +"</font></td></tr>")
 
 class Combo( string file, RequestID id )
 {
@@ -96,8 +96,8 @@ class Combo( string file, RequestID id )
       heads["Content-Length"] = (string)res->len;
 
     string head_string = sprintf( "%s %d %s\r\n", id2->prot, res->error,
-				  res->rettext||
-				  Roxen.http_status_messages[res->error]||"");
+                                  res->rettext||
+                                  Roxen.http_status_messages[res->error]||"");
 
     if( (res->error/100 == 2) && (res->len <= 0) )
       heads->Connection = "close";
@@ -133,32 +133,32 @@ array size_file( string page, RequestID id )
 
     function follow( string i ) {
       return lambda(object p, mapping m)
-	     {
-	       if(m[i])
-	       {
-		 if(sizes[m[i]])
-		   return;
-		 mapping ss,tt;
-		 string mm;
-		 array ff;
-		 [ff,ss,tt,mm] = size_file(m[i],id);
-		 sizes |= ss;
-		 types |= tt;
-		 files += ff;
-		 messages += mm;
-	       }
-	     };
+             {
+               if(m[i])
+               {
+                 if(sizes[m[i]])
+                   return;
+                 mapping ss,tt;
+                 string mm;
+                 array ff;
+                 [ff,ss,tt,mm] = size_file(m[i],id);
+                 sizes |= ss;
+                 types |= tt;
+                 files += ff;
+                 messages += mm;
+               }
+             };
     };
 
     if( id->misc->sizer_in_progress == 1 )
       if( res->type()  == "text/html" )
-	Parser.HTML( )->add_tags( ([
-	  // src=''
-	  "img":follow("src"), "input":follow("src"),
-	  // background=''
-	  "body":follow("background"), "table":follow("background"),
-	  "td":follow("background"), "tr":follow("background"),
-	]) )->feed( res->data() )->finish()->read();
+        Parser.HTML( )->add_tags( ([
+          // src=''
+          "img":follow("src"), "input":follow("src"),
+          // background=''
+          "body":follow("background"), "table":follow("background"),
+          "td":follow("background"), "tr":follow("background"),
+        ]) )->feed( res->data() )->finish()->read();
 
     types[ page ] = res->type();
     sizes[ page ] = ({ res->size(), strlen(res->headers()) });
@@ -184,8 +184,8 @@ mixed find_internal( string f, RequestID id )
 #if constant(Image.JPEG.encode)
     case "JPEG":
       return Roxen.http_string_answer(
-	Image.JPEG.encode( i->img, ([ "quality":quality ]) ),
-	"image/jpeg" );
+        Image.JPEG.encode( i->img, ([ "quality":quality ]) ),
+        "image/jpeg" );
       break;
 #endif
     case "GIF":
@@ -197,15 +197,15 @@ mixed find_internal( string f, RequestID id )
 string imglink( string img, string fmt, int quality,RequestID id )
 {
   return (query_absolute_internal_location(id)+
-	  Gmp.mpz(img,256)->digits(16)+"!"+fmt+"!"+quality);
+          Gmp.mpz(img,256)->digits(16)+"!"+fmt+"!"+quality);
 }
 
 constant simpletag_page_size_flags = RXML.FLAG_EMPTY_ELEMENT;
 
 string simpletag_page_size( string name,
-			    mapping args,
-			    string contents,
-			    RequestID id )
+                            mapping args,
+                            string contents,
+                            RequestID id )
 {
   if( id->misc->sizer_in_progress )
     return ""; // avoid infinite recursion. :-)
@@ -224,7 +224,7 @@ string simpletag_page_size( string name,
   string res = "";
   int total, total_headers;
   multiset what = (multiset)((args->include||"summary,details,dltime,"
-			      "suggestions")/",");
+                              "suggestions")/",");
 
   string fname( string f )
   {
@@ -235,29 +235,29 @@ string simpletag_page_size( string name,
 
       if( sscanf( f, internal + "cimg%*[^/]/%s", f ) == 2 )
       {
-	if( mapping ar = roxen.argcache->lookup( f ) )
-	{
-	  string sz = "";
-	  if( ar["max-width"] )  sz = " (xs:"+((string)ar["max-width"]);
-	  if( ar["max-height"] ) sz +=" (ys:"+((string)ar["max-height"]);
-	  if(strlen(sz))
-	    sz+=")";
+        if( mapping ar = roxen.argcache->lookup( f ) )
+        {
+          string sz = "";
+          if( ar["max-width"] )  sz = " (xs:"+((string)ar["max-width"]);
+          if( ar["max-height"] ) sz +=" (ys:"+((string)ar["max-height"]);
+          if(strlen(sz))
+            sz+=")";
 
-	  if( ar->src )
-	    return "Cimg of "+fname( ar->src )+sz;
-	  return "Cimg from data"+sz;
-	}
+          if( ar->src )
+            return "Cimg of "+fname( ar->src )+sz;
+          return "Cimg from data"+sz;
+        }
       }
       else if(sscanf( f, internal + "graphic_text%*[^$]$%s", f ) == 2 )
       {
-	mapping ar = roxen.argcache->lookup( f );
-	if( ar[""] ) return "Gtext (\""+ar[""]+"\")";
-	return "Gtext";
+        mapping ar = roxen.argcache->lookup( f );
+        if( ar[""] ) return "Gtext (\""+ar[""]+"\")";
+        return "Gtext";
       }
     }
     if( d != "" )
       if( f[..strlen(d)-1] == d )
-	f = f[strlen(d)+1..];
+        f = f[strlen(d)+1..];
     return f;
   };
   int mpct;
@@ -268,12 +268,12 @@ string simpletag_page_size( string name,
     if( pct > mpct )
       mpct = pct;
     return sprintf( "  <tr><td><font color='black' size='-1'>%s</font></td>"
-		    "<td align='right'><font color='black' size='-1'>%.1f</font>"
-		    "</td><td align='right'><font color='black' size='-1'>%d"
-		    "</font></td>"
-	    "<td align='right'><font color='black' size='-1'>%d%%</font></td>"
-		    "</tr>\n",
-		    f, `+(@sz)/1024.0, sz[1],pct );
+                    "<td align='right'><font color='black' size='-1'>%.1f</font>"
+                    "</td><td align='right'><font color='black' size='-1'>%d"
+                    "</font></td>"
+            "<td align='right'><font color='black' size='-1'>%d%%</font></td>"
+                    "</tr>\n",
+                    f, `+(@sz)/1024.0, sz[1],pct );
   };
 
   foreach( indices( sizes ), string f )
@@ -304,7 +304,7 @@ string simpletag_page_size( string name,
   if( what->summary )
   {
     res += sprintf( "\n<tr><td><font color='black' size='-1'><b>Total size:</b></font></td><td align='right'><font color='black' size='-1'>%.1f</font></td><td align='right'><font color='black' size='-1'>%d</font></td><td>&nbsp;</td></tr>",
-		    total/1024.0, total_headers );
+                    total/1024.0, total_headers );
     res += "<tr><td colspan='4'><hr noshade size='1'></td></tr>";
   }
 
@@ -313,26 +313,26 @@ string simpletag_page_size( string name,
   {
     int i = -1;
     res += "<b><font size='-1'>Estimated download time:</font></b> "
-	   "(bandwidth in kb/s)\n<table><tr>";
+           "(bandwidth in kb/s)\n<table><tr>";
     foreach( (args->speeds?(array(float))(args->speeds/",")
-	      :({ 28.8, 56.0, 64.0, 256.0, 384.0,1024.0 })), float kbit )
+              :({ 28.8, 56.0, 64.0, 256.0, 384.0,1024.0 })), float kbit )
     {
       int time = (int)((total*8)/(kbit*1000)+0.7);
       if(!time) time = 1;
       string color;
       switch( time )
       {
-	case 1..5:      color = "darkgreen"; break;
-	case 6..10:     color = "black"; break;
-	case 11..20:    color = "darkred"; break;
-	case 21..30:    color = "darkorange";    break;
-	case 31..:      color = "red";        break; 
+        case 1..5:      color = "darkgreen"; break;
+        case 6..10:     color = "black"; break;
+        case 11..20:    color = "darkred"; break;
+        case 21..30:    color = "darkorange";    break;
+        case 31..:      color = "red";        break; 
       }
       res+=sprintf("<td align='right'><font color='%s' size='-1'><b>%2.1f</b>:"
-		   "</td><td align='right'><font color='%s' size='-1'>%ds</font></td>\n",
-		   color, kbit,color,time  );
+                   "</td><td align='right'><font color='%s' size='-1'>%ds</font></td>\n",
+                   color, kbit,color,time  );
       if( (++i % 3) == 2)
-	res += "</tr>\n<tr>";
+        res += "</tr>\n<tr>";
     }
     if( (i % 3) )
       res += "</tr>\n";
@@ -347,148 +347,148 @@ string simpletag_page_size( string name,
     if( ((total*8) / 56000)  > 20 )
     {
       res += WARN("This page takes more than 20 seconds to download over a "
-		  "56Kbit/sec modem.");
+                  "56Kbit/sec modem.");
       foreach( files, string f )
       {
-	if( 100*`+(@sizes[f])/total > mpct/3 )
-	switch( types[ f ] )
-	{
-	  case "image/jpeg":
+        if( 100*`+(@sizes[f])/total > mpct/3 )
+        switch( types[ f ] )
+        {
+          case "image/jpeg":
 #if constant(Image.JPEG.encode) && constant(Image.JPEG.decode)
-	    if( sizes[f][0] < 300*1024 )
-	    {
-	      Image.Image i=Image.JPEG.decode( do_read_file( f, id )->data() );
-	      if( (i->xsize() > 1024) || (i->ysize() > 1024) )
-	      {
-		res += NOTE(sprintf("The image %s (%dx%d) is larger than most "
-				    "people can easily view on screen.",
-				    fname(f),i->xsize(), i->ysize()));
-	      }
-	      else
-	      {
-		mapping  sz = ([
-		  75:strlen(Image.JPEG.encode( i, ([ "quality":75 ]) )),
-		  50:strlen(Image.JPEG.encode( i, ([ "quality":50 ]) )),
-		  25:strlen(Image.JPEG.encode( i, ([ "quality":25 ]) )),
-		]);
-		int ds;
-		string mm = "";
-		if( sz[ 75 ] < sizes[f][0] )
-		{
-		  mm = ("The image "+fname(f)+
-			" is compressed with a very high "
-			"JPEG-quality. Try lowering it.");
-		  ds = 0;
-		}
-		else if( sz[ 50 ] < sizes[f][0] )
-		{
-		  mm = ("The image "+fname(f)+" might be compressed better.");
-		  ds = 1;
-		}
-		else
-		  ds = 2;
-		if( ds < 2 )
-		{
-		  if( ds )
-		  {
-		    res+=WARN(sprintf(replace(mm,"%","%%")+
-				      " Some suggestions: "
-				      "<a target='_foo' href='%s'>50%%: -%.1fKb</a>, "
-				      "<a target='_foo' href='%s'>25%%: -%.1fKb</a>",
-				      imglink(f, "JPEG", 50,id),
-				      (sizes[f][0]-sz[50])/1024.0,
-				      imglink(f, "JPEG", 25,id),
-				      (sizes[f][0]-sz[25])/1024.0 ) );
-		  } else {
-		    res+=WARN(sprintf(replace(mm,"%","%%")+
-				      " Some suggestions: <a target='_foo' href='%s'>75%%: "
-				      "-%.1fKb</a>, <a target='_foo' href='%s'>"
-				      "50%%: -%.1fKb</a>, "
-				      "<a target='_foo' href='%s'>25%%: -%.1fKb</a>",
-				      imglink(f, "JPEG", 75,id),
-				      (sizes[f][0]-sz[75])/1024.0,
-				      imglink(f, "JPEG", 50,id),
-				      (sizes[f][0]-sz[50])/1024.0,
-				      imglink(f, "JPEG", 25,id),
-				      (sizes[f][0]-sz[25])/1024.0 ) );
-		  }
-		}
-	      }
-	    } else {
-	      res += WARN("The image "+fname(f)+
-			  " is huge. Try making it smaller");
-	    }
+            if( sizes[f][0] < 300*1024 )
+            {
+              Image.Image i=Image.JPEG.decode( do_read_file( f, id )->data() );
+              if( (i->xsize() > 1024) || (i->ysize() > 1024) )
+              {
+                res += NOTE(sprintf("The image %s (%dx%d) is larger than most "
+                                    "people can easily view on screen.",
+                                    fname(f),i->xsize(), i->ysize()));
+              }
+              else
+              {
+                mapping  sz = ([
+                  75:strlen(Image.JPEG.encode( i, ([ "quality":75 ]) )),
+                  50:strlen(Image.JPEG.encode( i, ([ "quality":50 ]) )),
+                  25:strlen(Image.JPEG.encode( i, ([ "quality":25 ]) )),
+                ]);
+                int ds;
+                string mm = "";
+                if( sz[ 75 ] < sizes[f][0] )
+                {
+                  mm = ("The image "+fname(f)+
+                        " is compressed with a very high "
+                        "JPEG-quality. Try lowering it.");
+                  ds = 0;
+                }
+                else if( sz[ 50 ] < sizes[f][0] )
+                {
+                  mm = ("The image "+fname(f)+" might be compressed better.");
+                  ds = 1;
+                }
+                else
+                  ds = 2;
+                if( ds < 2 )
+                {
+                  if( ds )
+                  {
+                    res+=WARN(sprintf(replace(mm,"%","%%")+
+                                      " Some suggestions: "
+                                      "<a target='_foo' href='%s'>50%%: -%.1fKb</a>, "
+                                      "<a target='_foo' href='%s'>25%%: -%.1fKb</a>",
+                                      imglink(f, "JPEG", 50,id),
+                                      (sizes[f][0]-sz[50])/1024.0,
+                                      imglink(f, "JPEG", 25,id),
+                                      (sizes[f][0]-sz[25])/1024.0 ) );
+                  } else {
+                    res+=WARN(sprintf(replace(mm,"%","%%")+
+                                      " Some suggestions: <a target='_foo' href='%s'>75%%: "
+                                      "-%.1fKb</a>, <a target='_foo' href='%s'>"
+                                      "50%%: -%.1fKb</a>, "
+                                      "<a target='_foo' href='%s'>25%%: -%.1fKb</a>",
+                                      imglink(f, "JPEG", 75,id),
+                                      (sizes[f][0]-sz[75])/1024.0,
+                                      imglink(f, "JPEG", 50,id),
+                                      (sizes[f][0]-sz[50])/1024.0,
+                                      imglink(f, "JPEG", 25,id),
+                                      (sizes[f][0]-sz[25])/1024.0 ) );
+                  }
+                }
+              }
+            } else {
+              res += WARN("The image "+fname(f)+
+                          " is huge. Try making it smaller");
+            }
 #else /* !constant(Image.JPEG.encode) || !constant(Image.JPEG.decode) */
-	    res += NOTE("Could not decode/encode JPEG image. "
-			"This server lacks JPEG support.");
+            res += NOTE("Could not decode/encode JPEG image. "
+                        "This server lacks JPEG support.");
 #endif /* constant(Image.JPEG.encode) */
-	    break;
-	  case "image/gif":
+            break;
+          case "image/gif":
 #if constant(Image.GIF) && constant(Image.GIF.encode)
-	    mapping _i = Image._decode( do_read_file( f, id )->data() );
-	    Image.Image i = _i->img;
-	    Image.Image a = _i->alpha;
+            mapping _i = Image._decode( do_read_file( f, id )->data() );
+            Image.Image i = _i->img;
+            Image.Image a = _i->alpha;
 
-	    if( (i->xsize() > 1024) || (i->ysize() > 1024) )
-	      res += NOTE(sprintf("The image %s (%dx%d) is larger than most "
-				  "people can easily view on screen.",
-				  fname(f), i->xsize(), i->ysize()));
-	    else
-	    {
-	      mapping  sz;
-	      if( a )
-		sz = ([
-		  8:strlen(Image.GIF.encode_trans(Image.Colortable( i, 7 )
-						  ->map(i),a)),
-		  32:strlen(Image.GIF.encode_trans(Image.Colortable( i, 31 )
-						   ->map(i),a)),
-		  128:strlen(Image.GIF.encode_trans(Image.Colortable( i, 127 )
-						    ->map(i),a)),
-		]);
-	      else
-		sz = ([
-		  8:strlen(Image.GIF.encode(Image.Colortable( i, 8 )->map(i))),
-		  32:strlen(Image.GIF.encode(Image.Colortable(i,32)->map(i))),
-		  128:strlen(Image.GIF.encode(Image.Colortable(i,128)->map(i))),
-		]);
-	      int ds;
-	      string mm = "";
-	      if( sz[ 128 ] < sizes[f][0] )
-	      {
-		mm = ("The image "+fname(f)+" is compressed with a very high "
-		      "number of colors.");
-		ds = 0;
-	      }
-	      else if( sz[ 32 ] < sizes[f][0] )
-	      {
-		mm = ("The image "+fname(f)+" might be compressed better "
-		      "with fewer colors.");
-		ds = 1;
-	      }
-	      else
-		ds = 2;
-	      if( ds < 2 )
-	      {
-		if( ds )
-		  res+=WARN(sprintf(replace(mm,"%","%%")+" Some suggestions: "
-				    "32: -%.1fKb, 8: -%.1fKb",
-				    (sizes[f][0]-sz[32])/1024.0,
-				    (sizes[f][0]-sz[8])/1024.0 ) );
-		else
-		  res+=WARN(sprintf(replace(mm,"%","%%")+
-				    " Some suggestions: 128: "
-				    "-%.1fKb, 32: -%.1fKb, 8: -%.1fKb",
-				    (sizes[f][0]-sz[128])/1024.0,
-				    (sizes[f][0]-sz[32])/1024.0,
-				    (sizes[f][0]-sz[8])/1024.0 ) );
-	      }
-	    }
+            if( (i->xsize() > 1024) || (i->ysize() > 1024) )
+              res += NOTE(sprintf("The image %s (%dx%d) is larger than most "
+                                  "people can easily view on screen.",
+                                  fname(f), i->xsize(), i->ysize()));
+            else
+            {
+              mapping  sz;
+              if( a )
+                sz = ([
+                  8:strlen(Image.GIF.encode_trans(Image.Colortable( i, 7 )
+                                                  ->map(i),a)),
+                  32:strlen(Image.GIF.encode_trans(Image.Colortable( i, 31 )
+                                                   ->map(i),a)),
+                  128:strlen(Image.GIF.encode_trans(Image.Colortable( i, 127 )
+                                                    ->map(i),a)),
+                ]);
+              else
+                sz = ([
+                  8:strlen(Image.GIF.encode(Image.Colortable( i, 8 )->map(i))),
+                  32:strlen(Image.GIF.encode(Image.Colortable(i,32)->map(i))),
+                  128:strlen(Image.GIF.encode(Image.Colortable(i,128)->map(i))),
+                ]);
+              int ds;
+              string mm = "";
+              if( sz[ 128 ] < sizes[f][0] )
+              {
+                mm = ("The image "+fname(f)+" is compressed with a very high "
+                      "number of colors.");
+                ds = 0;
+              }
+              else if( sz[ 32 ] < sizes[f][0] )
+              {
+                mm = ("The image "+fname(f)+" might be compressed better "
+                      "with fewer colors.");
+                ds = 1;
+              }
+              else
+                ds = 2;
+              if( ds < 2 )
+              {
+                if( ds )
+                  res+=WARN(sprintf(replace(mm,"%","%%")+" Some suggestions: "
+                                    "32: -%.1fKb, 8: -%.1fKb",
+                                    (sizes[f][0]-sz[32])/1024.0,
+                                    (sizes[f][0]-sz[8])/1024.0 ) );
+                else
+                  res+=WARN(sprintf(replace(mm,"%","%%")+
+                                    " Some suggestions: 128: "
+                                    "-%.1fKb, 32: -%.1fKb, 8: -%.1fKb",
+                                    (sizes[f][0]-sz[128])/1024.0,
+                                    (sizes[f][0]-sz[32])/1024.0,
+                                    (sizes[f][0]-sz[8])/1024.0 ) );
+              }
+            }
 #else // constant(Image.GIF) && constant(Image.GIF.encode)
-	    res += NOTE("Could not decode/encode GIF image. "
-			"This server lacks LZW support.");
+            res += NOTE("Could not decode/encode GIF image. "
+                        "This server lacks LZW support.");
 #endif // constant(Image.GIF) && constant(Image.GIF.encode)
-	    break;
-	}
+            break;
+        }
       }
     }
     res += "</table>";

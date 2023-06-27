@@ -38,7 +38,7 @@ void main(int argc, array (string) argv)
   if(!login || !domain || !d_root || !passwd)
   {
     werror("Syntax: addfp98.pike -d <domain> -l <login> -p <passwd> "
-	   "-r <document-root> [--port=<port>]\n");
+           "-r <document-root> [--port=<port>]\n");
     exit(1);
   }
   write("Setting up Frontpage...\n");
@@ -64,21 +64,21 @@ void main(int argc, array (string) argv)
     "</VirtualHost>\n";
   
   data = replace(data,
-		 ({ "$LOGIN$", "$PORT$", "$DOMAIN$",
-		    "$D_ROOT$", "$FP_DIR$" }),
-		 ({ login, port, domain, d_root, fp_dir }));
+                 ({ "$LOGIN$", "$PORT$", "$DOMAIN$",
+                    "$D_ROOT$", "$FP_DIR$" }),
+                 ({ login, port, domain, d_root, fp_dir }));
   
   Stdio.File(fp_dir + "/srm.conf", "rwct")->write(data);
   if(!file_stat(conf_dir + "/srm.conf"))
     symlink("../srm.conf", conf_dir + "/srm.conf");
   cd(FP_BASE);
   data = replace("currentversion/bin/fpsrvadm.exe -o install -p $PORT$ -s "
-		 "$FP_DIR$/srm.conf -u $LOGIN$ -pw $PASSWD$ -type apache "
-		 //"-xUser $LOGIN$ -xGroup users "
-		 "-multihost $DOMAIN$",
-		 ({ "$LOGIN$", "$PASSWD$", "$PORT$", "$DOMAIN$",
-		    "$D_ROOT$", "$FP_DIR$" }),
-		 ({ login, passwd, port, domain, d_root, fp_dir }));
+                 "$FP_DIR$/srm.conf -u $LOGIN$ -pw $PASSWD$ -type apache "
+                 //"-xUser $LOGIN$ -xGroup users "
+                 "-multihost $DOMAIN$",
+                 ({ "$LOGIN$", "$PASSWD$", "$PORT$", "$DOMAIN$",
+                    "$D_ROOT$", "$FP_DIR$" }),
+                 ({ login, passwd, port, domain, d_root, fp_dir }));
   //write(data + "\n");
   write(popen(data));
 }

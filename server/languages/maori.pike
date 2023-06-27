@@ -29,31 +29,31 @@ string number( int i ) ;
 
 string ordered(int i)
      {
-	return "tua" + number(i) ;
+        return "tua" + number(i) ;
      }
 
 string date(int timestamp, mapping|void m)
      {
-	mapping t1=localtime(timestamp) ;
-	mapping t2=localtime(time(0));
+        mapping t1=localtime(timestamp) ;
+        mapping t2=localtime(time(0));
 
-	if (!m) m=([]);
+        if (!m) m=([]);
 
-	if (!(m["full"] || m["date"] || m["time"]))
-	  {
-	     if(t1["year"] != t2["year"])
-	       return (month(t1["mon"]+1) + " " + (t1["year"]+1900));
-	     return (month(t1["mon"]+1) + " " + ordered(t1["mday"]));
-	  }
-	if(m["full"])
-	  return ctime(timestamp)[11..15]+", "+
-	month(t1["mon"]+1) + " te "
-	+ ordered(t1["mday"]) + ", " +(t1["year"]+1900);
-	if(m["date"])
-	  return month(t1["mon"]+1) + " te "  + ordered(t1["mday"])
-	+ " o te tau " +(t1["year"]+1900);
-	if(m["time"])
-	  return ctime(timestamp)[11..15];
+        if (!(m["full"] || m["date"] || m["time"]))
+          {
+             if(t1["year"] != t2["year"])
+               return (month(t1["mon"]+1) + " " + (t1["year"]+1900));
+             return (month(t1["mon"]+1) + " " + ordered(t1["mday"]));
+          }
+        if(m["full"])
+          return ctime(timestamp)[11..15]+", "+
+        month(t1["mon"]+1) + " te "
+        + ordered(t1["mday"]) + ", " +(t1["year"]+1900);
+        if(m["date"])
+          return month(t1["mon"]+1) + " te "  + ordered(t1["mday"])
+        + " o te tau " +(t1["year"]+1900);
+        if(m["time"])
+          return ctime(timestamp)[11..15];
      }
 
 

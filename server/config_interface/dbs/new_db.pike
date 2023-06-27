@@ -9,10 +9,10 @@ void really_do_create( RequestID id  )
   DBManager.create_db( id->variables->name,
                        id->variables->url,
                        id->variables->type == "internal",
-		       id->variables->group );
+                       id->variables->group );
   if( strlen( id->variables->comment ) )
     DBManager.is_module_db( 0, id->variables->name,
-			    id->variables->comment-"\r" );
+                            id->variables->comment-"\r" );
   foreach( roxen->configurations, Configuration c )
     DBManager.set_permission( id->variables->name, c, DBManager.READ );
   DBManager.set_permission( id->variables->name, id->conf, DBManager.WRITE );
@@ -28,9 +28,9 @@ string parse(RequestID id )
     string form = "";
     foreach( DBManager.list_groups(), string c )
       if( c != "internal" )
-	res += ({ ({DBManager.get_group(c)->lname, c}) });
+        res += ({ ({DBManager.get_group(c)->lname, c}) });
       else
-	res = ({ ({DBManager.get_group(c)->lname, c}) })+res;
+        res = ({ ({DBManager.get_group(c)->lname, c}) })+res;
     foreach( res[0..0]+sort(res[1..]), array q )
       form += "   <option value='"+q[1]+"'>"+q[0]+"\n";
     return form;
@@ -105,47 +105,47 @@ database is created in.")+#"
     {
       if( !strlen(id->variables->url) )
         error= "<font color='&usr.warncolor;'>"
-	  +_(406,"Please specify an URL to define an external database")+
+          +_(406,"Please specify an URL to define an external database")+
                "</font>";
       else if( mixed err = catch( Sql.Sql( id->variables->url ) ) )
         error = sprintf("<font color='&usr.warncolor;'>"+
                         _(407,"It is not possible to connect to %s.")+
-			"<br /> (%s)"
+                        "<br /> (%s)"
                         "</font>",
                         id->variables->url,
-			describe_error(err));
+                        describe_error(err));
     }
     if( !strlen( error ) )
       switch( id->variables->name )
       {
        case "":
          error =  "<font color='&usr.warncolor;'>"+
-	   _(408,"Please specify a name for the database")+
-	   "</font>";
+           _(408,"Please specify a name for the database")+
+           "</font>";
          break;
        case "mysql": case "roxen":
        case "local":
          error = sprintf("<font color='&usr.warncolor;'>"+
                          _(409,"%s is an internal database, used by Roxen. "
-			   "Please select another name.")+
+                           "Please select another name.")+
                          "</font>", id->variables->name );
          break;
        default:
-	 if( Roxen.is_mysql_keyword( id->variables->name ) )
-	   error = sprintf("<font color='&usr.warncolor;'>"+
-			   _(410,"%s is a MySQL keyword, used by MySQL. "
-			     "Please select another name.")+
-			   "</font>", id->variables->name );
-	 else
-	 {
-	   if( mixed err = catch {
-	     really_do_create( id );
-	     RXML.user_set_var( "var.go-on", "<redirect to='/dbs/'/>" );
-	     return "";
-	   } )
-	     error = ("<font color='&usr.warncolor;'>"+
-		      describe_error(err)+"</font>");
-	 }
+         if( Roxen.is_mysql_keyword( id->variables->name ) )
+           error = sprintf("<font color='&usr.warncolor;'>"+
+                           _(410,"%s is a MySQL keyword, used by MySQL. "
+                             "Please select another name.")+
+                           "</font>", id->variables->name );
+         else
+         {
+           if( mixed err = catch {
+             really_do_create( id );
+             RXML.user_set_var( "var.go-on", "<redirect to='/dbs/'/>" );
+             return "";
+           } )
+             error = ("<font color='&usr.warncolor;'>"+
+                      describe_error(err)+"</font>");
+         }
       }
   }
   return replace( form, "ERROR", error );

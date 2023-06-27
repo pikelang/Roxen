@@ -190,7 +190,7 @@ class servlet {
     if(stringp(name)) {
       classname = name;
       if(!objectp(dir))
-	dir = loader(dir||".");
+        dir = loader(dir||".");
       name = dir->low_load(name);
     }
 
@@ -256,7 +256,7 @@ class config {
   object cfg;
 
   void create(object context, mapping(string:string)|void params,
-	      string|void name)
+              string|void name)
   {
     cfg = config_class->alloc();
     check_exception();
@@ -265,7 +265,7 @@ class config {
     if(params) {
       object dic = dic_field->get(cfg);
       foreach(indices(params), string key)
-	dic_put(dic, key, params[key]);
+        dic_put(dic, key, params[key]);
     }
   }
 
@@ -317,7 +317,7 @@ class context {
     contexts[id] = this_object();
     if(conf && !parent_module) {
       if(context_for_conf[conf])
-	destruct(context_for_conf[conf]);
+        destruct(context_for_conf[conf]);
       context_for_conf[conf] = this_object();
     }
     if(c)
@@ -426,8 +426,8 @@ object conf_context(object conf)
 }
 
 object request(object context, mapping(string:array(string))|object id,
-	       mapping(string:string|object)|void attrs,
-	       mapping(string:array(string)|string)|void headers, mixed ... rest)
+               mapping(string:string|object)|void attrs,
+               mapping(string:array(string)|string)|void headers, mixed ... rest)
 {
   if(objectp(id)) {
     string tmp = id->url_base();
@@ -439,14 +439,14 @@ object request(object context, mapping(string:array(string))|object id,
     string uri, query, pathtrans;
     if(id->raw) {
       if(sscanf(id->raw, "%[^?\r\n]?%s%*[ \t\n]", uri, query)>1)
-	sscanf(query, "%[^\r\n]", query);
+        sscanf(query, "%[^\r\n]", query);
       else {
-	query="";
-	sscanf(uri, "%[^\r\n]", uri);
+        query="";
+        sscanf(uri, "%[^\r\n]", uri);
       }
       uri = (uri/" "+({"",""}))[1];
       if(!strlen(query))
-	query = 0;
+        query = 0;
     } else {
       uri = id->not_query;
       query = id->query;
@@ -457,20 +457,20 @@ object request(object context, mapping(string:array(string))|object id,
     }
 
     return request(context||conf_context(id->conf), id->real_variables, attrs,
-		   (id->raw && MIME.parse_headers(id->raw)[0])||id->request_headers,
-		   (zero_type(id->misc->len)? -1:id->misc->len),
-		   id->misc["content-type"], id->prot,
+                   (id->raw && MIME.parse_headers(id->raw)[0])||id->request_headers,
+                   (zero_type(id->misc->len)? -1:id->misc->len),
+                   id->misc["content-type"], id->prot,
                    (id && id->port_obj && lower_case(id->port_obj->prot_name))||
-		   lower_case((id->prot/"/")[0]), tmp,		   
-		   (id->my_fd&&id->my_fd->query_address&&
+                   lower_case((id->prot/"/")[0]), tmp,		   
+                   (id->my_fd&&id->my_fd->query_address&&
                     (int)((id->my_fd->query_address(1)||"0 0")/" ")[1]),
-		   addr, (host != addr)&&host, id->data,
-		   id->misc->mountpoint, id->misc->servlet_path,
+                   addr, (host != addr)&&host, id->data,
+                   id->misc->mountpoint, id->misc->servlet_path,
                    id->misc->path_info, id->method,
                    id->misc->authenticated_user &&
                    id->misc->authenticated_user->name &&
                    id->misc->authenticated_user->name(),
-		   uri, query, pathtrans);
+                   uri, query, pathtrans);
   }
   object r = request_class->alloc();
   check_exception();
@@ -493,13 +493,13 @@ object request(object context, mapping(string:array(string))|object id,
   if(headers)
     foreach(indices(headers), string h)
       if(stringp(headers[h]))
-	dic_put(hh, h, headers[h]);
+        dic_put(hh, h, headers[h]);
       else {
-	object v = vector_class->alloc();
-	vector_init(v);
-	foreach(headers[h], string hx)
-	  vector_add(v, hx);
-	dic_put(hh, h, v);
+        object v = vector_class->alloc();
+        vector_init(v);
+        foreach(headers[h], string hx)
+          vector_add(v, hx);
+        dic_put(hh, h, v);
       }
   else
     headers_field->put(r, 0);
@@ -553,10 +553,10 @@ protected string native_getServerInfo(object ctx)
 }
 
 protected object native_getRequestDispatcher(object ctx, object path1,
-					     object path2)
+                                             object path2)
 {
   return ctx_object(ctx)->get_request_dispatcher(combine_path((string)path1,
-							      (string)path2));
+                                                              (string)path2));
 }
 
 protected string native_getResourceURL(object ctx, object path)

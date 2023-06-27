@@ -13,10 +13,10 @@ inherit "roxenlib";
 void create()
 {
   defvar("modification", 0, "Time modification", TYPE_INT, 
-	 "Time difference in seconds from system clock.");
+         "Time difference in seconds from system clock.");
 
   defvar("mountpoint", "/clock/", "Mount point", TYPE_LOCATION, 
-	 "Clock location in filesystem.");
+         "Clock location in filesystem.");
 }
 
 array(mixed) register_module()
@@ -36,19 +36,19 @@ mapping find_file( string f )
 {
   if((int)f)
     return http_string_answer("<title>And the time is...</title>"+
-			      "<h1>Local time: "+ctime((int)f)+
-			      "</h1><h1>GMT: "+http_date((int)f)+"</h1>");
+                              "<h1>Local time: "+ctime((int)f)+
+                              "</h1><h1>GMT: "+http_date((int)f)+"</h1>");
 
   return http_string_answer("<html><head><title>" + ctime(my_time())
-			    +"</title></head><body><h1>"
-			    +ctime(time(1))+"</h1></body></html>\n")
+                            +"</title></head><body><h1>"
+                            +ctime(time(1))+"</h1></body></html>\n")
     + ([ "extra_heads":
-	([
-	  "Expires": http_date(time(1)+5),
-	  "Refresh":5-time(1)%5,
-	  "Last-Modified":http_date(time(1)-1)
-	  ])
-	]);
+        ([
+          "Expires": http_date(time(1)+5),
+          "Refresh":5-time(1)%5,
+          "Last-Modified":http_date(time(1)-1)
+          ])
+        ]);
 }
 
 string query_name()

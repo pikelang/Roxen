@@ -101,7 +101,7 @@ does not apply to it. The use of the container tag is deprecated.</p>";
 void create()
 {
   defvar("program_cache_limit", 256, "Program cache limit", TYPE_INT|VAR_MORE,
-	 "Maximum size of the cache for compiled programs.");
+         "Maximum size of the cache for compiled programs.");
 }
 
 // Helper functions, to be used in the pike script.
@@ -262,7 +262,7 @@ string read_roxen_file( string what, object id )
 }
 
 program my_compile_string(string s, object id, int dom, string fn,
-			  ErrorContainer e)
+                          ErrorContainer e)
 {
   if( program_cache[ s ] )
     return program_cache[ s ];
@@ -333,7 +333,7 @@ program handle_inherit( string what, RequestID id, ErrorContainer e )
 }
 
 array parse_magic( string data, RequestID id, int add_md, string filename,
-		   ErrorContainer e )
+                   ErrorContainer e )
 {
   array flat=SPLIT(data,filename);
   object cip, cipup;
@@ -353,45 +353,45 @@ array parse_magic( string data, RequestID id, int add_md, string filename,
 
      case '/':
        if( strlen(flat[i]->text)>2 &&
-	   (flat[i]->text[1]=='/' || flat[i]->text[1]=='*') )
+           (flat[i]->text[1]=='/' || flat[i]->text[1]=='*') )
        {
-	 if( flat[i]->text[2] == 'X' )
-	 {
-	   if (flat[i]->text[1] == '*')
-	     flat[i]->text = flat[i]->text[..sizeof (flat[i]->text) - 3];
-	   OCIPUP();
-	   CIP( cip );
-	 }
-	 else if( flat[i]->text[2] == 'O' )
-	 {
-	   if (flat[i]->text[1] == '*')
-	     flat[i]->text = flat[i]->text[..sizeof (flat[i]->text) - 3];
-	   OCIP();
-	   CIP( cipup );
-	 }
-	 else 
-	 {
-	   OCIPUP();
-	   OCIP();
-	 }
+         if( flat[i]->text[2] == 'X' )
+         {
+           if (flat[i]->text[1] == '*')
+             flat[i]->text = flat[i]->text[..sizeof (flat[i]->text) - 3];
+           OCIPUP();
+           CIP( cip );
+         }
+         else if( flat[i]->text[2] == 'O' )
+         {
+           if (flat[i]->text[1] == '*')
+             flat[i]->text = flat[i]->text[..sizeof (flat[i]->text) - 3];
+           OCIP();
+           CIP( cipup );
+         }
+         else 
+         {
+           OCIPUP();
+           OCIP();
+         }
        }
        else 
        {
-	 OCIPUP();
-	 OCIP();
+         OCIPUP();
+         OCIP();
        }
        break;
 
      case '#':  
        OCIP(); OCIPUP();
        if( sscanf( flat[i]->text, "#%*[ \t]inherit%[ \t]%s",
-		   string ws, string fn) == 3 && sizeof (ws))
+                   string ws, string fn) == 3 && sizeof (ws))
        {
-	 flat[i]->text="";
+         flat[i]->text="";
          inherits += ({ handle_inherit( PS(fn), id, e ) });
        }
        else if( sscanf( flat[i]->text, "#%*[ \t]include%[ \t]%s",
-			string ws, string fn) == 3 && sizeof (ws))
+                        string ws, string fn) == 3 && sizeof (ws))
        {
          sscanf( fn, "%*s<%s>", fn );
          sscanf( fn, "%*s\"%s\"", fn );
@@ -505,15 +505,15 @@ string container_pike(string tag, mapping m, string s, RequestID request_id,
                          request_id->misc->line+")");
       if (sizeof(program_cache) > query("program_cache_limit")) 
       {
-	array a = indices(program_cache);
-	int i;
+        array a = indices(program_cache);
+        int i;
 
-	// Zap somewhere between 25 & 50% of the cache.
-	for(i = query("program_cache_limit")/2; i > 0; i--)
-	  m_delete(program_cache, a[random(sizeof(a))]);
+        // Zap somewhere between 25 & 50% of the cache.
+        for(i = query("program_cache_limit")/2; i > 0; i--)
+          m_delete(program_cache, a[random(sizeof(a))]);
       }
       if (query ("program_cache_limit") > 0)
-	program_cache[s] = p;
+        program_cache[s] = p;
     }
   })
   {
@@ -521,7 +521,7 @@ string container_pike(string tag, mapping m, string s, RequestID request_id,
     if (e->get() && strlen(e->get()))
     {
       RXML.parse_error ("Error while compiling Pike code:\n%s",
-			Roxen.html_encode_string( e->get()) );
+                        Roxen.html_encode_string( e->get()) );
     }
     else 
       throw (err);

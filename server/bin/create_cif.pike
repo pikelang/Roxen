@@ -30,8 +30,8 @@ array(string) font_name( string what )
   string name = what;
   string info = Parser.HTML()->
     add_container("name", lambda(string t, mapping m, string c) {
-			    name=c; return "";
-			  } )->finish(what)->read();
+                            name=c; return "";
+                          } )->finish(what)->read();
   if(info==name) info=0;
   name = (lower_case( replace(name," ","_") )/"\n")[0]-"\r";
   info = info - "\r" - "\n";
@@ -117,7 +117,7 @@ void use_image_tar( )
 
   name_cif( name );
   foreach( it->get_dir() - ({ "fontname", "/fontname", "fontinfo", "/fontinfo" }),
-	   string fn )
+           string fn )
   {
     int wc;
     string of = fn;

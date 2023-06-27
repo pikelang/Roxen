@@ -224,12 +224,12 @@ protected string http_res_to_string( mapping file, RequestID id )
   {
     if(objectp(file->file))
       if(!file->stat && !(file->stat=([mapping(string:mixed)]id->misc)->stat))
-	file->stat = (array(int))file->file->stat();
+        file->stat = (array(int))file->file->stat();
     array fstat;
     if(arrayp(fstat = file->stat))
     {
       if(file->file && !file->len)
-	file->len = fstat[1];
+        file->len = fstat[1];
 
       heads["Last-Modified"] = http_date([int]fstat[3]);
     }
@@ -244,11 +244,11 @@ protected string http_res_to_string( mapping file, RequestID id )
     heads |= ([mapping(string:mixed)]id->misc)->moreheads;
 
   array myheads=({id->prot+" "+
-		  replace (file->rettext||errors[file->error], "\n", " ")});
+                  replace (file->rettext||errors[file->error], "\n", " ")});
   foreach(indices(heads), string h)
     if(arrayp(heads[h]))
       foreach([array(string)]heads[h], string tmp)
-	myheads += ({ `+(h,": ", tmp)});
+        myheads += ({ `+(h,": ", tmp)});
     else
       myheads +=  ({ `+(h, ": ", heads[h])});
 
@@ -322,8 +322,8 @@ protected int compare( string a, string b )
 }
 
 protected string do_output_tag( mapping(string:string) args,
-				array(mapping(string:string)|object) var_arr,
-				string contents, RequestID id )
+                                array(mapping(string:string)|object) var_arr,
+                                string contents, RequestID id )
 //! Method for use by tags that replace variables in their content,
 //! like formoutput, sqloutput and others.
 //!
@@ -355,37 +355,37 @@ protected string do_output_tag( mapping(string:string) args,
       break;
     default:
       new_contents = "\n<br><b>[</b><pre>" +
-	html_encode_string (contents) + "</pre><b>]</b>\n";
+        html_encode_string (contents) + "</pre><b>]</b>\n";
   }
 
   if (args->sort)
   {
     array(string) order = args->sort / "," - ({ "" });
     var_arr = Array.sort_array( var_arr,
-				lambda (mapping(string:string)|object m1,
-					mapping(string:string)|object m2)
-				{
-				  int tmp;
+                                lambda (mapping(string:string)|object m1,
+                                        mapping(string:string)|object m2)
+                                {
+                                  int tmp;
 
-				  foreach (order, string field)
-				  {
-				    int tmp;
+                                  foreach (order, string field)
+                                  {
+                                    int tmp;
 
-				    if (field[0] == '-')
-				      tmp = compare( m2[field[1..]],
-						     m1[field[1..]] );
-				    else if (field[0] == '+')
-				      tmp = compare( m1[field[1..]],
-						     m2[field[1..]] );
-				    else
-				      tmp = compare( m1[field], m2[field] );
-				    if (tmp == 1)
-				      return 1;
-				    else if (tmp == -1)
-				      return 0;
-				  }
-				  return 0;
-				} );
+                                    if (field[0] == '-')
+                                      tmp = compare( m2[field[1..]],
+                                                     m1[field[1..]] );
+                                    else if (field[0] == '+')
+                                      tmp = compare( m1[field[1..]],
+                                                     m2[field[1..]] );
+                                    else
+                                      tmp = compare( m1[field], m2[field] );
+                                    if (tmp == 1)
+                                      return 1;
+                                    else if (tmp == -1)
+                                      return 0;
+                                  }
+                                  return 0;
+                                } );
   }
 
   if (args->range)
@@ -412,9 +412,9 @@ protected string do_output_tag( mapping(string:string) args,
       return "";
     if (begin < 0)
       if (end < 0)
-	return "";
+        return "";
       else
-	begin = 0;
+        begin = 0;
     var_arr = var_arr[begin..end];
   }
 
@@ -423,17 +423,17 @@ protected string do_output_tag( mapping(string:string) args,
   {
     if (args->set)
       foreach (indices (vars), string var) {
-	array|string val = vars[var];
-	if (!val) val = args->zero || "";
-	else {
-	  if (arrayp( val ))
-	    val = Array.map (val, lambda (mixed v) {return (string) v;}) *
-	      multi_separator;
-	  else
-	    val = replace ((string) val, "\000", multi_separator);
-	  if (!sizeof (val)) val = args->empty || "";
-	}
-	id->variables[var] = [string]val;
+        array|string val = vars[var];
+        if (!val) val = args->zero || "";
+        else {
+          if (arrayp( val ))
+            val = Array.map (val, lambda (mixed v) {return (string) v;}) *
+              multi_separator;
+          else
+            val = replace ((string) val, "\000", multi_separator);
+          if (!sizeof (val)) val = args->empty || "";
+        }
+        id->variables[var] = [string]val;
       }
 
     id->misc->variables = vars;
@@ -442,87 +442,87 @@ protected string do_output_tag( mapping(string:string) args,
     {
       array exploded = contents / quote;
       if (!(sizeof (exploded) & 1))
-	return "<b>Content ends inside a replace field</b>";
+        return "<b>Content ends inside a replace field</b>";
 
       for (int c=1; c < sizeof( exploded ); c+=2)
-	if (exploded[c] == "")
-	  exploded[c] = quote;
-	else
-	{
-	  array(string) options =  [string]exploded[c] / ":";
-	  string var = String.trim_whites(options[0]);
-	  mixed val = vars[var];
-	  array(string) encodings = ({});
-	  string multisep = multi_separator;
-	  string zero = args->zero || "";
-	  string empty = args->empty || "";
+        if (exploded[c] == "")
+          exploded[c] = quote;
+        else
+        {
+          array(string) options =  [string]exploded[c] / ":";
+          string var = String.trim_whites(options[0]);
+          mixed val = vars[var];
+          array(string) encodings = ({});
+          string multisep = multi_separator;
+          string zero = args->zero || "";
+          string empty = args->empty || "";
 
-	  foreach(options[1..], string option) {
-	    array (string) foo = option / "=";
-	    string optval = String.trim_whites(foo[1..] * "=");
+          foreach(options[1..], string option) {
+            array (string) foo = option / "=";
+            string optval = String.trim_whites(foo[1..] * "=");
 
-	    switch (lower_case (String.trim_whites( foo[0] ))) {
-	      case "empty":
-		empty = optval;
-		break;
-	      case "zero":
-		zero = optval;
-		break;
-	      case "multisep":
-	      case "multi_separator":
-		multisep = optval;
-		break;
-	      case "quote":	// For backward compatibility.
-		optval = lower_case (optval);
-		switch (optval) {
-		  case "mysql": case "sql": case "oracle":
-		    encodings += ({optval + "-dtag"});
-		    break;
-		  default:
-		    encodings += ({optval});
-		}
-		break;
-	      case "encode":
-		encodings += Array.map (lower_case (optval) / ",", String.trim_whites);
-		break;
-	      default:
-		return "<b>Unknown option " + String.trim_whites(foo[0]) +
-		  " in replace field " + ((c >> 1) + 1) + "</b>";
-	    }
-	  }
+            switch (lower_case (String.trim_whites( foo[0] ))) {
+              case "empty":
+                empty = optval;
+                break;
+              case "zero":
+                zero = optval;
+                break;
+              case "multisep":
+              case "multi_separator":
+                multisep = optval;
+                break;
+              case "quote":	// For backward compatibility.
+                optval = lower_case (optval);
+                switch (optval) {
+                  case "mysql": case "sql": case "oracle":
+                    encodings += ({optval + "-dtag"});
+                    break;
+                  default:
+                    encodings += ({optval});
+                }
+                break;
+              case "encode":
+                encodings += Array.map (lower_case (optval) / ",", String.trim_whites);
+                break;
+              default:
+                return "<b>Unknown option " + String.trim_whites(foo[0]) +
+                  " in replace field " + ((c >> 1) + 1) + "</b>";
+            }
+          }
 
-	  if (!val)
-	    if (zero_type (vars[var]) && (args->debug || id->misc->debug))
-	      val = "<b>No variable " + options[0] + "</b>";
-	    else
-	      val = zero;
-	  else {
-	    if (arrayp( val ))
-	      val = Array.map (val, lambda (mixed v) {return (string) v;}) *
-		multisep;
-	    else
-	      val = replace ((string) val, "\000", multisep);
-	    if (!sizeof ([string]val)) val = empty;
-	  }
+          if (!val)
+            if (zero_type (vars[var]) && (args->debug || id->misc->debug))
+              val = "<b>No variable " + options[0] + "</b>";
+            else
+              val = zero;
+          else {
+            if (arrayp( val ))
+              val = Array.map (val, lambda (mixed v) {return (string) v;}) *
+                multisep;
+            else
+              val = replace ((string) val, "\000", multisep);
+            if (!sizeof ([string]val)) val = empty;
+          }
 
-	  if (!sizeof (encodings))
-	    encodings = args->encode ?
-	      Array.map (lower_case (args->encode) / ",", String.trim_whites) : ({"html"});
+          if (!sizeof (encodings))
+            encodings = args->encode ?
+              Array.map (lower_case (args->encode) / ",", String.trim_whites) : ({"html"});
 
-	  foreach (encodings, string encoding)
-	    if( !(val = roxen_encode( [string]val, encoding )) )
-	      return ("<b>Unknown encoding " + encoding
-		      + " in replace field " + ((c >> 1) + 1) + "</b>");
+          foreach (encodings, string encoding)
+            if( !(val = roxen_encode( [string]val, encoding )) )
+              return ("<b>Unknown encoding " + encoding
+                      + " in replace field " + ((c >> 1) + 1) + "</b>");
 
-	  exploded[c] = val;
-	}
+          exploded[c] = val;
+        }
 
       if (first)
-	first = 0;
+        first = 0;
       else if (args->delimiter)
-	new_contents += args->delimiter;
+        new_contents += args->delimiter;
       new_contents += args->preprocess ? exploded * "" :
-	Roxen.parse_rxml (exploded * "", id);
+        Roxen.parse_rxml (exploded * "", id);
       if (args["debug-output"]) unparsed_contents += exploded * "";
     }
     else {
@@ -541,7 +541,7 @@ protected string do_output_tag( mapping(string:string) args,
       break;
     default:
       new_contents = "\n<br><b>[</b><pre>" + html_encode_string (unparsed_contents) +
-	"</pre><b>]</b>\n";
+        "</pre><b>]</b>\n";
   }
 
   id->misc->variables = other_vars;
@@ -551,8 +551,8 @@ protected string do_output_tag( mapping(string:string) args,
 //! Works like @[Roxen.parse_rxml()], but also takes the optional
 //! arguments @[file] and @[defines].
 string parse_rxml(string what, RequestID id,
-			 void|Stdio.File file,
-			 void|mapping(string:mixed) defines)
+                         void|Stdio.File file,
+                         void|mapping(string:mixed) defines)
 {
   if(!objectp(id)) error("No id passed to parse_rxml\n");
   return id->conf->parse_rxml( what, id, file, defines );

@@ -10,8 +10,8 @@ constant action = "debug_info";
 
 LocaleString name= LOCALE(162,"Pike profiling information");
 LocaleString doc = LOCALE(167,"Show some information about how much time "
-			  "has been spent in various functions. "
-			  "Mostly useful for developers.");
+                          "has been spent in various functions. "
+                          "Mostly useful for developers.");
 
 int creation_date = time();
 
@@ -90,14 +90,14 @@ array get_prof_info(string|void foo)
   sort(column(b, 2), b, q);	// Primary sort after total time.
   for (int i = 0; i < sizeof(q); i++) {
     res += ({({q[i],
-	       sprintf("%d",b[i][1]),	// Calls
+               sprintf("%d",b[i][1]),	// Calls
                sprintf("%8d",				// Time
                        b[i][0]),
                sprintf("%8d",				// +Children
                        b[i][2]),
-	       sprintf("%7.3f",				// Average
-		       ((float)b[i][0])/b[i][1]),
-	       sprintf("%7.3f",				// +Children
+               sprintf("%7.3f",				// Average
+                       ((float)b[i][0])/b[i][1]),
+               sprintf("%7.3f",				// +Children
                        ((float)b[i][2])/b[i][1])})});
   }
   return reverse(res);
@@ -106,19 +106,19 @@ array get_prof_info(string|void foo)
 mixed page_0(object id)
 {
   string res = ("All times are in milliseconds, and real-time. Times include "
-		"time of child functions. No callgraph is available yet.<br />"
-		"Function glob: <input type=text name=subnode value='"+
+                "time of child functions. No callgraph is available yet.<br />"
+                "Function glob: <input type=text name=subnode value='"+
                 Roxen.html_encode_string(id->variables->subnode||"")
                 +"'><br />");
 
   object t = ADT.Table->table(get_prof_info("*"+
                                             (id->variables->subnode||"")+"*"),
-			      ({ "Function",
+                              ({ "Function",
                                  "Calls",
                                  "Time(ms)",
                                  "+chld(ms)",
                                  "t/call(ms)",
-				 "+chld(ms)"}));
+                                 "+chld(ms)"}));
   return res + "\n\n<pre>"+ADT.Table.ASCII.encode( t )+"</pre>";
 }
 #endif
@@ -140,7 +140,7 @@ mixed parse( RequestID id )
 #else
     "<font color='&usr.warncolor;'>" +
     LOCALE(185,"This information is only available if the "
-	   "pike binary has been compiled with <tt>--with-profiling</tt>.") +
+           "pike binary has been compiled with <tt>--with-profiling</tt>.") +
     "</font>"
     "<p />\n"
     "<cf-ok-button href='?class=&form.class;&amp;&usr.set-wiz-id;'/>";

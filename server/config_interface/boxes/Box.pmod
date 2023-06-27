@@ -32,43 +32,43 @@ class RDF
       contents = "";
       string title,link,description;
       Parser.HTML itemparser = Parser.HTML() ->
-	add_containers( ([ "title": lambda(Parser.HTML p, mapping m, string c)
-				      { title = c; },
-			   "description":lambda(Parser.HTML p, mapping m,
-						string c)
-				      { description = c; },
-			   "link": lambda(Parser.HTML p, mapping m, string c)
-				     { link = c; } ]) );
+        add_containers( ([ "title": lambda(Parser.HTML p, mapping m, string c)
+                                      { title = c; },
+                           "description":lambda(Parser.HTML p, mapping m,
+                                                string c)
+                                      { description = c; },
+                           "link": lambda(Parser.HTML p, mapping m, string c)
+                                     { link = c; } ]) );
       Parser.HTML() -> add_container("item",
-				     lambda(Parser.HTML p, mapping m, string c)
-				     {
-				       title = link = 0;
-				       description="";
-				       itemparser->finish(c);
-				       if(title && link) {
-					 if (list_style)
-					   contents +=
-					     sprintf("<li style='margin-left: -0.9em; margin-right: 0.9em;'>"
-						     "<font size=-1>"
-						     "<a href=\"%s\">%s</a>"
-						     "<br />%s"
-						     "</font></li>\n",
-						     link, title, description);
-					 else
-					   contents +=
-					     sprintf("<font size=-1>"
-						     "<a href=\"%s\">%s</a>"
-						     "<br />%s<br />"
-						     "</font>\n",
-						     link, title, description);
-				       }
-				     } )->
-	finish(data);
+                                     lambda(Parser.HTML p, mapping m, string c)
+                                     {
+                                       title = link = 0;
+                                       description="";
+                                       itemparser->finish(c);
+                                       if(title && link) {
+                                         if (list_style)
+                                           contents +=
+                                             sprintf("<li style='margin-left: -0.9em; margin-right: 0.9em;'>"
+                                                     "<font size=-1>"
+                                                     "<a href=\"%s\">%s</a>"
+                                                     "<br />%s"
+                                                     "</font></li>\n",
+                                                     link, title, description);
+                                         else
+                                           contents +=
+                                             sprintf("<font size=-1>"
+                                                     "<a href=\"%s\">%s</a>"
+                                                     "<br />%s<br />"
+                                                     "</font>\n",
+                                                     link, title, description);
+                                       }
+                                     } )->
+        finish(data);
     }
     return ("<box type='"+this_object()->box+"' title='"+
-	    this_object()->box_name+"'>"+
-	    (list_style?"<ul>":"")+contents+(list_style?"</ul>":"")+
-	    "</box>");
+            this_object()->box_name+"'>"+
+            (list_style?"<ul>":"")+contents+(list_style?"</ul>":"")+
+            "</box>");
   }
 }
 
@@ -107,16 +107,16 @@ class Fetcher
     Protocols.HTTP.Query query = Protocols.HTTP.Query( )->
       set_callbacks( connected, fail );
     query->async_request( h, p, q,
-			  ([ "Host":h+":"+p,
-			     "User-Agent": (roxen.query("default_ident") ?
-					    (roxen_product_name + "/" +
-					     roxen_dist_version) :
-					    roxen.version()),
-			  ]) );
+                          ([ "Host":h+":"+p,
+                             "User-Agent": (roxen.query("default_ident") ?
+                                            (roxen_product_name + "/" +
+                                             roxen_dist_version) :
+                                            roxen.version()),
+                          ]) );
   }
   
   void create( function _cb, string _h, int _p, string _q,
-	       RequestID id )
+               RequestID id )
   {
     cb = _cb;
     h = _h; p = _p; q = _q;
@@ -125,17 +125,17 @@ class Fetcher
     if( px = id->conf->find_module("update#0") )
     {
       mixed err = catch {
-	  if( strlen( px->query( "proxyserver" ) ) )
-	  {
-	    sscanf( q, "GET %s", q );
-	    q = "GET http://"+h+":"+p+q;
-	    h = px->query( "proxyserver" );
-	    p = px->query( "proxyport" );
-	  }
-	};
+          if( strlen( px->query( "proxyserver" ) ) )
+          {
+            sscanf( q, "GET %s", q );
+            q = "GET http://"+h+":"+p+q;
+            h = px->query( "proxyserver" );
+            p = px->query( "proxyport" );
+          }
+        };
       if (err) {
-	report_error("Failed to determine proxy server:\n"
-		     "%s\n", describe_error(err));
+        report_error("Failed to determine proxy server:\n"
+                     "%s\n", describe_error(err));
       }
     }
     start();
@@ -143,7 +143,7 @@ class Fetcher
 }
 
 string get_http_data( string host, int port, string query,
-		      function|void cb )
+                      function|void cb )
 {
 #ifdef OFFLINE
   return "The server is offline.";

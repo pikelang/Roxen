@@ -13,44 +13,44 @@ void main(int argc, array argv)
     switch( (int)argv[4] )
     {
       case 1:
-	break;
+        break;
       case 2:
-	sep = "\n";
-	break;
+        sep = "\n";
+        break;
       case 3:
-	psize = 1;
-	break;
+        psize = 1;
+        break;
       case 4:
-	psize = 10;
-	break;
+        psize = 10;
+        break;
 
       case 5:
-	hlen = 1024;
-	break;
+        hlen = 1024;
+        break;
       case 6:
-	hlen = 10240;
-	break;
+        hlen = 10240;
+        break;
       case 7:
-	hlen = 102400;
-	break;
+        hlen = 102400;
+        break;
 
       case 8:
-	hlen = 1024;
-	sep = "\n";
-	break;
+        hlen = 1024;
+        sep = "\n";
+        break;
       case 9:
-	hlen = 10240;
-	sep = "\n";
-	break;
+        hlen = 10240;
+        sep = "\n";
+        break;
       case 10:
-	sep = "\n";
-	hlen = 102400;
-	break;
+        sep = "\n";
+        hlen = 102400;
+        break;
       case 11:
-	sep = "\n";
-	hlen = 1024000;
-	fail=1;
-	break;
+        sep = "\n";
+        hlen = 1024000;
+        fail=1;
+        break;
     }
   }
 
@@ -60,11 +60,11 @@ void main(int argc, array argv)
     extra_headers += "Extra-Headers: Filler"+sep;
   
   write_fragmented( f,
-		    "GET "+argv[2]+" HTTP/1.0"+sep+
-		    "Connection: close"+sep+
-		    extra_headers+
-		    "User-Agent: Roxen Testscript"+sep+sep,
-		    psize );
+                    "GET "+argv[2]+" HTTP/1.0"+sep+
+                    "Connection: close"+sep+
+                    extra_headers+
+                    "User-Agent: Roxen Testscript"+sep+sep,
+                    psize );
 
   string _d = f->read();
 
@@ -79,8 +79,8 @@ void main(int argc, array argv)
     exit( BADHEADERS );
 
   verify_headers( q[0], strlen(q[1]), "HTTP/1.0",
-		  (fail?500:(argv[2] != "/nofile" ? 200 : 404)),
-		  !fail && (argv[2][strlen(argv[2])-3..]=="raw"));
+                  (fail?500:(argv[2] != "/nofile" ? 200 : 404)),
+                  !fail && (argv[2][strlen(argv[2])-3..]=="raw"));
 
   if( (int)argv[3] )
     if( q[1] != ("\0" * (int)argv[3]) )

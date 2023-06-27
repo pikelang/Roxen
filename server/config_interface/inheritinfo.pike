@@ -50,22 +50,22 @@ string program_name_version( program what )
     catch
     {
       if( file )
-	ofile = master()->make_ofilename( master()->program_name( what ) );
+        ofile = master()->make_ofilename( master()->program_name( what ) );
     };
     mapping ofs;
     if (ofile) {
       array q = connect_to_my_mysql( 1, "local" )
-	->query( "select mtime from precompiled_files where id=%s", ofile );
+        ->query( "select mtime from precompiled_files where id=%s", ofile );
       if( !sizeof( q ) )
-	ofs = 0;
+        ofs = 0;
       else
-	ofs = ([ "mtime":(int)q[0]->mtime ]);
+        ofs = ([ "mtime":(int)q[0]->mtime ]);
     }
 
     if( ofs  )
     {
       if( ofs->mtime < fs->mtime  )
-	warning = "(<i>Precompiled file out of date</i>)";
+        warning = "(<i>Precompiled file out of date</i>)";
     } else
       warning = "(<i>No precompiled file available</i>)";
   }
@@ -96,7 +96,7 @@ string rec_print_tree( array q )
     }
     else
       res += "<ul style='padding-left: 2ex; list-style-type: disc'>" +
-	rec_print_tree( q[i] ) + "</ul>\n";
+        rec_print_tree( q[i] ) + "</ul>\n";
   return res;
 }
 
@@ -110,7 +110,7 @@ string inherit_tree( RoxenModule m )
       "</ul>";
   };
   report_debug("Failed to generated inherit tree:\n"
-	       "%s\n",
-	       describe_backtrace(err));
+               "%s\n",
+               describe_backtrace(err));
   return "";
 }

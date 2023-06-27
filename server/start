@@ -25,23 +25,23 @@ check_owner() {
      if [ ! "x$ugid" = x ] ; then
         dp "Doing uid change to $ugid"
         oifs="$IFS";IFS=':';set $ugid;IFS="$oifs"
-	if [ ! "x$2" = x ]; then
-	  ok=`ls -lgd . 2>/dev/null | grep "$2" |wc -l`
-	  ok=`echo $ok`
-	  if [ "x$ok" = x1 ] ; then
-	    dp "The server directory is already readable by group $2"
-	  else
-	    ok=`ls -ngd . 2>/dev/null | grep "$2" |wc -l`
-	    ok=`echo $ok`
-	    if [ "x$ok" = x1 ] ; then
-	      dp "The server directory is already readable by group $2"
-	    else
-	      chgrp -R "$2" .
-	      chmod -R g+r  .
-	    fi
-	  fi
-	fi
-	change_owner "$1" "$2" "$DIR" "$VARDIR" "$LOGDIR"
+        if [ ! "x$2" = x ]; then
+          ok=`ls -lgd . 2>/dev/null | grep "$2" |wc -l`
+          ok=`echo $ok`
+          if [ "x$ok" = x1 ] ; then
+            dp "The server directory is already readable by group $2"
+          else
+            ok=`ls -ngd . 2>/dev/null | grep "$2" |wc -l`
+            ok=`echo $ok`
+            if [ "x$ok" = x1 ] ; then
+              dp "The server directory is already readable by group $2"
+            else
+              chgrp -R "$2" .
+              chmod -R g+r  .
+            fi
+          fi
+        fi
+        change_owner "$1" "$2" "$DIR" "$VARDIR" "$LOGDIR"
      fi
    fi
 }
@@ -88,9 +88,9 @@ then
 
     if [ -d "$ROXEN_DATADIR"/license ]
     then
-	ROXEN_LICENSEDIR="$ROXEN_DATADIR"/license
+        ROXEN_LICENSEDIR="$ROXEN_DATADIR"/license
     else
-	ROXEN_LICENSEDIR="$DIR"/_license
+        ROXEN_LICENSEDIR="$DIR"/_license
     fi
     export ROXEN_DATADIR ROXEN_LICENSEDIR
 fi
@@ -213,9 +213,9 @@ stop_mysql() {
     if kill -0 `cat "$DIR/_mysql/mysql_pid"` >/dev/null 2>&1; then
       dp "Stopping MySQL/MariaDB..."
       if kill `cat "$DIR/_mysql/mysql_pid"`; then
-	dp "Ok."
+        dp "Ok."
       else
-	dp "Failed to stop MySQL/MariaDB."
+        dp "Failed to stop MySQL/MariaDB."
       fi
     else
       dp "MySQL/MariaDB does not appear to be running."
@@ -499,8 +499,8 @@ the default arguments.
       .B--help -?B.:                  This information.
 
       .B--offlineB.:                  Indicate that there is no network 
-				  connection available. Disables DNS and some
-				  other similar things.
+                                  connection available. Disables DNS and some
+                                  other similar things.
 
       .B--remove-dumpedB.:            Remove all dumped code, thus forcing
                                   a recompile.
@@ -512,13 +512,13 @@ the default arguments.
       .B--log-dir=DIRB.:              Set the log directory. Defaults to .B../logsB..
 
       .B--config-dir=DIRB.:           Use an alternate configuration directory.
-				  Defaults to .B../configurationsB..
+                                  Defaults to .B../configurationsB..
 
       .B--debug-log=FILEB.:           Use an alternate debuglog file.
-				  Defaults to .B../logs/debug/B.configdirname.B.1B..
+                                  Defaults to .B../logs/debug/B.configdirname.B.1B..
 
       .B--pid-file=FILEB.:            Store the Roxen and start script pids in this
-				  file. Defaults to .B../configurations/_roxen_pidB..
+                                  file. Defaults to .B../configurations/_roxen_pidB..
 
       .B--silent-startB.:             Inhibits output to stdout. If used,
                                   this argument must be the first one.
@@ -529,14 +529,14 @@ the default arguments.
                                   This is typically used with launchd.
 
       .B--without-ram-cacheB.:        Do not use a protocol level RAM cache to speed
-				  things up. Saves RAM at the cost of speed.
+                                  things up. Saves RAM at the cost of speed.
 
       .B--without-ram-cache-statB.:   Disable the stat that is usually done
-				  for files in the protocol cache to ensure that
-				  they are not changed before they are sent.
+                                  for files in the protocol cache to ensure that
+                                  they are not changed before they are sent.
                                   Improves performance at the cost of constant
                                   aggravation if the site is edited. Useful for
-				  truly static sites.
+                                  truly static sites.
 
       .B--without-http-compressionB.: Disable gzip compression for HTTP requests.
 
@@ -546,11 +546,11 @@ the default arguments.
                                   disable them.
 
       .B--with-profileB.:             Store runtime profiling information on
-				  a directory basis. This information is
- 				  not saved on permanent storage, it is only
-				  available until the next server restart
-				  This will enable a new 'action' in the
-				  administration interface
+                                  a directory basis. This information is
+                                  not saved on permanent storage, it is only
+                                  available until the next server restart
+                                  This will enable a new 'action' in the
+                                  administration interface
 
       .B--with-file-profileB.:        Like .B--with-profileB., but save information
                                   for each and every file.
@@ -565,8 +565,8 @@ the default arguments.
                                   the default .Betc/testB. directory.
 
       .B--onceB.:                     Run the server only once, in the foreground.
-			   	  This is very useful when debugging. Implies
-				  --module-debug.
+                                  This is very useful when debugging. Implies
+                                  --module-debug.
 
       .B--stopB.:                     Stop the server.
 
@@ -576,9 +576,9 @@ the default arguments.
                                   Roxen process.
 
       .B--keep-mysqlB.:               Do not shut down MySQL process when exiting
-				  the start script. Useful during development
-				  or any other scenario where the start script
-				  is frequently terminated.
+                                  the start script. Useful during development
+                                  or any other scenario where the start script
+                                  is frequently terminated.
 
       .B--mysql-onlyB.:               Start the embedded MySQL process, but
                                   do not start the rest of Roxen. May be
@@ -595,9 +595,9 @@ the default arguments.
                                   Roxen search path.
 
       .B--programB.:                  Start a different program with the Roxen
-				  Pike. As an example,
+                                  Pike. As an example,
                                   .B./start --program bin/install.pikeB. will
-				  start the installation program normally
+                                  start the installation program normally
                                   started with .B./installB.
 
       .B--with-debugB.:               Enable debug
@@ -629,12 +629,12 @@ the default arguments.
       .B--dump-debugB.:               Enable dump debug.
 
       .B--trussB.:                    (Solaris only). Run the server under
-				  truss, shows .BallB. system calls. This is
-				  extremely noisy, and is not intented for
-				  anything but debug.
+                                  truss, shows .BallB. system calls. This is
+                                  extremely noisy, and is not intented for
+                                  anything but debug.
 
       .B--truss-cB.:                  (Solaris only). Run the server under
-				  truss -c, shows times for all system calls
+                                  truss -c, shows times for all system calls
                                   on exit. This is not intented for anything
                                   but debug. Slows the server down.
 
@@ -645,32 +645,32 @@ the default arguments.
        .B-DDEFINEB.:                  Define the symbol .BDEFINEB..
 
        .B-d<level>B.:                 Set the runtime Pike debug to level.
-				  This only works if Pike is compiled
-				  with debug (i.e. with --rtl-debug to
-				  configure).
+                                  This only works if Pike is compiled
+                                  with debug (i.e. with --rtl-debug to
+                                  configure).
 
        .B-rtB.:                       Enable runtime typechecking.
-				  Things will run more slowly, but it is very
+                                  Things will run more slowly, but it is very
                                   useful while developing code.
 
-				  Enabled when starting Roxen with --debug
+                                  Enabled when starting Roxen with --debug
 
        .B-rTB.:                       Enable strict types.
-				  Same as adding #pragma strict-types
-				  to all files.
+                                  Same as adding #pragma strict-types
+                                  to all files.
 
-				  This enables more strict
-				  type-checking, things that are
-				  normally permitted (such as calling
-				  a mixed value, or assigning a typed
-				  object variable with an untyped
-				  object) will generate warnings.
+                                  This enables more strict
+                                  type-checking, things that are
+                                  normally permitted (such as calling
+                                  a mixed value, or assigning a typed
+                                  object variable with an untyped
+                                  object) will generate warnings.
 
-				  Useful for module and Roxen core
-				  developers, but not so useful for
-				  the occasional pike-script-writer.
+                                  Useful for module and Roxen core
+                                  developers, but not so useful for
+                                  the occasional pike-script-writer.
 
-				  Enabled when starting Roxen with --debug
+                                  Enabled when starting Roxen with --debug
 
        .B-s<size>B.:                  Set the stack size.
 
@@ -687,12 +687,12 @@ the default arguments.
        .B-pB.:                        Turn on Pike profiling.
 
        .B-t<level>B.:                 Turn on more Pike tracing. This only
-				  works if Pike is compiled with debug
-				  (i.e. with --rtl-debug to configure).
+                                  works if Pike is compiled with debug
+                                  (i.e. with --rtl-debug to configure).
 
        .B-a<level>B.:                 Turn on Pike assembler debug. This only
-				  works if Pike is compiled with debug
-				  (i.e. with --rtl-debug to configure).
+                                  works if Pike is compiled with debug
+                                  (i.e. with --rtl-debug to configure).
 
        .B-wB.:                        Turn on Pike warnings.
 
@@ -705,7 +705,7 @@ the default arguments.
      .BROXEN_CONFIGDIRB.:             Same as .B--config-dir=... B.
      .BROXEN_PID_FILEB.:              Same as .B--pid-file=... B.
      .BROXEN_LANGB.:                  The default language for all language
-		                  related tags. Defaults to 'en' for english.
+                                  related tags. Defaults to 'en' for english.
 
 EOF
     tput 'rmso' 2>/dev/null
@@ -782,7 +782,7 @@ if [ "x$PIKE_NO_DEFAULT_PATHS" = "x" ]; then
   for d in modules/feedimport; do
     for pm in pike_modules pike-modules; do
       if [ -d "$roxendir/$d/$pm/." ]; then
-	DEFINES="$DEFINES \"-M$roxendir/$d/$pm\""
+        DEFINES="$DEFINES \"-M$roxendir/$d/$pm\""
       fi
     done
   done
@@ -996,9 +996,9 @@ signal_exit() {
   fi
   if [ "x$keep_mysql" = "x" ] ; then
     if [ -f "$DIR/_mysql/mysql_pid" ] ; then
-	mysql_pidfile="$DIR/_mysql/mysql_pid"
+        mysql_pidfile="$DIR/_mysql/mysql_pid"
     elif [ -f "$ROXEN_DATADIR/mysql/mysql_pid" ] ; then
-	mysql_pidfile="$ROXEN_DATADIR/mysql/mysql_pid"
+        mysql_pidfile="$ROXEN_DATADIR/mysql/mysql_pid"
     fi
     if [ "x$mysql_pidfile" != "x" ] ; then
       mysql_pid="`cat $mysql_pidfile 2>/dev/null`"
@@ -1007,25 +1007,25 @@ signal_exit() {
       # Give mysql 5 minutes to shut down.
       timer=""
       while [ -f "$mysql_pidfile" -a \
-	      "$timer" != "mmmmm" ] && \
-	    processp "$mysql_pid" 2>/dev/null; do
-	sleep 2
-	timer=`echo "x$timer" | sed -e 's/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/m/'`
-	if [ "x$SILENT_START" != "xy" ]; then
-	  # Progress indicator.
-	  echo "." | tr -d '
+              "$timer" != "mmmmm" ] && \
+            processp "$mysql_pid" 2>/dev/null; do
+        sleep 2
+        timer=`echo "x$timer" | sed -e 's/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/m/'`
+        if [ "x$SILENT_START" != "xy" ]; then
+          # Progress indicator.
+          echo "." | tr -d '
 ' >&2
-	fi
+        fi
       done
       if [ "x$SILENT_START" != "xy" ]; then
-	echo >&2
+        echo >&2
       fi
       if processp "$mysql_pid" 2>/dev/null; then
         dp "Shutting down MySQL the hard way."
         kill -9 "$mysql_pid" 2>/dev/null
       fi
       if [ -f "$mysql_pidfile" ] && \
-	 [ "$mysql_pid" = "`cat $mysql_pidfile`" ]; then
+         [ "$mysql_pid" = "`cat $mysql_pidfile`" ]; then
         rm -f "$mysql_pidfile" 2>/dev/null
       fi
     fi
@@ -1085,7 +1085,7 @@ start_roxen() {
   if [ "x$gdb" = "xno" -a "x$valgrind" = "x" ]; then
     if [ "x$once" = "x" ]; then
       if [ $verbose -gt 0 ]; then
-	dp "Executing $pike $args"|sed -e "s!`pwd`!.!g"
+        dp "Executing $pike $args"|sed -e "s!`pwd`!.!g"
       fi
       eval "fork_roxen \"$pike\" $args 2>>\"${DEBUGLOG}.1\" 1>&2"
       dp "Roxen WebServer server pid $ROXEN_PID."
@@ -1095,22 +1095,22 @@ start_roxen() {
       ROXEN_PID=""
     else
       if [ $verbose -gt 0 ]; then
-	dp "Executing $truss $pike $args"|sed -e "s!`pwd`!.!g"
+        dp "Executing $truss $pike $args"|sed -e "s!`pwd`!.!g"
       fi
       if [ "x$do_pipe" = "x" ] ; then
         if [ "x$once" = "x1" ]; then
-	  eval "fork_roxen $truss \"$pike\" $args 2>&1"
-	  wait $ROXEN_PID 2>/dev/null 1>&2
-	  exitcode="$?"
-	  ROXEN_PID=""
-	else
-	  eval "$truss \"$pike\" $args" 2>&1
-	  exitcode="$?"
-	fi
+          eval "fork_roxen $truss \"$pike\" $args 2>&1"
+          wait $ROXEN_PID 2>/dev/null 1>&2
+          exitcode="$?"
+          ROXEN_PID=""
+        else
+          eval "$truss \"$pike\" $args" 2>&1
+          exitcode="$?"
+        fi
       else
         trap exit_fail 1
-	eval "(eval \"$truss \\\"$pike\\\" $args\" || kill -1 $$) 2>&1  $do_pipe"
-	cleanup_roxen_pid_file
+        eval "(eval \"$truss \\\"$pike\\\" $args\" || kill -1 $$) 2>&1  $do_pipe"
+        cleanup_roxen_pid_file
         exit $exitcode
       fi
     fi
@@ -1160,8 +1160,8 @@ stop_roxen()
       dp "Shutting down the $5..."
       kill "$1" || exit 1
       while processp "$1" 2>/dev/null; do
-	echo "Waiting for $5 $1 to die." >&2
-	sleep 1
+        echo "Waiting for $5 $1 to die." >&2
+        sleep 1
       done
     else
       kill "-$2" "$1" || exit 1
@@ -1193,43 +1193,43 @@ if [ "$program" = "base_server/roxenloader.pike" ] ; then
   then
     if [ -f "$pidfile" ]; then
       if read roxenpid && read scriptpid; then
-	problems=""
-	# NB: No need to shut down the start-script
+        problems=""
+        # NB: No need to shut down the start-script
         #     if we're going to do a restart.
-	if [ "$start"x = x -a "$stop" = "TERM" ]; then
-	  if stop_roxen "$scriptpid" "TERM" "start" "$canonicalconf" "start script"; then
-	    :
-	  else
-	    problems="nostart"
-	  fi
-	fi
-	# NB: At this point the original start script has
-	#     often already shut down the server, but...
-	if stop_roxen "$roxenpid" "$stop" "server" "$canonicalconf" "Roxen server"; then
-	  :
-	else
-	  problems="$problems:noserver"
-	fi
-	if [ "$problems" = "nostart:noserver" ]; then
-	  dp "There is a pid file $pidfile,"
-	  dp "but the corresponding processes do not exist,"
-	  dp "or are not associated with this configuration."
-	  dp "Stale pid file? Deleting the pid file."
-	  rm "$pidfile"
-	  :
-	fi
-	if [ "$problems:$start" = "nostart:1" ]; then
-	  dp "The listed start script was dead. Starting a new one."
-	  :
-	fi
+        if [ "$start"x = x -a "$stop" = "TERM" ]; then
+          if stop_roxen "$scriptpid" "TERM" "start" "$canonicalconf" "start script"; then
+            :
+          else
+            problems="nostart"
+          fi
+        fi
+        # NB: At this point the original start script has
+        #     often already shut down the server, but...
+        if stop_roxen "$roxenpid" "$stop" "server" "$canonicalconf" "Roxen server"; then
+          :
+        else
+          problems="$problems:noserver"
+        fi
+        if [ "$problems" = "nostart:noserver" ]; then
+          dp "There is a pid file $pidfile,"
+          dp "but the corresponding processes do not exist,"
+          dp "or are not associated with this configuration."
+          dp "Stale pid file? Deleting the pid file."
+          rm "$pidfile"
+          :
+        fi
+        if [ "$problems:$start" = "nostart:1" ]; then
+          dp "The listed start script was dead. Starting a new one."
+          :
+        fi
       else
-	dp "There is a pid file $pidfile,"
-	dp "but it seems to be truncated."
-	exit 1
+        dp "There is a pid file $pidfile,"
+        dp "but it seems to be truncated."
+        exit 1
       fi < "$pidfile"
 
       if [ "x$keep_mysql" = "x2" ]; then
-	stop_mysql;
+        stop_mysql;
       fi
     elif [ "x$keep_mysql" = "x2" ]; then
       stop_mysql;
@@ -1237,7 +1237,7 @@ if [ "$program" = "base_server/roxenloader.pike" ] ; then
       dp "The pid file $pidfile does not exist."
       dp "The server is probably not running."
       if [ "$stop" != "TERM" ]; then
-	exit 1
+        exit 1
       fi
     fi
     if [ "$start"x = x ]; then
@@ -1249,22 +1249,22 @@ if [ "$program" = "base_server/roxenloader.pike" ] ; then
     (
       if read roxenpid && read scriptpid; then
         if roxenp "$scriptpid" "start" "$canonicalconf" 2>/dev/null ; then
-	  if [ "$stop"x = x ]; then
-	    dp "According to the pid file $pidfile,"
-	    dp "there is already a start script running with pid $scriptpid. Specify "
-	    dp "another pid file with --pid-file if this is a different server."
-	    dp "Server not started."
-	    exit 1
-	  fi
-	  dp "The old start script (pid $scriptpid) should now restart the server."
-	  exit 2
-	elif roxenp "$roxenpid" "server" "$canonicalconf" 2>/dev/null ; then
-	  dp "According to the pid file $pidfile,"
-	  dp "there is already a server running with pid $roxenpid, but its start "
-	  dp "script seems to have died. You should shut it down and restart "
-	  dp "it, since it won't restart automatically. Server not started."
-	  exit 1
-	fi
+          if [ "$stop"x = x ]; then
+            dp "According to the pid file $pidfile,"
+            dp "there is already a start script running with pid $scriptpid. Specify "
+            dp "another pid file with --pid-file if this is a different server."
+            dp "Server not started."
+            exit 1
+          fi
+          dp "The old start script (pid $scriptpid) should now restart the server."
+          exit 2
+        elif roxenp "$roxenpid" "server" "$canonicalconf" 2>/dev/null ; then
+          dp "According to the pid file $pidfile,"
+          dp "there is already a server running with pid $roxenpid, but its start "
+          dp "script seems to have died. You should shut it down and restart "
+          dp "it, since it won't restart automatically. Server not started."
+          exit 1
+        fi
       fi
     ) < "$pidfile" || {
       # NB: The exits above just exit the subshell used for the
@@ -1341,7 +1341,7 @@ if [ -z "$once" ] ; then
       [ -z "$pidfile" ] || { echo "x" && echo $start_pid; } > "$pidfile"
       if [ "x$old_start_pid" = "x$start_pid" ]; then :; else
         # Get rid of the tentative pid file lock.
-	cleanup_pid_file_lock "$old_start_pid" "start" "$canonicalconf"
+        cleanup_pid_file_lock "$old_start_pid" "start" "$canonicalconf"
       fi
 
       exec 3>&-
@@ -1350,60 +1350,60 @@ if [ -z "$once" ] ; then
       trap cleanup_start_pid_file 0
 
       while : ; do
-	if test -d "$DEBUGDIR/."; then :; else
-	  # Avoid infinite loop if the debug directory is deleted.
-	  # Thanks to Emils Klotins <emils@dot.lv> for reporting it.
-	  if ./mkdir -p "$DEBUGDIR" 2>/dev/null; then :; else
-	    dp "Failed to create log directory $DEBUGDIR."
-	    cleanup_start_pid_file
-	    exit 1
-	  fi
-	fi
+        if test -d "$DEBUGDIR/."; then :; else
+          # Avoid infinite loop if the debug directory is deleted.
+          # Thanks to Emils Klotins <emils@dot.lv> for reporting it.
+          if ./mkdir -p "$DEBUGDIR" 2>/dev/null; then :; else
+            dp "Failed to create log directory $DEBUGDIR."
+            cleanup_start_pid_file
+            exit 1
+          fi
+        fi
 
-	dp "Server start at `date`"
-	dp "Debug log in ${DEBUGLOG}.1"
-	rotate "$DEBUGLOG"
-	start_roxen
+        dp "Server start at `date`"
+        dp "Debug log in ${DEBUGLOG}.1"
+        rotate "$DEBUGLOG"
+        start_roxen
 
-	if [ "$exitcode" -eq "0" ] ; then
-	  # Clean shutdown.
-	  dp "Roxen WebServer shutdown."
-	  signal_exit
-	  # Not reached, but...
-	  exit 0
-	fi
-	if [ "$exitcode" -lt "0" ] ; then
-	  # Signal death.
-	  dp "Roxen WebServer died of signal $exitcode."
-	else
+        if [ "$exitcode" -eq "0" ] ; then
+          # Clean shutdown.
+          dp "Roxen WebServer shutdown."
+          signal_exit
+          # Not reached, but...
+          exit 0
+        fi
+        if [ "$exitcode" -lt "0" ] ; then
+          # Signal death.
+          dp "Roxen WebServer died of signal $exitcode."
+        else
          case "$exitcode" in
          100)
            dp "Changing Roxen WebServer version. Restarting."
-	   # We need to clean up the pid file, since we're mentioned in it...
-	   cleanup_start_pid_file
+           # We need to clean up the pid file, since we're mentioned in it...
+           cleanup_start_pid_file
            cd .. && exec ./start "$@"
            dp 'Failed to spawn start script. -- Permission problem?'
            exit 1
            ;;
-	 50)
-	   dp "Failed to open any port. Shutdown."
-	   keep_mysql=1
-	   signal_exit
-	   # Not reached, but...
-	   exit 50
-	   ;;
+         50)
+           dp "Failed to open any port. Shutdown."
+           keep_mysql=1
+           signal_exit
+           # Not reached, but...
+           exit 50
+           ;;
          *)
            dp "Roxen WebServer down with code $exitcode."
            ;;
          esac
-	fi
-	if [ -f "$LOCALDIR/restart_rc" ]; then
-	  dp "Running $LOCALDIR/restart_rc..."
-	  if /bin/sh "$LOCALDIR/restart_rc"; then :; else
-	    dp "$LOCALDIR/restart_rc failed with code $?."
-	  fi
-	fi
-	dp "Restarting..."
+        fi
+        if [ -f "$LOCALDIR/restart_rc" ]; then
+          dp "Running $LOCALDIR/restart_rc..."
+          if /bin/sh "$LOCALDIR/restart_rc"; then :; else
+            dp "$LOCALDIR/restart_rc failed with code $?."
+          fi
+        fi
+        dp "Restarting..."
       done
     ) &
     # Minor race here wrt pid file contents.

@@ -107,10 +107,10 @@ void set_from_form( RequestID id )
     mixed q = catch( b = verify_set_from_form( val ) );
     if( q || sizeof( b ) != 2 ) {
       if( q )
-	add_warning( q );
+        add_warning( q );
       else
-	add_warning( "Internal error: Illegal sized array "
-		     "from verify_set_from_form\n" );
+        add_warning( "Internal error: Illegal sized array "
+                     "from verify_set_from_form\n" );
       return;
     }
     if( b ) {
@@ -124,13 +124,13 @@ void set_from_form( RequestID id )
 
 protected string create_src( RequestID id ) {
   mapping state = ([ "width":width,
-		     "height":height ]);
+                     "height":height ]);
   array coord = query();
   if(coord)
     state->markers = ({ ([ "x":coord[0],
-			   "y":coord[1],
-			   "size":4,
-			   "color": ({ 255, 0, 0 }) ]) });
+                           "y":coord[1],
+                           "size":4,
+                           "color": ({ 255, 0, 0 }) ]) });
   if(marker_settings)
     state->markers[0] += marker_settings;
   if(map_settings)
@@ -145,8 +145,8 @@ string render_view( RequestID id, void|mapping additional_args ) {
 
 string render_form( RequestID id, void|mapping additional_args ) {
   string ret = Variable.input(path(), 0, 0, additional_args +
-			([ "src":create_src(id),
-			   "type":"image" ]) );
+                        ([ "src":create_src(id),
+                           "type":"image" ]) );
   if(query())
     ret += "<submit-gbutton2 name=\""+path()+"R\">"+"Remove marker"+"</submit-gbutton2>";
 
@@ -154,8 +154,8 @@ string render_form( RequestID id, void|mapping additional_args ) {
 }
 
 void create(array default_value, function(void:string) _internal_location,
-	    void|int flags, void|LocaleString std_name,
-	    void|LocaleString std_doc) {
+            void|int flags, void|LocaleString std_name,
+            void|LocaleString std_doc) {
   internal_location = _internal_location;
   cache = roxen.ImageCache( "atlas", generate_image );
   ::create(default_value, flags, std_name, std_doc);

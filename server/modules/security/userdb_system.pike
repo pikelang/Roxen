@@ -52,10 +52,10 @@ protected array(string) get_cached_groups_for_user( int uid )
       User u = find_user( user );
       if( u )
       {
-	int uid = u->uid();
-	if( !cached_groups[ uid ] )
-	  cached_groups[ uid ] = ({});
-	cached_groups[ uid ] += ({ g->name() });
+        int uid = u->uid();
+        if( !cached_groups[ uid ] )
+          cached_groups[ uid ] = ({});
+        cached_groups[ uid ] += ({ g->name() });
       }
     }
   }
@@ -67,7 +67,7 @@ protected array(string) get_cached_groups_for_user( int uid )
     {
       uid = uu->uid();
       if( Group g = find_group_from_gid( uu->gid() ) )
-	cached_groups[ uid ] = ({ g->name() })|(cached_groups[ uid ]||({}));
+        cached_groups[ uid ] = ({ g->name() })|(cached_groups[ uid ]||({}));
     }
   }
 
@@ -102,7 +102,7 @@ class SysUser
     pwent = _pwent;
     foreach(({ 0, 4 }), int fieldno) {
       catch {
-	pwent[fieldno] = utf8_to_string(pwent[fieldno]);
+        pwent[fieldno] = utf8_to_string(pwent[fieldno]);
       };
     }
   }
@@ -125,7 +125,7 @@ class SysGroup
     };
     foreach(grent[3]; int fieldno; string user) {
       catch {
-	grent[3][fieldno] = utf8_to_string(user);
+        grent[3][fieldno] = utf8_to_string(user);
       };
     }
   }
@@ -264,7 +264,7 @@ array(string) list_groups( )
   System.endgrent();
   full_group_list = res;
   call_out( lambda(){ full_group_list = 0; cached_groups=([]); },
-	    MAX_CACHE_TIME );
+            MAX_CACHE_TIME );
   return res->name();
 }
 #else

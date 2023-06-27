@@ -33,7 +33,7 @@ class RoxenSession implements javax.servlet.http.HttpSession
     {
       base = "";
       try {
-	base += InetAddress.getLocalHost().getHostAddress()+":";
+        base += InetAddress.getLocalHost().getHostAddress()+":";
       } catch(UnknownHostException e) {
       }
       base += System.currentTimeMillis()+":";
@@ -114,7 +114,7 @@ class RoxenSession implements javax.servlet.http.HttpSession
       String name = (String)atts.nextElement();
       Object v = attributes.get(name);
       if(v != null && v instanceof HttpSessionBindingListener)
-	((HttpSessionBindingListener)v).valueUnbound(new HttpSessionBindingEvent(this, name));
+        ((HttpSessionBindingListener)v).valueUnbound(new HttpSessionBindingEvent(this, name));
     }
     attributes.clear();
   }

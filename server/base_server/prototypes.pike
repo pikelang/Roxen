@@ -255,8 +255,8 @@ class DAVLock
   //! @expr{1@} if @[path] refers to a file.
 
   protected void create(string locktoken, string path, int(0..1) recursive,
-			string|SimpleNode lockscope, string|SimpleNode locktype,
-			int(0..) expiry_delta, array(SimpleNode) owner)
+                        string|SimpleNode lockscope, string|SimpleNode locktype,
+                        int(0..) expiry_delta, array(SimpleNode) owner)
   {
     DAVLock::locktoken = locktoken;
     DAVLock::path = path;
@@ -277,14 +277,14 @@ class DAVLock
   {
     SimpleElementNode res = SimpleElementNode("DAV:activelock", ([]))->
       add_child(SimpleElementNode("DAV:locktype", ([]))->
-		add_child(stringp(locktype)?
-			  SimpleElementNode(locktype, ([])):locktype))->
+                add_child(stringp(locktype)?
+                          SimpleElementNode(locktype, ([])):locktype))->
       add_child(SimpleElementNode("DAV:lockscope", ([]))->
-		add_child(stringp(lockscope)?
-			  SimpleElementNode(lockscope, ([])):lockscope))->
+                add_child(stringp(lockscope)?
+                          SimpleElementNode(lockscope, ([])):lockscope))->
       add_child(SimpleElementNode("DAV:depth", ([]))->
-		add_child(recursive?
-			  SimpleTextNode("Infinity"):SimpleTextNode("0")));
+                add_child(recursive?
+                          SimpleTextNode("Infinity"):SimpleTextNode("0")));
 
     if (owner) {
       SimpleElementNode node;
@@ -294,16 +294,16 @@ class DAVLock
 
     if (expiry_delta) {
       res->add_child(SimpleElementNode("DAV:timeout", ([]))->
-		     add_child(SimpleTextNode(sprintf("Second-%d",
-						      expiry_delta))));
+                     add_child(SimpleTextNode(sprintf("Second-%d",
+                                                      expiry_delta))));
     } else {
       res->add_child(SimpleElementNode("DAV:timeout", ([]))->
-		     add_child(SimpleTextNode("Infinite")));
+                     add_child(SimpleTextNode("Infinite")));
     }
 
     res->add_child(SimpleElementNode("DAV:locktoken", ([]))->
-		   add_child(SimpleElementNode("DAV:href", ([]))->
-			     add_child(SimpleTextNode(locktoken))));
+                   add_child(SimpleElementNode("DAV:href", ([]))->
+                             add_child(SimpleTextNode(locktoken))));
 
     return res;
   }
@@ -316,11 +316,11 @@ class DAVLock
   {
     return flag == 'O' &&
       sprintf ("DAVLock(%O on %O, %s, %s%s)" + OBJ_COUNT, locktoken, path,
-	       recursive ? "rec" : "norec",
-	       lockscope == "DAV:exclusive" ? "excl" :
-	       lockscope == "DAV:shared" ? "shared" :
-	       sprintf ("%O", lockscope),
-	       locktype == "DAV:write" ? "" : sprintf (", %O", locktype));
+               recursive ? "rec" : "norec",
+               lockscope == "DAV:exclusive" ? "excl" :
+               lockscope == "DAV:shared" ? "shared" :
+               sprintf ("%O", lockscope),
+               locktype == "DAV:write" ? "" : sprintf (", %O", locktype));
   }
 }
 
@@ -393,13 +393,13 @@ class Configuration
   int queue_acc_time;
 
   void add_module_pre_callback (string mod_name, string func,
-				function(RoxenModule,mixed...:void) cb);
+                                function(RoxenModule,mixed...:void) cb);
   void delete_module_pre_callback (string mod_name, string func,
-				   function(RoxenModule,mixed...:void) cb);
+                                   function(RoxenModule,mixed...:void) cb);
   void add_module_post_callback (string mod_name, string func,
-				function(RoxenModule,mixed...:void) cb);
+                                function(RoxenModule,mixed...:void) cb);
   void delete_module_post_callback (string mod_name, string func,
-				    function(RoxenModule,mixed...:void) cb);
+                                    function(RoxenModule,mixed...:void) cb);
   //! These functions add or delete callbacks which are called before
   //! or after specific functions in @[RoxenModule] instances. In
   //! particular this can be used to add callbacks to call before or
@@ -444,7 +444,7 @@ class Configuration
   void unregister_urls();
   void stop(void|int asynch);
   string|array(string) type_from_filename( string file, int|void to,
-					   string|void myext );
+                                           string|void myext );
 
   string get_url();
   string get_host();
@@ -467,20 +467,20 @@ class Configuration
   void clear_memory_caches();
   string examine_return_mapping(mapping m);
   mapping(string:DAVLock) find_locks(string path, int(-1..1) recursive,
-				     int(0..1) exclude_shared, RequestID id);
+                                     int(0..1) exclude_shared, RequestID id);
   mapping(string:mixed)|int(-1..0) check_locks(string path,
-					       int(0..1) recursive,
-					       RequestID id);
+                                               int(0..1) recursive,
+                                               RequestID id);
   mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID|int(0..0) id);
   int expire_locks(RequestID id);
   void refresh_lock(DAVLock lock);
   mapping(string:mixed)|DAVLock lock_file(string path,
-					  int(0..1) recursive,
-					  string lockscope,
-					  string locktype,
-					  int(0..) expiry_delta,
-					  array(Parser.XML.Tree.Node) owner,
-					  RequestID id);
+                                          int(0..1) recursive,
+                                          string lockscope,
+                                          string locktype,
+                                          int(0..) expiry_delta,
+                                          array(Parser.XML.Tree.Node) owner,
+                                          RequestID id);
   mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic);
   mapping get_file(RequestID id, int|void no_magic, int|void internal_get);
   array(string) find_dir(string file, RequestID id, void|int(0..1) verbose);
@@ -503,8 +503,8 @@ class Configuration
                              int|void nosave );
   void call_start_callbacks( RoxenModule me,
                              ModuleInfo moduleinfo,
-			     ModuleCopies module,
-			     void|int newly_added);
+                             ModuleCopies module,
+                             void|int newly_added);
   void call_low_start_callbacks( RoxenModule me,
                                  ModuleInfo moduleinfo,
                                  ModuleCopies module );
@@ -529,11 +529,11 @@ class Configuration
 
 
   mapping authenticate_throw( RequestID id, string realm,
-			      UserDB|void database,
-			      AuthModule|void method);
+                              UserDB|void database,
+                              AuthModule|void method);
   User authenticate( RequestID id,
-		     UserDB|void database,
-		     AuthModule|void method );
+                     UserDB|void database,
+                     AuthModule|void method );
 
   array(AuthModule) auth_modules();
   array(UserDB) user_databases();
@@ -652,9 +652,9 @@ class FakedVariables( mapping real_variables )
     switch( f )
     {
       case 'O':
-	return sprintf( "FakedVariables(%O)" + OBJ_COUNT, real_variables );
+        return sprintf( "FakedVariables(%O)" + OBJ_COUNT, real_variables );
       default:
-	return sprintf( sprintf("%%%c", f ), real_variables );
+        return sprintf( sprintf("%%%c", f ), real_variables );
     }
   }
 
@@ -746,35 +746,35 @@ class PrefLanguages
       function cb;
       switch (item[0]) {
       case "accept-language":
-	cb = Roxen->get_lang_vary_cb(known_langs, "accept-language");
-	id->register_vary_callback("accept-language", cb);
-	break;
+        cb = Roxen->get_lang_vary_cb(known_langs, "accept-language");
+        id->register_vary_callback("accept-language", cb);
+        break;
 
       case "cookie":
-	string lang_cookie = item[1];
-	cb = Roxen->get_lang_vary_cb(known_langs, "cookie", lang_cookie);
-	id->register_vary_callback("cookie", cb);
-	break;
+        string lang_cookie = item[1];
+        cb = Roxen->get_lang_vary_cb(known_langs, "cookie", lang_cookie);
+        id->register_vary_callback("cookie", cb);
+        break;
 
       case "host":
-	id->register_vary_callback("host");
-	break;
+        id->register_vary_callback("host");
+        break;
 
       case "variable":
       case "prestate":
       case "path":
-	//  All three are implicitly managed in the protocol cache since
-	//  they are part of the page URL.
-	break;
+        //  All three are implicitly managed in the protocol cache since
+        //  they are part of the page URL.
+        break;
       }
 
       //  Don't depend on further properties as soon as one of the known
       //  languages have appeared (since that language will be the one
       //  shown in the page).
       if (array(string) property_langs = item[-1]) {
-	foreach (property_langs, string lang)
-	  if (known_langs[lang])
-	    return;
+        foreach (property_langs, string lang)
+          if (known_langs[lang])
+            return;
       }
     }
   }
@@ -819,16 +819,16 @@ class PrefLanguages
     if(!decoded) {
       q=({});
       s=Array.map(s, lambda(string x) {
-		       float n=1.0;
-		       string sub="";
-		       sscanf(lower_case(x), "%s;q=%f", x, n);
-		       if(n==0.0) return "";
-		       sscanf(x, "%s-%s", x, sub);
-		       if(x == "" ) return "";
-		       q+=({n});
-		       //  u+=({sub});
-		       return x;
-		     });
+                       float n=1.0;
+                       string sub="";
+                       sscanf(lower_case(x), "%s;q=%f", x, n);
+                       if(n==0.0) return "";
+                       sscanf(x, "%s-%s", x, sub);
+                       if(x == "" ) return "";
+                       q+=({n});
+                       //  u+=({sub});
+                       return x;
+                     });
       s-=({""});
       decoded=1;
     }
@@ -845,10 +845,10 @@ class PrefLanguages
     for (int i = 0; i < sizeof(languages); i++) {
       string l = languages[i];
       if (known_langs[l]) {
-	languages[i] = 0;
-	qualities[i] = 0;
+        languages[i] = 0;
+        qualities[i] = 0;
       } else {
-	known_langs[l] = 1;
+        known_langs[l] = 1;
       }
     }
     languages -= ({ 0 });
@@ -925,19 +925,19 @@ class CacheKey
   protected void destroy()
   {
     foreach (destruction_cbs, [CacheDestructionCB cb, int remove_at_activation,
-			       array args]) {
+                               array args]) {
       if (cb) cb (this, @args);
     }
 
 #if 0
     if (activation_cbs)
       werror ("%O: activation list size at destroy: %d\n",
-	      this, sizeof (activation_cbs));
+              this, sizeof (activation_cbs));
 #endif
   }
 
   void add_destruction_cb (CacheDestructionCB cb, int remove_at_activation,
-			   mixed... args)
+                           mixed... args)
   //! Register a callback that will be called when this cache key is
   //! destructed. If @[remove_at_activation] is set, the callback will
   //! be removed when this key is activated. Also, attempts to add
@@ -1000,10 +1000,10 @@ class CacheKey
     else
       foreach (cbs, [CacheActivationCB cb, array args]) {
 #if 0
-	werror ("Key %O already active - calling %O(%{%O, %})\n",
-		this, cb, args);
+        werror ("Key %O already active - calling %O(%{%O, %})\n",
+                this, cb, args);
 #endif
-	cb (this, @args);
+        cb (this, @args);
       }
   }
 
@@ -1018,17 +1018,17 @@ class CacheKey
     // vvv Relying on the interpreter lock from here.
     if (array(array(CacheActivationCB|array)) cbs = this && activation_cbs) {
       if (objectp (merge_target) && merge_target->add_activation_list) {
-	merge_target->add_activation_list (cbs);
-	// ^^^ Relying on the interpreter lock up to this call.
+        merge_target->add_activation_list (cbs);
+        // ^^^ Relying on the interpreter lock up to this call.
       }
       else
-	foreach (cbs, [CacheActivationCB cb, array args]) {
+        foreach (cbs, [CacheActivationCB cb, array args]) {
 #if 0
-	  werror ("Merge from %O - activating key %O: Calling %O(%{%O, %})\n",
-		  this, merge_target, cb, args);
+          werror ("Merge from %O - activating key %O: Calling %O(%{%O, %})\n",
+                  this, merge_target, cb, args);
 #endif
-	  cb (merge_target, @args);
-	}
+          cb (merge_target, @args);
+        }
       return 1;
     }
     return 0;
@@ -1046,17 +1046,17 @@ class CacheKey
       array _destruction_cbs = destruction_cbs;
       // Remove destruction callbacks set to be removed at activation.
       _destruction_cbs = filter (_destruction_cbs,
-				lambda (array(CacheDestructionCB|int|array) arg)
-				{
-				  return !arg[1];
-				});
+                                lambda (array(CacheDestructionCB|int|array) arg)
+                                {
+                                  return !arg[1];
+                                });
       if (this) destruction_cbs = _destruction_cbs;
 
       foreach (cbs, [CacheActivationCB cb, array args]) {
 #if 0
-	werror ("Activating key %O: Calling %O(%{%O, %})\n", this, cb, args);
+        werror ("Activating key %O: Calling %O(%{%O, %})\n", this, cb, args);
 #endif
-	cb (this, @args);
+        cb (this, @args);
       }
       return sizeof (cbs);
     }
@@ -1082,15 +1082,15 @@ class CacheKey
     // vvv Relying on the interpreter lock from here.
     if (array(array(CacheActivationCB|array)) cbs = this && activation_cbs) {
       if (sizeof (cbs)) {
-	activation_cbs = 0;
-	// ^^^ Relying on the interpreter lock to here.
-	foreach (cbs, [CacheActivationCB cb, array args]) {
+        activation_cbs = 0;
+        // ^^^ Relying on the interpreter lock to here.
+        foreach (cbs, [CacheActivationCB cb, array args]) {
 #if 0
-	  werror ("Activating key %O: Calling %O(%{%O, %})\n", this, cb, args);
+          werror ("Activating key %O: Calling %O(%{%O, %})\n", this, cb, args);
 #endif
-	  cb (this, @args);
-	}
-	return 1;
+          cb (this, @args);
+        }
+        return 1;
       }
     }
     return 0;
@@ -1100,14 +1100,14 @@ class CacheKey
   {
     return flag == 'O' &&
       sprintf ("%s(%s)%s",
-	       function_name (object_program (this)) || "CacheKey",
-	       activation_cbs ? "inactive" : "active",
+               function_name (object_program (this)) || "CacheKey",
+               activation_cbs ? "inactive" : "active",
 #ifdef ID_CACHEKEY_DEBUG
-	       __marker ? "[" + __marker->count + "]" : "",
+               __marker ? "[" + __marker->count + "]" : "",
 #else
-	       OBJ_COUNT
+               OBJ_COUNT
 #endif
-	      );
+              );
   }
 }
 
@@ -1509,66 +1509,66 @@ class RequestID
 
     // cf RFC 6265.
     protected void create(string|array(string)|mapping(string:string)|void
-			  contents)
+                          contents)
     {
       VARY_WERROR("Initiating cookie jar.\n");
       real_cookies = ([]);
 
       if(!contents)
-	return;
+        return;
 
       if (mappingp(contents)) {
-	real_cookies = contents;
-	return;
+        real_cookies = contents;
+        return;
       }
 
       array tmp = arrayp(contents) ? contents : ({ contents});
 
       foreach(tmp, string cookieheader) {
-	foreach(cookieheader/";", string c)
-	{
-	  array(string) pair = c/"=";
-	  if (sizeof(pair) < 2) continue;
-	  string name = String.trim_whites(pair[0]);
-	  string value = String.trim_whites(pair[1..]*"=");
-	  if (has_prefix(value, "\"") && has_suffix(value, "\""))
-	    value = value[1..sizeof(value)-2];
-	  catch {
-	    value=_Roxen.http_decode_string(value);
-	  };
-	  catch {
-	    name=_Roxen.http_decode_string(name);
-	  };
-	  real_cookies[ name ]=value;
+        foreach(cookieheader/";", string c)
+        {
+          array(string) pair = c/"=";
+          if (sizeof(pair) < 2) continue;
+          string name = String.trim_whites(pair[0]);
+          string value = String.trim_whites(pair[1..]*"=");
+          if (has_prefix(value, "\"") && has_suffix(value, "\""))
+            value = value[1..sizeof(value)-2];
+          catch {
+            value=_Roxen.http_decode_string(value);
+          };
+          catch {
+            name=_Roxen.http_decode_string(name);
+          };
+          real_cookies[ name ]=value;
 
 #ifdef OLD_RXML_CONFIG
-	  // FIXME: Really ought to register this one...
-	  if( (name == "RoxenConfig") && strlen(value) )
-	    config =  mkmultiset( value/"," );
+          // FIXME: Really ought to register this one...
+          if( (name == "RoxenConfig") && strlen(value) )
+            config =  mkmultiset( value/"," );
 #endif
-	}
+        }
       }
     }
     protected string `->(string cookie)
     {
       if (supports && zero_type(eaten[cookie])) {
-	VARY_WERROR("Looking at cookie %O from %s\n",
-		   cookie, describe_backtrace(({backtrace()[-2]})));
-	register_vary_callback("cookie", Roxen->get_cookie_callback(cookie));
+        VARY_WERROR("Looking at cookie %O from %s\n",
+                   cookie, describe_backtrace(({backtrace()[-2]})));
+        register_vary_callback("cookie", Roxen->get_cookie_callback(cookie));
       }
       return real_cookies[cookie];
     }
     protected string `[](mixed cookie)
     {
       if (stringp(cookie)) {
-	return `->(cookie);
+        return `->(cookie);
       }
       return UNDEFINED;
     }
     protected string `->=(string cookie, string value)
     {
       if (zero_type(eaten[cookie])) {
-	eaten[cookie] = real_cookies[cookie];
+        eaten[cookie] = real_cookies[cookie];
       }
       return real_cookies[cookie] = value;
     }
@@ -1581,7 +1581,7 @@ class RequestID
     {
       // FIXME: Warn if not string?
       if (zero_type(eaten[cookie])) {
-	eaten[cookie] = real_cookies[cookie];
+        eaten[cookie] = real_cookies[cookie];
       }
       return m_delete(real_cookies, cookie);
     }
@@ -1626,7 +1626,7 @@ class RequestID
     protected string _sprintf(int fmt)
     {
       return fmt == 'O' && sprintf("CookieJar(%O)" + OBJ_COUNT,
-				   RequestID::this && real_cookies);
+                                   RequestID::this && real_cookies);
     }
 
     string encode_json(int flags) {
@@ -1655,8 +1655,8 @@ class RequestID
     if (!cookies) {
       cookies = CookieJar(request_headers["cookie"]);
       if (no_cookie_jar) {
-	// Disable the cookie jar -- Called from log()?
-	real_cookies = cookies = ~cookies;
+        // Disable the cookie jar -- Called from log()?
+        real_cookies = cookies = ~cookies;
       }
     }
   }
@@ -1672,13 +1672,13 @@ class RequestID
       misc->pref_languages=PrefLanguages();
       if (string|array(string) contents = request_headers[ "accept-language" ])
       {
-	if( !arrayp( contents ) )
-	  contents = (contents-" ")/",";
-	else
-	  contents =
-	    Array.flatten( map( map( contents, `-, " " ), `/, "," ))-({""});
-	misc->pref_languages->languages=contents;
-	misc["accept-language"] = contents;
+        if( !arrayp( contents ) )
+          contents = (contents-" ")/",";
+        else
+          contents =
+            Array.flatten( map( map( contents, `-, " " ), `/, "," ))-({""});
+        misc->pref_languages->languages=contents;
+        misc["accept-language"] = contents;
       }
     }
   }
@@ -1876,8 +1876,8 @@ class RequestID
     DAV_WERROR("Parsing XML data: %O\n", data);
     return xml_data =
       Parser.XML.Tree.simple_parse_input(data,
-					 0,
-					 Parser.XML.Tree.PARSE_ENABLE_NAMESPACES);
+                                         0,
+                                         Parser.XML.Tree.PARSE_ENABLE_NAMESPACES);
   }
 
   //! Get a string describing the link layer protocol for the request.
@@ -1988,7 +1988,7 @@ class RequestID
     {
       string res = "";
       while (sizeof(buf) && (buf[0] != term)) {
-	res += buf->read(1);
+        res += buf->read(1);
       }
       if (sizeof(buf)) buf->consume(1);
       return res;
@@ -1998,15 +1998,15 @@ class RequestID
     {
       string res = "";
       while (sizeof(buf) && (buf[0] != term)) {
-	if (buf[0] == '\\') {
-	  // FIXME: Should we keep the escape character or not?
-	  //        Currently this function is only used for reading
-	  //        etags, including the surrounding double quotes,
-	  //        so it seems reasonable to also keep the escapes.
-	  res += buf->read(2);
-	} else {
-	  res += buf->read(1);
-	}
+        if (buf[0] == '\\') {
+          // FIXME: Should we keep the escape character or not?
+          //        Currently this function is only used for reading
+          //        etags, including the surrounding double quotes,
+          //        so it seems reasonable to also keep the escapes.
+          res += buf->read(2);
+        } else {
+          res += buf->read(1);
+        }
       }
       if (sizeof(buf)) buf->consume(1);
       return res;
@@ -2037,82 +2037,82 @@ class RequestID
       switch(raw[0]) {
       case ' ': case '\t':	// LWS
       case '\r': case '\n':
-	raw->consume(1);
-	continue;
+        raw->consume(1);
+        continue;
       case '<':			// Resource-Tag
-	{
-	  raw->consume(1);
-	  resource = read_until(raw, '>');
-	  // Normalize.
-	  // FIXME: Check that the protocol and server parts refer
-	  //        to this server.
-	  // NB: Above invalid according to rfc 4918 8.3.
-	  //
-	  // NB: RFC 4918 8.3 adds support for path-absolute resources.
-	  // NB: The resource reference may have a query section.
-	  //
-	  // FIXME: Support for servers mounted on subpaths.
-	  catch { resource = Standards.URI(resource)->path; };
-	  catch { resource = Protocols.HTTP.percent_decode(resource); };
-	  catch { resource = utf8_to_string(resource); };
-	  resource = Unicode.normalize(resource, "NFC");
-	  if (!sizeof(resource)) resource = "/";
-	  if (!res[resource])
-	    res[resource] = ({});
-	  break;
-	}
+        {
+          raw->consume(1);
+          resource = read_until(raw, '>');
+          // Normalize.
+          // FIXME: Check that the protocol and server parts refer
+          //        to this server.
+          // NB: Above invalid according to rfc 4918 8.3.
+          //
+          // NB: RFC 4918 8.3 adds support for path-absolute resources.
+          // NB: The resource reference may have a query section.
+          //
+          // FIXME: Support for servers mounted on subpaths.
+          catch { resource = Standards.URI(resource)->path; };
+          catch { resource = Protocols.HTTP.percent_decode(resource); };
+          catch { resource = utf8_to_string(resource); };
+          resource = Unicode.normalize(resource, "NFC");
+          if (!sizeof(resource)) resource = "/";
+          if (!res[resource])
+            res[resource] = ({});
+          break;
+        }
       case '(':
-	// Parenthesis expression.
-	raw->consume(1);
-	array(array(string)) expr = ({});
-	while (sizeof(raw)) {
-	  switch(raw[0]) {
-	  case ')':
-	    raw->consume(1);
-	    break;
-	  case ' ': case '\t':	// LWS
-	  case '\r': case '\n':
-	    raw->consume(1);
-	    continue;
-	  case '<':	// State-token
-	    {
-	      raw->consume(1);
-	      string tmp_key = read_until(raw, '>');
-	      if (!sizeof(expr) || (expr[-1][0] != "not")) {
-		keys += ({ tmp_key });
-	      }
-	      expr += ({ ({ "key", tmp_key }) });
-	      continue;
-	    }
-	  case '[':
-	    // entity-tag.
-	    raw->consume(1);
-	    string etag = read_quoted_until(raw, ']');
-	    expr += ({ ({ "etag", etag }) });
-	    continue;
-	  default:
-	    string not = raw->read(3);
-	    if (lower_case(not) == "not") {
-	      // Not
-	      if (sizeof(expr) && (expr[-1][0] == "not")) {
-		IF_HDR_MSG("Double negation.");
-		report_debug("Syntax error in if-header: %O\n", raw_header);
-		return 0;
-	      }
-	      expr += ({ ({ "not", 0 }) });
-	      break;
-	    }
-	    IF_HDR_MSG("Word outside key: %O\n", not);
-	    report_debug("Syntax error in if-header: %O\n", raw_header);
-	    return 0;
-	  }
-	}
-	res[resource] += ({ expr });
-	break;
+        // Parenthesis expression.
+        raw->consume(1);
+        array(array(string)) expr = ({});
+        while (sizeof(raw)) {
+          switch(raw[0]) {
+          case ')':
+            raw->consume(1);
+            break;
+          case ' ': case '\t':	// LWS
+          case '\r': case '\n':
+            raw->consume(1);
+            continue;
+          case '<':	// State-token
+            {
+              raw->consume(1);
+              string tmp_key = read_until(raw, '>');
+              if (!sizeof(expr) || (expr[-1][0] != "not")) {
+                keys += ({ tmp_key });
+              }
+              expr += ({ ({ "key", tmp_key }) });
+              continue;
+            }
+          case '[':
+            // entity-tag.
+            raw->consume(1);
+            string etag = read_quoted_until(raw, ']');
+            expr += ({ ({ "etag", etag }) });
+            continue;
+          default:
+            string not = raw->read(3);
+            if (lower_case(not) == "not") {
+              // Not
+              if (sizeof(expr) && (expr[-1][0] == "not")) {
+                IF_HDR_MSG("Double negation.");
+                report_debug("Syntax error in if-header: %O\n", raw_header);
+                return 0;
+              }
+              expr += ({ ({ "not", 0 }) });
+              break;
+            }
+            IF_HDR_MSG("Word outside key: %O\n", not);
+            report_debug("Syntax error in if-header: %O\n", raw_header);
+            return 0;
+          }
+        }
+        res[resource] += ({ expr });
+        break;
       default:
-	IF_HDR_MSG("Unexpected character: '%c' (raw: %O)\n", raw[0], raw);
-	report_debug("Syntax error in if-header: %O\n", raw_header);
-	return 0;
+        IF_HDR_MSG("Unexpected character: '%c' (raw: %O)\n", raw[0], raw);
+        report_debug("Syntax error in if-header: %O\n", raw_header);
+        return 0;
       }
     }
 
@@ -2123,13 +2123,13 @@ class RequestID
 
     if (sizeof(keys)) {
       res[0] = ({
-	map(keys, lambda(string key) {
-		    return ({ "key", key });
-		  }),
+        map(keys, lambda(string key) {
+                    return ({ "key", key });
+                  }),
       });
     }
     IF_HDR_MSG("get_if_data(): Parsed if header: %s:\n"
-	       "%O\n", raw_header, res);
+               "%O\n", raw_header, res);
     return if_data = res;
   }
 
@@ -2147,21 +2147,21 @@ class RequestID
   {
     if (mapping(mixed:int) lc = misc->local_cacheable)
       foreach (lc; mixed ind; int old)
-	if (seconds < old)
-	  lc[ind] = seconds;
+        if (seconds < old)
+          lc[ind] = seconds;
 
     int old = misc->cacheable;
     if (seconds < old) {
       object/*(RXML.Context)*/ ctx = RXML_CONTEXT;
       if (ctx && ctx->id == this)
-	ctx->set_id_misc ("cacheable", seconds);
+        ctx->set_id_misc ("cacheable", seconds);
       else
-	misc->cacheable = seconds;
+        misc->cacheable = seconds;
 
 #ifdef DEBUG_CACHEABLE
       object frame = backtrace()[-2];
       report_debug ("%s:%d: Lower cacheable to %d (was %d)\n",
-		    frame[0], frame[1], seconds, old);
+                    frame[0], frame[1], seconds, old);
 #endif
     }
 
@@ -2169,7 +2169,7 @@ class RequestID
     else {
       object frame = backtrace()[-2];
       report_debug ("%s:%d: Not lowering cacheable to %d (is %d)\n",
-		    frame[0], frame[1], seconds, old);
+                    frame[0], frame[1], seconds, old);
     }
 #endif
 
@@ -2183,21 +2183,21 @@ class RequestID
   {
     if (mapping(mixed:int) lc = misc->local_cacheable)
       foreach (lc; mixed ind; int old)
-	if (seconds > old)
-	  lc[ind] = seconds;
+        if (seconds > old)
+          lc[ind] = seconds;
 
     int old = misc->cacheable;
     if (seconds > old) {
       object/*(RXML.Context)*/ ctx = RXML_CONTEXT;
       if (ctx && ctx->id == this)
-	ctx->set_id_misc ("cacheable", seconds);
+        ctx->set_id_misc ("cacheable", seconds);
       else
-	misc->cacheable = seconds;
+        misc->cacheable = seconds;
 
 #ifdef DEBUG_CACHEABLE
       object frame = backtrace()[-2];
       report_debug ("%s:%d: Raise cacheable to %d (was %d)\n",
-		    frame[0], frame[1], seconds, old);
+                    frame[0], frame[1], seconds, old);
 #endif
     }
 
@@ -2205,7 +2205,7 @@ class RequestID
     else {
       object frame = backtrace()[-2];
       report_debug ("%s:%d: Not raising cacheable to %d (is %d)\n",
-		    frame[0], frame[1], seconds, old);
+                    frame[0], frame[1], seconds, old);
     }
 #endif
 
@@ -2218,21 +2218,21 @@ class RequestID
   {
     if (mapping(mixed:int) lc = misc->local_cacheable)
       foreach (lc; mixed ind;)
-	lc[ind] = seconds;
+        lc[ind] = seconds;
 
     int old = misc->cacheable;
     if (seconds != old) {
       object/*(RXML.Context)*/ ctx = RXML_CONTEXT;
       if (ctx && ctx->id == this)
-	ctx->set_id_misc ("cacheable", seconds);
+        ctx->set_id_misc ("cacheable", seconds);
       else
-	misc->cacheable = seconds;
+        misc->cacheable = seconds;
     }
 
 #ifdef DEBUG_CACHEABLE
     object frame = backtrace()[-2];
     report_debug ("%s:%d: Set cacheable to %d (was %d)\n",
-		  frame[0], frame[1], seconds, old);
+                  frame[0], frame[1], seconds, old);
 #endif
 
     return old;
@@ -2275,7 +2275,7 @@ class RequestID
   //! @seealso
   //!   @[NOCACHE()], @[propagate_vary_callbacks()]
   void register_vary_callback(string|void vary,
-			      function(string, RequestID: string|int)|void cb)
+                              function(string, RequestID: string|int)|void cb)
   {
     if (!(vary || cb)) {
       error("Vary: At least one of the arguments MUST be specified.\n");
@@ -2283,9 +2283,9 @@ class RequestID
     // Don't generate a vary header for the Host header.
     if (vary != "host") {
       if (!misc->vary) {
-	misc->vary = (< vary || "*" >);
+        misc->vary = (< vary || "*" >);
       } else {
-	misc->vary[vary || "*"] = 1;
+        misc->vary[vary || "*"] = 1;
       }
     }
     if (!misc->vary_cb_set) {
@@ -2295,23 +2295,23 @@ class RequestID
       return;
     }
     if (multiset(function(string,RequestID:string|int))|int(1..1) old =
-	misc->vary_cb_set[vary]) {
+        misc->vary_cb_set[vary]) {
       if (old == 1) {
-	// The full header has already been registred.
-	VARY_WERROR("register_vary_callback(%O, %O) Full header\n", vary, cb);
-	return;
+        // The full header has already been registred.
+        VARY_WERROR("register_vary_callback(%O, %O) Full header\n", vary, cb);
+        return;
       }
       else if (old[cb]) {
-	// Already registred.
-	VARY_WERROR("register_vary_callback(%O, %O) Duplicate\n", vary, cb);
-	return;
+        // Already registred.
+        VARY_WERROR("register_vary_callback(%O, %O) Duplicate\n", vary, cb);
+        return;
       }
       else if (!cb) {
-	// Registering full header now - remove all callbacks.
-	misc->vary_cb_order = misc->vary_cb_order - (array) old + ({vary});
-	misc->vary_cb_set[vary] = 1;
-	VARY_WERROR("register_vary_callback(%O, 0) Removed old cbs\n", vary);
-	return;
+        // Registering full header now - remove all callbacks.
+        misc->vary_cb_order = misc->vary_cb_order - (array) old + ({vary});
+        misc->vary_cb_set[vary] = 1;
+        VARY_WERROR("register_vary_callback(%O, 0) Removed old cbs\n", vary);
+        return;
       }
       old[cb] = 1;
     }
@@ -2322,7 +2322,7 @@ class RequestID
   }
 
   void unregister_vary_callback (string vary,
-				 void|function(string,RequestID:string|int) cb)
+                                 void|function(string,RequestID:string|int) cb)
   //! Unregisters a dependency on a request header or a specific vary
   //! callback. @[vary] and @[cb] should be the same arguments that
   //! were previously passed to @[register_vary_callback]. If @[cb] is
@@ -2339,43 +2339,43 @@ class RequestID
       misc->vary[vary || "*"] = 0;
     if (!misc->vary_cb_set) {
       VARY_WERROR ("unregister_vary_callback (%O, %O) "
-		   "Got no vary registrations\n", vary, cb);
+                   "Got no vary registrations\n", vary, cb);
       return;
     }
     if (multiset(function(string,RequestID:string|int))|int(1..1) old =
-	misc->vary_cb_set[vary]) {
+        misc->vary_cb_set[vary]) {
       if (multisetp (old)) {
-	if (cb) {
-	  if (old[cb]) {
-	    misc->vary_cb_order -= ({cb});
-	    old[cb] = 0;
-	    if (!sizeof (old)) m_delete (misc->vary_cb_set, vary);
-	    VARY_WERROR ("unregister_vary_callback (%O, %O) "
-			 "Removed callback\n", vary, cb);
-	  }
-	  else {
-	    VARY_WERROR ("unregister_vary_callback (%O, %O) "
-			 "Callback wasn't registered\n", vary, cb);
-	  }
-	}
-	else {
-	  misc->vary_cb_order -= (array) old;
-	  m_delete (misc->vary_cb_set, vary);
-	  VARY_WERROR ("unregister_vary_callback (%O, 0) "
-		       "Removed %d callbacks\n", vary, sizeof (old));
-	}
+        if (cb) {
+          if (old[cb]) {
+            misc->vary_cb_order -= ({cb});
+            old[cb] = 0;
+            if (!sizeof (old)) m_delete (misc->vary_cb_set, vary);
+            VARY_WERROR ("unregister_vary_callback (%O, %O) "
+                         "Removed callback\n", vary, cb);
+          }
+          else {
+            VARY_WERROR ("unregister_vary_callback (%O, %O) "
+                         "Callback wasn't registered\n", vary, cb);
+          }
+        }
+        else {
+          misc->vary_cb_order -= (array) old;
+          m_delete (misc->vary_cb_set, vary);
+          VARY_WERROR ("unregister_vary_callback (%O, 0) "
+                       "Removed %d callbacks\n", vary, sizeof (old));
+        }
       }
       else {
-	if (cb) {
-	  VARY_WERROR ("unregister_vary_callback (%O, %O) "
-		       "Callback wasn't registered\n", vary, cb);
-	}
-	else {
-	  misc->vary_cb_order -= ({vary});
-	  m_delete (misc->vary_cb_set, vary);
-	  VARY_WERROR ("unregister_vary_callback (%O, 0) "
-		       "Removed header\n", vary);
-	}
+        if (cb) {
+          VARY_WERROR ("unregister_vary_callback (%O, %O) "
+                       "Callback wasn't registered\n", vary, cb);
+        }
+        else {
+          misc->vary_cb_order -= ({vary});
+          m_delete (misc->vary_cb_set, vary);
+          VARY_WERROR ("unregister_vary_callback (%O, 0) "
+                       "Removed header\n", vary);
+        }
       }
     }
   }
@@ -2391,50 +2391,50 @@ class RequestID
   void propagate_vary_callbacks(RequestID id)
   {
     VARY_WERROR("Propagating vary information from %O to %O...\n",
-		id, this_object());
+                id, this_object());
     if (id->misc->vary) {
       mapping(function(string,RequestID:string|int):multiset(string))
-	reverse_cb_set;
+        reverse_cb_set;
       foreach(id->misc->vary_cb_order || ({}),
-	      string|function(string, RequestID: string|int)|object vary_cb) {
-	if (stringp(vary_cb)) {
-	  VARY_WERROR("Propagating vary header %O.\n", vary_cb);
-	  register_vary_callback(vary_cb);
-	} else if (objectp(vary_cb) && vary_cb->cookie) {
-	  // Update indirectly via the CookieJar.
-	  VARY_WERROR("Propagating cookie %O.\n", vary_cb->cookie);
-	  mixed ignored = cookies[vary_cb->cookie];
-	} else {
-	  if (!reverse_cb_set) {
-	    // This gets complicated...
-	    // Build a reverse lookup from callback to the headers.
-	    VARY_WERROR("Building reverse vary lookup.\n");
-	    reverse_cb_set = ([]);
-	    foreach(id->misc->vary_cb_set || ([]); string vary;
-		    multiset(function(string,RequestID:string|int))|
-		    int(1..1) cb_info) {
-	      if (multisetp(cb_info)) {
-		foreach(cb_info;
-			function(string,RequestID:string|int) cb;) {
-		  if (reverse_cb_set[cb]) {
-		    reverse_cb_set[cb][vary] = 1;
-		  } else {
-		    reverse_cb_set[cb] = (< vary >);
-		  }
-		}
-	      }
-	    }
-	  }
-	  VARY_WERROR("Propagating generic vary callback: %O (headers: %O)\n",
-		      vary_cb, reverse_cb_set[vary_cb]);
-	  foreach(reverse_cb_set[vary_cb] || (< 0 >); string vary;) {
-	    register_vary_callback(vary, vary_cb);
-	  }
-	}
+              string|function(string, RequestID: string|int)|object vary_cb) {
+        if (stringp(vary_cb)) {
+          VARY_WERROR("Propagating vary header %O.\n", vary_cb);
+          register_vary_callback(vary_cb);
+        } else if (objectp(vary_cb) && vary_cb->cookie) {
+          // Update indirectly via the CookieJar.
+          VARY_WERROR("Propagating cookie %O.\n", vary_cb->cookie);
+          mixed ignored = cookies[vary_cb->cookie];
+        } else {
+          if (!reverse_cb_set) {
+            // This gets complicated...
+            // Build a reverse lookup from callback to the headers.
+            VARY_WERROR("Building reverse vary lookup.\n");
+            reverse_cb_set = ([]);
+            foreach(id->misc->vary_cb_set || ([]); string vary;
+                    multiset(function(string,RequestID:string|int))|
+                    int(1..1) cb_info) {
+              if (multisetp(cb_info)) {
+                foreach(cb_info;
+                        function(string,RequestID:string|int) cb;) {
+                  if (reverse_cb_set[cb]) {
+                    reverse_cb_set[cb][vary] = 1;
+                  } else {
+                    reverse_cb_set[cb] = (< vary >);
+                  }
+                }
+              }
+            }
+          }
+          VARY_WERROR("Propagating generic vary callback: %O (headers: %O)\n",
+                      vary_cb, reverse_cb_set[vary_cb]);
+          foreach(reverse_cb_set[vary_cb] || (< 0 >); string vary;) {
+            register_vary_callback(vary, vary_cb);
+          }
+        }
       }
     }
     VARY_WERROR("Propagation of vary information from %O to %O complete.\n",
-		id, this_object());
+                id, this_object());
   }
 
   protected array(object) threadbound_session_objects;
@@ -2483,12 +2483,12 @@ class RequestID
     if (array(object) objs = this && threadbound_session_objects) {
       threadbound_session_objects = 0;
       foreach (objs, object obj) {
-	if (mixed err = catch {
-	    if (obj)
-	      // Relying on the interpreter lock here.
-	      destruct (obj);
-	  })
-	  master()->handle_error (err);
+        if (mixed err = catch {
+            if (obj)
+              // Relying on the interpreter lock here.
+              destruct (obj);
+          })
+          master()->handle_error (err);
       }
     }
   }
@@ -2584,51 +2584,51 @@ class RequestID
 
       // Second look at the host header in the request.
       if (!host) {
-	// We're looking at the host header...
-	register_vary_callback("host");
-	host = misc->host;
+        // We're looking at the host header...
+        register_vary_callback("host");
+        host = misc->host;
       }
 
       // Then try the port object.
       if (!scheme) {
-	scheme = port_obj->prot_name;
+        scheme = port_obj->prot_name;
       }
       if (!host) {
-	mapping(string:mixed) conf_data = port_obj->conf_data[conf];
-	if (conf_data) {
-	  host = conf_data->hostname;
-	  if (host == "*")
-	    // Use the hostname in the configuration url.
-	    // Fall back to the numeric ip.
-	    host = conf->get_host() || port_obj->ip;
-	  if (port_obj->port != port_obj->default_port) {
-	    host += ":" + port_obj->port;
-	  }
-	}
+        mapping(string:mixed) conf_data = port_obj->conf_data[conf];
+        if (conf_data) {
+          host = conf_data->hostname;
+          if (host == "*")
+            // Use the hostname in the configuration url.
+            // Fall back to the numeric ip.
+            host = conf->get_host() || port_obj->ip;
+          if (port_obj->port != port_obj->default_port) {
+            host += ":" + port_obj->port;
+          }
+        }
       } else {
-	string host_no_port;
-	int port;
+        string host_no_port;
+        int port;
 
-	if (has_prefix(host, "[")) {
-	  //  IPv6
-	  sscanf(host, "[%s]:%d", host_no_port, port);
-	} else {
-	  sscanf(host, "%[^:]:%d", host_no_port, port);
-	}
-	if (port == ([ "http":80, "https":443 ])[scheme]) {
-	  // Default port.
-	  port = 0;
-	  host = host_no_port;
-	}
+        if (has_prefix(host, "[")) {
+          //  IPv6
+          sscanf(host, "[%s]:%d", host_no_port, port);
+        } else {
+          sscanf(host, "%[^:]:%d", host_no_port, port);
+        }
+        if (port == ([ "http":80, "https":443 ])[scheme]) {
+          // Default port.
+          port = 0;
+          host = host_no_port;
+        }
       }
 
       if (host) {
-	cached_url_base = scheme + "://" + host;
+        cached_url_base = scheme + "://" + host;
       }
 
       // Then try the configuration url.
       else if (conf && sizeof (host = conf->get_url()))
-	cached_url_base = host[..sizeof(host) - 2]; // Remove trailing '/'.
+        cached_url_base = host[..sizeof(host) - 2]; // Remove trailing '/'.
 
       // Lastly use a pathetic fallback. With this the produced urls
       // will still be relative, which has some chance of working.
@@ -2673,18 +2673,18 @@ class RequestID
     array|string cur_val = hdrs[name];
     if(cur_val) {
       if(arrayp(cur_val)) {
-	if (!has_value(cur_val, value))
-	  cur_val += ({ value });
+        if (!has_value(cur_val, value))
+          cur_val += ({ value });
       } else {
-	if (cur_val != value)
-	  cur_val = ({ cur_val, value });
+        if (cur_val != value)
+          cur_val = ({ cur_val, value });
       }
     }
     else
       cur_val = value;
     object /*(RXML.Context)*/ ctx;
     if (misc->defines && misc->defines[" _extra_heads"] &&
-	(ctx = RXML_CONTEXT))
+        (ctx = RXML_CONTEXT))
       ctx->set_var (name, cur_val, "header");
     else
       hdrs[name] = cur_val;
@@ -2718,7 +2718,7 @@ class RequestID
     misc->moreheads[name] = value;
     object/*(RXML.Context)*/ ctx;
     if (misc->defines && misc->defines[" _extra_heads"] &&
-	(ctx = RXML_CONTEXT))
+        (ctx = RXML_CONTEXT))
       ctx->signal_var_change (name, "header", value);
   }
 
@@ -2731,22 +2731,22 @@ class RequestID
   //! value if there is any.
   {
     if ((["Accept-Ranges": 1,
-	  "Allow": 1,
-	  "Cache-Control": 1,
-	  "Connection": 1,
-	  "Content-Encoding": 1,
-	  "Content-Language": 1,
-	  "Pragma": 1,
-	  "Proxy-Authenticate": 1,
-	  "Set-Cookie": 1,
-	  "Trailer": 1,
-	  "Transfer-Encoding": 1,
-	  "Upgrade": 1,
-	  "Vary": 1,
-	  "Via": 1,
-	  "Warning": 1,
-	  "WWW-Authenticate": 1,
-	])[name])
+          "Allow": 1,
+          "Cache-Control": 1,
+          "Connection": 1,
+          "Content-Encoding": 1,
+          "Content-Language": 1,
+          "Pragma": 1,
+          "Proxy-Authenticate": 1,
+          "Set-Cookie": 1,
+          "Trailer": 1,
+          "Transfer-Encoding": 1,
+          "Upgrade": 1,
+          "Vary": 1,
+          "Via": 1,
+          "Warning": 1,
+          "WWW-Authenticate": 1,
+        ])[name])
       add_response_header (name, value);
     else
       set_response_header (name, value);
@@ -2783,20 +2783,20 @@ class RequestID
     mapping(string:string|array(string)) hdrs = misc->moreheads;
     if (hdrs) {
       if (array(string)|string cur_val = hdrs[name]) {
-	if (!value_prefix)
-	  return arrayp (cur_val) ? cur_val : ({cur_val});
-	else {
-	  if (arrayp (cur_val)) {
-	    array(string) res = ({});
-	    foreach (cur_val, string val)
-	      if (MATCH_TOKEN_PREFIX (val, value_prefix))
-		res += ({val});
-	    return res;
-	  }
-	  else
-	    if (MATCH_TOKEN_PREFIX (cur_val, value_prefix))
-	      return ({cur_val});
-	}
+        if (!value_prefix)
+          return arrayp (cur_val) ? cur_val : ({cur_val});
+        else {
+          if (arrayp (cur_val)) {
+            array(string) res = ({});
+            foreach (cur_val, string val)
+              if (MATCH_TOKEN_PREFIX (val, value_prefix))
+                res += ({val});
+            return res;
+          }
+          else
+            if (MATCH_TOKEN_PREFIX (cur_val, value_prefix))
+              return ({cur_val});
+        }
       }
     }
 
@@ -2827,27 +2827,27 @@ class RequestID
     mapping(string:string|array(string)) hdrs = misc->moreheads;
     if (hdrs) {
       if (array(string)|string cur_val = hdrs[name]) {
-	if (!value_prefix) {
-	  m_delete (hdrs, name);
-	  removed = 1;
-	}
-	else {
-	  if (arrayp (cur_val)) {
-	    foreach (cur_val; int i; string val)
-	      if (MATCH_TOKEN_PREFIX (val, value_prefix)) {
-		cur_val[i] = 0;
-		removed = 1;
-	      }
-	    cur_val -= ({0});
-	    if (sizeof (cur_val)) hdrs[name] = cur_val;
-	    else m_delete (hdrs, name);
-	  }
-	  else
-	    if (MATCH_TOKEN_PREFIX (cur_val, value_prefix)) {
-	      m_delete (hdrs, name);
-	      removed = 1;
-	    }
-	}
+        if (!value_prefix) {
+          m_delete (hdrs, name);
+          removed = 1;
+        }
+        else {
+          if (arrayp (cur_val)) {
+            foreach (cur_val; int i; string val)
+              if (MATCH_TOKEN_PREFIX (val, value_prefix)) {
+                cur_val[i] = 0;
+                removed = 1;
+              }
+            cur_val -= ({0});
+            if (sizeof (cur_val)) hdrs[name] = cur_val;
+            else m_delete (hdrs, name);
+          }
+          else
+            if (MATCH_TOKEN_PREFIX (cur_val, value_prefix)) {
+              m_delete (hdrs, name);
+              removed = 1;
+            }
+        }
       }
     }
 
@@ -2884,7 +2884,7 @@ class RequestID
   }
 
   void set_status_for_path (string path, int status_code,
-			    string|void message, mixed... args)
+                            string|void message, mixed... args)
   //! Register a status to be included in the response that applies
   //! only for the given path. This is used for recursive operations
   //! that can yield different results for different encountered files
@@ -2918,7 +2918,7 @@ class RequestID
     if (sizeof (args)) message = sprintf (message, @args);
     ASSERT_IF_DEBUG (has_prefix (path, "/"));
     get_multi_status()->add_status (url_base() + path[1..],
-				    status_code, message);
+                                    status_code, message);
   }
 
   variant void set_status_for_path (string path, mapping(string:mixed) ret)
@@ -2972,7 +2972,7 @@ class RequestID
   }
 
   void set_status_for_url (string url, int status_code,
-			   string|void message, mixed... args)
+                           string|void message, mixed... args)
   //! Register a status to be included in the response that applies
   //! only for the given URL. Similar to @[set_status_for_path], but
   //! takes a complete URL instead of an absolute path within the
@@ -3024,21 +3024,21 @@ class RequestID
     switch( mode )
     {
       case 0: // Really set.
-	output_charset = ({ to });
-	break;
+        output_charset = ({ to });
+        break;
 
       case 1: // Only set if not already set.
-	if( !sizeof( output_charset ) )
-	  output_charset = ({ to });
-	break;
+        if( !sizeof( output_charset ) )
+          output_charset = ({ to });
+        break;
 
       case 2: // Join.
-	if (sizeof (output_charset) &&
-	    (!stringp (to) || !stringp (output_charset[0])))
-	  error ("Can't join charsets with functions (%O with %O).\n",
-		 to, output_charset[0]);
-	output_charset += ({ to });
-	break;
+        if (sizeof (output_charset) &&
+            (!stringp (to) || !stringp (output_charset[0])))
+          error ("Can't join charsets with functions (%O with %O).\n",
+                 to, output_charset[0]);
+        output_charset += ({ to });
+        break;
     }
   }
 
@@ -3075,23 +3075,23 @@ class RequestID
     default:
       //  Use entity fallback if content type allows it
       function fallback_func =
-	allow_entities &&
-	lambda(string char) {
-	  return sprintf("&#x%x;", char[0]);
-	};
+        allow_entities &&
+        lambda(string char) {
+          return sprintf("&#x%x;", char[0]);
+        };
 
       _charset_decoder_func =
-	_charset_decoder_func || Roxen->_charset_decoder;
+        _charset_decoder_func || Roxen->_charset_decoder;
       return
-	_charset_decoder_func(Charset.encoder((string) what, "", fallback_func))
-	->decode;
+        _charset_decoder_func(Charset.encoder((string) what, "", fallback_func))
+        ->decode;
     }
   }
 
   protected array(string) join_charset(string old,
-				       function|string add,
-				       function oldcodec,
-				       int allow_entities)
+                                       function|string add,
+                                       function oldcodec,
+                                       int allow_entities)
   {
     switch (old && upper_case(old)) {
     case 0:
@@ -3122,18 +3122,18 @@ class RequestID
   }
 
   array(string) output_encode(string what, int|void allow_entities,
-			      string|void force_charset)
+                              string|void force_charset)
   {
     //  Performance optimization for unneeded ISO-8859-1 recoding of
     //  strings which already are narrow.
     if (String.width(what) == 8) {
       if (force_charset) {
-	if (upper_case(force_charset) == "ISO-8859-1")
-	  return replace_charset_placeholder("ISO-8859-1", what, allow_entities);
+        if (upper_case(force_charset) == "ISO-8859-1")
+          return replace_charset_placeholder("ISO-8859-1", what, allow_entities);
       } else {
-	if (sizeof(output_charset) == 1 &&
-	    upper_case(output_charset[0]) == "ISO-8859-1")
-	  return replace_charset_placeholder("ISO-8859-1", what, allow_entities);
+        if (sizeof(output_charset) == 1 &&
+            upper_case(output_charset[0]) == "ISO-8859-1")
+          return replace_charset_placeholder("ISO-8859-1", what, allow_entities);
       }
     }
 
@@ -3142,19 +3142,19 @@ class RequestID
       function encoder;
 
       foreach( output_charset, string|function f )
-	[charset,encoder] = join_charset(charset, f, encoder, allow_entities);
+        [charset,encoder] = join_charset(charset, f, encoder, allow_entities);
       if (!encoder)
-	if (String.width(what) > 8) {
-	  charset = "UTF-8";
-	  encoder = string_to_utf8;
-	}
+        if (String.width(what) > 8) {
+          charset = "UTF-8";
+          encoder = string_to_utf8;
+        }
       if (encoder)
-	what = encoder(what);
+        what = encoder(what);
       return replace_charset_placeholder( charset, what, allow_entities );
     } else
       return ({
-	0,
-	Charset.encoder((force_charset / "=")[-1])->feed(what)->drain()
+        0,
+        Charset.encoder((force_charset / "=")[-1])->feed(what)->drain()
       });
   }
 
@@ -3165,22 +3165,22 @@ class RequestID
     foreach (query_vars / "&", string v) {
       if(sscanf(v, "%s=%s", string a, string b) == 2)
       {
-	// NB: Assume invalidly %-encoded values are unencoded.
-	//     Fixes [bug 7818].
-	catch {
-	  a = replace(a, "+", " ");
-	  a = _Roxen.http_decode_string(a);
-	};
-	catch {
-	  b = replace(b, "+", " ");
-	  b = _Roxen.http_decode_string(b);
-	};
-	vars[ a ] += ({ b });
+        // NB: Assume invalidly %-encoded values are unencoded.
+        //     Fixes [bug 7818].
+        catch {
+          a = replace(a, "+", " ");
+          a = _Roxen.http_decode_string(a);
+        };
+        catch {
+          b = replace(b, "+", " ");
+          b = _Roxen.http_decode_string(b);
+        };
+        vars[ a ] += ({ b });
       } else {
-	catch {
-	  v = _Roxen.http_decode_string( v );
-	};
-	rests += ({ v });
+        catch {
+          v = _Roxen.http_decode_string( v );
+        };
+        rests += ({ v });
       }
     }
 
@@ -3198,8 +3198,8 @@ class RequestID
   }
 
   string decode_query_charset (string path,
-			       mapping(string:array(string)) vars,
-			       string decode_charset)
+                               mapping(string:array(string)) vars,
+                               string decode_charset)
   //! Decodes the charset encoding of a query.
   //!
   //! @[path] is the path part of the query. It is returned after
@@ -3247,60 +3247,60 @@ class RequestID
       array(string) magic = vars->magic_roxen_automatic_charset_variable;
       decode_charset = magic && Roxen->get_client_charset (magic[0]);
       function(string:string) decoder = decode_charset ?
-	Roxen->get_decoder_for_client_charset (decode_charset) :
-	utf8_to_string;
+        Roxen->get_decoder_for_client_charset (decode_charset) :
+        utf8_to_string;
 
       mapping(string:array(string)) decoded_vars = ([]);
       if (mixed err = catch {
-	  path = decoder (path);
-	  foreach (vars; string var; array(string) vals) {
-	    if (vars[var + ".mimetype"])
-	      // Don't decode the value if it has a mime type (which
-	      // we assume comes from a multipart/form-data POST).
-	      decoded_vars[decoder (var)] = vals;
-	    else
-	      decoded_vars[decoder (var)] = map (vals, decoder);
-	  }
-	}) {
+          path = decoder (path);
+          foreach (vars; string var; array(string) vals) {
+            if (vars[var + ".mimetype"])
+              // Don't decode the value if it has a mime type (which
+              // we assume comes from a multipart/form-data POST).
+              decoded_vars[decoder (var)] = vals;
+            else
+              decoded_vars[decoder (var)] = map (vals, decoder);
+          }
+        }) {
 #ifdef DEBUG
-	if (decode_charset)
-	  report_debug ("Failed to decode query %O using charset %O derived "
-			"from magic_roxen_automatic_charset_variable %O: %s",
-			raw_url, decode_charset, magic[0],
-			describe_error (err));
+        if (decode_charset)
+          report_debug ("Failed to decode query %O using charset %O derived "
+                        "from magic_roxen_automatic_charset_variable %O: %s",
+                        raw_url, decode_charset, magic[0],
+                        describe_error (err));
 #if 0
-	else
-	  report_debug ("Failed to decode query %O using UTF-8: %s",
-			raw_url, describe_error (err));
+        else
+          report_debug ("Failed to decode query %O using UTF-8: %s",
+                        raw_url, describe_error (err));
 #endif
 #endif
       }
       else {
-	vars = decoded_vars;
-	input_charset = decode_charset || "utf-8"; // Set this after we're done.
+        vars = decoded_vars;
+        input_charset = decode_charset || "utf-8"; // Set this after we're done.
       }
     }
 
     else if (decode_charset) {
       if (decode_charset == "magic") {
-	array(string) magic = vars->magic_roxen_automatic_charset_variable;
-	decode_charset = magic && Roxen->get_client_charset (magic[0]);
-	if (!decode_charset)
-	  break do_decode_charset;
+        array(string) magic = vars->magic_roxen_automatic_charset_variable;
+        decode_charset = magic && Roxen->get_client_charset (magic[0]);
+        if (!decode_charset)
+          break do_decode_charset;
       }
 
       function(string:string) decoder =
-	Roxen->get_decoder_for_client_charset (decode_charset);
+        Roxen->get_decoder_for_client_charset (decode_charset);
       path = decoder (path);
 
       mapping(string:array(string)) decoded_vars = ([]);
       foreach (vars; string var; array(string) vals) {
-	if (vars[var + ".mimetype"])
-	  // Don't decode the value if it has a mime type (which we
-	  // assume comes from a multipart/form-data POST).
-	  decoded_vars[decoder (var)] = vals;
-	else
-	  decoded_vars[decoder (var)] = map (vals, decoder);
+        if (vars[var + ".mimetype"])
+          // Don't decode the value if it has a mime type (which we
+          // assume comes from a multipart/form-data POST).
+          decoded_vars[decoder (var)] = vals;
+        else
+          decoded_vars[decoder (var)] = map (vals, decoder);
       }
       vars = decoded_vars;
       input_charset = decode_charset; // Set this after we're done.
@@ -3308,7 +3308,7 @@ class RequestID
 
     if (sizeof (real_variables))
       foreach (vars; string var; array(string) vals)
-	real_variables[var] += vals;
+        real_variables[var] += vals;
     else {
       real_variables = vars;
       // Must fix the mapping in FakedVariables too.
@@ -3329,7 +3329,7 @@ class RequestID
   }
 
   string get_response_content_type (mapping file,
-				    void|int(1..1) destructive)
+                                    void|int(1..1) destructive)
   {
     string|array(string) type = file->type;
     if (mappingp (file->extra_heads) && file->extra_heads["Content-Type"]) {
@@ -3359,19 +3359,19 @@ class RequestID
     if (!file->stat) file->stat = misc->stat;
     if(objectp(file->file)) {
       if(!file->stat && file->file->stat)
-	file->stat = file->file->stat();
+        file->stat = file->file->stat();
       if (zero_type(misc->cacheable) && file->file->is_file) {
-	// Assume a cacheablity on the order of the age of the file.
-	misc->cacheable = (predef::time(1) - file->stat[ST_MTIME])/4;
+        // Assume a cacheablity on the order of the age of the file.
+        misc->cacheable = (predef::time(1) - file->stat[ST_MTIME])/4;
       }
     }
 
     if( Stat fstat = file->stat )
     {
       if( !file->len && (fstat[1] >= 0) && file->file )
-	file->len = fstat[1];
+        file->len = fstat[1];
       if ( fstat[ST_MTIME] > misc->last_modified )
-	misc->last_modified = fstat[ST_MTIME];
+        misc->last_modified = fstat[ST_MTIME];
     }
 
     if (!file->error)
@@ -3387,19 +3387,19 @@ class RequestID
       pl->finalize_delayed_vary(this);
 
     if( !zero_type(misc->cacheable) &&
-	(misc->cacheable != INITIAL_CACHEABLE) ) {
+        (misc->cacheable != INITIAL_CACHEABLE) ) {
       if (!misc->cacheable) {
-	// It expired a year ago.
-	heads["Expires"] = Roxen->http_date( predef::time(1)-31557600 );
-	// Force the vary header generated below to be "*".
-	misc->vary = (< "*" >);
-	VARY_WERROR("Not cacheable. Force vary *.\n");
+        // It expired a year ago.
+        heads["Expires"] = Roxen->http_date( predef::time(1)-31557600 );
+        // Force the vary header generated below to be "*".
+        misc->vary = (< "*" >);
+        VARY_WERROR("Not cacheable. Force vary *.\n");
       } else
-	heads["Expires"] = Roxen->http_date( predef::time(1)+misc->cacheable );
+        heads["Expires"] = Roxen->http_date( predef::time(1)+misc->cacheable );
       if (misc->cacheable < INITIAL_CACHEABLE) {
-	// Data with expiry is assumed to have been generated at the
-	// same instant.
-	misc->last_modified = predef::time(1);
+        // Data with expiry is assumed to have been generated at the
+        // same instant.
+        misc->last_modified = predef::time(1);
       }
     }
 
@@ -3411,20 +3411,20 @@ class RequestID
       string charset;
 
       if( stringp(file->data) ) {
-	if (file->charset)
-	  // Join to be on the safe side.
-	  set_output_charset (file->charset, 2);
+        if (file->charset)
+          // Join to be on the safe side.
+          set_output_charset (file->charset, 2);
 
-	if (sizeof (output_charset) || (String.width(file->data) > 8))
-	{
-	  sscanf (type, "%[-!#$%&´*+./0-9A-Z^_`a-z{|}~]", string ct);
-	  int allow_entities =
-	    (ct == "text/xml") ||
-	    (ct == "text/html") ||
-	    (ct == "application/xml") ||
-	    sscanf(ct, "application/%*s+xml%*c") == 1;
-	  [charset, file->data] = output_encode( file->data, allow_entities );
-	}
+        if (sizeof (output_charset) || (String.width(file->data) > 8))
+        {
+          sscanf (type, "%[-!#$%&´*+./0-9A-Z^_`a-z{|}~]", string ct);
+          int allow_entities =
+            (ct == "text/xml") ||
+            (ct == "text/html") ||
+            (ct == "application/xml") ||
+            sscanf(ct, "application/%*s+xml%*c") == 1;
+          [charset, file->data] = output_encode( file->data, allow_entities );
+        }
       }
 
       //  Only declare charset if we have exact knowledge of it. We cannot
@@ -3432,16 +3432,16 @@ class RequestID
       //  complain if it receives a charset=ISO-8859-1 header for text data
       //  that starts with a UTF-8 BOM.
       if (charset)
-	type += "; charset=" + charset;
+        type += "; charset=" + charset;
     }
 
     if (stringp (file->data)) {
       if (String.width(file->data) > 8) {
-	// Invalid charset header!
-	// DWIM!
-	eval_status["bad-charset"] = 1;
-	file->data = string_to_utf8(file->data);
-	type = (type/";")[0] + "; charset=utf-8";
+        // Invalid charset header!
+        // DWIM!
+        eval_status["bad-charset"] = 1;
+        file->data = string_to_utf8(file->data);
+        type = (type/";")[0] + "; charset=utf-8";
       }
       file->len = sizeof (file->data);
     }
@@ -3474,22 +3474,22 @@ class RequestID
 
 #ifdef RAM_CACHE
     if (!misc->etag && file->len &&
-	(file->data || file->file) &&
-	file->error == 200 && (<"HEAD", "GET">)[method] &&
-	(file->len < conf->datacache->get_cache_stats()->max_file_size)) {
+        (file->data || file->file) &&
+        file->error == 200 && (<"HEAD", "GET">)[method] &&
+        (file->len < conf->datacache->get_cache_stats()->max_file_size)) {
       string data = "";
       if (file->file) {
-	data = file->file->read(file->len);
-	if (file->data && (sizeof(data) < file->len)) {
-	  data += file->data[..file->len - (sizeof(data)+1)];
-	}
-	m_delete(file, "file");
+        data = file->file->read(file->len);
+        if (file->data && (sizeof(data) < file->len)) {
+          data += file->data[..file->len - (sizeof(data)+1)];
+        }
+        m_delete(file, "file");
       } else if (file->data) {
-	data = file->data[..file->len - 1];
+        data = file->data[..file->len - 1];
       }
       file->data = data;
       heads->ETag = misc->etag =
-	sprintf("\"%s\"", String.string2hex(Crypto.MD5.hash(data)));
+        sprintf("\"%s\"", String.string2hex(Crypto.MD5.hash(data)));
     }
 #endif /* RAM_CACHE */
 
@@ -3497,18 +3497,18 @@ class RequestID
       // Generate a vary header.
       VARY_WERROR("Full set: %s\n", ((array)misc->vary) * ", ");
       if (!supports->vary) {
-	// Broken support for vary.
-	heads->Vary = "User-Agent";
+        // Broken support for vary.
+        heads->Vary = "User-Agent";
 #ifndef DISABLE_VARY_EXPIRES_FALLBACK
-	// It expired a year ago.
-	heads->Expires = Roxen->http_date(predef::time(1)-31557600);
+        // It expired a year ago.
+        heads->Expires = Roxen->http_date(predef::time(1)-31557600);
 #endif /* !DISABLE_VARY_EXPIRES_FALLBACK */
-	VARY_WERROR("Vary not supported by the browser.\n");
+        VARY_WERROR("Vary not supported by the browser.\n");
       } else if (misc->vary["*"]) {
-	// Depends on non-headers.
-	heads->Vary = "*";
+        // Depends on non-headers.
+        heads->Vary = "*";
       } else {
-	heads->Vary = ((array)misc->vary) * ", ";
+        heads->Vary = ((array)misc->vary) * ", ";
       }
     }
 
@@ -3623,11 +3623,11 @@ class RequestID
   {
     return flag == 'O' && ("RequestID(" + (raw_url||"") + ")"
 #ifdef ID_OBJ_DEBUG
-			   + (__marker ? "[" + __marker->count + "]" : "")
+                           + (__marker ? "[" + __marker->count + "]" : "")
 #else
-			   + OBJ_COUNT
+                           + OBJ_COUNT
 #endif
-			  );
+                          );
   }
 }
 
@@ -3746,51 +3746,51 @@ class MultiStatusPropStat
     mapping(int:SimpleNode) prop_nodes = ([]);
 
     foreach (properties;
-	     string prop_name;
+             string prop_name;
              string|SimpleNode|array(SimpleNode)|MultiStatusStatus|int value) {
       if (value && (intp(value) || (objectp (value) && value->is_status))) {
-	// Group together failed properties according to status codes.
+        // Group together failed properties according to status codes.
         if (objectp(value)) {
           value = value->http_code;
         }
-	SimpleNode prop_node = prop_nodes[value];
-	if (!prop_node)
-	  prop_nodes[value] = prop_node = SimpleElementNode("DAV:prop", ([]));
-	prop_node->add_child(SimpleElementNode(prop_name, ([])));
+        SimpleNode prop_node = prop_nodes[value];
+        if (!prop_node)
+          prop_nodes[value] = prop_node = SimpleElementNode("DAV:prop", ([]));
+        prop_node->add_child(SimpleElementNode(prop_name, ([])));
       }
 
       else {
-	// The property is ok and has a value.
+        // The property is ok and has a value.
 
-	string ms_type;
-	// The DAV client in Windows XP Pro (at least) requires types
-	// on the date fields to parse them correctly. The type system
-	// is of course some MS goo.
-	switch (prop_name) {
-	  case "DAV:creationdate":     ms_type = "dateTime.tz"; break;
-	  case "DAV:getlastmodified":  ms_type = "dateTime.rfc1123"; break;
-	    // MS header - format unknown.
-	    //case "DAV:lastaccessed": ms_type = "dateTime.tz"; break;
-	}
-	SimpleElementNode node =
-	  SimpleElementNode(prop_name,
-			    ms_type ?
-			    ([ "urn:schemas-microsoft-com:datatypesdt":
-			       ms_type ]) : ([]));
-	ok_prop_node->add_child (node);
+        string ms_type;
+        // The DAV client in Windows XP Pro (at least) requires types
+        // on the date fields to parse them correctly. The type system
+        // is of course some MS goo.
+        switch (prop_name) {
+          case "DAV:creationdate":     ms_type = "dateTime.tz"; break;
+          case "DAV:getlastmodified":  ms_type = "dateTime.rfc1123"; break;
+            // MS header - format unknown.
+            //case "DAV:lastaccessed": ms_type = "dateTime.tz"; break;
+        }
+        SimpleElementNode node =
+          SimpleElementNode(prop_name,
+                            ms_type ?
+                            ([ "urn:schemas-microsoft-com:datatypesdt":
+                               ms_type ]) : ([]));
+        ok_prop_node->add_child (node);
 
-	if (arrayp (value))
-	  node->replace_children (value);
-	else if (stringp (value))
-	  node->add_child(SimpleTextNode(value));
-	else if (objectp (value))
-	  node->add_child (value);
+        if (arrayp (value))
+          node->replace_children (value);
+        else if (stringp (value))
+          node->add_child(SimpleTextNode(value));
+        else if (objectp (value))
+          node->add_child (value);
       }
     }
 
     if (ok_prop_node->count_children()) {
       SimpleElementNode propstat_node =
-	SimpleElementNode("DAV:propstat", ([]));
+        SimpleElementNode("DAV:propstat", ([]));
       response_node->add_child (propstat_node);
       propstat_node->add_child (ok_prop_node);
       propstat_node->add_child (ok_status_node);
@@ -3798,7 +3798,7 @@ class MultiStatusPropStat
 
     foreach (prop_nodes; int http_code; SimpleNode prop_node) {
       SimpleElementNode propstat_node =
-	SimpleElementNode("DAV:propstat", ([]));
+        SimpleElementNode("DAV:propstat", ([]));
       response_node->add_child (propstat_node);
       propstat_node->add_child (prop_node);
       MultiStatusStatus status = MultiStatusStatus(http_code);
@@ -3871,12 +3871,12 @@ class MultiStatus
     mapping(string:MultiStatusNode) result = ([]);
     if (!has_suffix (href_prefix, "/")) {
       if (MultiStatusNode stat = status_set[href_prefix])
-	result[href_prefix] = stat;
+        result[href_prefix] = stat;
       href_prefix += "/";
     }
     foreach (status_set; string href; MultiStatusNode stat)
       if (has_prefix (href, href_prefix))
-	result[href] = stat;
+        result[href] = stat;
     return result;
   }
 
@@ -3899,16 +3899,16 @@ class MultiStatus
   void add_property(string href, string prop_name,
                     void|int(0..0)|int(100..999)|string|
                     array(SimpleNode)|SimpleNode|
-		    MultiStatusStatus|mapping(string:mixed) prop_value)
+                    MultiStatusStatus|mapping(string:mixed) prop_value)
   {
     MultiStatusPropStat prop_stat;
     if (MultiStatusNode stat = status_set[href])
       if (stat->is_prop_stat)
-	// This will cause override of an existing MultiStatusStatus.
-	// Presumably it came from another file system that is now
-	// being hidden. Or is it better to keep the status node and
-	// do nothing here instead?
-	prop_stat = stat;
+        // This will cause override of an existing MultiStatusStatus.
+        // Presumably it came from another file system that is now
+        // being hidden. Or is it better to keep the status node and
+        // do nothing here instead?
+        prop_stat = stat;
     if (!prop_stat)
       prop_stat = status_set[href] = MultiStatusPropStat();
     if (mappingp (prop_value))
@@ -3920,7 +3920,7 @@ class MultiStatus
   }
 
   void add_status (string href, int status_code,
-		   void|string message, mixed... args)
+                   void|string message, mixed... args)
   //! Add a status for the specified url. The remaining arguments are
   //! the same as for @[Roxen.http_status].
   {
@@ -3975,7 +3975,7 @@ class MultiStatus
     SimpleElementNode node;
     SimpleRootNode root = SimpleRootNode()->
       add_child(SimpleHeaderNode((["version": "1.0",
-				   "encoding": "utf-8"])))->
+                                   "encoding": "utf-8"])))->
       add_child(node = SimpleElementNode("DAV:multistatus", args));
 
     array(SimpleNode) response_xml = allocate(sizeof(status_set));
@@ -3983,7 +3983,7 @@ class MultiStatus
 
     int startts = gethrtime();
     DAV_WERROR("Generating XML Nodes for status_set:%O\n",
-	       status_set);
+               status_set);
 
     // Sort this because some client (which one?) requires collections
     // to come before the entries they contain.
@@ -3991,9 +3991,9 @@ class MultiStatus
     // they are proper URLs (eg including fragment).
     foreach(sort(indices(status_set)), string href) {
       SimpleElementNode response_node =
-	SimpleElementNode("DAV:response", ([]))->
-	add_child(SimpleElementNode("DAV:href", ([]))->
-		  add_child(SimpleTextNode(href)));
+        SimpleElementNode("DAV:response", ([]))->
+        add_child(SimpleElementNode("DAV:href", ([]))->
+                  add_child(SimpleTextNode(href)));
       response_xml[i++] = response_node;
       status_set[href]->build_response (response_node);
     }
@@ -4265,8 +4265,8 @@ class MultiStatus
     //!   Note that the segments of the path will be
     //!   encoded with @[Roxen.http_encode_url()].
     void add_property(string path, string prop_name,
-		      void|int(0..0)|string|array(SimpleNode)|SimpleNode|
-		      MultiStatusStatus|mapping(string:mixed) prop_value)
+                      void|int(0..0)|string|array(SimpleNode)|SimpleNode|
+                      MultiStatusStatus|mapping(string:mixed) prop_value)
     {
       path = map(path/"/", Roxen->http_encode_url)*"/";
       MultiStatus::add_property(href_prefix + path, prop_name, prop_value);
@@ -4278,7 +4278,7 @@ class MultiStatus
     //!   Note that the segments of the path will be
     //!   encoded with @[Roxen.http_encode_url()].
     void add_status (string path, int status_code,
-		     void|string message, mixed... args)
+                     void|string message, mixed... args)
     {
       path = map(path/"/", Roxen->http_encode_url)*"/";
       MultiStatus::add_status (href_prefix + path, status_code, message, @args);
@@ -4332,13 +4332,13 @@ protected class PropertySet
   void unroll();
   void commit();
   mapping(string:mixed) set_property(string prop_name,
-				     string|array(SimpleNode) value);
+                                     string|array(SimpleNode) value);
   mapping(string:mixed) set_dead_property(string prop_name,
-					  array(SimpleNode) value);
+                                          array(SimpleNode) value);
   mapping(string:mixed) remove_property(string prop_name);
   mapping(string:mixed) find_properties(string mode,
-					MultiStatus.Prefixed result,
-					multiset(string)|void filt);
+                                        MultiStatus.Prefixed result,
+                                        multiset(string)|void filt);
 }
 
 //! How to handle an existing destination when files or directories
@@ -4395,7 +4395,7 @@ class RoxenModule
   string file_name_and_stuff();
 
   void start (void|int variable_save, void|Configuration conf,
-	      void|int newly_added);
+              void|int newly_added);
   //! This function is called both when a module is loaded
   //! (@[variable_save] is 0) and when its variables are saved after a
   //! change (@[variable_save] is 2).
@@ -4455,7 +4455,7 @@ class RoxenModule
   string|multiset(string) query_provides();
   function(RequestID:int|mapping) query_seclevels();
   void set_status_for_path (string path, RequestID id, int status_code,
-			    string|void message, mixed... args);
+                            string|void message, mixed... args);
   array(int)|object(Stdio.Stat) stat_file(string f, RequestID id);
   array(string) find_dir(string f, RequestID id);
   mapping(string:array(mixed)) find_dir_stat(string f, RequestID id);
@@ -4472,45 +4472,45 @@ class RoxenModule
   string|array(SimpleNode)|mapping(string:mixed)
     query_property(string path, string prop_name, RequestID id);
   mapping(string:mixed) recurse_find_properties(string path, string mode, int depth,
-						RequestID id,
-						multiset(string)|void filt);
+                                                RequestID id,
+                                                multiset(string)|void filt);
   mapping(string:mixed) patch_properties(string path,
-					 array(PatchPropertyCommand) instructions,
-					 RequestID id);
+                                         array(PatchPropertyCommand) instructions,
+                                         RequestID id);
   mapping(string:mixed) set_property (string path, string prop_name,
-				      string|array(SimpleNode) value,
-				      RequestID id);
+                                      string|array(SimpleNode) value,
+                                      RequestID id);
   mapping(string:mixed) remove_property (string path, string prop_name,
-					 RequestID id);
+                                         RequestID id);
 
   string resource_id (string path, RequestID id);
   string|int authenticated_user_id (string path, RequestID id);
   mapping(string:DAVLock) find_locks(string path,
-				     int(-1..1) recursive,
-				     int(0..1) exclude_shared,
-				     RequestID id);
+                                     int(-1..1) recursive,
+                                     int(0..1) exclude_shared,
+                                     RequestID id);
   mapping(string:mixed) lock_file(string path,
-				  DAVLock lock,
-				  RequestID id);
+                                  DAVLock lock,
+                                  RequestID id);
   mapping(string:mixed) unlock_file (string path,
-				     DAVLock lock,
-				     RequestID id);
+                                     DAVLock lock,
+                                     RequestID id);
   mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
-						  int(0..1) recursive,
-						  RequestID id);
+                                                  int(0..1) recursive,
+                                                  RequestID id);
 
   mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
-							RequestID id);
+                                                        RequestID id);
   mapping(string:mixed) recurse_delete_files(string path,
-					     RequestID id);
+                                             RequestID id);
   mapping(string:mixed) make_collection(string path, RequestID id);
   mapping(string:mixed) recurse_copy_files(string source, string destination,
-					   PropertyBehavior behavior,
-					   Overwrite overwrite, RequestID id,
-					   int|void one_level);
+                                           PropertyBehavior behavior,
+                                           Overwrite overwrite, RequestID id,
+                                           int|void one_level);
   mapping(string:mixed) recurse_move_files(string source, string destination,
-					   PropertyBehavior behavior,
-					   Overwrite overwrite, RequestID id);
+                                           PropertyBehavior behavior,
+                                           Overwrite overwrite, RequestID id);
 }
 
 //! @appears WebSocketAPI
@@ -4540,7 +4540,7 @@ class WebSocketAPI
   //! @param frame
   //!   Websocket message.
   void websocket_message(Protocols.WebSocket.Connection ws,
-			 Protocols.WebSocket.Frame frame);
+                         Protocols.WebSocket.Frame frame);
 
   //! @decl void websocket_close(WebSocket ws, @
   //!                            Protocols.WebSocket.CLOSE_STATUS reason)
@@ -4557,7 +4557,7 @@ class WebSocketAPI
   //!   Will be called even when this side has ended the connection
   //!   by calling @[WebSocket()->websocket_close()] in @[ws].
   void websocket_close(Protocols.WebSocket.Connection ws,
-		       Protocols.WebSocket.CLOSE_STATUS reason);
+                       Protocols.WebSocket.CLOSE_STATUS reason);
 }
 
 class PatchPropertyCommand
@@ -4616,20 +4616,20 @@ protected void init_user_sql(string table)
   if( !user_mysql )
     user_mysql = master()->resolv("DBManager.get")( db );
   if(catch(user_mysql->query( "SELECT module FROM "+
-			      table+" WHERE module=''")))
+                              table+" WHERE module=''")))
   {
     user_mysql->query( "CREATE TABLE "+table+" "
-		       " (module varchar(30) NOT NULL,  "
-		       "  name   varchar(30) NOT NULL, "
-		       "  user   varchar(30) NOT NULL, "
-		       "  value  blob, "
-		       "  raw    int not null, "
-		       " INDEX foo (module,name,user))" );
+                       " (module varchar(30) NOT NULL,  "
+                       "  name   varchar(30) NOT NULL, "
+                       "  user   varchar(30) NOT NULL, "
+                       "  value  blob, "
+                       "  raw    int not null, "
+                       " INDEX foo (module,name,user))" );
     master()->resolv("DBManager.is_module_table")( 0, db, table,
- 			       "Contains metadata about users. "
-			       "Userdatabases can store information here "
-			       "at the request of other modules, or they "
-			       "can keep their own state in this table" );
+                               "Contains metadata about users. "
+                               "Userdatabases can store information here "
+                               "at the request of other modules, or they "
+                               "can keep their own state in this table" );
   }
   user_sql_inited[ table ]=
     lambda(){user_mysql = master()->resolv("DBManager.get")( db );};
@@ -4652,8 +4652,8 @@ class Group( UserDB database )
     int id = gid();
     foreach( database->list_users(), string u )
       if( (uid = database->find_user( u )) &&
-	  ((uid->gid() == id) || has_value(uid->groups(), name())))
-	res += ({ u });
+          ((uid->gid() == id) || has_value(uid->groups(), name())))
+        res += ({ u });
     return res;
   }
 
@@ -4806,9 +4806,9 @@ class User( UserDB database )
     LOCK();
     INIT_SQL();
     rows = user_mysql->query( "SELECT * FROM "+table+
-			      " WHERE module="+module_name( module )
-			      +" AND name=%s AND user=%s",
-			      index, name() );
+                              " WHERE module="+module_name( module )
+                              +" AND name=%s AND user=%s",
+                              index, name() );
     if( !sizeof( rows ) )
       return 0;
     mapping m = rows[0];
@@ -4824,8 +4824,8 @@ class User( UserDB database )
     LOCK();
     INIT_SQL();
     user_mysql->query( "DELETE FROM "+table+" WHERE (module="+
-		       module_name( module )+
-		       " AND name=%s AND user=%s)", index, name() );
+                       module_name( module )+
+                       " AND name=%s AND user=%s)", index, name() );
   }
 #undef INIT_SQL
 #undef LOCK
@@ -4851,7 +4851,7 @@ class UserDB
     User user;
     foreach( list_users(), string u )
       if( (user = find_user( u )) && (user->uid() == uid) )
-	return user;
+        return user;
   }
 
   Group find_group( string group, RequestID|void id )
@@ -4867,7 +4867,7 @@ class UserDB
     Group group;
     foreach( list_groups(), string u )
       if( (group = find_group( u )) && (group->gid() == gid) )
-	return group;
+        return group;
   }
 
   array(string) list_groups( RequestID|void id )

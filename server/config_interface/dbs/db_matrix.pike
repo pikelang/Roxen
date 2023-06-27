@@ -96,16 +96,16 @@ string|mapping parse( RequestID id )
     foreach( conf_cols, string conf )
     {
 #define PERM(P,T,L)							\
-	((view_mode ? "" :						\
-	  "<a href='?set_"+L+"="+					\
-	  Roxen.http_encode_url(conf)+"&amp;db="+Roxen.http_encode_url(db)+\
-	  "&amp;&usr.set-wiz-id;'>")					\
-	 + (p[conf] == DBManager.P ? T : "&#x2013;")			\
-	 + (view_mode?"":"</a>"))
+        ((view_mode ? "" :						\
+          "<a href='?set_"+L+"="+					\
+          Roxen.http_encode_url(conf)+"&amp;db="+Roxen.http_encode_url(db)+\
+          "&amp;&usr.set-wiz-id;'>")					\
+         + (p[conf] == DBManager.P ? T : "&#x2013;")			\
+         + (view_mode?"":"</a>"))
       res += "<td>" +
-	PERM(NONE,_(431,"N"),"none") + " " +
-	PERM(READ,_(432,"R"),"read") + " " +
-	PERM(WRITE,_(433,"W"),"write") + "</td>";
+        PERM(NONE,_(431,"N"),"none") + " " +
+        PERM(READ,_(432,"R"),"read") + " " +
+        PERM(WRITE,_(433,"W"),"write") + "</td>";
     }
 
     rres[db_group] += res + "</tr>\n";
@@ -127,10 +127,10 @@ string|mapping parse( RequestID id )
     foreach( conf_cols, string conf )
     {
       res += "<th class='conf'>"
-	"<gtext href='/sites/site.html/" + conf + "/' "
-	"scale='0.35' fgcolor='black' bgcolor='&usr.matrix12;' rotate='90'>" +
-	get_conf_name(conf) + "</gtext>"
-	"</th>";
+        "<gtext href='/sites/site.html/" + conf + "/' "
+        "scale='0.35' fgcolor='black' bgcolor='&usr.matrix12;' rotate='90'>" +
+        get_conf_name(conf) + "</gtext>"
+        "</th>";
     }
     res += "</tr>\n</thead>\n" +
       "<tbody>\n" + rres[ cats[0][1] ] + "</tbody>\n";
@@ -138,15 +138,15 @@ string|mapping parse( RequestID id )
     foreach( sort(cats[1..]), array q )
     {
       res += "<tbody>\n"
-	"<tr class='group-hdr'><th><br/>"
-	"<a style='font-size: larger'"
-	" href='edit_group.pike?group=" + q[1] + "&amp;&usr.set-wiz-id;'>" +
-	q[0] + "</a></th>" +
-	("<td></td>" *
-	 sizeof( roxen->configurations )) +
-	"</tr>\n" +
-	rres[ q[1] ] +
-	"</tbody>\n";
+        "<tr class='group-hdr'><th><br/>"
+        "<a style='font-size: larger'"
+        " href='edit_group.pike?group=" + q[1] + "&amp;&usr.set-wiz-id;'>" +
+        q[0] + "</a></th>" +
+        ("<td></td>" *
+         sizeof( roxen->configurations )) +
+        "</tr>\n" +
+        rres[ q[1] ] +
+        "</tbody>\n";
     }
   }
 

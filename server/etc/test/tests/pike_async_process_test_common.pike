@@ -44,7 +44,7 @@ void run_pikescript( string p, string ... args  )
   if( !http_url )
     foreach( c->query("URLs"), string url )
       if( has_prefix( url, "http://" ) )
-	http_url = (url/"#")[0];
+        http_url = (url/"#")[0];
 
   if( !http_url )
   {
@@ -67,27 +67,27 @@ void current_test_done()
     if(  function fp = IND("_check") )
       if( string fail = fp( ) )
       {
-	tests_failed++;
-	if( verbose ) report_debug(" FAILED\n");
-	report_debug("################ " +
-		     do_describe_error(IND("_desc")+" FAILED\n" ));
-	report_debug(do_describe_error( fail ));
+        tests_failed++;
+        if( verbose ) report_debug(" FAILED\n");
+        report_debug("################ " +
+                     do_describe_error(IND("_desc")+" FAILED\n" ));
+        report_debug(do_describe_error( fail ));
       }
       else if( verbose )
-	report_debug("   PASS\n");
+        report_debug("   PASS\n");
 
 
     current_test++;
     if( function t = IND("") )
     {
       if( verbose )
-	report_debug("%3d %c%-66s  ", current_test,' ',IND("_desc")[..65] );
+        report_debug("%3d %c%-66s  ", current_test,' ',IND("_desc")[..65] );
       if( mixed err = catch {
-	t();
+        t();
       } )
       {
-	if( verbose ) report_debug(" FAILED\n");
-	report_debug(do_describe_error( err ) );
+        if( verbose ) report_debug(" FAILED\n");
+        report_debug(do_describe_error( err ) );
       }
       call_out( current_test_done, 0.1 );
     }
@@ -117,8 +117,8 @@ void create( int v )
 
 int dt;
 void atest( string n,
-	    function t,
-	    function c )
+            function t,
+            function c )
 {
   dt++;
   all_tests[ dt+"_desc" ] = n;

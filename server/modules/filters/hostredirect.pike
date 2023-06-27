@@ -45,49 +45,49 @@ void create()
          "              ab.domain.org    http://my.university.edu/~me/ab/%p\n"
          "              bc.domain.com    %u/bc/%p%q\n"
          "              default          %u/serverlist.html</pre>"
-	 "<p><strong>There are several patterns that can be used "
-	 "in the 'target' field:</strong></p>\n"
-	 "<dl>\n"
-	 "<dh><tt>%p</tt> (Path)</dh>\n"
+         "<p><strong>There are several patterns that can be used "
+         "in the 'target' field:</strong></p>\n"
+         "<dl>\n"
+         "<dh><tt>%p</tt> (Path)</dh>\n"
          "<dd>A <tt>%p</tt> in the 'target' field will be replaced with the full "
          "path of the request.</dd>\n"
-	 "<dh><tt>%q</tt> (Query)</dh>\n"
-	 "<dd>A <tt>%q</tt> in the 'target' field will be replaced with the "
-	 "query string (if any). Note that the query string will be prepended "
-	 "with <tt>?</tt> if there's no <tt>?</tt> earlier in the 'target' "
-	 "field, and with <tt>&amp;</tt> otherwise. Note also that for "
-	 "internal redirects the query variables are passed along to "
-	 "the redirect target without any need to use <tt>%q</tt>.</dd>\n"
-	 "<dh><tt>%u</tt> (URL)</dh>\n"
-	 "<dd>A <tt>%u</tt> in the 'target' field will be replaced with this "
-	 "server's URL (useful if you want to send an external redirect "
-	 "instead of doing an internal one).</dd>\n"
-	 "</dl>\n"
+         "<dh><tt>%q</tt> (Query)</dh>\n"
+         "<dd>A <tt>%q</tt> in the 'target' field will be replaced with the "
+         "query string (if any). Note that the query string will be prepended "
+         "with <tt>?</tt> if there's no <tt>?</tt> earlier in the 'target' "
+         "field, and with <tt>&amp;</tt> otherwise. Note also that for "
+         "internal redirects the query variables are passed along to "
+         "the redirect target without any need to use <tt>%q</tt>.</dd>\n"
+         "<dh><tt>%u</tt> (URL)</dh>\n"
+         "<dd>A <tt>%u</tt> in the 'target' field will be replaced with this "
+         "server's URL (useful if you want to send an external redirect "
+         "instead of doing an internal one).</dd>\n"
+         "</dl>\n"
          "<p>If the first string on the line is 'permanent', the http return "
          "code is 301 (moved permanently) instead of 302 (found).</p> "
          "<p>Internal redirects will always have the path and query variables "
-	 "added, whether you use <tt>%p</tt> and/or <tt>%q</tt> or not. "
-	 "However for HTTP redirects <tt>%p</tt> and/or <tt>%q</tt> are "
-	 "mandatory if you want to propagate the path and/or query variables "
-	 "respectively. <strong><tt>default</tt> will never add a path, "
-	 "even if <tt>%p</tt> is present.</strong> "
+         "added, whether you use <tt>%p</tt> and/or <tt>%q</tt> or not. "
+         "However for HTTP redirects <tt>%p</tt> and/or <tt>%q</tt> are "
+         "mandatory if you want to propagate the path and/or query variables "
+         "respectively. <strong><tt>default</tt> will never add a path, "
+         "even if <tt>%p</tt> is present.</strong> "
          "In fact if <tt>%p</tt> is included it will "
          "just stay and probably not produce the expected result.</p>"
        );
   
   defvar("ignorepaths",
-	 Variable.StringList( ({ "/_internal/", "/__internal/", "/internal-roxen-",
-				 "/roxen-files/", "/edit", "/__ie/", "/yui/",
-			      }), 0, "Ignore paths",
-			      "A list of path prefixes that should not be redirected. "
-			      "Useful for making global images work in sub sites." ));
+         Variable.StringList( ({ "/_internal/", "/__internal/", "/internal-roxen-",
+                                 "/roxen-files/", "/edit", "/__ie/", "/yui/",
+                              }), 0, "Ignore paths",
+                              "A list of path prefixes that should not be redirected. "
+                              "Useful for making global images work in sub sites." ));
   defvar("ignorevariables",
-	 Variable.StringList( ({ "__force_path", "__sb_force_login" }),
-			      0, "Ignore form variables",
-			      "A list of form variables. If one of the form variables "
-			      "is set, the request will not be redirected."
-			      "Useful for making login redirects to / work in sub "
-			      "sites." ));
+         Variable.StringList( ({ "__force_path", "__sb_force_login" }),
+                              0, "Ignore form variables",
+                              "A list of form variables. If one of the form variables "
+                              "is set, the request will not be redirected."
+                              "Useful for making login redirects to / work in sub "
+                              "sites." ));
 }
 
 mapping patterns = ([ ]);
@@ -132,7 +132,7 @@ string get_host(string ignored, RequestID id)
   string host;
   if(!((id->misc->host && (host = lower_case(id->misc->host))) ||
        (id->my_fd && id->my_fd->query_address &&
-	(host = replace(id->my_fd->query_address(1)," ",":")))))
+        (host = replace(id->my_fd->query_address(1)," ",":")))))
     return 0;
 
   host = (host / ":")[0];  // Remove port number
@@ -155,7 +155,7 @@ string get_protocol(string ignored, RequestID id)
 string get_port(string ignored, RequestID id)
 {
   string port = id->my_fd && id->my_fd->query_address &&
-		(id->my_fd->query_address(1) / " ")[1];
+                (id->my_fd->query_address(1) / " ")[1];
   
   dwerror("HR: host_port: %O\n", port);
   return port;
@@ -175,7 +175,7 @@ int|mapping first_try(RequestID id)
   dwerror("HR: %O\n", id->not_query);
   foreach(query("ignorepaths"), string path) {
     dwerror("  IP: %O, %O, [%O]\n", id->not_query, path,
-	    has_prefix(id->not_query, path));
+            has_prefix(id->not_query, path));
     if(has_prefix(id->not_query, path))
       return 0;
   }
@@ -206,7 +206,7 @@ int|mapping first_try(RequestID id)
   {
     if((id->referrer) && (sizeof(id->referrer)) &&
        search(id->referer[0],
-	      lower_case((id->prot /"/")[0])+"://"+id->misc->host) == 0) {
+              lower_case((id->prot /"/")[0])+"://"+id->misc->host) == 0) {
       return 0;
     }
     // this is some magic here: in order to allow pictures in the defaultpage
@@ -250,11 +250,11 @@ int|mapping first_try(RequestID id)
   if (sizeof(segments) > 1) {
     if (sizeof(id->query || "")) {
       foreach(segments[..<1]; int i; string seg) {
-	if (i || has_value(seg, "?")) {
-	  segments[i] += "&";
-	} else {
-	  segments[i] += "?";
-	}
+        if (i || has_value(seg, "?")) {
+          segments[i] += "&";
+        } else {
+          segments[i] += "?";
+        }
       }
     }
     to = segments * (id->query || "");
@@ -272,22 +272,22 @@ int|mapping first_try(RequestID id)
     catch {  // The catch is needed to make sure the url parsing don't backtrace.
       Standards.URI to_uri = Standards.URI(to_prefix);
       Standards.URI cur_uri =
-	Standards.URI(get_protocol(0, id)+"://"+id->misc->host+id->not_query);
+        Standards.URI(get_protocol(0, id)+"://"+id->misc->host+id->not_query);
       
       // Don't redirect if the prot/host/port is the same and the
       // beginning of the path is already correct.
       if(has_prefix(cur_uri->path, to_uri->path) &&
-	 cur_uri->scheme == to_uri->scheme &&
-	 cur_uri->host == to_uri->host &&
-	 cur_uri->port == to_uri->port)
+         cur_uri->scheme == to_uri->scheme &&
+         cur_uri->host == to_uri->host &&
+         cur_uri->port == to_uri->port)
       {
-	return 0;
+        return 0;
       }
     };
     to = Roxen.http_encode_invalids(to);
     dwerror("HR: %O -> %O (http redirect)\n", id->not_query, to);
     return Roxen.http_low_answer( return_code,
-				  "See <a href='"+to+"'>"+to+"</a>")
+                                  "See <a href='"+to+"'>"+to+"</a>")
       + ([ "extra_heads":([ "Location":to,  ]) ]);
   } else {
     // Internal redirect

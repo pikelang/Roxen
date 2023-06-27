@@ -11,7 +11,7 @@ void run(object env)
   // "errno@@GLIBC_2.0", which is not available in modern GLIBCs.
   write("   Broken Mysql -- Checking for NPTL... ");
   if (search(Process.popen("/usr/bin/getconf GNU_LIBPTHREAD_VERSION 2>/dev/null"),
-	     "NPTL") >= 0) {
+             "NPTL") >= 0) {
     write("yes (%s)\n");
     write("   Checking if LD_ASSUME_KERNEL might work... ");
     // On recent releases of Linux, binaries often fail with
@@ -24,13 +24,13 @@ void run(object env)
     object err = Stdio.File();
     Process.Process p =
       Process.Process(({ "sed", "-ed" }), ([
-			"stdin": in->pipe(Stdio.PROP_REVERSE),
-			"stdout": out->pipe(),
-			"stderr": err->pipe(),
-			"env":getenv() + ([
-			  "LD_ASSUME_KERNEL":"2.4.1",
-			])
-		      ]));
+                        "stdin": in->pipe(Stdio.PROP_REVERSE),
+                        "stdout": out->pipe(),
+                        "stderr": err->pipe(),
+                        "env":getenv() + ([
+                          "LD_ASSUME_KERNEL":"2.4.1",
+                        ])
+                      ]));
     in->close();
     out->close();
     err->read();

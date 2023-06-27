@@ -53,10 +53,10 @@ void set_up_hilfe_variables( Protocol o )
   function(DEFVAR) defvar = o->defvar;
 
   defvar( "require_auth", 1,
-	  LOCALE(309,"Require user with the 'hilfe' permission"), TYPE_FLAG,
-	  LOCALE(310,"If yes, require a user with the hilfe permission "
-		 "set, otherwise, any configuration interface user will "
-		 "be allowed, even one with only the view settings permission." ) );
+          LOCALE(309,"Require user with the 'hilfe' permission"), TYPE_FLAG,
+          LOCALE(310,"If yes, require a user with the hilfe permission "
+                 "set, otherwise, any configuration interface user will "
+                 "be allowed, even one with only the view settings permission." ) );
 }
 
 #if 0
@@ -67,8 +67,8 @@ void set_up_snmp_variables( Protocol o )
   defvar("snmp_community", ({"public:ro"}), "Community string",
          TYPE_STRING_LIST,
          "One community name per line. Default permissions are 'read-only'. "
-	 "'Read-write' permissions can be specified by appending :rw to the "
-	 "community name (for example mypub:rw).");
+         "'Read-write' permissions can be specified by appending :rw to the "
+         "community name (for example mypub:rw).");
 /*
   defvar("snmp_mode", "smart", "Agent mode",
          TYPE_STRING_LIST,
@@ -98,9 +98,9 @@ void set_up_snmp_variables( Protocol o )
          "primarily offers.");
 #if 0
   defvar("site_id", 0,
-	 LOCALE(1012, "SNMP sub-MIB"), TYPE_INT,
-	 LOCALE(1013, "MIB suffix to 1.3.6.1.4.1.8614.1.1.2 "
-		"identifying this site."));
+         LOCALE(1012, "SNMP sub-MIB"), TYPE_INT,
+         LOCALE(1013, "MIB suffix to 1.3.6.1.4.1.8614.1.1.2 "
+                "identifying this site."));
 #endif /* 0 */
 }
 #endif /* 0 */
@@ -114,75 +114,75 @@ void set_up_ftp_variables( Protocol o )
           "              +------------------------------------------------\n"
           "              +--      Welcome to the Roxen FTP server      ---\n"
           "              +------------------------------------------------\n",
-	  LOCALE(60, "Welcome text"), TYPE_TEXT,
+          LOCALE(60, "Welcome text"), TYPE_TEXT,
           LOCALE(61, "The text shown to the user on connect.") );
 
   defvar( "ftp_user_session_limit", 0, LOCALE(62, "User session limit"), 
-	  TYPE_INT,
+          TYPE_INT,
           LOCALE(63, "The maximum number of times a user can connect at once."
           " 0 means unlimited.") );
 
   defvar( "named_ftp", 1,  LOCALE(64, "Allow named ftp"), TYPE_FLAG,
           LOCALE(65, "If yes, non-anonymous users can connect. "
-		 "Note that for password authentication to be performed "
-		 "you will need to have the \"Authentication: Password\" "
-		 "module in your site.") );
+                 "Note that for password authentication to be performed "
+                 "you will need to have the \"Authentication: Password\" "
+                 "module in your site.") );
 
   defvar( "guest_ftp", 1, 
-	  LOCALE(66, "Allow login with incorrect password/user"), 
-	  TYPE_FLAG,
+          LOCALE(66, "Allow login with incorrect password/user"), 
+          TYPE_FLAG,
           LOCALE(67, "If yes, users can connect with the wrong password "
-		 "and/or username. This is useful since things like .htaccess "
-		 "files can later on authenticate the user."));
+                 "and/or username. This is useful since things like .htaccess "
+                 "files can later on authenticate the user."));
 
   defvar( "anonymous_ftp", 1, LOCALE(68, "Allow anonymous ftp"), 
-	  TYPE_FLAG,
+          TYPE_FLAG,
           LOCALE(69, "If yes, anonymous users are allowed to connect.") );
 
   defvar( "shells", "",  LOCALE(70, "Shell database"), 
-	  TYPE_FILE,
+          TYPE_FILE,
           LOCALE(71, "If this string is set to anything but the empty string, "
           "it should specify a file containing a list of valid shells. "
           "Users with shells that are not in this list will not "
           "be allowed to log in.") );
 
   defvar( "passive_port_min", 0, LOCALE(257, "Passive port minimum"),
-	  TYPE_INT,
-	  LOCALE(320, "Minimum port number to use in the PASV/EPSV response."));
+          TYPE_INT,
+          LOCALE(320, "Minimum port number to use in the PASV/EPSV response."));
 
   defvar( "passive_port_max", 65535, LOCALE(321, "Passive port maximum"),
-	  TYPE_INT,
-	  LOCALE(322, "Maximum port number to use in the PASV/EPSV response."));
+          TYPE_INT,
+          LOCALE(322, "Maximum port number to use in the PASV/EPSV response."));
 
   defvar( "passive_public_address", "", LOCALE(0, "Passive public address"),
-	  TYPE_STRING,
-	  LOCALE(0, "<p>IP address to report in <b>PASV</b> reply.</p>\n"
-		 "<p>If the server is behind a network address translation "
-		 "(NAT) layer, it may not be possible for clients to connect "
-		 "to the local IP for the port. In that case, set the public "
-		 "IP or host name here.</p>\n"
-		 "<p>If left empty the local IP for the client connection "
-		 "will be used.</p>\n"
-		 "<p>Note: Only relevant for IPv4 as IPv6 "
-		 "uses <b>EPSV</b>.</p>\n"));
+          TYPE_STRING,
+          LOCALE(0, "<p>IP address to report in <b>PASV</b> reply.</p>\n"
+                 "<p>If the server is behind a network address translation "
+                 "(NAT) layer, it may not be possible for clients to connect "
+                 "to the local IP for the port. In that case, set the public "
+                 "IP or host name here.</p>\n"
+                 "<p>If left empty the local IP for the client connection "
+                 "will be used.</p>\n"
+                 "<p>Note: Only relevant for IPv4 as IPv6 "
+                 "uses <b>EPSV</b>.</p>\n"));
 
   defvar( "rfc2428_support", 1, LOCALE(518, "Support EPRT/EPSV"),
-	  TYPE_FLAG,
-	  LOCALE(528, "Enable support for the EPRT and EPSV commands (RFC2428)."
-		 "Some firewalls don't handle these commands properly, "
-		 "so depending on your network configuration you may need "
-		 "to disable them. "));
+          TYPE_FLAG,
+          LOCALE(528, "Enable support for the EPRT and EPSV commands (RFC2428)."
+                 "Some firewalls don't handle these commands properly, "
+                 "so depending on your network configuration you may need "
+                 "to disable them. "));
 
   defvar( "require_starttls",
-	  Variable.IntChoice
-	  (0, ([
-	    -1: "Disabled",
-	     0: "Optional",
-	     1: "Required",
-	   ]), 0,
-	   LOCALE(1078, "AUTH TLS"),
-	   LOCALE(1079, "Whether to require the AUTH TLS command (RFC4217) "
-		  "before login.")));
+          Variable.IntChoice
+          (0, ([
+            -1: "Disabled",
+             0: "Optional",
+             1: "Required",
+           ]), 0,
+           LOCALE(1078, "AUTH TLS"),
+           LOCALE(1079, "Whether to require the AUTH TLS command (RFC4217) "
+                  "before login.")));
 }
 
 
@@ -193,44 +193,44 @@ void set_up_http_variables( Protocol o )
   function do_set_cookie(Protocol o)
   {
     return lambda() {
-	     return o->query("set_cookie") == 0;
-	   };
+             return o->query("set_cookie") == 0;
+           };
   };
 
   defvar("request_data_max", 0,
-	 LOCALE(0, "Request data size limit"), TYPE_INT,
-	 LOCALE(0, "<p>The maximum amount of data in kilobytes that a "
-		"request may contain before being rejected.</p>\n"
-		"<p>Set to <tt>0</tt> (zero) to disable.</p>"))
+         LOCALE(0, "Request data size limit"), TYPE_INT,
+         LOCALE(0, "<p>The maximum amount of data in kilobytes that a "
+                "request may contain before being rejected.</p>\n"
+                "<p>Set to <tt>0</tt> (zero) to disable.</p>"))
     ->set_range(0, Variable.no_limit);
 
   defvar( "minimum_bitrate", 0, LOCALE(205, "Minimum allowed bitrate" ),
-	  TYPE_INT,
-	  LOCALE(215, "The minimum allowed bitrate, in bits/second. If the  "
-		 "client is slower than this set bitrate, it will be "
-		 "disconnected (after a timeout). Setting this higher than "
-		 "14000 is not recommended if you have modem users."));
+          TYPE_INT,
+          LOCALE(215, "The minimum allowed bitrate, in bits/second. If the  "
+                 "client is slower than this set bitrate, it will be "
+                 "disconnected (after a timeout). Setting this higher than "
+                 "14000 is not recommended if you have modem users."));
 
   defvar("show_internals", 0, LOCALE(72, "Show internal errors"),
-	 TYPE_FLAG,
-	 LOCALE(73, "Show 'Internal server error' messages to the user. "
-		"This is very useful if you are debugging your own modules "
-		"or writing Pike scripts."));
+         TYPE_FLAG,
+         LOCALE(73, "Show 'Internal server error' messages to the user. "
+                "This is very useful if you are debugging your own modules "
+                "or writing Pike scripts."));
 
   defvar("set_cookie", 0, LOCALE(74, "Logging: Set unique browser id cookies"),
-	 TYPE_FLAG,
-	 LOCALE(75, "If set to Yes, all clients that accept cookies will get "
-		"a unique 'user-id-cookie', which can then be used in the log "
-		"and in scripts to track individual users."));
+         TYPE_FLAG,
+         LOCALE(75, "If set to Yes, all clients that accept cookies will get "
+                "a unique 'user-id-cookie', which can then be used in the log "
+                "and in scripts to track individual users."));
 
   defvar("set_cookie_only_once", 1,
-	 LOCALE(76, "Logging: Set ID cookies only once"),
-	 TYPE_FLAG,
-	 LOCALE(77, "If set to Yes, Roxen will attempt to set unique browser "
-		"ID cookies only upon receiving the first request (and "
-		"again after some minutes). Thus, if the user doesn't allow "
-		"the cookie to be set, she won't be bothered with "
-		"multiple requests."),0, do_set_cookie( o ));
+         LOCALE(76, "Logging: Set ID cookies only once"),
+         TYPE_FLAG,
+         LOCALE(77, "If set to Yes, Roxen will attempt to set unique browser "
+                "ID cookies only upon receiving the first request (and "
+                "again after some minutes). Thus, if the user doesn't allow "
+                "the cookie to be set, she won't be bothered with "
+                "multiple requests."),0, do_set_cookie( o ));
 }
 
 protected int hide_if_empty(RequestID id, Variable.Variable var)
@@ -259,52 +259,52 @@ void set_up_ssl_variables( Protocol o )
   function(DEFVAR) defvar = o->defvar;
 
   defvar( "ssl_certs", o->CertificateKeyChoiceVariable
-	  (VAR_NO_DEFAULT,
-	   LOCALE(1125, "SSL/TLS Certificate(s)"),
-	   LOCALE(1126, "<p>The TLS certificate(s) to use.</p>\n"
-		  "<p>Certificate and key files matching the "
-		  "<b>Global Variables/Settings/Certificate and "
-		  "Private Key Globs</b> setting "
-		  "are automatically imported and valid "
-		  "combinations are listed above.</p>\n"
-		  "<p>At least one certificate must be selected.</p>\n"
-		  "<p>The Server Name Indication (SNI) extension sent by the "
-		  "TLS client will be used to choose a specific certificate "
-		  "for the connection from the set selected here.</p>\n"
-		  )));
+          (VAR_NO_DEFAULT,
+           LOCALE(1125, "SSL/TLS Certificate(s)"),
+           LOCALE(1126, "<p>The TLS certificate(s) to use.</p>\n"
+                  "<p>Certificate and key files matching the "
+                  "<b>Global Variables/Settings/Certificate and "
+                  "Private Key Globs</b> setting "
+                  "are automatically imported and valid "
+                  "combinations are listed above.</p>\n"
+                  "<p>At least one certificate must be selected.</p>\n"
+                  "<p>The Server Name Indication (SNI) extension sent by the "
+                  "TLS client will be used to choose a specific certificate "
+                  "for the connection from the set selected here.</p>\n"
+                  )));
 
 #if 1
   // Not so old-style SSL Certificate variables.
   // FIXME: Keep these around for at least a several major versions (15 years?).
   defvar("ssl_keys", Variable.IntChoice(({}), ({}), VAR_INVISIBLE,
-					"SSL/TLS Keypair identifiers", ""));
+                                        "SSL/TLS Keypair identifiers", ""));
 
   // Old-style SSL Certificate variables.
   // FIXME: Keep these around for at least a few major versions (10 years?).
   defvar( "ssl_cert_file",
-	  o->CertificateListVariable
-	  ( ({ "demo_certificate.pem" }), VAR_INVISIBLE,
-	     LOCALE(86, "SSL certificate file(s)"),
-	     LOCALE(87, "<p>The SSL certificate file(s) to use.</p>\n"
-		    "<p>This is a list of certificates, "
-		    "intermediate and root certificates, and "
-		    "corresponding private key files in any order.</p>\n"
-		    "<p>If a path is relative, it will first be "
-		    "searched for relative to %s, "
-		    "and if not found there relative to %s.</p>\n")));
+          o->CertificateListVariable
+          ( ({ "demo_certificate.pem" }), VAR_INVISIBLE,
+             LOCALE(86, "SSL certificate file(s)"),
+             LOCALE(87, "<p>The SSL certificate file(s) to use.</p>\n"
+                    "<p>This is a list of certificates, "
+                    "intermediate and root certificates, and "
+                    "corresponding private key files in any order.</p>\n"
+                    "<p>If a path is relative, it will first be "
+                    "searched for relative to %s, "
+                    "and if not found there relative to %s.</p>\n")));
 
   defvar( "ssl_key_file",
-	  o->KeyFileVariable
-	  ( "", VAR_INVISIBLE, LOCALE(88, "SSL key file"),
-	    LOCALE(89, "The SSL key file to use. If the path is "
-		   "relative, it will first be searched for "
-		   "relative to %s, and if not found there "
-		   "relative to %s. "
-		   "You do not have to specify a key "
-		   "file, leave this field empty to use the "
-		   "certificate file only. "
-		   "This field is obsolete, since the same setting "
-		   "can be done in <b>SSL certificate file(s)</b>.")));
+          o->KeyFileVariable
+          ( "", VAR_INVISIBLE, LOCALE(88, "SSL key file"),
+            LOCALE(89, "The SSL key file to use. If the path is "
+                   "relative, it will first be searched for "
+                   "relative to %s, and if not found there "
+                   "relative to %s. "
+                   "You do not have to specify a key "
+                   "file, leave this field empty to use the "
+                   "certificate file only. "
+                   "This field is obsolete, since the same setting "
+                   "can be done in <b>SSL certificate file(s)</b>.")));
 #endif
 
 #if constant(SSL.Constants.CIPHER_aead)
@@ -320,39 +320,39 @@ void set_up_ssl_variables( Protocol o )
   // FIXME: The cipher strength list ought to be generated dynamically
   //        from SSL.Constants.CIPHER_effective_keylengths.
   defvar("ssl_key_bits",
-	 Variable.Int(112, 0,
-		      LOCALE(1080, "Cipher suite minimum effective key strength"),
-		      LOCALE(1081,
-			     "<p>The minimum number of effective bits to "
-			     "secure connections.</p>\n"
-			     "<p>Common ciphers (subject to availability) "
-			     "in order of effective key bits as of "
-			     "December 2015:\n"
-			     "<dl>\n"
-			     "<dt>24</dt>\n"
-			     "<dd>Export RC4 (aka RC4-40)</dd>\n"
-			     "<dt>32</dt>\n"
-			     "<dd>Export DES (aka DES-40)</dd>\n"
-			     "<dt>38</dt>\n"
-			     "<dd>RC4</dd>\n"
-			     "<dt>40</dt>\n"
-			     "<dd>DES</dd>\n"
-			     "<dt>112</dt>\n"
-			     "<dd>3-DES (Note that this cipher is the "
-			     "minimum required cipher in many versions "
-			     "of TLS)</dd>\n"
-			     "<dt>128</dt>\n"
-			     "<dd>AES-128</dd>\n"
-			     "<dd>Camellia-128</dd>\n"
-			     "<dt>256</dt>\n"
-			     "<dd>AES-256</dd>\n"
-			     "<dd>Camellia-256</dd>\n"
-			     "<dd>ChaCha20</dd>\n"
-			     "</dl>\n"
-			     "</p>\n"
-			     "<p>Cipher strengths lower than 112 bits are "
-			     "<b>NOT</b> recommended, and there are RFCs that "
-			     "prohibit the use of all those suites.</p>\n")))->
+         Variable.Int(112, 0,
+                      LOCALE(1080, "Cipher suite minimum effective key strength"),
+                      LOCALE(1081,
+                             "<p>The minimum number of effective bits to "
+                             "secure connections.</p>\n"
+                             "<p>Common ciphers (subject to availability) "
+                             "in order of effective key bits as of "
+                             "December 2015:\n"
+                             "<dl>\n"
+                             "<dt>24</dt>\n"
+                             "<dd>Export RC4 (aka RC4-40)</dd>\n"
+                             "<dt>32</dt>\n"
+                             "<dd>Export DES (aka DES-40)</dd>\n"
+                             "<dt>38</dt>\n"
+                             "<dd>RC4</dd>\n"
+                             "<dt>40</dt>\n"
+                             "<dd>DES</dd>\n"
+                             "<dt>112</dt>\n"
+                             "<dd>3-DES (Note that this cipher is the "
+                             "minimum required cipher in many versions "
+                             "of TLS)</dd>\n"
+                             "<dt>128</dt>\n"
+                             "<dd>AES-128</dd>\n"
+                             "<dd>Camellia-128</dd>\n"
+                             "<dt>256</dt>\n"
+                             "<dd>AES-256</dd>\n"
+                             "<dd>Camellia-256</dd>\n"
+                             "<dd>ChaCha20</dd>\n"
+                             "</dl>\n"
+                             "</p>\n"
+                             "<p>Cipher strengths lower than 112 bits are "
+                             "<b>NOT</b> recommended, and there are RFCs that "
+                             "prohibit the use of all those suites.</p>\n")))->
     set_range(0, Variable.no_limit);
 #endif
 
@@ -360,68 +360,68 @@ void set_up_ssl_variables( Protocol o )
   // Pike 8.0 and later has much more advanced support for SSL/TLS.
 
   defvar( "ssl_password",
-	  Variable.String("", VAR_INVISIBLE,
-			  LOCALE(1082, "SSL decryption password"),
-			  LOCALE(1083, "Optional password to decrypt the "
-				 "SSL key file(s).")));
+          Variable.String("", VAR_INVISIBLE,
+                          LOCALE(1082, "SSL decryption password"),
+                          LOCALE(1083, "Optional password to decrypt the "
+                                 "SSL key file(s).")));
 
   defvar("ssl_suite_filter",
-	 Variable.IntChoice(0,
-			    ([
-			      0: "Roxen default policy",
-			      16: "Allow RSA-encryption",
-			      20: "Ephemeral key exchanges only",
-			      24: "Suite B (allow RSA-encryption)",
-			      28: "Suite B (ephemeral only)",
-			      30: "Suite B (transitional)",
-			      31: "Suite B (strict)",
-			    ]),
-			    0,
-			    LOCALE(1084, "Additional suite filtering"),
-			    LOCALE(1085, "<p>Selects an additional cipher suite "
-				   "policy.</p>"
-				   "<p>The supported filter modes are:\n"
-				   "<dl>\n"
-				   "<dt>Roxen default policy</dt>\n"
-				   "<dd>Use the Roxen default cipher suite "
-				   "selection policy. This is currently the "
-				   "same as <b>Ephemeral key exchanges "
-				   "only</b>, but may differ in other "
-				   "versions of Roxen.</dd>\n"
-				   "<dt>Allow RSA-encryption</dt>\n"
-				   "<dd>Allow old cipher suites that use RSA-"
-				   "encryption for the key-exchange. "
-				   "These suites are vulnerable to the "
-				   "<a href='https://robotattack.org/'>"
-				   "ROBOT</a> vulnerability, and should "
-				   "usually <b>NOT</b> be allowed.</dd>\n"
-				   "<dt>Ephemeral key exchanges only</dt>\n"
-				   "<dd>Only allow cipher suites that use a "
-				   "key exchange with ephemeral keys (aka "
-				   "\"Perfect Forward Security\"). Ie "
-				   "either ECDHE or DHE.</dd>\n"
-				   "<dt>Suite B (allow RSA-encryption)</dt>\n"
-				   "<dd>Same as <b>Allow RSA-encryption</b>, "
-				   "but prefer the suites specified in "
-				   "<b>Suite B</b>. Should usually <b>NOT</b> "
-				   "be used.</dd>\n"
-				   "<dt>Suite B (ephemeral only)</dt>\n"
-				   "<dd>Same as <b>Ephemeral key exchanges "
-				   "only</b>, but prefer the suites specified "
-				   "in <b>Suite B</b>.</dd>\n"
-				   "<dt>Suite B (transitional)</dt>\n"
-				   "<dd>Support only the suites specified by "
-				   "RFCs 5430 and 6460.</dd>\n"
-				   "<dt>Suite B (strict)</dt>\n"
-				   "<dd>Support only the suites specified by "
-				   "RFC 6460.</dt>\n"
-				   "</dl>\n"
-				   "</p>\n"
-				   "<p>Note: Full Suite B operation is not "
-				   "supported in all configurations.</p>\n"
-				   "<p>Note: For full Suite B compliance a "
-				   "suitable certificate must also be "
-				   "used.</p>")))->
+         Variable.IntChoice(0,
+                            ([
+                              0: "Roxen default policy",
+                              16: "Allow RSA-encryption",
+                              20: "Ephemeral key exchanges only",
+                              24: "Suite B (allow RSA-encryption)",
+                              28: "Suite B (ephemeral only)",
+                              30: "Suite B (transitional)",
+                              31: "Suite B (strict)",
+                            ]),
+                            0,
+                            LOCALE(1084, "Additional suite filtering"),
+                            LOCALE(1085, "<p>Selects an additional cipher suite "
+                                   "policy.</p>"
+                                   "<p>The supported filter modes are:\n"
+                                   "<dl>\n"
+                                   "<dt>Roxen default policy</dt>\n"
+                                   "<dd>Use the Roxen default cipher suite "
+                                   "selection policy. This is currently the "
+                                   "same as <b>Ephemeral key exchanges "
+                                   "only</b>, but may differ in other "
+                                   "versions of Roxen.</dd>\n"
+                                   "<dt>Allow RSA-encryption</dt>\n"
+                                   "<dd>Allow old cipher suites that use RSA-"
+                                   "encryption for the key-exchange. "
+                                   "These suites are vulnerable to the "
+                                   "<a href='https://robotattack.org/'>"
+                                   "ROBOT</a> vulnerability, and should "
+                                   "usually <b>NOT</b> be allowed.</dd>\n"
+                                   "<dt>Ephemeral key exchanges only</dt>\n"
+                                   "<dd>Only allow cipher suites that use a "
+                                   "key exchange with ephemeral keys (aka "
+                                   "\"Perfect Forward Security\"). Ie "
+                                   "either ECDHE or DHE.</dd>\n"
+                                   "<dt>Suite B (allow RSA-encryption)</dt>\n"
+                                   "<dd>Same as <b>Allow RSA-encryption</b>, "
+                                   "but prefer the suites specified in "
+                                   "<b>Suite B</b>. Should usually <b>NOT</b> "
+                                   "be used.</dd>\n"
+                                   "<dt>Suite B (ephemeral only)</dt>\n"
+                                   "<dd>Same as <b>Ephemeral key exchanges "
+                                   "only</b>, but prefer the suites specified "
+                                   "in <b>Suite B</b>.</dd>\n"
+                                   "<dt>Suite B (transitional)</dt>\n"
+                                   "<dd>Support only the suites specified by "
+                                   "RFCs 5430 and 6460.</dd>\n"
+                                   "<dt>Suite B (strict)</dt>\n"
+                                   "<dd>Support only the suites specified by "
+                                   "RFC 6460.</dt>\n"
+                                   "</dl>\n"
+                                   "</p>\n"
+                                   "<p>Note: Full Suite B operation is not "
+                                   "supported in all configurations.</p>\n"
+                                   "<p>Note: For full Suite B compliance a "
+                                   "suitable certificate must also be "
+                                   "used.</p>")))->
     set_changed_callback(update_ssl_suite_filter_default);
 #endif /* SSL.ServerConnection */
 #if constant(SSL.Constants.PROTOCOL_TLS_MAX)
@@ -437,13 +437,13 @@ void set_up_ssl_variables( Protocol o )
   }
 #endif
   defvar("ssl_min_version",
-	 Variable.IntChoice(SSL.Constants.PROTOCOL_TLS_1_0, ssl_versions, 0,
-			    LOCALE(1086, "Minimum supported version of SSL/TLS"),
-			    LOCALE(1087, "<p>Reject clients that want to use a "
-				   "version of SSL/TLS lower than the selected "
-				   "version.</p>\n"
-				   "<p>Note: SSL 3.0 has been deprecated "
-				   "in RFC 7568.</p>\n")));
+         Variable.IntChoice(SSL.Constants.PROTOCOL_TLS_1_0, ssl_versions, 0,
+                            LOCALE(1086, "Minimum supported version of SSL/TLS"),
+                            LOCALE(1087, "<p>Reject clients that want to use a "
+                                   "version of SSL/TLS lower than the selected "
+                                   "version.</p>\n"
+                                   "<p>Note: SSL 3.0 has been deprecated "
+                                   "in RFC 7568.</p>\n")));
 #endif /* SSL.Constants.PROTOCOL_TLS_MAX */
 }
 
@@ -514,227 +514,227 @@ void define_global_variables(  )
   Variable.Variable v;
 
   defvar("myisamchk",
-	 Variable.Language("Fast check and repair",
-			   ({ "Disable check",
-			      "Fast check and repair",
-			      "Normal check and repair",
-			      "Medium check and repair",
-			      "Extended check and repair" }),
-			   0, LOCALE(1014, "MySQL table check"), 
-			   LOCALE(1015, "Check MySQL tables on server start, "
-				  "and automatically repair if necessary. "
-				  "<b>Fast</b> checks only tables that haven't "
-				  "been closed properly. "
-				  "<b>Normal</b> checks for general errors. "
-				  "<b>Medium</b> catches 99.99 % of all "
-				  "errors. Should be good enough for most "
-				  "cases. "
-				  "<b>Extended</b> checks the tables VERY "
-				  "throughly.  Only use this in extreme cases "
-				  "as myisamchk should normally be able to "
-				  "find out if the table is OK even without "
-				  "this switch.")))
+         Variable.Language("Fast check and repair",
+                           ({ "Disable check",
+                              "Fast check and repair",
+                              "Normal check and repair",
+                              "Medium check and repair",
+                              "Extended check and repair" }),
+                           0, LOCALE(1014, "MySQL table check"), 
+                           LOCALE(1015, "Check MySQL tables on server start, "
+                                  "and automatically repair if necessary. "
+                                  "<b>Fast</b> checks only tables that haven't "
+                                  "been closed properly. "
+                                  "<b>Normal</b> checks for general errors. "
+                                  "<b>Medium</b> catches 99.99 % of all "
+                                  "errors. Should be good enough for most "
+                                  "cases. "
+                                  "<b>Extended</b> checks the tables VERY "
+                                  "throughly.  Only use this in extreme cases "
+                                  "as myisamchk should normally be able to "
+                                  "find out if the table is OK even without "
+                                  "this switch.")))
     ->set_changed_callback(lambda(Variable.Variable s)
-			   {
-			     string options = "";
-			     switch(query("myisamchk"))
-			     {
-			       case "Disable check":
-				 break;
-			       case "Fast check and repair":
-				 options += "--force --fast --silent\n"
-					    "--myisam-recover=QUICK,FORCE\n";
-				 break;
-			       case "Normal check and repair":
-				 options += "--force --check\n"
-					    "--myisam-recover=DEFAULT,FORCE\n";
-				 break;
-			       case "Medium check and repair":
-				 options += "--force --medium-check\n"
-					    "--myisam-recover=DEFAULT,FORCE\n";
-				 break;
-			       case "Extended check and repair":
-				 options += "--force --extend-check\n"
-					    "--myisam-recover=DEFAULT,FORCE\n";
-				 break;
-			       default:
-				 error("Unknown myisamchk level %O\n",
-				       query("myisamchk"));
-				 return;
-			     }
-			     Stdio.write_file(combine_path(roxenloader.query_configuration_dir(), "_mysql_table_check"), options);
-			   });
+                           {
+                             string options = "";
+                             switch(query("myisamchk"))
+                             {
+                               case "Disable check":
+                                 break;
+                               case "Fast check and repair":
+                                 options += "--force --fast --silent\n"
+                                            "--myisam-recover=QUICK,FORCE\n";
+                                 break;
+                               case "Normal check and repair":
+                                 options += "--force --check\n"
+                                            "--myisam-recover=DEFAULT,FORCE\n";
+                                 break;
+                               case "Medium check and repair":
+                                 options += "--force --medium-check\n"
+                                            "--myisam-recover=DEFAULT,FORCE\n";
+                                 break;
+                               case "Extended check and repair":
+                                 options += "--force --extend-check\n"
+                                            "--myisam-recover=DEFAULT,FORCE\n";
+                                 break;
+                               default:
+                                 error("Unknown myisamchk level %O\n",
+                                       query("myisamchk"));
+                                 return;
+                             }
+                             Stdio.write_file(combine_path(roxenloader.query_configuration_dir(), "_mysql_table_check"), options);
+                           });
 
   defvar("port_options", PortOptions());
 
   defvar("RestoreConnLogFull", 0,
-	  LOCALE(90, "Logging: Log entire file length in restored connections"),
-	  TYPE_FLAG,
-	  LOCALE(91, "If this toggle is enabled log entries for restored connections "
-	  "will log the amount of sent data plus the restoration location. "
-	  "Ie if a user has downloaded 100 bytes of a file already, and makes "
-	  "a Range request fetching the remaining 900 bytes, the log entry "
-	  "will log it as if the entire 1000 bytes were downloaded. "
-	  "<p>This is useful if you want to know if downloads were successful "
-	  "(the user has the complete file downloaded). The drawback is that "
-	  "bandwidth statistics on the log file will be incorrect. The "
-	  "statistics in Roxen will still be correct.</p>"));
+          LOCALE(90, "Logging: Log entire file length in restored connections"),
+          TYPE_FLAG,
+          LOCALE(91, "If this toggle is enabled log entries for restored connections "
+          "will log the amount of sent data plus the restoration location. "
+          "Ie if a user has downloaded 100 bytes of a file already, and makes "
+          "a Range request fetching the remaining 900 bytes, the log entry "
+          "will log it as if the entire 1000 bytes were downloaded. "
+          "<p>This is useful if you want to know if downloads were successful "
+          "(the user has the complete file downloaded). The drawback is that "
+          "bandwidth statistics on the log file will be incorrect. The "
+          "statistics in Roxen will still be correct.</p>"));
 
   defvar("default_font", "roxen builtin", LOCALE(92, "Default font"), 
-	 TYPE_FONT,
-	 LOCALE(93, "The default font to use when modules request a font."));
+         TYPE_FONT,
+         LOCALE(93, "The default font to use when modules request a font."));
 
   defvar("font_dirs", roxenloader.default_roxen_font_path,
          LOCALE(94, "Font directories"), TYPE_DIR_LIST,
-	 LOCALE(95, "This is where the fonts are located."));
+         LOCALE(95, "This is where the fonts are located."));
 
   defvar("font_oversampling", 1, LOCALE(521, "Font oversampling"), 
-	 TYPE_FLAG,
-	 LOCALE(522, "If set to Yes, fonts will be oversampled resulting "
-		"in higher quality but more fuzz. This will require clearing "
-		"of various graphics caches like the Graphic text and "
-		"GButton caches to take full effect."));
+         TYPE_FLAG,
+         LOCALE(522, "If set to Yes, fonts will be oversampled resulting "
+                "in higher quality but more fuzz. This will require clearing "
+                "of various graphics caches like the Graphic text and "
+                "GButton caches to take full effect."));
 
   defvar("logdirprefix", getenv("LOGDIR") || "../logs/", 
-	 LOCALE(96, "Logging: Log directory prefix"),
-	 TYPE_STRING|VAR_MORE,
-	 LOCALE(97, "This is the default file path that will be prepended "
-		"to the log file path in all the default modules and the "
-		"site."));
+         LOCALE(96, "Logging: Log directory prefix"),
+         TYPE_STRING|VAR_MORE,
+         LOCALE(97, "This is the default file path that will be prepended "
+                "to the log file path in all the default modules and the "
+                "site."));
 
   defvar("cache", 0, LOCALE(98, "Cache: Proxy Disk Cache Enabled"), 
-	 TYPE_FLAG,
-	 LOCALE(99, "If set to Yes, caching will be enabled."));
+         TYPE_FLAG,
+         LOCALE(99, "If set to Yes, caching will be enabled."));
 
   defvar("garb_min_garb", 1, 
-	 LOCALE(100, "Cache: Proxy Disk Cache Clean size"),
-	 TYPE_INT,
-	 LOCALE(101, "Minimum number of Megabytes removed when a garbage collect is done."),
-	  0, cache_disabled_p);
+         LOCALE(100, "Cache: Proxy Disk Cache Clean size"),
+         TYPE_INT,
+         LOCALE(101, "Minimum number of Megabytes removed when a garbage collect is done."),
+          0, cache_disabled_p);
 
   defvar("cache_minimum_left", 5,
-	 LOCALE(102, "Cache: Proxy Disk Cache Minimum available free space and inodes (in %)"), 
-	 TYPE_INT,
-	 LOCALE(103, "If less than this amount of disk space or inodes (in %) "
-		"is left, the cache will remove a few files. This check may "
-		"work half-hearted if the diskcache is spread over several "
-		"filesystems."),
-	 0,
+         LOCALE(102, "Cache: Proxy Disk Cache Minimum available free space and inodes (in %)"), 
+         TYPE_INT,
+         LOCALE(103, "If less than this amount of disk space or inodes (in %) "
+                "is left, the cache will remove a few files. This check may "
+                "work half-hearted if the diskcache is spread over several "
+                "filesystems."),
+         0,
 #if constant(filesystem_stat)
-	 cache_disabled_p
+         cache_disabled_p
 #else
-	 1
+         1
 #endif /* filesystem_stat */
-	 );
+         );
 
   defvar("cache_size", 25, LOCALE(104, "Cache: Proxy Disk Cache Size"), 
-	 TYPE_INT,
-	 LOCALE(105, "How many MB may the cache grow to before a garbage "
-		"collect is done?"),
-	 0, cache_disabled_p);
+         TYPE_INT,
+         LOCALE(105, "How many MB may the cache grow to before a garbage "
+                "collect is done?"),
+         0, cache_disabled_p);
 
   defvar("cache_max_num_files", 0,
-	 LOCALE(106, "Cache: Proxy Disk Cache Maximum number of files"), 
-	 TYPE_INT, 
-	 LOCALE(107, "How many cache files (inodes) may be on disk before "
-		"a garbage collect is done? May be left at zero to disable "
-		"this check."),
-	 0, cache_disabled_p);
+         LOCALE(106, "Cache: Proxy Disk Cache Maximum number of files"), 
+         TYPE_INT, 
+         LOCALE(107, "How many cache files (inodes) may be on disk before "
+                "a garbage collect is done? May be left at zero to disable "
+                "this check."),
+         0, cache_disabled_p);
 
   defvar("bytes_per_second", 50,
-	 LOCALE(108, "Cache: Proxy Disk Cache bytes per second"),
-	 TYPE_INT,
-	 LOCALE(109, "How file size should be treated during garbage collect. "
-	  "Each X bytes count as a second, so that larger files will "
-	  "be removed first."),
-	  0, cache_disabled_p);
+         LOCALE(108, "Cache: Proxy Disk Cache bytes per second"),
+         TYPE_INT,
+         LOCALE(109, "How file size should be treated during garbage collect. "
+          "Each X bytes count as a second, so that larger files will "
+          "be removed first."),
+          0, cache_disabled_p);
 
   defvar("cachedir", "/tmp/roxen_cache/",
-	  LOCALE(110, "Cache: Proxy Disk Cache Base Cache Dir"),
-	  TYPE_DIR,
-	  LOCALE(111, "This is the base directory where cached files will "
-		 "reside. To avoid mishaps, 'roxen_cache/' is always "
-		 "appended to this variable."),
-	 0, cache_disabled_p);
+          LOCALE(110, "Cache: Proxy Disk Cache Base Cache Dir"),
+          TYPE_DIR,
+          LOCALE(111, "This is the base directory where cached files will "
+                 "reside. To avoid mishaps, 'roxen_cache/' is always "
+                 "appended to this variable."),
+         0, cache_disabled_p);
 
   defvar("hash_num_dirs", 500,
-	 LOCALE(112, "Cache: Proxy Disk Cache Number of hash directories"),
-	 TYPE_INT|VAR_MORE,
-	 LOCALE(113, "This is the number of directories to hash the contents "
-		"of the disk cache into. Changing this value currently "
-		"invalidates the whole cache, since the cache cannot find "
-		"the old files. In the future, the cache will be "
-		"recalculated when this value is changed."),
-	 0, cache_disabled_p);
+         LOCALE(112, "Cache: Proxy Disk Cache Number of hash directories"),
+         TYPE_INT|VAR_MORE,
+         LOCALE(113, "This is the number of directories to hash the contents "
+                "of the disk cache into. Changing this value currently "
+                "invalidates the whole cache, since the cache cannot find "
+                "the old files. In the future, the cache will be "
+                "recalculated when this value is changed."),
+         0, cache_disabled_p);
 
   defvar("cache_keep_without_content_length", 1,
-	 LOCALE(114, "Cache: Proxy Disk Cache Keep without Content-Length"),
-	 TYPE_FLAG, 
-	 LOCALE(115, "Keep files without Content-Length header information "
-		"in the cache?"),
-	 0, cache_disabled_p);
+         LOCALE(114, "Cache: Proxy Disk Cache Keep without Content-Length"),
+         TYPE_FLAG, 
+         LOCALE(115, "Keep files without Content-Length header information "
+                "in the cache?"),
+         0, cache_disabled_p);
 
   defvar("cache_check_last_modified", 0,
-	 LOCALE(116, "Cache: Proxy Disk Cache Refreshes on Last-Modified"), 
-	 TYPE_FLAG,
-	 LOCALE(117, "If set, refreshes files without Expire header "
-		"information when they have reached double the age they had "
-		"when they got cached. This may be useful for some regularly "
-		"updated docs as online newspapers."),
-	 0, cache_disabled_p);
+         LOCALE(116, "Cache: Proxy Disk Cache Refreshes on Last-Modified"), 
+         TYPE_FLAG,
+         LOCALE(117, "If set, refreshes files without Expire header "
+                "information when they have reached double the age they had "
+                "when they got cached. This may be useful for some regularly "
+                "updated docs as online newspapers."),
+         0, cache_disabled_p);
 
   defvar("cache_last_resort", 0,
-	 LOCALE(118, "Cache: Proxy Disk Cache Last resort (in days)"), 
-	 TYPE_INT,
-	 LOCALE(119, "How many days shall files without Expires and without "
-		"Last-Modified header information be kept?"),
-	 0, cache_disabled_p);
+         LOCALE(118, "Cache: Proxy Disk Cache Last resort (in days)"), 
+         TYPE_INT,
+         LOCALE(119, "How many days shall files without Expires and without "
+                "Last-Modified header information be kept?"),
+         0, cache_disabled_p);
 
   defvar("cache_gc_logfile",  "",
-	 LOCALE(120, "Cache: Proxy Disk Cache Garbage collector logfile"), 
-	 TYPE_FILE,
-	 LOCALE(121, "Information about garbage collector runs, removed and "
-		"refreshed files, cache and disk status goes here."),
-	 0, cache_disabled_p);
+         LOCALE(120, "Cache: Proxy Disk Cache Garbage collector logfile"), 
+         TYPE_FILE,
+         LOCALE(121, "Information about garbage collector runs, removed and "
+                "refreshed files, cache and disk status goes here."),
+         0, cache_disabled_p);
 
   /// End of cache variables..
 
   // FIXME: Should mention real_version.
   defvar("default_ident", 1, 
-	 LOCALE(124, "Identify, Use default identification string"),
-	 TYPE_FLAG|VAR_MORE,
-	 LOCALE(125, "Setting this variable to No will display the "
-		"\"Identify as\" node where you can state what Roxen "
-		"should call itself when talking to clients.<br />"
-		"It is possible to disable this so that you can enter an "
-		"identification-string that does not include the actual "
-		"version of Roxen, as recommended by the HTTP/1.0 and "
-		"HTTP/1.1 RFCs:"
+         LOCALE(124, "Identify, Use default identification string"),
+         TYPE_FLAG|VAR_MORE,
+         LOCALE(125, "Setting this variable to No will display the "
+                "\"Identify as\" node where you can state what Roxen "
+                "should call itself when talking to clients.<br />"
+                "It is possible to disable this so that you can enter an "
+                "identification-string that does not include the actual "
+                "version of Roxen, as recommended by the HTTP/1.0 and "
+                "HTTP/1.1 RFCs:"
          "<p><blockquote><i>"
-	 "Note: Revealing the specific software version of the server "
-	 "may allow the server machine to become more vulnerable to "
-	 "attacks against software that is known to contain security "
-	 "holes. Server implementors are encouraged to make this field "
-	 "a configurable option."
-	 "</i></blockquote></p>"));
+         "Note: Revealing the specific software version of the server "
+         "may allow the server machine to become more vulnerable to "
+         "attacks against software that is known to contain security "
+         "holes. Server implementors are encouraged to make this field "
+         "a configurable option."
+         "</i></blockquote></p>"));
   
   defvar("ident", replace(real_version," ","·"), 
-	 LOCALE(126, "Identify, Identify as"),
-	 TYPE_STRING /* |VAR_MORE */,
-	 LOCALE(127, "Enter the name that Roxen should use when talking to clients. "),
-	 0, ident_disabled_p);
+         LOCALE(126, "Identify, Identify as"),
+         TYPE_STRING /* |VAR_MORE */,
+         LOCALE(127, "Enter the name that Roxen should use when talking to clients. "),
+         0, ident_disabled_p);
   
   defvar("config_header_string", "", 
-	 LOCALE(532, "Show this string in header"),
-	 TYPE_STRING /* |VAR_MORE */,
-	 LOCALE(533, "Enter a identifier that will be displayed in the head of "
-		   " config interface. This makes it easier to distinguish "
-		   "between different site configurations. "),
-	 0);
+         LOCALE(532, "Show this string in header"),
+         TYPE_STRING /* |VAR_MORE */,
+         LOCALE(533, "Enter a identifier that will be displayed in the head of "
+                   " config interface. This makes it easier to distinguish "
+                   "between different site configurations. "),
+         0);
   
   defvar("User", "", LOCALE(128, "Change uid and gid to"), 
-	 TYPE_STRING,
-	 LOCALE(129, #"\
+         TYPE_STRING,
+         LOCALE(129, #"\
 When Roxen is run as root, to be able to open port 80 for listening,
 change to this user-id and group-id when the port has been opened. If
 you specify a symbolic username, the default group of that user will
@@ -746,32 +746,32 @@ Roxen process no longer can read files it previously has written.
 The start script attempts to fix this for the standard file locations.</p>"));
 
   defvar("permanent_uid", 0, LOCALE(130, "Change uid and gid permanently"),
-	 TYPE_FLAG,
-	 LOCALE(131, "If this variable is set, Roxen will set it's uid and gid "
-	  "permanently. This disables the 'exec script as user' features "
-	  "for CGI, and also 'access files as user' in the filesystems, but "
-	  "it gives better security."));
+         TYPE_FLAG,
+         LOCALE(131, "If this variable is set, Roxen will set it's uid and gid "
+          "permanently. This disables the 'exec script as user' features "
+          "for CGI, and also 'access files as user' in the filesystems, but "
+          "it gives better security."));
 
   defvar("ModuleDirs", ({ "$LOCALDIR/modules/", "modules/" }),
-	 LOCALE(132, "Module directories"),
-	 TYPE_DIR_LIST,
-	 LOCALE(133, "This is a list of directories where Roxen should look "
-		"for modules. Can be relative paths, from the "
-		"directory you started Roxen. "
-		"The directories are searched in order for modules."));
+         LOCALE(132, "Module directories"),
+         TYPE_DIR_LIST,
+         LOCALE(133, "This is a list of directories where Roxen should look "
+                "for modules. Can be relative paths, from the "
+                "directory you started Roxen. "
+                "The directories are searched in order for modules."));
 
   defvar("CertGlobs", ({
-	   "*.pem", "certs/*.pem",
-	   "*.cer", "certs/*.cer",
-	   "*.key", "certs/*.key",
-	 }),
-	 LOCALE(1127, "Certificate and Private Key Globs"),
-	 TYPE_STRING_LIST,
-	 LOCALE(1128, "<p>This is a list of globs for which corresponding files "
-		"will automatically be imported into the certificate "
-		"database on server start.</p>\n"
-		"<p>It may be left empty, in which case any certificates "
-		"to use will need to be added by hand.</p>\n"))
+           "*.pem", "certs/*.pem",
+           "*.cer", "certs/*.cer",
+           "*.key", "certs/*.key",
+         }),
+         LOCALE(1127, "Certificate and Private Key Globs"),
+         TYPE_STRING_LIST,
+         LOCALE(1128, "<p>This is a list of globs for which corresponding files "
+                "will automatically be imported into the certificate "
+                "database on server start.</p>\n"
+                "<p>It may be left empty, in which case any certificates "
+                "to use will need to be added by hand.</p>\n"))
     ->set_changed_callback(lambda() {
                              roxenp()->background_run(0, roxenp()->scan_certs);
                            });
@@ -788,61 +788,61 @@ The start script attempts to fix this for the standard file locations.</p>"));
                              } );
 
   defvar("audit", 0, LOCALE(136, "Logging: Audit trail"), 
-	 TYPE_FLAG,
-	 LOCALE(137, "If Audit trail is set to Yes, all changes of uid will be "
-		"logged in the Event log."));
+         TYPE_FLAG,
+         LOCALE(137, "If Audit trail is set to Yes, all changes of uid will be "
+                "logged in the Event log."));
 
 #if constant(syslog)
   defvar("LogA", "file", LOCALE(138, "Logging: Debug log method"), 
-	 TYPE_STRING_LIST|VAR_MORE,
-	 LOCALE(139, "What method to use for the debug log, default is file, "
-	  "but "
-	  "syslog is also available. When using file, the output is really"
-	  " sent to stdout and stderr, but this is handled by the "
-	  "start script."),
-	 ({ "file", "syslog" }));
+         TYPE_STRING_LIST|VAR_MORE,
+         LOCALE(139, "What method to use for the debug log, default is file, "
+          "but "
+          "syslog is also available. When using file, the output is really"
+          " sent to stdout and stderr, but this is handled by the "
+          "start script."),
+         ({ "file", "syslog" }));
 
   defvar("LogSP", 1, LOCALE(140, "Logging: Log PID"), 
-	 TYPE_FLAG,
-	 LOCALE(141, "If set, the PID will be included in the syslog."), 0,
-	 syslog_disabled);
+         TYPE_FLAG,
+         LOCALE(141, "If set, the PID will be included in the syslog."), 0,
+         syslog_disabled);
 
   defvar("LogCO", 0, LOCALE(142, "Logging: Log to system console"), 
-	 TYPE_FLAG,
-	 LOCALE(143, "If set and syslog is used, the error/debug message "
-		"will be printed to the system console as well as to the "
-		"system log."),
-	  0, syslog_disabled);
+         TYPE_FLAG,
+         LOCALE(143, "If set and syslog is used, the error/debug message "
+                "will be printed to the system console as well as to the "
+                "system log."),
+          0, syslog_disabled);
 
   defvar("LogST", "Daemon", LOCALE(144, "Logging: Syslog type"), 
-	 TYPE_STRING_LIST,
-	 LOCALE(145, "When using SYSLOG, which log type should be used."),
-	 ({ "Daemon", "Local 0", "Local 1", "Local 2", "Local 3",
-	    "Local 4", "Local 5", "Local 6", "Local 7", "User" }),
-	 syslog_disabled);
+         TYPE_STRING_LIST,
+         LOCALE(145, "When using SYSLOG, which log type should be used."),
+         ({ "Daemon", "Local 0", "Local 1", "Local 2", "Local 3",
+            "Local 4", "Local 5", "Local 6", "Local 7", "User" }),
+         syslog_disabled);
 
   defvar("LogWH", "Errors", LOCALE(146, "Logging: Log what to syslog"), 
-	 TYPE_STRING_LIST,
-	 LOCALE(147, "When syslog is used, how much should be sent to it?<br /><hr />"
-		"Fatal:    Only messages about fatal errors<br />"
-		"Errors:   Only error or fatal messages<br />"
-		"Warning:  Warning messages as well<br />"
-		"Debug:    Debug messager as well<br />"
-		"All:      Everything<br />"),
-	 ({ "Fatal", "Errors",  "Warnings", "Debug", "All" }),
-	 syslog_disabled);
+         TYPE_STRING_LIST,
+         LOCALE(147, "When syslog is used, how much should be sent to it?<br /><hr />"
+                "Fatal:    Only messages about fatal errors<br />"
+                "Errors:   Only error or fatal messages<br />"
+                "Warning:  Warning messages as well<br />"
+                "Debug:    Debug messager as well<br />"
+                "All:      Everything<br />"),
+         ({ "Fatal", "Errors",  "Warnings", "Debug", "All" }),
+         syslog_disabled);
 
   defvar("LogNA", "Roxen", LOCALE(148, "Logging: Log as"), 
-	 TYPE_STRING,
-	 LOCALE(149, "When syslog is used, this will be the identification "
-		"of the Roxen daemon. The entered value will be appended to "
-		"all logs."),
-	 0, syslog_disabled);
+         TYPE_STRING,
+         LOCALE(149, "When syslog is used, this will be the identification "
+                "of the Roxen daemon. The entered value will be appended to "
+                "all logs."),
+         0, syslog_disabled);
 #endif // constant(syslog)
 
   v = Variable.Flag (0, 0,
-		     LOCALE(534, "Logging: Dump threads by file polling"),
-		     LOCALE(535, #"\
+                     LOCALE(534, "Logging: Dump threads by file polling"),
+                     LOCALE(535, #"\
 <p>This option can be used to produce dumps of all the threads in the
 debug log in situations where the Administration Interface doesn't
 respond.</p>
@@ -868,10 +868,10 @@ process to get a thread dump.</p>
   definvisvar ("slow_req_bt_permanent", 0, TYPE_FLAG)->
     set_changed_callback (
       lambda (Variable.Variable v) {
-	if (v->query())
-	  set ("slow_req_bt_count", -1);
-	else if (query ("slow_req_bt_count") < 0)
-	  set ("slow_req_bt_count", 0);
+        if (v->query())
+          set ("slow_req_bt_count", -1);
+        else if (query ("slow_req_bt_count") < 0)
+          set ("slow_req_bt_count", 0);
       });
 
   v = Variable.TmpInt (
@@ -912,9 +912,9 @@ or in the DEFINES environment variable).</p>
     });
 
   v = defvar ("slow_req_bt_timeout", 10.0,
-	      LOCALE(1019, "Logging: Slow request timeout"),
-	      TYPE_FLOAT,
-	      LOCALE(1020, #"\
+              LOCALE(1019, "Logging: Slow request timeout"),
+              TYPE_FLOAT,
+              LOCALE(1020, #"\
 <p>The timeout in seconds for requests or background jobs to trig a
 thread dump. Zero disables monitoring of those. See the \"Dump threads
 for slow requests\" setting for details.</p>"));
@@ -922,14 +922,14 @@ for slow requests\" setting for details.</p>"));
   v->set_precision (3);
 #ifndef NO_SLOW_REQ_BT
   v->set_changed_callback (lambda (Variable.Variable v) {
-			     slow_req_timeout_changed();
-			   });
+                             slow_req_timeout_changed();
+                           });
 #endif
 
   v = defvar ("slow_be_bt_timeout", 0.05,
-	      LOCALE(1021, "Logging: Slow backend timeout"),
-	      TYPE_FLOAT,
-	      LOCALE(1022, #"\
+              LOCALE(1021, "Logging: Slow backend timeout"),
+              TYPE_FLOAT,
+              LOCALE(1022, #"\
 <p>The timeout in seconds for the backend thread to trig a thread
 dump. Zero disables monitoring of it. See the \"Dump threads for slow
 requests\" setting for details.</p>
@@ -947,112 +947,112 @@ be of real use.</p>"));
   v->set_precision (3);
 #ifndef NO_SLOW_REQ_BT
   v->set_changed_callback (lambda (Variable.Variable v) {
-			     slow_be_timeout_changed();
-			   });
+                             slow_be_timeout_changed();
+                           });
 #endif
 
 #ifdef THREADS
   defvar("numthreads", 15, LOCALE(150, "Number of threads to run"), 
-	 TYPE_INT,
-	 LOCALE(151, "The number of simultaneous threads Roxen will use.\n"
-	  "<p>Please note that even if this is one, Roxen will still "
-	  "be able to serve multiple requests, using a select loop based "
-	  "system.\n"
-	  "<i>This is quite useful if you have more than one CPU in "
-	  "your machine, or if you have a lot of slow NFS accesses.</i></p>"
-  	  "<p>Do not increase this over 20 unless you have a "
-	  "very good reason to do so.</p>"));
+         TYPE_INT,
+         LOCALE(151, "The number of simultaneous threads Roxen will use.\n"
+          "<p>Please note that even if this is one, Roxen will still "
+          "be able to serve multiple requests, using a select loop based "
+          "system.\n"
+          "<i>This is quite useful if you have more than one CPU in "
+          "your machine, or if you have a lot of slow NFS accesses.</i></p>"
+          "<p>Do not increase this over 20 unless you have a "
+          "very good reason to do so.</p>"));
 #endif // THREADS
 
 #ifndef __NT__
   defvar("abs_engage", 0, LOCALE(154, "Auto Maintenance: Enable Anti-Block-System"),
-	 TYPE_FLAG|VAR_MORE,
-	 LOCALE(155, "If set, the anti-block-system will be enabled. "
-		"This will restart the server after a configurable number of minutes if it "
-		"locks up. If you are running in a single threaded environment heavy "
-		"calculations will also halt the server. In multi-threaded mode bugs such as "
-		"eternal loops will not cause the server to reboot, since only one thread is "
-		"blocked. In general there is no harm in having this option enabled. "));
+         TYPE_FLAG|VAR_MORE,
+         LOCALE(155, "If set, the anti-block-system will be enabled. "
+                "This will restart the server after a configurable number of minutes if it "
+                "locks up. If you are running in a single threaded environment heavy "
+                "calculations will also halt the server. In multi-threaded mode bugs such as "
+                "eternal loops will not cause the server to reboot, since only one thread is "
+                "blocked. In general there is no harm in having this option enabled. "));
 
 
 
   defvar("abs_timeout", 5, LOCALE(156, "Auto Maintenance: ABS Timeout"),
-	 TYPE_INT_LIST|VAR_MORE,
-	 LOCALE(157, "If the server is unable to accept connection for this many "
-		"minutes, it will be restarted. You need to find a balance: "
-		"if set too low, the server will be restarted even if it's doing "
-		"legal things (like generating many images), if set too high you might "
-		"get a long downtime if the server for some reason locks up."),
-	 ({1,2,3,4,5,10,15,30,60}),
-	 lambda() {return !query("abs_engage");});
+         TYPE_INT_LIST|VAR_MORE,
+         LOCALE(157, "If the server is unable to accept connection for this many "
+                "minutes, it will be restarted. You need to find a balance: "
+                "if set too low, the server will be restarted even if it's doing "
+                "legal things (like generating many images), if set too high you might "
+                "get a long downtime if the server for some reason locks up."),
+         ({1,2,3,4,5,10,15,30,60}),
+         lambda() {return !query("abs_engage");});
 
   defvar("abs_vmemlimit", 0,
-	 LOCALE(0, "Auto Maintenance: ABS Memory limit (VMEM)"),
-	 TYPE_INT,
-	 LOCALE(0, "Automatically restart the Roxen process if its "
-		"virtual memory usage grows past this limit in megabytes. "
-		"Set to 0 to disable."),
-	 UNDEFINED,
-	 lambda() { return !query("abs_engage");});
+         LOCALE(0, "Auto Maintenance: ABS Memory limit (VMEM)"),
+         TYPE_INT,
+         LOCALE(0, "Automatically restart the Roxen process if its "
+                "virtual memory usage grows past this limit in megabytes. "
+                "Set to 0 to disable."),
+         UNDEFINED,
+         lambda() { return !query("abs_engage");});
   defvar("abs_rmemlimit", 0,
-	 LOCALE(0, "Auto Maintenance: ABS Memory limit (RSS)"),
-	 TYPE_INT,
-	 LOCALE(0, "Automatically restart the Roxen process if its active "
-		"(aka resident) memory usage grows past this limit in "
-		"megabytes. Set to 0 to disable."),
-	 UNDEFINED,
-	 lambda() { return !query("abs_engage");});
+         LOCALE(0, "Auto Maintenance: ABS Memory limit (RSS)"),
+         TYPE_INT,
+         LOCALE(0, "Automatically restart the Roxen process if its active "
+                "(aka resident) memory usage grows past this limit in "
+                "megabytes. Set to 0 to disable."),
+         UNDEFINED,
+         lambda() { return !query("abs_engage");});
 
   defvar("abs_email", "", LOCALE(0, "Auto Maintenance: ABS Email Adress"),
-	 TYPE_STRING,
-	 LOCALE(0, "<p>Send ABS reports to this email adress.</p>\n"
-		"<p>Leaving it empty disables sending of emails.</p>\n"),
-	 UNDEFINED,
-	 lambda() { return !query("abs_engage");});
+         TYPE_STRING,
+         LOCALE(0, "<p>Send ABS reports to this email adress.</p>\n"
+                "<p>Leaving it empty disables sending of emails.</p>\n"),
+         UNDEFINED,
+         lambda() { return !query("abs_engage");});
   defvar("abs_sender", "", LOCALE(0, "Auto Maintenance: ABS Sender Adress"),
-	 TYPE_STRING,
-	 LOCALE(0, "<p>Send ABS reports from this email adress.</p>\n"
-		"<p>Leaving it empty causes the to adress to be used "
-		"in the <b>From</b> header, and the empty string to "
-		"be used in the <b>MAIL FROM</b> SMTP-command.</p>\n"),
-	 UNDEFINED,
-	 lambda() {
-	   return !query("abs_engage") ||
-	     !has_value(query("abs_email"), "@");
-	 });
+         TYPE_STRING,
+         LOCALE(0, "<p>Send ABS reports from this email adress.</p>\n"
+                "<p>Leaving it empty causes the to adress to be used "
+                "in the <b>From</b> header, and the empty string to "
+                "be used in the <b>MAIL FROM</b> SMTP-command.</p>\n"),
+         UNDEFINED,
+         lambda() {
+           return !query("abs_engage") ||
+             !has_value(query("abs_email"), "@");
+         });
 #endif // __NT__
 
   defvar("auto_fetch_rxps", 0,
-	 LOCALE(1088, "Auto Maintenance: Enable Automatic Patch import"),
-	 TYPE_FLAG,
-	 LOCALE(1089, "Automatically fetch and import patches to the server "
-		"from www.roxen.com."));
+         LOCALE(1088, "Auto Maintenance: Enable Automatic Patch import"),
+         TYPE_FLAG,
+         LOCALE(1089, "Automatically fetch and import patches to the server "
+                "from www.roxen.com."));
 
   defvar("locale",
-	 Variable.Language("Standard", ({ "Standard" }) +
-			   Locale.list_languages("roxen_config"),
-			   0, LOCALE(158, "Default language"), 
-			   LOCALE(159, "Locale, used to localize all "
-				  "messages in Roxen. Standard means using "
-				  "the default locale, which varies "
-				  "according to the values of "
-				  "the 'LC_MESSAGES' and 'LANG' environment "
-				  "variables.")))
+         Variable.Language("Standard", ({ "Standard" }) +
+                           Locale.list_languages("roxen_config"),
+                           0, LOCALE(158, "Default language"), 
+                           LOCALE(159, "Locale, used to localize all "
+                                  "messages in Roxen. Standard means using "
+                                  "the default locale, which varies "
+                                  "according to the values of "
+                                  "the 'LC_MESSAGES' and 'LANG' environment "
+                                  "variables.")))
     ->set_changed_callback( lambda(Variable.Variable s) {
-			      roxenp()->set_default_locale(query("locale"));
-			      roxenp()->set_locale();
-			    } );
+                              roxenp()->set_default_locale(query("locale"));
+                              roxenp()->set_locale();
+                            } );
 
   string secret=Crypto.MD5.hash(""+time(1)+random(100000));
   secret = MIME.encode_base64(secret,1);
   defvar("server_salt", secret[..sizeof(secret)-3], LOCALE(8, "Server secret"),
-	 TYPE_STRING|VAR_MORE|VAR_NO_DEFAULT,
-	 LOCALE(9, "The server secret is a string used in some "
-		"cryptographic functions, such as calculating "
-		"unique, non-guessable session id's. Change this "
-		"value into something that is hard to guess, unless "
-		"you are satisfied with what your computers random "
-		"generator has produced.") );
+         TYPE_STRING|VAR_MORE|VAR_NO_DEFAULT,
+         LOCALE(9, "The server secret is a string used in some "
+                "cryptographic functions, such as calculating "
+                "unique, non-guessable session id's. Change this "
+                "value into something that is hard to guess, unless "
+                "you are satisfied with what your computers random "
+                "generator has produced.") );
 
   secret = Crypto.MD5.hash(""+time(1)+random(100000)+"x"+gethrtime());
 
@@ -1062,42 +1062,42 @@ be of real use.</p>"));
 
   
   defvar("suicide_engage", 0,
-	 LOCALE(160, "Auto Maintenance: Enable Automatic Restart"),
-	 TYPE_FLAG|VAR_MORE,
-	 LOCALE(161, "If set, Roxen will automatically restart after a "
-		"configurable number of days. Since Roxen uses a monolith, "
-		"non-forking server model the process tends to grow in size "
-		"over time. This is mainly due to heap fragmentation but "
-		"may also sometimes be because of memory leaks.")
-	  );
+         LOCALE(160, "Auto Maintenance: Enable Automatic Restart"),
+         TYPE_FLAG|VAR_MORE,
+         LOCALE(161, "If set, Roxen will automatically restart after a "
+                "configurable number of days. Since Roxen uses a monolith, "
+                "non-forking server model the process tends to grow in size "
+                "over time. This is mainly due to heap fragmentation but "
+                "may also sometimes be because of memory leaks.")
+          );
 
   definvisvar( "last_suicide", 0, TYPE_INT );
   
   defvar("suicide_schedule",
-	 Variable.Schedule( ({ 2, 1, 1, 0, 4 }), 0,
-			    LOCALE(387,"Auto Maintenance: Restart Schedule"),
-			    LOCALE(388, "Automatically restart the "
-				   "server according to this schedule.") ) )
+         Variable.Schedule( ({ 2, 1, 1, 0, 4 }), 0,
+                            LOCALE(387,"Auto Maintenance: Restart Schedule"),
+                            LOCALE(388, "Automatically restart the "
+                                   "server according to this schedule.") ) )
     ->set_link_enabled("suicide_engage")
     ->set_link_last_run("last_suicide")
     ->set_invisibility_check_callback (
       lambda(RequestID id, Variable.Variable f)
-	{return !query("suicide_engage");}
+        {return !query("suicide_engage");}
     );
 
   defvar("patch_on_restart", 0,
-	 LOCALE(1090, "Auto Maintenance: Restart and apply patches"),
-	 TYPE_FLAG,
-	 LOCALE(1091, "Apply any pending imported patches when the server is "
-		"automatically restarted."))
+         LOCALE(1090, "Auto Maintenance: Restart and apply patches"),
+         TYPE_FLAG,
+         LOCALE(1091, "Apply any pending imported patches when the server is "
+                "automatically restarted."))
     ->set_invisibility_check_callback (
       lambda(RequestID id, Variable.Variable f)
       {return !query("suicide_engage");});
 
   defvar ("mem_cache_gc_2", 5 * 60,
-	  LOCALE(1045, "Cache: Memory cache GC interval"),
-	  TYPE_INT,
-	  LOCALE(1046, #"\
+          LOCALE(1045, "Cache: Memory cache GC interval"),
+          TYPE_INT,
+          LOCALE(1046, #"\
 <p>Interval in seconds between RAM cache garbage collector runs. This
 GC removes entries from the RAM caches that have timed out or are
 stale for other reasons, thereby making more room for new entries. The
@@ -1115,9 +1115,9 @@ Running it too often causes unnecessary server load.</p>"))
   definvisvar ("mem_cache_gc", 300, TYPE_INT);
 
   v = defvar ("mem_cache_size", 100,
-	      LOCALE(1043, "Cache: Memory cache size"),
-	      TYPE_INT,
-	      LOCALE(1044, #"\
+              LOCALE(1043, "Cache: Memory cache size"),
+              TYPE_INT,
+              LOCALE(1044, #"\
 <p>Maximum size in MByte for all RAM caches taken together. This limit
 covers the caches visible in the <a
 href='/actions/?action=cachestatus.pike&class=status&_roxen_wizard_id=&form._roxen_wizard_id;'>Cache status</a> page.</p>
@@ -1139,21 +1139,21 @@ the Roxen instance of the MySQL server).</p>"));
     });
 
   defvar("replicate", 0,
-	 LOCALE(163, "Enable replication system" ),
-	 TYPE_FLAG,
-	 LOCALE(337,"If enabled, Roxen will enable various replication systems "
-		"needed to set up multiple frontend systems. You will need "
-		"a database named 'replicate' that resides in a shared mysql "
-		"server for this to work. Also, all servers has to have this "
-		"flag set. Roxen must be restarted before changes to this "
-		"variable takes effect." ) );
+         LOCALE(163, "Enable replication system" ),
+         TYPE_FLAG,
+         LOCALE(337,"If enabled, Roxen will enable various replication systems "
+                "needed to set up multiple frontend systems. You will need "
+                "a database named 'replicate' that resides in a shared mysql "
+                "server for this to work. Also, all servers has to have this "
+                "flag set. Roxen must be restarted before changes to this "
+                "variable takes effect." ) );
   
   defvar("config_file_comments", 0,
-	 LOCALE(172, "Commented config files"),
-	 TYPE_FLAG,
-	 LOCALE(173, "Save the variable documentation strings as comments "
-		"in the configuration files. Only useful if you read or "
-		"edit the config files directly."));
+         LOCALE(172, "Commented config files"),
+         TYPE_FLAG,
+         LOCALE(173, "Save the variable documentation strings as comments "
+                "in the configuration files. Only useful if you read or "
+                "edit the config files directly."));
 
   defvar("image_cache_max_entry_size",
     Variable.Int(128, 0,
@@ -1165,19 +1165,19 @@ the Roxen instance of the MySQL server).</p>"));
   // SMTP stuff
 
   defvar("mail_spooldir", "../var/spool/mqueue/",
-	 "SMTP: Mail queue directory", TYPE_DIR,
-	 "Directory where the mail spool queue is stored.");
+         "SMTP: Mail queue directory", TYPE_DIR,
+         "Directory where the mail spool queue is stored.");
 
   defvar("mail_maxhops", 10, "SMTP: Maximum number of hops", TYPE_INT,
-	 "Maximum number of MTA hops (used to avoid loops).<br>\n"
-	 "Zero means no limit.");
+         "Maximum number of MTA hops (used to avoid loops).<br>\n"
+         "Zero means no limit.");
 
   defvar("mail_bounce_size_limit", 262144,
-	 "SMTP: Maximum bounce size", TYPE_INT,
-	 "<p>Maximum size (bytes) of the embedded message in "
-	 "generated bounces.</p>"
-	 "<p>Set to zero for no limit.</p>"
-	 "<p>Set to -1 to disable bounces.</p>");
+         "SMTP: Maximum bounce size", TYPE_INT,
+         "<p>Maximum size (bytes) of the embedded message in "
+         "generated bounces.</p>"
+         "<p>Set to zero for no limit.</p>"
+         "<p>Set to -1 to disable bounces.</p>");
 
   // Try to get our FQDN.
   string hostname = gethostname();
@@ -1187,33 +1187,33 @@ the Roxen instance of the MySQL server).</p>"));
   }
 
   defvar("mail_hostname", hostname,
-	 "SMTP: Mailserver host name", TYPE_STRING,
-	 "This is the hostname used by the server in the SMTP "
-	 "handshake (EHLO & HELO).");
+         "SMTP: Mailserver host name", TYPE_STRING,
+         "This is the hostname used by the server in the SMTP "
+         "handshake (EHLO & HELO).");
 
   defvar("mail_postmaster",
-	 "Postmaster <postmaster@" + hostname + ">",
-	 "SMTP: Postmaster address", TYPE_STRING,
-	 "Email address of the postmaster.");
+         "Postmaster <postmaster@" + hostname + ">",
+         "SMTP: Postmaster address", TYPE_STRING,
+         "Email address of the postmaster.");
 
   defvar("mail_mailerdaemon",
-	 "Mail Delivery Subsystem <MAILER-DAEMON@" + hostname + ">",
-	 "SMTP: Mailer daemon address", TYPE_STRING,
-	 "Email address of the mailer daemon.");
+         "Mail Delivery Subsystem <MAILER-DAEMON@" + hostname + ">",
+         "SMTP: Mailer daemon address", TYPE_STRING,
+         "Email address of the mailer daemon.");
 #endif /* SMTP_RELAY */
 
 #ifdef SNMP_AGENT
   // SNMP stuffs
   defvar("snmp_agent", 0, LOCALE(999, "SNMP: Enable SNMP agent"),
-	 TYPE_FLAG|VAR_MORE,
-	 "If set, the Roxen SNMP agent will be anabled."
-	 );
+         TYPE_FLAG|VAR_MORE,
+         "If set, the Roxen SNMP agent will be anabled."
+         );
   defvar("snmp_community", ({"public:ro"}), "SNMP: Community string",
          TYPE_STRING_LIST,
          "One community name per line. Default permissions are 'read-only'. "
-	 "'Read-write' permissions can be specified by appending :rw to the "
-	 "community name (for example mypub:rw).",
-	 0, snmp_disabled);
+         "'Read-write' permissions can be specified by appending :rw to the "
+         "community name (for example mypub:rw).",
+         0, snmp_disabled);
 /*
   defvar("snmp_mode", "smart", "SNMP: Agent mode",
          TYPE_STRING_LIST,
@@ -1225,69 +1225,69 @@ the Roxen instance of the MySQL server).</p>"));
          TYPE_STRING,
          "Agent listening IP adress and port. Format: [[host]:port] "
          "If host isn't set then the IP address of the config interface "
-	 "will be used.",
-	 0, snmp_disabled);
+         "will be used.",
+         0, snmp_disabled);
 
   defvar("snmp_global_traphosts", ({}),"SNMP: Trap destinations",
          TYPE_STRING_LIST,
          "The SNMP traphost URL for sending common traps (like coldstart).",
-	 0, snmp_disabled);
+         0, snmp_disabled);
 
   defvar("snmp_syscontact","","SNMP: System MIB - Contact",
          TYPE_STRING,
          "The textual identification of the contact person for this managed "
          "node, together with information on how to contact this person.",
-	 0, snmp_disabled);
+         0, snmp_disabled);
   defvar("snmp_sysname","","SNMP: System MIB - Name",
          TYPE_STRING,
          "An administratively-assigned name for this managed node. By "
          "convention, this is the node's fully-qualified domain name.",
-	 0, snmp_disabled);
+         0, snmp_disabled);
   defvar("snmp_syslocation","","SNMP: System MIB - Location",
          TYPE_STRING,
          "The physical location of this node (e.g., `telephone closet, 3rd "
          "floor').",
-	 0, snmp_disabled);
+         0, snmp_disabled);
   defvar("snmp_sysservices",72,"SNMP: System MIB - Services",
          TYPE_INT,
          "A value which indicates the set of services that this entity "
          "primarily offers.",
-	 0, snmp_disabled);
+         0, snmp_disabled);
 #endif // SNMP_AGENT
 
   defvar("global_position",
-	 Variable.Variable(0, VAR_INVISIBLE));
+         Variable.Variable(0, VAR_INVISIBLE));
 
   defvar("fsgc_starttime",
-	 Variable.Schedule(({ 2, 2, 1, 0, 3, 0 }), 0,
-			   "FSGC: Start time",
-			   "<p>Time after which the Filesystem "
-			   "Garbage Collector subsystem may run.</p>\n"
-			   "<p>Disable this to disable the FSGC.</p>\n"
-			   "<p>Note that other values for this setting "
-			   "are only relevant if a <b>Stop time</b> is "
-			   "configured, and that that setting differs from "
-			   "this setting.</p>", (< 0, 2>)));
+         Variable.Schedule(({ 2, 2, 1, 0, 3, 0 }), 0,
+                           "FSGC: Start time",
+                           "<p>Time after which the Filesystem "
+                           "Garbage Collector subsystem may run.</p>\n"
+                           "<p>Disable this to disable the FSGC.</p>\n"
+                           "<p>Note that other values for this setting "
+                           "are only relevant if a <b>Stop time</b> is "
+                           "configured, and that that setting differs from "
+                           "this setting.</p>", (< 0, 2>)));
 
   defvar("fsgc_stoptime",
-	 Variable.Schedule(({ 0, 2, 1, 0, 5, 0 }), 0,
-			   "FSGC: Stop time",
-			   "<p>Time after which the Filesystem "
-			   "Garbage Collector subsystem may not run.</p>\n"
-			   "<p>Disable this or set it to the same value as "
-			   "<b>Start time</b> to enable running the FSGC "
-			   "at any time of the day.</p>", (< 0, 2>)));
+         Variable.Schedule(({ 0, 2, 1, 0, 5, 0 }), 0,
+                           "FSGC: Stop time",
+                           "<p>Time after which the Filesystem "
+                           "Garbage Collector subsystem may not run.</p>\n"
+                           "<p>Disable this or set it to the same value as "
+                           "<b>Start time</b> to enable running the FSGC "
+                           "at any time of the day.</p>", (< 0, 2>)));
 
 #ifdef ENABLE_OUTGOING_PROXY
   defvar("use_proxy", 0,
-	 LOCALE(1052, "Proxy: Use proxy (experimental)"), TYPE_FLAG,
-	 LOCALE(1053, "Use proxy for outgoing requests. E.g. when browsing "
-		"external web sites through the Linkbrowser or when Insert "
-		"cached-href fetches data from an external location."));
+         LOCALE(1052, "Proxy: Use proxy (experimental)"), TYPE_FLAG,
+         LOCALE(1053, "Use proxy for outgoing requests. E.g. when browsing "
+                "external web sites through the Linkbrowser or when Insert "
+                "cached-href fetches data from an external location."));
   
   defvar("proxy_url", "",
-	 LOCALE(1054, "Proxy: Proxy URL"), TYPE_STRING,
-	 LOCALE(1055, "The URL of the proxy to use for outgoing requests."));
+         LOCALE(1054, "Proxy: Proxy URL"), TYPE_STRING,
+         LOCALE(1055, "The URL of the proxy to use for outgoing requests."));
   
   defvar("proxy_username", "",
          LOCALE(1056, "Proxy: Proxy username"), TYPE_STRING,

@@ -81,11 +81,11 @@ Function CreateMysqlLocation()
         Else
           If i = 6 Then
             myisamchk = match.Value
-	  Else
+          Else
             If i = 8 Then
               mysqladmin = match.Value
-	    Else
-	      rest = rest & ";" & match.Value
+            Else
+              rest = rest & ";" & match.Value
             End If
           End If
         End If
