@@ -35,6 +35,7 @@
 
 # List of files that MUST use tab-indent
 Makefile -space_indent tab_indent
+makefile -space_indent tab_indent
 
 # List of files that use CRLF at EOL:
 /server/bin/mysql_client_nt.bat eol=crlf
