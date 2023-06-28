@@ -13,24 +13,24 @@ LOCALMODULEDIR = ../../../local/modules
 all : roxen_module.jar roxen_servlet.jar compile_modules
 
 roxen_servlet.jar : servlet_classes
-        jar cf $@ com/roxen/servlet/*.class
+	jar cf $@ com/roxen/servlet/*.class
 
 servlet_classes : $(SRCDIR)/com/roxen/servlet/*.java
-        CLASSPATH=$(CLASSPATH) $(JAVAC) $(JAVAFLAGS) $^ -d .
+	CLASSPATH=$(CLASSPATH) $(JAVAC) $(JAVAFLAGS) $^ -d .
 
 roxen_module.jar : module_classes
-        jar cf $@ com/roxen/roxen/*.class
+	jar cf $@ com/roxen/roxen/*.class
 
 module_classes : $(SRCDIR)/com/roxen/roxen/*.java
-        CLASSPATH=$(CLASSPATH) $(JAVAC) $(JAVAFLAGS) $^ -d .
+	CLASSPATH=$(CLASSPATH) $(JAVAC) $(JAVAFLAGS) $^ -d .
 
 compile_modules: roxen_module.jar 
-        CLASSPATH=roxen_module.jar find $(MODULEDIR) -name '*.java' \
-                -exec $(JAVAC) $(JAVAFLAGS) {} \;
-        @test ! -d $(LOCALMODULEDIR) || \
-                CLASSPATH=roxen_module.jar \
-                find $(LOCALMODULEDIR) -name '*.java' \
-                -exec $(JAVAC) $(JAVAFLAGS) {} \;
+	CLASSPATH=roxen_module.jar find $(MODULEDIR) -name '*.java' \
+		-exec $(JAVAC) $(JAVAFLAGS) {} \;
+	@test ! -d $(LOCALMODULEDIR) || \
+		CLASSPATH=roxen_module.jar \
+		find $(LOCALMODULEDIR) -name '*.java' \
+		-exec $(JAVAC) $(JAVAFLAGS) {} \;
 
 clean:
-        -rm com/roxen/servlet/*.class roxen_module.jar roxen_servlet.jar
+	-rm com/roxen/servlet/*.class roxen_module.jar roxen_servlet.jar

@@ -13,18 +13,18 @@ PIKE=../../start --silent-start --cd "`pwd`" --program
 CONFIGFILE=
 
 all:
-        @case "$(CONFIGFILE)" in					\
-          "")								\
-            find "configs/" -name '*.xml' -print |			\
-              while read config; do					\
-                echo "Updating project $$config...";			\
-                $(PIKE) -x extract_locale				\
-                  --config="$$config" --wipe --sync || exit $$?;	\
-              done;							\
-          ;;								\
-          *)								\
-            echo "Updating project $(CONFIGFILE)...";			\
-            exec $(PIKE) -x extract_locale				\
-              --config="$(CONFIGFILE)" --wipe --sync;			\
-          ;;								\
-        esac
+	@case "$(CONFIGFILE)" in					\
+	  "")								\
+	    find "configs/" -name '*.xml' -print |			\
+	      while read config; do					\
+		echo "Updating project $$config...";			\
+		$(PIKE) -x extract_locale				\
+		  --config="$$config" --wipe --sync || exit $$?;	\
+	      done;							\
+	  ;;								\
+	  *)								\
+	    echo "Updating project $(CONFIGFILE)...";			\
+	    exec $(PIKE) -x extract_locale				\
+	      --config="$(CONFIGFILE)" --wipe --sync;			\
+	  ;;								\
+	esac
