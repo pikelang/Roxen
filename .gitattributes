@@ -4,6 +4,10 @@
 # $ git config --global filter.space-indent.clean 'unexpand --first-only'
 # $ git config --global filter.space-indent.smudge 'cat'
 #[attr]space_indent filter=space-indent
+# The tab-indent filter is typically defined with:
+# $ git config --global filter.tab-indent.clean 'unexpand --first-only'
+# $ git config --global filter.tab-indent.smudge 'cat'
+[attr]tab_indent filter=tab-indent
 * text ident space_indent
 *.DSW eol=crlf
 *.cif binary
@@ -28,6 +32,9 @@
 *.vcproj eol=crlf
 *.wxs eol=crlf
 *.xcf binary
+
+# List of files that MUST use tab-indent
+Makefile -space_indent tab_indent
 
 # List of files that use CRLF at EOL:
 /server/bin/mysql_client_nt.bat eol=crlf

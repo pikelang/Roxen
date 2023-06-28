@@ -27,7 +27,7 @@ modules:
 	      ./scripts/make_mod_config $$module $$a; \
 	    fi;\
 	  fi ; \
-        done
+	done
 
 xmls: modules
 	@echo "2. Rebuilding .xml config files"

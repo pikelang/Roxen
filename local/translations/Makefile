@@ -17,8 +17,8 @@ all:
 	  "")								\
 	    find "configs/" -name '*.xml' -print |			\
 	      while read config; do					\
-	        echo "Updating project $$config...";			\
-	        $(PIKE) -x extract_locale				\
+		echo "Updating project $$config...";			\
+		$(PIKE) -x extract_locale				\
 		  --config="$$config" --wipe --sync || exit $$?;	\
 	      done;							\
 	  ;;								\
