@@ -3177,6 +3177,60 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db,
   return 0;
 }
 
+void dump_mysql_process_list()
+{
+  catch {
+    Sql.Sql db = connect_to_my_mysql(0, "mysql");
+    array(mapping(string:string)) db_procs;
+    if (catch {
+        // MariaDB 5.0 and later.
+        db_procs = db->query("SELECT * FROM information_schema.processlist");
+      }) {
+      if (catch {
+          // MySQL 8.0 and later.
+          db_procs = db->query("SELECT * FROM performance_schema.processlist");
+        }) {
+        // Fall-back to old syntax.
+        db_procs = db->query("SHOW FULL PROCESSLIST");
+      }
+    }
+    if (db_procs && sizeof(db_procs)) {
+      report_debug("MySQL process list:\n");
+      foreach(db_procs, mapping(string:string) row) {
+        // NB: The case for the field names has changed
+        //     between the old and new syntax.
+        string db_id = row->ID || row->Id;
+        string db_user = row->USER || row->User;
+        string db_host = row->HOST || row->Host;
+        string db_db = row->DB || row->db;
+        string db_cmd = row->COMMAND || row->Command;
+        string db_state = row->STATE || row->State || "";
+        int db_time = (int)(row->TIME_MS || row->TIME || row->Time);
+        string db_info = row->INFO || row->Info;
+
+        string db_url = "";
+        if (db_user) db_url = db_user + "@";
+        if (db_host) db_url += db_host;
+        if (db_url != "") db_url = "mysql://" + db_url;
+        if (db_db) db_url += "/" + db_db;
+        if (db_url == "") db_url = "internal";
+
+        if (db_state != "") db_state = "(" + db_state + ")";
+
+        report_debug("  %s(%s): %s%s %dms\n",
+                     db_id || "NULL", db_url,
+                     db_cmd || "", db_state,
+                     db_time);
+        if (db_info) {
+          report_debug("  %s(%s):   %s\n",
+                       db_id || "NULL", db_url,
+                       db_info);
+        }
+      }
+    }
+  };
+}
+
 protected mixed low_connect_to_my_mysql( string|int ro, void|string db )
 {
   object res;
@@ -3220,6 +3274,12 @@ protected mixed low_connect_to_my_mysql( string|int ro, void|string db )
       // Yep, this is ugly..
       has_value (describe_error (err), "Access denied"))
     throw( err );
+
+  if (has_value (describe_error (err), "Too many connections")) {
+    // Yep, this is even more ugly...
+    dump_mysql_process_list();
+    throw(err);
+  }
 
   if (mixed err_2 = catch {
       low_connect_to_my_mysql( 0, "mysql" )
@@ -4055,7 +4115,8 @@ void do_main( int argc, array(string) argv )
 
   add_constant( "connect_to_my_mysql", connect_to_my_mysql );
   add_constant( "clear_connect_to_my_mysql_cache",
-                clear_connect_to_my_mysql_cache );  
+                clear_connect_to_my_mysql_cache );
+  add_constant( "dump_mysql_process_list", dump_mysql_process_list );
 
 #if !constant(thread_create)
   report_debug(#"
