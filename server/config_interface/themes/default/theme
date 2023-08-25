@@ -25,7 +25,7 @@
 <set variable="var.decor" value="#f6f6ff"/>
 <set variable="var.decor-faint" value="#e9eefc"/>
 <set variable="var.decor-faint2" value="#7aa0e6"/>
-<set variable="var.decor-faint3" value="7190e0"/>
+<set variable="var.decor-faint3" value="#7190e0"/>
 <set variable="var.obox-titlebg" value="#dcdbd3"/>
 <set variable="var.tab-text" value="#000000"/>
 <set variable="var.tab-dim-text" value="#000000"/>
