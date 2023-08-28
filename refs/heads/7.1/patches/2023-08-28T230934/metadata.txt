@@ -1,0 +1,8 @@
+subject: Roxen 7.1: Fix 20-year-old typo. Browsers won't DWIM this nowadays.
+from: eb37b0fe03731f4055c45ce27ed9d8b249e14cb2
+to: e0b37c06be0aaac0af7baff6a605b231cff8f356
+originator: Erik Allemann
+depends: roxen/7.1.517
+restart: true
+
+• Fix 20-year-old typo. Browsers won't DWIM this nowadays.
