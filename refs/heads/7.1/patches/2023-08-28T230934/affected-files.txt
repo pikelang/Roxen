@@ -1,0 +1,3 @@
+Modified files:
+  config_interface/themes/default/theme
+  etc/include/version.h
