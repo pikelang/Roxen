@@ -1,0 +1,26 @@
+subject: Roxen 7.0: Fix 20-year-old typo. Browsers won't DWIM this nowadays. Testsuite [RoxenPatch]: Fix testsuite patch file. Testsuite [RoxenPatch]: Restore content of testfile.txt. Fix makefiles broken by the space indent mega commit. Fix Makefiles broken by the space indent mega commit. Mega commit: Indent text files with spaces only. Fixes [REP-1024].
+from: 141652a39cc6c021671b87312cfe58e2195b8734
+to: 1b22a841cc825323349a030eb729c35870674964
+originator: Jonas Lonnberg
+depends: 2023-05-30T103120
+restart: true
+
+• Fix 20-year-old typo. Browsers won't DWIM this nowadays.
+
+• Testsuite [RoxenPatch]: Fix testsuite patch file.
+
+Fixes some more fall-out from [REP-1024].
+
+• Testsuite [RoxenPatch]: Restore content of testfile.txt.
+
+Patch 2009-02-25T1728.rxp should now apply again.
+
+Fixes fall-out from [REP-1024].
+
+• Fix makefiles broken by the space indent mega commit.
+
+• Fix Makefiles broken by the space indent mega commit.
+
+• Mega commit: Indent text files with spaces only.
+
+Fixes [REP-1024].
