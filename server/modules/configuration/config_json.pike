@@ -214,6 +214,8 @@ class Router {
      method_callbacks[method] += ({ Route(matcher, callback) });
   }
 
+  //! @ignore
+
 #define MAKE_ROUTER_FUNCTION(NAME, METHOD)		\
   void NAME(string pattern, RouterCallback callback) {	\
     add_route(METHOD, PathMatcher(pattern), callback);	\
@@ -224,6 +226,8 @@ class Router {
   MAKE_ROUTER_FUNCTION(put, "PUT")
   MAKE_ROUTER_FUNCTION(patch, "PATCH")
   MAKE_ROUTER_FUNCTION(delete, "DELETE")
+
+  //! @endignore
 
   void|RouterResponse handle_request(string path, RequestID id) {
     string method = id->method;
