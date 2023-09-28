@@ -8776,8 +8776,8 @@ class LogFile
   private Process.Process compressor_process;
   private int last_scan_time;
 
-  //! Also deletes old files.
-  //!
+  // Also deletes old files.
+  //
   // Will not scan for files if compressor is running. This means we might not
   // remove an old file because the compressor is running but that does not
   // matter since this function is ran so often. Sooner or later files will be

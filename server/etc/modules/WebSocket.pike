@@ -244,7 +244,8 @@ protected void ws_onopen(this_program id)
 //! Close the websocket from our end. Once the connection is closed,
 //! the @[websocket_close] callback will be triggered.
 //!
-//! @returns 1 if this isn't an open websocket connection.
+//! @returns
+//!   Returns @expr{1@} if this isn't an open websocket connection.
 public int websocket_close(void|Protocols.WebSocket.CLOSE_STATUS reason)
 {
   if (state != Protocols.WebSocket.Connection.OPEN) {

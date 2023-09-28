@@ -3348,7 +3348,8 @@ object websocket;
 //! Call this method to send a text frame across the websocket
 //! connection.
 //!
-//! @returns 1 if this isn't an open websocket connection.
+//! @returns
+//!   Returns @expr{1@} if this isn't an open websocket connection.
 public int websocket_send_text(string text) {
   if (!websocket ||
       websocket->state != Protocols.WebSocket.Connection.OPEN) {
@@ -3362,7 +3363,8 @@ public int websocket_send_text(string text) {
 //! Call this method to send a binary frame across the websocket
 //! connection.
 //!
-//! @returns 1 if this isn't an open websocket connection.
+//! @returns
+//!   Returns @expr{1@} if this isn't an open websocket connection.
 public int websocket_send_binary(string data) {
   if (!websocket ||
       websocket->state != Protocols.WebSocket.Connection.OPEN) {

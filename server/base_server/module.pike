@@ -910,7 +910,7 @@ protected mapping(string:mapping(mixed:DAVLock)) prefix_locks = ([]);
 //!
 //! @param recursive
 //!   If @expr{1@} also return locks anywhere below @[path].
-//!   If @expr{-1} return locks anywhere below @[path], but not
+//!   If @expr{-1@} return locks anywhere below @[path], but not
 //!   any above @[path]. (This is appropriate to use to get the
 //!   list of locks that need to be unlocked on DELETE.)
 //!

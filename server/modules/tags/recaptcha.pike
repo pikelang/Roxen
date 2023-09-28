@@ -228,6 +228,7 @@ class TagIfreCaptchaVerify
   }
 }
 
+//! @ignore
 
 TAGDOCUMENTATION;
 #ifdef manual
@@ -296,3 +297,5 @@ constant tagdoc = ([
 
 ]);
 #endif /* manual */
+
+//! @endignore
