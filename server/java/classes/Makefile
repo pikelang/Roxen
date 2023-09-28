@@ -1,7 +1,10 @@
 
 CLASSPATH = servlet.jar
 
-JAVAFLAGS = -deprecation -encoding iso-8859-1
+# Java SE release to compile for.
+JAVASE = 8
+
+JAVAFLAGS = -deprecation -encoding iso-8859-1 --release $(JAVASE)
 
 JAVAC = javac
 
