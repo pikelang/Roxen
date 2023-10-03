@@ -1,0 +1,13 @@
+subject: Roxen 7.1: Java: Compile for Java SE release 8.  Fixes issues with javac by default targetting the latest release, which makes the resulting files unuseable with old versions of Java.  Potential fix for testsuite failures.
+from: e0b37c06be0aaac0af7baff6a605b231cff8f356
+to: a74646b2b54156727988451f792fb336d04702b2
+originator: Erik Allemann
+depends: 2023-08-28T230934
+restart: true
+
+• Java: Compile for Java SE release 8.
+
+Fixes issues with javac by default targetting the latest release,
+which makes the resulting files unuseable with old versions of Java.
+
+Potential fix for testsuite failures.
