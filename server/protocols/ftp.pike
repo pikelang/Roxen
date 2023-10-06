@@ -551,6 +551,8 @@ class PutFileWrapper
     while((n=search(gotdata, "\n"))>=0) {
       if(3==sscanf(gotdata[..n], "HTTP/%*s %d %[^\r\n]", code, msg)
          && code>199) {
+        session->file = Roxen.http_status(code, msg);
+
         if(code < 300)
           code = 226;
         else
@@ -565,6 +567,8 @@ class PutFileWrapper
 
   void done(mapping result)
   {
+    session->file = result;
+
     if (result->error < 300) {
       response_code = 226;
     } else {
@@ -2049,6 +2053,8 @@ class FTPSession
   private void send_error(string cmd, string f, mapping file,
 			  object session)
   {
+    session = session || master_session;
+
     switch(file && file->error) {
     case 301:
     case 302:
@@ -2119,11 +2125,23 @@ class FTPSession
 	send(550, ({ sprintf(LOCALE(96, "%s: Error, can't open file."), fname) }));
 	return 0;
       }
+
+      if ((< "STOR", "APPE" >)[cmd]) {
+        // NB: Avoid races.
+        //   Under some circumstances the operation may have
+        //   already been completed by get_file() above and
+        //   the session destructed. Make sure not to trust
+        //   it existing by always invalidating it here.
+        //
+        //   session->file will in this case be set via done()
+        //   or write() in PutFileWrapper.
+        session = UNDEFINED;
+      }
     }
 
     // file is a mapping.
 
-    session->file = file;
+    session && (session->file = file);
 
     if (!file || (file->error && (file->error >= 300))) {
       DWRITE("FTP: open_file(\"%s\") failed: %O\n", fname, file);
@@ -2133,8 +2151,14 @@ class FTPSession
 
     //  If data is a wide string we flatten it according to the charset
     //  preferences in the current ID object.
-    if (file->data && String.width(file->data) > 8)
-      file->data = session->output_encode(file->data, 0)[1];
+    if (file->data && (String.width(file->data) > 8)) {
+      if (session) {
+        file->data = session->output_encode(file->data, 0)[1];
+      } else {
+        // Probably not reached, but...
+        file->data = string_to_utf8(file->data);
+      }
+    }
     
     file->full_path = fname;
     file->request_start = time(1);
