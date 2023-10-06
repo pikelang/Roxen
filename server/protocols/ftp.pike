@@ -2108,6 +2108,8 @@ class FTPSession
       file = 0;
       if (st && (st[1] < 0) && !((<"RMD", "XRMD", "CHMOD">)[cmd])) {
 	send(550, ({ sprintf(LOCALE(95, "%s: not a plain file."), fname) }));
+        session->conf->log(Roxen.http_status(Protocols.HTTP.HTTP_METHOD_INVALID,
+                                             "Not a plain file."), session);
 	return 0;
       }
       mixed err;
@@ -2115,6 +2117,8 @@ class FTPSession
 	report_error("FTP: Error opening file \"%s\"\n"
 		     "%s\n", fname, describe_backtrace(err));
 	send(550, ({ sprintf(LOCALE(96, "%s: Error, can't open file."), fname) }));
+        session->conf->log(Roxen.http_status(Protocols.HTTP.HTTP_INTERNAL_ERR),
+                           session);
 	return 0;
       }
     } else if ((< "STOR", "APPE", "MKD", "XMKD", "MOVE" >)[cmd]) {
@@ -2123,6 +2127,8 @@ class FTPSession
 	report_error("FTP: Error opening file \"%s\"\n"
 		     "%s\n", fname, describe_backtrace(err));
 	send(550, ({ sprintf(LOCALE(96, "%s: Error, can't open file."), fname) }));
+        session->conf->log(Roxen.http_status(Protocols.HTTP.HTTP_INTERNAL_ERR),
+                           session);
 	return 0;
       }
 
@@ -2319,6 +2325,9 @@ class FTPSession
 
     restore_locale();
 
+    RequestID session = RequestID2(master_session);
+    session->method = "PUT";
+
     if (fd) {
       send(150, ({ sprintf(LOCALE(100, "Opening %s mode data connection for %s."),
 			   modes[mode], args) }));
@@ -2339,6 +2348,8 @@ class FTPSession
       }
     } else {
       send(425, ({ LOCALE(99, "Can't build data connect: Connection refused.") }));
+      session->conf->
+        log(Roxen.http_status(Protocols.HTTP.HTTP_BAD_GW), session);
       return;
     }
 
@@ -2357,8 +2368,6 @@ class FTPSession
       break;
     }
 
-    RequestID session = RequestID2(master_session);
-    session->method = "PUT";
     session->my_fd = PutFileWrapper(fd, session, this_object());
     session->misc->len = 0x7fffffff;
 
