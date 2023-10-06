@@ -477,7 +477,9 @@ class PutFileWrapper
       ftpsession->send(response_code, response);
       closed = 1;
       session->conf->received += recvd;
-      session->misc->len = recvd;
+      session->raw_bytes = session->misc->len = recvd;
+      // FIXME: Consider the following:
+      // session->file->len = recvd;
       session->conf->log(session->file, session);
       destruct(session);
     }
