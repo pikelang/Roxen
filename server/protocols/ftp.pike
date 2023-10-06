@@ -477,7 +477,9 @@ class PutFileWrapper
       ftpsession->send(response_code, response);
       closed = 1;
       session->conf->received += recvd;
-      session->misc->len = recvd;
+      session->raw_bytes = session->misc->len = recvd;
+      // FIXME: Consider the following:
+      // session->file->len = recvd;
       session->conf->log(session->file, session);
       destruct(session);
     }
@@ -551,6 +553,8 @@ class PutFileWrapper
     while((n=search(gotdata, "\n"))>=0) {
       if(3==sscanf(gotdata[..n], "HTTP/%*s %d %[^\r\n]", code, msg)
          && code>199) {
+        session->file = Roxen.http_status(code, msg);
+
         if(code < 300)
           code = 226;
         else
@@ -565,6 +569,8 @@ class PutFileWrapper
 
   void done(mapping result)
   {
+    session->file = result;
+
     if (result->error < 300) {
       response_code = 226;
     } else {
@@ -2048,6 +2054,8 @@ class FTPSession
   private void send_error(string cmd, string f, mapping file,
                           object session)
   {
+    session = session || master_session;
+
     switch(file && file->error) {
     case 301:
     case 302:
@@ -2115,6 +2123,8 @@ class FTPSession
       file = 0;
       if (st && (st[1] < 0) && !((<"RMD", "XRMD", "CHMOD">)[cmd])) {
         send(550, ({ sprintf(LOCALE(95, "%s: not a plain file."), fname) }));
+        session->conf->log(Roxen.http_status(Protocols.HTTP.HTTP_METHOD_INVALID,
+                                             "Not a plain file."), session);
         return 0;
       }
       mixed err;
@@ -2122,6 +2132,8 @@ class FTPSession
         report_error("FTP: Error opening file \"%s\"\n"
                      "%s\n", fname, describe_backtrace(err));
         send(550, ({ sprintf(LOCALE(96, "%s: Error, can't open file."), fname) }));
+        session->conf->log(Roxen.http_status(Protocols.HTTP.HTTP_INTERNAL_ERR),
+                           session);
         return 0;
       }
     } else if ((< "STOR", "APPE", "MKD", "XMKD", "MOVE" >)[cmd]) {
@@ -2130,13 +2142,27 @@ class FTPSession
         report_error("FTP: Error opening file \"%s\"\n"
                      "%s\n", fname, describe_backtrace(err));
         send(550, ({ sprintf(LOCALE(96, "%s: Error, can't open file."), fname) }));
+        session->conf->log(Roxen.http_status(Protocols.HTTP.HTTP_INTERNAL_ERR),
+                           session);
         return 0;
+      }
+
+      if ((< "STOR", "APPE" >)[cmd]) {
+        // NB: Avoid races.
+        //   Under some circumstances the operation may have
+        //   already been completed by get_file() above and
+        //   the session destructed. Make sure not to trust
+        //   it existing by always invalidating it here.
+        //
+        //   session->file will in this case be set via done()
+        //   or write() in PutFileWrapper.
+        session = UNDEFINED;
       }
     }
 
     // file is a mapping.
 
-    session->file = file;
+    session && (session->file = file);
 
     if (!file || (file->error && (file->error >= 300))) {
       DWRITE("FTP: open_file(\"%s\") failed: %O\n", fname, file);
@@ -2146,8 +2172,14 @@ class FTPSession
 
     //  If data is a wide string we flatten it according to the charset
     //  preferences in the current ID object.
-    if (file->data && String.width(file->data) > 8)
-      file->data = session->output_encode(file->data, 0)[1];
+    if (file->data && (String.width(file->data) > 8)) {
+      if (session) {
+        file->data = session->output_encode(file->data, 0)[1];
+      } else {
+        // Probably not reached, but...
+        file->data = string_to_utf8(file->data);
+      }
+    }
     
     file->full_path = fname;
     file->request_start = time(1);
@@ -2306,6 +2338,9 @@ class FTPSession
 
     restore_locale();
 
+    RequestID session = RequestID2(master_session);
+    session->method = "PUT";
+
     if (fd) {
       send(150, ({ sprintf(LOCALE(100, "Opening %s mode data connection for %s."),
                            modes[mode], args) }));
@@ -2324,6 +2359,8 @@ class FTPSession
 #endif
     } else {
       send(425, ({ LOCALE(99, "Can't build data connect: Connection refused.") }));
+      session->conf->
+        log(Roxen.http_status(Protocols.HTTP.HTTP_BAD_GW), session);
       return;
     }
 
@@ -2342,8 +2379,6 @@ class FTPSession
       break;
     }
 
-    RequestID session = RequestID2(master_session);
-    session->method = "PUT";
     session->my_fd = PutFileWrapper(fd, session, this_object());
     session->misc->len = 0x7fffffff;
 
