@@ -1704,6 +1704,9 @@ class RequestID
   //! @seealso
   //! @[raw_url]
 
+  //! Typically @expr{sizeof(raw) + sizeof(leftovers)@}.
+  int raw_bytes = 0;
+
   string query;
   //! The query part (i.e. all characters after the first question
   //! mark) of the requested URL.

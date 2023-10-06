@@ -147,7 +147,6 @@ mapping file;
 
 string rest_query="";
 string raw="";
-int raw_bytes = 0;
 string extra_extension = ""; // special hack for the language module
 
 protected mapping connection_stats = ([]);
