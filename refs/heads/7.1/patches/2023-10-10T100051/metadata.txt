@@ -1,0 +1,28 @@
+subject: Roxen 7.1: FTP improvements. Fixes [REP-1089].
+from: a74646b2b54156727988451f792fb336d04702b2
+to: 6ff0883c085bcbb8b576f61cc1ef4720edeb87d3
+originator: Erik Allemann
+depends: 2023-10-03T173013
+restart: true
+
+• FTP: Fix logging of ${bin-,}request-length when used with ftp.
+
+Previously it typically returned -${bin-,}request-data-length
+due to raw_bytes missing from RequestID2.
+
+• FTP: Improved logging of STOR-failures.
+
+• FTP: Fix race-condition in open_file() when handling STOR.
+
+The session object may be destructed concurrently or directly
+by conf->get_file(). This caused errors like "Lookup in destructed
+object" in open_file() when it attempted to set session->file.
+
+The session->file value used for logging is now typically set from
+PutFileWrapper()->done().
+
+Fixes [REP-1089] #2.
+
+• RequestID: Move raw_bytes from http.pike to RequestID.
+
+This makes it available in RequestID2 too.
