@@ -2675,12 +2675,18 @@ protected string my_sprintf(int prefix, string f, int arg)
   return sprintf(f, arg);
 }
 
-string strftime(string fmt, int t,
+string strftime(string fmt, int|mapping t,
                 void|string lang, void|function language, void|RequestID id)
 //! Encodes the time `t' according to the format string `fmt'.
 {
   if(!sizeof(fmt)) return "";
-  mapping lt = localtime(t);
+  mapping lt;
+  if (mappingp(t)) {
+    lt = t;
+    t = mktime(lt);
+  } else {
+    lt = localtime(t);
+  }
   fmt=replace(fmt, "%%", "\0");
   array(string) a = fmt/"%";
   string res = a[0];
@@ -3634,6 +3640,83 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
   return res;
 }
 #pragma deprecation_warnings
+
+mapping(string:int) low_time_dequantifier(mapping m, void|int|mapping t )
+  //! Calculates an integer with how many seconds a mapping
+  //! that maps from time units to an integer can be collapsed to.
+  //! E.g. (["minutes":"2"]) results in 120.
+  //! Valid units are seconds, minutes, beats, hours, days, weeks,
+  //! months and years.
+{
+  mapping(string:int) res = ([]);
+  if (mappingp(t)) {
+    res = t;
+  } else {
+    res = localtime(t);
+    if (!t) {
+      // Backward compat.
+      res->year = -1900;
+    }
+  }
+
+  mapping(string:int) delta = (mapping(string:int))m;
+
+  if (m->beats) {
+    delta->seconds += (int)(((float)m->beats) * 86.4);
+  }
+
+  if (m->weeks) {
+    delta->days += delta->weeks * 7;
+  }
+
+  int dirty;
+  foreach(({ "seconds", "minutes", "hours", "days", "months" }), string field) {
+    if (delta[field]) {
+      string tsfield = ([
+        "seconds":"sec",
+        "minutes":"min",
+        "hours":"hour",
+        "days":"mday",
+        "months":"mon",
+      ])[field];
+      res[tsfield] += delta[field];
+      dirty = 1;
+    }
+  }
+
+  if (dirty) {
+    // Normalize.
+    if (res->timezone) {
+      res = localtime(mktime(res));
+    } else {
+      res = gmtime(mktime(res));
+    }
+  }
+
+  if (delta->years) {
+    res->year += delta->years;
+
+    mixed err = catch {
+        // Normalize.
+        mapping(string:int) tmp = res + ([]);
+        tmp->hour = 12;	// Keep away from day threshold.
+        if (tmp->timezone) {
+          tmp = localtime(mktime(tmp));
+        } else {
+          tmp = gmtime(mktime(tmp));
+        }
+        res->mon = tmp->mon;	/* In case of leap day. */
+        res->mday = tmp->mday;	/* In case of leap day. */
+        res->wday = tmp->wday;	/* Likely to differ. */
+        res->yday = tmp->yday;	/* In case of leap year. */
+      };
+    if (err) {
+      master()->handle_error(err);
+    }
+  }
+
+  return res;
+}
 
 int time_dequantifier(mapping m, void|int t )
   //! Calculates an integer with how many seconds a mapping
