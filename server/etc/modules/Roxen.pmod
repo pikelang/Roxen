@@ -2553,12 +2553,18 @@ protected string my_sprintf(int prefix, string f, int arg)
   return sprintf(f, arg);
 }
 
-string strftime(string fmt, int t,
+string strftime(string fmt, int|mapping t,
 		void|string lang, void|function language, void|RequestID id)
 //! Encodes the time `t' according to the format string `fmt'.
 {
   if(!sizeof(fmt)) return "";
-  mapping lt = localtime(t);
+  mapping lt;
+  if (mappingp(t)) {
+    lt = t;
+    t = mktime(lt);
+  } else {
+    lt = localtime(t);
+  }
   fmt=replace(fmt, "%%", "\0");
   array(string) a = fmt/"%";
   string res = a[0];
