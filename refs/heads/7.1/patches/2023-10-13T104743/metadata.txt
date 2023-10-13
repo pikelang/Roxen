@@ -1,0 +1,17 @@
+subject: Roxen 7.1: Internal improvements for date output of specific years
+from: 6ff0883c085bcbb8b576f61cc1ef4720edeb87d3
+to: 64b18d86ebe8d4638103ddf4be092e4344758b9f
+originator: Jonas Wallden
+depends: 2023-10-10T100051
+restart: true
+
+• Roxen: Add low_time_dequantifier().
+
+This function does the same as time_dequantifier(), but
+operates on localtime-style mappings.
+
+Needed for [REP-1083].
+
+• Roxen: Support calling strftime() with a localtime-style mapping.
+
+Needed for [REP-1083].
