@@ -1,0 +1,7 @@
+subject: Roxen 7.1: Synch with release 7.1.570 (r2)
+from: 64b18d86ebe8d4638103ddf4be092e4344758b9f
+to: ac8e83eb043e512520a807d6894617a879d29173
+originator: Henrik Grubbström (Grubba) <grubba@grubba.org>
+depends: 2023-10-13T104743
+
+Bump version to 7.1.570 (r2).
