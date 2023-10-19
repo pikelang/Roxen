@@ -3434,6 +3434,8 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
   return res;
 }
 
+protected int dequantifier_failure_reported;
+
 mapping(string:int) low_time_dequantifier(mapping m, void|int|mapping t )
   //! Calculates an integer with how many seconds a mapping
   //! that maps from time units to an integer can be collapsed to.
@@ -3503,8 +3505,16 @@ mapping(string:int) low_time_dequantifier(mapping m, void|int|mapping t )
         res->wday = tmp->wday;	/* Likely to differ. */
         res->yday = tmp->yday;	/* In case of leap year. */
       };
-    if (err) {
+    if (err
+#ifndef DEBUG
+        && !dequantifier_failure_reported
+#endif
+        ) {
+      dequantitifer_failure_reported++;
+      werror("Failed to normalize timestamp for %O.\n", res);
+#ifdef DEBUG
       master()->handle_error(err);
+#endif
     }
   }
 
