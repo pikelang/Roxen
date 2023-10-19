@@ -3722,7 +3722,7 @@ mapping(string:int) low_time_dequantifier(mapping m, void|int|mapping t )
         && !dequantifier_failure_reported
 #endif
         ) {
-      dequantitifer_failure_reported++;
+      dequantifier_failure_reported++;
       werror("Failed to normalize timestamp for %O.\n", res);
 #ifdef DEBUG
       master()->handle_error(err);
