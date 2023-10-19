@@ -2561,9 +2561,10 @@ string strftime(string fmt, int|mapping t,
   mapping lt;
   if (mappingp(t)) {
     lt = t;
-    t = mktime(lt);
+    t = lt->timestamp;
   } else {
     lt = localtime(t);
+    lt->timestamp = t;
   }
   fmt=replace(fmt, "%%", "\0");
   array(string) a = fmt/"%";
@@ -2614,8 +2615,7 @@ string strftime(string fmt, int|mapping t,
 		    "July", "August", "September", "October", "November", "December" })[lt->mon];
 	break;
       case 'c':	// Date and time
-	res += strftime(sprintf("%%a %%b %02d  %02d:%02d:%02d %04d",
-				lt->mday, lt->hour, lt->min, lt->sec, 1900 + lt->year), t);
+        res += strftime("%a %b %d  %T %Y", lt);
 	break;
       case 'C':	// Century number; 0-prefix
 	res += my_sprintf(prefix, "%02d", 19 + lt->year/100);
@@ -2624,7 +2624,7 @@ string strftime(string fmt, int|mapping t,
 	res += my_sprintf(prefix, "%02d", lt->mday);
 	break;
       case 'D':	// Date as %m/%d/%y
-	res += strftime("%m/%d/%y", t);
+        res += strftime("%m/%d/%y", lt);
 	break;
       case 'e':	// Day of month [1,31]; space-prefix
 	res += my_sprintf(prefix, "%2d", lt->mday);
@@ -2660,7 +2660,7 @@ string strftime(string fmt, int|mapping t,
 	res += lt->hour<12 ? "am" : "pm";
 	break;
       case 'r':	// Time in 12-hour clock format with %p
-	res += strftime("%l:%M %p", t);
+        res += strftime("%l:%M %p", lt);
 	break;
       case 'R':	// Time as %H:%M
 	res += sprintf("%02d:%02d", lt->hour, lt->min);
@@ -2682,7 +2682,7 @@ string strftime(string fmt, int|mapping t,
 	res += my_sprintf(prefix, "%d", lt->wday);
 	break;
       case 'x':	// Date
-	res += strftime("%a %b %d %Y", t);
+        res += strftime("%a %b %d %Y", lt);
 	break;
       case 'y':	// Year [00,99]; 0-prefix
 	res += my_sprintf(prefix, "%02d", lt->year % 100);
