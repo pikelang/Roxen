@@ -2683,9 +2683,10 @@ string strftime(string fmt, int|mapping t,
   mapping lt;
   if (mappingp(t)) {
     lt = t;
-    t = mktime(lt);
+    t = lt->timestamp;
   } else {
     lt = localtime(t);
+    lt->timestamp = t;
   }
   fmt=replace(fmt, "%%", "\0");
   array(string) a = fmt/"%";
@@ -2757,8 +2758,7 @@ string strftime(string fmt, int|mapping t,
         break;
       case 'c':	// Date and time
         // FIXME: Should be preferred date and time for the locale.
-        res += strftime(sprintf("%%a %%b %02d  %02d:%02d:%02d %04d",
-                                lt->mday, lt->hour, lt->min, lt->sec, 1900 + lt->year), t);
+        res += strftime("%a %b %d  %T %Y", lt);
         break;
       case 'C':	// Century number; 0-prefix
         res += my_sprintf(prefix, "%02d", 19 + lt->year/100);
@@ -2767,7 +2767,7 @@ string strftime(string fmt, int|mapping t,
         res += my_sprintf(prefix, "%02d", lt->mday);
         break;
       case 'D':	// Date as %m/%d/%y
-        res += strftime("%m/%d/%y", t);
+        res += strftime("%m/%d/%y", lt);
         break;
       case 'e':	// Day of month [1,31]; space-prefix
         res += my_sprintf(prefix, "%2d", lt->mday);
@@ -2838,12 +2838,17 @@ string strftime(string fmt, int|mapping t,
         res += (string) ((lt->mon / 3) + 1);
         break;
       case 'r':	// Time in 12-hour clock format with %p
-        res += strftime("%I:%M:%S %p", t);
+        res += strftime("%I:%M:%S %p", lt);
         break;
       case 'R':	// Time as %H:%M
         res += sprintf("%02d:%02d", lt->hour, lt->min);
         break;
       case 's':	// Seconds since epoch.
+        if (undefinedp(t)) {
+          // Note: Errors will be thrown here for dates unsupported
+          //       by mktime().
+          lt->timestamp = t = mktime(lt);
+        }
         res += my_sprintf(prefix, "%d", t);
         break;
       case 'S':	// Seconds [00,61]; 0-prefix
@@ -2875,7 +2880,7 @@ string strftime(string fmt, int|mapping t,
         break;
       case 'x':	// Date
                 // FIXME: Locale preferred date format.
-        res += strftime("%a %b %d %Y", t);
+        res += strftime("%a %b %d %Y", lt);
         break;
       case 'y':	// Year [00,99]; 0-prefix
         res += my_sprintf(prefix, "%02d", lt->year % 100);
@@ -3641,6 +3646,8 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
 }
 #pragma deprecation_warnings
 
+protected int dequantifier_failure_reported;
+
 mapping(string:int) low_time_dequantifier(mapping m, void|int|mapping t )
   //! Calculates an integer with how many seconds a mapping
   //! that maps from time units to an integer can be collapsed to.
@@ -3710,8 +3717,16 @@ mapping(string:int) low_time_dequantifier(mapping m, void|int|mapping t )
         res->wday = tmp->wday;	/* Likely to differ. */
         res->yday = tmp->yday;	/* In case of leap year. */
       };
-    if (err) {
+    if (err
+#ifndef DEBUG
+        && !dequantifier_failure_reported
+#endif
+        ) {
+      dequantifier_failure_reported++;
+      werror("Failed to normalize timestamp for %O.\n", res);
+#ifdef DEBUG
       master()->handle_error(err);
+#endif
     }
   }
 
