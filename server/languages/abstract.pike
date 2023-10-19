@@ -28,6 +28,13 @@ string month(int num)
   return months[ num - 1 ];
 }
 
+// Some languages (eg russian) have a different form
+// of the month name if it's part of a date.
+string numbered_month(int num)
+{
+  return month(num);
+}
+
 string short_month(int num)
 {
   return months[ num - 1 ][..2];

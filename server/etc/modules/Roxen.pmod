@@ -2573,6 +2573,8 @@ string strftime(string fmt, int|mapping t,
   
   foreach(a[1..], string key) {
     int(0..1) prefix = 1;
+    int(0..1) alternative_numbers = 0;
+    int(0..1) alternative_form = 0;
     while (sizeof(key)) {
       switch(key[0]) {
 	// Flags.
@@ -2580,9 +2582,13 @@ string strftime(string fmt, int|mapping t,
 	prefix = 0;
 	key = key[1..];
 	continue;
-      case 'E':
-      case 'O':
-	key = key[1..]; // No support for E or O extension.
+      case 'E':	// Locale-dependent alternative form.
+	alternative_form = 1;
+	key = key[1..];
+	continue;
+      case 'O':	// Locale-dependent alternative numeric representation.
+	alternative_numbers = 1;
+	key = key[1..];
 	continue;
 
 	// Formats.
@@ -2608,13 +2614,18 @@ string strftime(string fmt, int|mapping t,
 		    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" })[lt->mon];
 	break;
       case 'B':	// Month name
-	if (language)
-	  res += number2string(lt->mon+1,m,language(lang,"month",id));
-	else
+	if (language) {
+	  if (alternative_form) {
+	    res += number2string(lt->mon+1,m,language(lang,"numbered_month",id));
+	  } else {
+	    res += number2string(lt->mon+1,m,language(lang,"month",id));
+	  }
+	} else
 	  res += ({ "January", "February", "March", "April", "May", "June",
 		    "July", "August", "September", "October", "November", "December" })[lt->mon];
 	break;
       case 'c':	// Date and time
+	// FIXME: Should be preferred date and time for the locale.
         res += strftime("%a %b %d  %T %Y", lt);
 	break;
       case 'C':	// Century number; 0-prefix
@@ -2628,6 +2639,38 @@ string strftime(string fmt, int|mapping t,
 	break;
       case 'e':	// Day of month [1,31]; space-prefix
 	res += my_sprintf(prefix, "%2d", lt->mday);
+	break;
+      case 'F':	// ISO 8601 date %Y-%m-%d
+	res += sprintf("%04d-%02d-%02d",
+		       1900 + lt->year, lt->mon + 1, lt->mday);
+	break;
+      case 'G':	// Year for the ISO 8601 week containing the day.
+	{
+	  int wday = (lt->wday + 1)%7;	// ISO 8601 weekday number.
+	  if ((wday - lt->yday) >= 4) {
+	    // The day belongs to the last week of the previous year.
+	    res += my_sprintf(prefix, "%04d", 1899 + lt->year);
+	  } else if ((lt->mon == 11) && ((lt->mday - wday) >= 29)) {
+	    // The day belongs to the first week of the next year.
+	    res += my_sprintf(prefix, "%04d", 1901 + lt->year);
+	  } else {
+	    res += my_sprintf(prefix, "%04d", 1900 + lt->year);
+	  }
+	}
+	break;
+      case 'g':	// Short year for the ISO 8601 week containing the day.
+	{
+	  int wday = (lt->wday + 1)%7;	// ISO 8601 weekday number.
+	  if ((wday - lt->yday) >= 4) {
+	    // The day belongs to the last week of the previous year.
+	    res += my_sprintf(prefix, "%02d", (99 + lt->year) % 100);
+	  } else if ((lt->mon == 11) && ((lt->mday - wday) >= 29)) {
+	    // The day belongs to the first week of the next year.
+	    res += my_sprintf(prefix, "%02d", (1 + lt->year) % 100);
+	  } else {
+	    res += my_sprintf(prefix, "%02d", (lt->year) % 100);
+	  }
+	}
 	break;
       case 'H':	// Hour (24-hour clock) [0,23]; 0-prefix
 	res += my_sprintf(prefix, "%02d", lt->hour);
@@ -2660,10 +2703,18 @@ string strftime(string fmt, int|mapping t,
 	res += lt->hour<12 ? "am" : "pm";
 	break;
       case 'r':	// Time in 12-hour clock format with %p
-        res += strftime("%l:%M %p", lt);
+	res += strftime("%I:%M:%S %p", lt);
 	break;
       case 'R':	// Time as %H:%M
 	res += sprintf("%02d:%02d", lt->hour, lt->min);
+	break;
+      case 's':	// Seconds since epoch.
+        if (undefinedp(t)) {
+          // Note: Errors will be thrown here for dates unsupported
+          //       by mktime().
+          lt->timestamp = t = mktime(lt);
+        }
+	res += my_sprintf(prefix, "%d", t);
 	break;
       case 'S':	// Seconds [00,61]; 0-prefix
 	res += my_sprintf(prefix, "%02d", lt->sec);
@@ -2672,16 +2723,28 @@ string strftime(string fmt, int|mapping t,
 	res += "\t";
 	break;
       case 'T':	// Time as %H:%M:%S
-      case 'X':
+      case 'X':	// FIXME: Time in locale preferred format.
 	res += sprintf("%02d:%02d:%02d", lt->hour, lt->min, lt->sec);
 	break;
-      case 'u':	// Weekday as a decimal number [1,7], Sunday == 1
-	res += my_sprintf(prefix, "%d", lt->wday + 1);
+      case 'u':	// Weekday as a decimal number [1,7], Monday == 1
+	res += my_sprintf(prefix, "%d", 1 + ((lt->wday + 6) % 7));
+	break;
+      case 'U':	// Week number of current year [00,53]; 0-prefix
+		// Sunday is first day of week.
+	res += my_sprintf(prefix, "%02d", 1 + (lt->yday - lt->wday)/ 7);
+	break;
+      case 'V':	// ISO week number of the year as a decimal number [01,53]; 0-prefix
+	res += my_sprintf(prefix, "%02d", Calendar.ISO.Second(t)->week_no());
 	break;
       case 'w':	// Weekday as a decimal number [0,6], Sunday == 0
 	res += my_sprintf(prefix, "%d", lt->wday);
 	break;
+      case 'W':	// Week number of year as a decimal number [00,53],
+		// with Monday as the first day of week 1; 0-prefix
+	res += my_sprintf(prefix, "%02d", ((lt->yday+(5+lt->wday)%7)/7));
+	break;
       case 'x':	// Date
+		// FIXME: Locale preferred date format.
         res += strftime("%a %b %d %Y", lt);
 	break;
       case 'y':	// Year [00,99]; 0-prefix
@@ -2690,20 +2753,18 @@ string strftime(string fmt, int|mapping t,
       case 'Y':	// Year [0000.9999]; 0-prefix
 	res += my_sprintf(prefix, "%04d", 1900 + lt->year);
 	break;
-
-      case 'U':	// Week number of year as a decimal number [00,53],
-		// with Sunday as the first day of week 1; 0-prefix
-	res += my_sprintf(prefix, "%02d", ((lt->yday-1+lt->wday)/7));
-	break;
-      case 'V':	// ISO week number of the year as a decimal number [01,53]; 0-prefix
-	res += my_sprintf(prefix, "%02d", Calendar.ISO.Second(t)->week_no());
-	break;
-      case 'W':	// Week number of year as a decimal number [00,53],
-		// with Monday as the first day of week 1; 0-prefix
-	res += my_sprintf(prefix, "%02d", ((lt->yday+(5+lt->wday)%7)/7));
+      case 'z':	// Time zone as hour offset from UTC.
+		// Needed for RFC822 dates.
+	{
+	  int minutes = lt->timezone/60;
+	  int hours = minutes/60;
+	  minutes -= hours * 60;
+	  res += my_sprintf(prefix, "%+05d%", hours*100 + minutes);
+	}
 	break;
       case 'Z':	// FIXME: Time zone name or abbreviation, or no bytes if
 		// no time zone information exists
+	break;
       }
       res+=key[1..];
       break;
