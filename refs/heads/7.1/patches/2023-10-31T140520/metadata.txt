@@ -1,0 +1,14 @@
+subject: Roxen 7.1: Fixes issue with mktime() not supporting some dates
+from: ac8e83eb043e512520a807d6894617a879d29173
+to: 9bf41f444b544536b3264e2fc753df5f18d3ab9c
+originator: Marcus Wellhardh
+depends: roxen/7.1.570|2023-10-16T123843
+restart: true
+
+• Roxen: Fix typo.
+
+• Roxen: Reduce logging of failures in low_time_dequantifier().
+
+• Roxen: Improved support in stftime() for localtime-style mapping.
+
+Fixes issue with mktime() not supporting some dates.
