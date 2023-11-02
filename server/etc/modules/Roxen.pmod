@@ -2734,8 +2734,15 @@ string strftime(string fmt, int|mapping t,
 	res += my_sprintf(prefix, "%02d", 1 + (lt->yday - lt->wday)/ 7);
 	break;
       case 'V':	// ISO week number of the year as a decimal number [01,53]; 0-prefix
-	res += my_sprintf(prefix, "%02d", Calendar.ISO.Second(t)->week_no());
-	break;
+        if (undefinedp(t)) {
+          // FIXME: Create a Calendar.ISO.Second directly from lt,
+          //        to avoid mktime() range limits.
+          // Note: Errors will be thrown here for dates unsupported
+          //       by mktime().
+          lt->timestamp = t = mktime(lt);
+        }
+        res += my_sprintf(prefix, "%02d", Calendar.ISO.Second(t)->week_no());
+        break;
       case 'w':	// Weekday as a decimal number [0,6], Sunday == 0
 	res += my_sprintf(prefix, "%d", lt->wday);
 	break;
