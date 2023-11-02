@@ -1,0 +1,13 @@
+subject: Roxen 7.1: Roxen: Fix strftime() handling of %V when called with mapping
+from: 9bf41f444b544536b3264e2fc753df5f18d3ab9c
+to: a4644707d8b666c769e10369f59b79c2e035f372
+originator: Marcus Wellhardh
+depends: 2023-10-31T140520
+restart: true
+
+• Roxen: Fix strftime() handling of %V when called with mapping.
+
+Without this fix, it always expanded to the ISO week for
+1970-01-01T00:00:00 UTC (ie 01) when called with a mapping.
+
+Fixes [REPD-909].
