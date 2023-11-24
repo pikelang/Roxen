@@ -4034,6 +4034,7 @@ void save(int|void all)
     foreach(indices(modules[modname]->copies), int i)
     {
       RoxenModule mod = modules[modname]->copies[i];
+      if (mod->faked) continue;
       store(modname+"#"+i, mod->query(), 0, this);
       if (mixed err = mod->start && catch {
 	  call_module_func_with_cbs (mod, "start", 2, this, 0);
@@ -4054,6 +4055,7 @@ int save_one( RoxenModule o )
     start(2);
     return 1;
   }
+  if (o->faked) return 0;
   string q = otomod[ o ];
   if( !q )
     error("Invalid module");
@@ -4087,6 +4089,7 @@ int save_one_without_cbs(RoxenModule o)
 //! Save all variables in a given module but don't call any callbacks.
 {
   if (o) {
+    if (o->faked) return 0;
     string q = otomod[ o ];
     if (!q)
       error("Invalid module");
