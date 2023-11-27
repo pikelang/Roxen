@@ -119,7 +119,7 @@ protected void low_refresh_pem(int pem_id, int|void force)
     // FIXME: Check if mtime hash changed before reading the file?
 
     SSL3_WERR("Reading cert file %O\n", pem_file);
-    if( catch{ raw_pem = lopen(pem_file, "r")->read(); } )
+    if( catch{ raw_pem = lopen(pem_file, "r")->read(); } || !raw_pem )
     {
       SSL3_WERR("Reading PEM file %O failed: %s\n",
 		pem_file, strerror(errno()));
