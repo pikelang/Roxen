@@ -1,0 +1,20 @@
+subject: Roxen 7.1: ConfigIF: Do not save variables for faked modules, fixes [EP-2051]. Variable.Schedule: More fixing of DST transitions, fixes [REPD-922].
+from: a4644707d8b666c769e10369f59b79c2e035f372
+to: 50bcb61825688da6fd02f019b5ef5de170042a4f
+originator: Jonas Lonnberg
+depends: 2023-11-02T155212
+restart: true
+
+• ConfigIF: Do not save variables for faked modules.
+
+Saving the variables for faked modules may zap existing settings
+for modules that eg have a compilation error.
+
+Fixes [EP-2051].
+
+• Variable.Schedule: More fixing of DST transitions.
+
+Fixes transition out of DST for times during the first hour
+the day after the transition.
+
+Fixes [REPD-922].
