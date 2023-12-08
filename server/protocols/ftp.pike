@@ -1095,7 +1095,18 @@ class LSFile
           files[n_files++] = short;
         }
       } else {
-        output(short + ": not found\n");
+        // Path not found.
+        //
+        // NOTE: Some ftp clients assume that eg the command
+        //
+        //           LIST missing_file
+        //
+        //       will have no output if the file is missing.
+        //       [REPD-937]
+        //
+        // NB: This output should have been on stderr
+        //     (but that does not exist).
+        // output(short + ": not found\n");
         session->conf->log(([ "error":404 ]), session);
       }
       destruct(session);
