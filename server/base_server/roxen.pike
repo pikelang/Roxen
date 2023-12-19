@@ -687,6 +687,76 @@ local protected int thread_reap_cnt;
 protected int threads_on_hold;
 //! Number of handler threads on hold.
 
+int number_of_threads;
+//! The number of handler threads to run.
+
+int busy_threads;
+//! The number of currently busy threads.
+
+protected array(object|int(-1..0)) handler_threads = ({});
+//! The handler threads.
+//!
+//! This list is mainly used for debug, but also
+//! to signal individual handler threads that it
+//! is time to die (by setting them to zero).
+
+protected int handler_timestamp;
+//! Bumped when a handler thread gets an item from the queue.
+
+//! Keeps track of active handler threads.
+//!
+//! Spawns new handler threads if/when it observes that the handler
+//! queue is stalled.
+//!
+//! Terminates extra handler threads when the handler queue is empty.
+//!
+//! Runs via @[call_out()] once every second.
+protected void handler_governor()
+{
+  mixed err = catch {
+      if (low_handle_queue->size()) {
+        // NB: There is a minor race here for servers that have a low
+        //     handler pressure (less than 1 call every 2 seconds),
+        //     in that we may get called in the interval between an
+        //     item having been added to the queue, and a handler
+        //     having woken up. In practise this probably never happens,
+        //     and the effect is just that an extra handler thread is
+        //     added only to be scheduled for removal a few seconds later.
+        if ((handler_timestamp + 2 < time(1)) ||
+            (number_of_threads < query("numthreads"))) {
+          // The handler queue appears to have stalled or
+          // all handler threads have not been started yet.
+          if (number_of_threads < query("numthreads") * query("numthreads")) {
+            report_warning_sparsely("Handler threads stalled.\n");
+            start_handler_thread();
+          } else {
+            if (abs_started) {
+              report_warning_sparsely("Handler thread overflow. "
+                                      "ABS imminent.\n");
+            } else {
+              report_warning_sparsely("Handler thread overflow.\n");
+            }
+          }
+        }
+      } else {
+        // The handler queue is empty.
+        if (number_of_threads > query("numthreads")) {
+          // Inform the most recent handler thread that
+          // it is time to die.
+          //
+          // It will die after it has handled the next item.
+          THREAD_WERR("Handler queue empty. Reducing number of threads.\n");
+          thread_reap_cnt++;
+          handler_threads[--number_of_threads] = -1;
+        }
+      }
+    };
+  if (err) {
+    master()->handle_error(err);
+  }
+  call_out(handler_governor, 1);
+}
+
 // Global variables for statistics
 int handler_num_runs = 0;
 int handler_num_runs_001s = 0;
@@ -730,6 +800,7 @@ local protected void handler_thread(int id)
 //! the handler function throws an error.
 {
   THREAD_WERR("Handle thread ["+id+"] started");
+  handler_threads[id] = handler_threads[id] || this_thread();
   mixed h, q;
   set_u_and_gid (1);
 #ifdef TEST_EUID_CHANGE
@@ -741,7 +812,7 @@ local protected void handler_thread(int id)
       werror ("Handler thread %d can't read rootonly\n", id);
   }
 #endif
-  while(1)
+  while(handler_threads[id] == this_thread())
   {
     int thread_flagged_as_busy;
 #ifndef NO_SLOW_REQ_BT
@@ -754,6 +825,7 @@ local protected void handler_thread(int id)
         cache_clear_deltas();
         THREAD_WERR("Handle thread ["+id+"] waiting for next event");
         if(arrayp(h = low_handle_queue->read())) {
+          handler_timestamp = time(1);
           if (!h[0]) {
             THREAD_WERR(sprintf("Handle thread [%O] got NULL callback: %s",
                                 id, debug_format_queue_task(h)));
@@ -822,12 +894,8 @@ local protected void handler_thread(int id)
           handler_acc_time += (int)(1E6*handler_rtime);
         } else if(!h) {
           // Roxen is shutting down.
-          report_debug("Handle thread ["+id+"] stopped.\n");
-          thread_reap_cnt--;
-#ifdef NSERIOUS
-          if(!thread_reap_cnt) report_debug("+++ATH\n");
-#endif
-          return;
+          handler_threads[id] = -1;
+          break;
         }
 #ifdef DEBUG
         else if (h != 1)
@@ -849,7 +917,7 @@ local protected void handler_thread(int id)
           threads_on_hold--;
           THREAD_WERR("Handle thread [" + id + "] released");
         }
-      } while(1);
+      } while(handler_threads[id] == this_thread());
     }) {
       if (thread_flagged_as_busy)
         busy_threads--;
@@ -875,6 +943,12 @@ local protected void handler_thread(int id)
       }
     }
   }
+  report_debug("Handle thread ["+id+"] stopped.\n");
+  thread_reap_cnt--;
+  handler_threads[id] = 0;
+#ifdef NSERIOUS
+  if(!thread_reap_cnt && !number_of_threads) report_debug("+++ATH\n");
+#endif
 }
 
 //! Like @[handle()], but available before all configurations
@@ -895,30 +969,40 @@ int handle_queue_length()
     handle_queue->size();
 }
 
-int number_of_threads;
-//! The number of handler threads to run.
-
-int busy_threads;
-//! The number of currently busy threads.
-
-protected array(object) handler_threads = ({});
-//! The handler threads, the list is kept for debug reasons.
+protected void start_handler_thread()
+{
+  int id = number_of_threads++;
+  if (sizeof(handler_threads) < id + 1) {
+    // Grow the array keeping track of handler threads.
+    handler_threads += allocate(id + 1);
+  } else if (handler_threads[id]) {
+    // Handler thread already in use. Probably shutting down.
+    // We will soon be called again, so restore number_of_threads and return.
+    number_of_threads--;
+    return;
+  }
+  THREAD_WERR("Starting Handle Thread [" + id + "]...\n");
+  handler_threads[id] =
+    do_thread_create( "Handle Thread [" + id + "]", handler_thread, id );
+}
 
 protected void start_low_handler_threads()
 {
   if (query("numthreads") <= 1) {
     set( "numthreads", 1 );
     report_warning (LOC_S(1, "Starting one thread to handle requests.")+"\n");
-  } else { 
+  } else {
     report_notice (LOC_S(2, "Starting %d threads to handle requests.")+"\n",
                    query("numthreads") );
   }
-  array(object) new_threads = ({});
-  for(; number_of_threads < query("numthreads"); number_of_threads++)
-    new_threads += ({ do_thread_create( "Handle Thread [" +
-                                        number_of_threads + "]",
-                                        handler_thread, number_of_threads ) });
-  handler_threads += new_threads;
+
+  if (sizeof(handler_threads) < query("numthreads")) {
+    handler_threads += allocate(query("numthreads") - sizeof(handler_threads));
+  }
+
+  while (number_of_threads < query("numthreads")) {
+    start_handler_thread();
+  }
 }
 
 protected void transfer_handler_queue(Queue from, Queue to, int|void count)
@@ -1054,12 +1138,14 @@ void stop_handler_threads()
     cond->broadcast();
   }
 
-  while(number_of_threads>0) {
-    number_of_threads--;
-    low_handle_queue->write(0);
-    thread_reap_cnt++;
+  for (int i = number_of_threads; i--;) {
+    if (objectp(handler_threads[i])) {
+      number_of_threads--;
+      if (handler_threads[i] == this_thread()) continue;
+      thread_reap_cnt++;
+      low_handle_queue->write(0);
+    }
   }
-  handler_threads = ({});
 
   if (this_thread() != backend_thread && !backend_block_lock) {
     thread_reap_cnt++;
@@ -4112,7 +4198,9 @@ void restart_if_stuck (int force)
 
   unregister_roxen_perror_output(abs_buf->add);
 }
-#endif
+#else /* !__NT__ */
+protected constant abs_started = 0;
+#endif /* __NT__ */
 
 #if constant(ROXEN_MYSQL_SUPPORTS_UNICODE)
 // NOTE: We need to mark binary data as binary in case
@@ -7394,6 +7482,8 @@ int main(int argc, array tmp)
 
 #ifdef THREADS
   start_handler_threads();
+
+  call_out(handler_governor, 1);
 #if constant(Filesystem.Monitor.basic) && !defined(DISABLE_FSGARB)
   start_fsgarb();
 #endif
