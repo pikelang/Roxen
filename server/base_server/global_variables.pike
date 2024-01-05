@@ -1085,11 +1085,16 @@ be of real use.</p>"));
         {return !query("suicide_engage");}
     );
 
-  defvar("patch_on_restart", 0,
-         LOCALE(1090, "Auto Maintenance: Restart and apply patches"),
-         TYPE_FLAG,
-         LOCALE(1091, "Apply any pending imported patches when the server is "
-                "automatically restarted."))
+  defvar("patch_on_restart",
+         Variable.IntChoice(0,
+           ([
+             0: LOCALE("no", "No"),
+             1: LOCALE("yes", "Yes"),
+             -1: LOCALE("once", "Yes, just once"),
+           ]), 0,
+           LOCALE(1090, "Auto Maintenance: Apply pending patches on shutdown"),
+           LOCALE(1091, "Apply any pending imported patches when the server is "
+                  "shutdown or restarted (not including by the ABS system).")))
     ->set_invisibility_check_callback (
       lambda(RequestID id, Variable.Variable f)
       {return !query("suicide_engage");});
