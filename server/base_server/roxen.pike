@@ -293,7 +293,13 @@ private void low_shutdown(int exit_code, int|void apply_patches)
 
   DBManager.stop_backup_thread();
 
-  if ((apply_patches || query("patch_on_restart")) > 0) {
+  if ((apply_patches ||
+       (query("patch_on_restart") && query("suicide_engage"))) > 0) {
+    if (query("patch_on_restart") < 0) {
+      // Once.
+      set( "patch_on_restart", 0 );
+      save( );
+    }
     mixed err = catch {
 	foreach(plib->file_list_imported(), mapping(string:mixed) item) {
 	  report_notice("Applying patch %s...\n", item->metadata->id);
