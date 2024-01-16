@@ -2158,6 +2158,23 @@ void do_log( int|void fsent )
 
       conf->log(file, this_object());
 
+#ifdef ADDITIONAL_JSON_LOGGING
+      json_logger->log(([
+                           "level" : json_logger.INFO,
+                           "event" : "REQUEST",
+                           "req"   : ([
+                                      "method"        : method,
+                                      "url"           : raw_url,
+                                      "headers"       : request_headers,
+                                      "remoteAddress" : remoteaddr,
+                                     ]),
+                            "res"  : ([
+                                      "statusCode"    : file->error,
+                                      "length"        : file->len,
+                                     ]),
+                         ]));
+#endif
+
       json_logger->log(([
                            "level" : json_logger.TRACE,
                            "event" : "LOG_REQUEST",
