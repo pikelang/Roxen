@@ -1,6 +1,6 @@
 // This is a roxen protocol module.
 // Modified by Francesco Chemolli to add throttling capabilities.
-// Copyright © 1996 - 2009, Roxen IS.
+// Copyright ï¿½ 1996 - 2009, Roxen IS.
 
 constant cvs_version = "$Id$";
 // #define REQUEST_DEBUG
@@ -924,6 +924,7 @@ private int parse_got( string new_data )
 
     do {
       mapping tmp = ([
+        "level"  : json_logger.TRACE,
         "event"  : "BEGIN_REQUEST",
         "tid"    : this_thread()->id_number(),
         "remote" : remoteaddr,
@@ -1035,6 +1036,7 @@ private int parse_got( string new_data )
     }
 
     json_logger->log(([
+                         "level"       : json_logger.TRACE,
                          "event"       : "GOT_HEADERS",
                          "headers"     : request_headers,
                          "prot"        : prot,
@@ -1695,7 +1697,7 @@ protected void do_timeout()
 #ifdef DEBUG
     error ("This shouldn't happen.\n");
 #endif
-    // premature call_out... *¤#!"
+    // premature call_out... *ï¿½#!"
     call_out(do_timeout, 10);
     MARK_FD("HTTP premature timeout");
   }
@@ -2157,6 +2159,7 @@ void do_log( int|void fsent )
       conf->log(file, this_object());
 
       json_logger->log(([
+                           "level" : json_logger.TRACE,
                            "event" : "LOG_REQUEST",
                            "htime" : handle_time,
                            "qtime" : queue_time,
@@ -2817,6 +2820,7 @@ void send_result(mapping|void result)
   TIMER_START(send_result);
 
   json_logger->log(([
+                       "level"       : json_logger.TRACE,
                        "event"       : "SEND_RESULT_BEGIN",
                      ]));
 
@@ -2879,6 +2883,7 @@ void send_result(mapping|void result)
     if((file->file == -1) || file->leave_me)
     {
       json_logger->log(([
+                           "level"       : json_logger.TRACE,
                            "event"       : "SEND_RESULT_END",
                            "msg"         : "No result",
                          ]));
@@ -3383,11 +3388,12 @@ void handle_request()
   REQUEST_WERR("HTTP: handle_request()");
   TIMER_START(handle_request);
   json_logger->log(([
+                       "level" : json_logger.TRACE,
                        "event" : "HANDLE_REQUEST_BEGIN",
                        "qtime" : queue_time,
                      ]));
 #ifdef TIMERS
-#define LOG_HANDLE_END() do { json_logger->log((["event" : "HANDLE_REQUEST_END", "handle_time" : timers->handle_request ])); } while(0)
+#define LOG_HANDLE_END() do { json_logger->log((["level":json_logger.TRACE, "event" : "HANDLE_REQUEST_END", "handle_time" : timers->handle_request ])); } while(0)
 #else
 #define LOG_HANDLE_END()
 #endif
@@ -3496,6 +3502,7 @@ void handle_request()
       //     Local copys of json_logger and timers (see above) saves us from
       //     suffering from trying to use objects in desctructed object.
       json_logger->log(([
+                           "level"  : json_logger.TRACE,
                            "event" : "PIPE_BEGIN",
                          ]));
       LOG_HANDLE_END();
@@ -3716,6 +3723,7 @@ void got_data(mixed fooid, string s, void|int chained)
     protocol_time += gethrtime() - start_time;
 
     json_logger->log(([
+                         "level"       : json_logger.TRACE,
                          "event"       : "GOT_REQUEST",
                          "data_length" : strlen(data),
                          "path"        : path,
@@ -4123,6 +4131,7 @@ protected void got_configuration(Configuration conf)
     queue_length = roxen.handle_queue_length();
     protocol_time += gethrtime() - start_time;
     json_logger->log(([
+                         "level"   : json_logger.TRACE,
                          "event"   : "ENTER_QUEUE",
                          "qlen"    : queue_length,
                          "vars"    : real_variables,
