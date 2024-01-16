@@ -219,6 +219,10 @@ class SocketLogger {
   }
 
   void do_log(mapping entry) {
+    if (!entry->level) {
+      entry = entry | ([]); // Make sure we don't modify the original mapping!
+      entry->level = default_log_level;
+    }
     string res = Standards.JSON.encode(entry);
     Stdio.Buffer tmp = Stdio.Buffer(res);
     tmp->add("\n"); // Add a newline so that the reciever can parse data based on lines.
