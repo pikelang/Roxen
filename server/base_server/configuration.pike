@@ -1,5 +1,5 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2009, Roxen IS.
+// Copyright ï¿½ 1996 - 2009, Roxen IS.
 //
 
 // @appears Configuration
@@ -2384,7 +2384,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
         if(loc=="unit" || loc=="pixel-of-destiny")
         {
           TIMER_END(internal_magic);
-          return (["data":"GIF89a\1\0\1\0\200ÿ\0ÀÀÀ\0\0\0!ù\4\1\0\0\0\0,"
+          return (["data":"GIF89a\1\0\1\0\200ï¿½\0ï¿½ï¿½ï¿½\0\0\0!ï¿½\4\1\0\0\0\0,"
                    "\0\0\0\0\1\0\1\0\0\1\1""2\0;",
                    "type":"image/gif",
                    "stat": ({0, 0, 0, 900000000, 0, 0, 0})]);
@@ -6136,6 +6136,10 @@ server to cut down the queue length after spikes of heavy load."))
     // Upgrading an older configuration; default to 2.1 compatibility level.
     set ("compat_level", "2.1");
   setvars( retrieved_vars );
+
+  // We need to call this, otherwise json_log won't be setup propertly
+  // when using default values.
+  json_log_endpoint_cb(getvar("JSONLogEndpoints"));
 
 //   report_debug("[restore: %.1fms] ", (gethrtime()-st)/1000.0 );
 
