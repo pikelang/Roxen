@@ -44,7 +44,7 @@ class BaseJSONLogger {
       data->level = default_log_level;
     }
 
-    string res = Standards.JSON.encode(data);
+    string res = Standards.JSON.encode(data, Standards.JSON.ASCII_ONLY);
   }
 
 
@@ -223,7 +223,7 @@ class SocketLogger {
       entry = entry | ([]); // Make sure we don't modify the original mapping!
       entry->level = default_log_level;
     }
-    string res = Standards.JSON.encode(entry);
+    string res = Standards.JSON.encode(entry, Standards.JSON.ASCII_ONLY);
     Stdio.Buffer tmp = Stdio.Buffer(res);
     tmp->add("\n"); // Add a newline so that the reciever can parse data based on lines.
     sizeof(listeners) && indices(listeners)->write(tmp);
