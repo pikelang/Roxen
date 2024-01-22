@@ -2384,7 +2384,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
         if(loc=="unit" || loc=="pixel-of-destiny")
         {
           TIMER_END(internal_magic);
-          return (["data":"GIF89a\1\0\1\0\200�\0���\0\0\0!�\4\1\0\0\0\0,"
+          return (["data":"GIF89a\1\0\1\0\200\xFF\0\xC0\xC0\xC0\0\0\0!\xF9\4\1\0\0\0\0,"
                    "\0\0\0\0\1\0\1\0\0\1\1""2\0;",
                    "type":"image/gif",
                    "stat": ({0, 0, 0, 900000000, 0, 0, 0})]);
