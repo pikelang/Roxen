@@ -1,0 +1,27 @@
+subject: Roxen 7.2: [REPD-937][EP-2051][REPD-922]
+from: b3a82f62b13e44f3cec731f1f4c6e182388c1c15
+to: db8a0d2d64830b3cd55deb8c76d39dfd6dc9a7e0
+originator: Erik Allemann
+depends: roxen/7.2.251
+restart: true
+
+• FTP: Do not send stderr output from the internal ls (ie LIST or NLST).
+
+Some ftp clients assume that LIST and NLST will return an empty
+output if the argument does not exist.
+
+Fixes [REPD-937].
+
+• ConfigIF: Do not save variables for faked modules.
+
+Saving the variables for faked modules may zap existing settings
+for modules that eg have a compilation error.
+
+Fixes [EP-2051].
+
+• Variable.Schedule: More fixing of DST transitions.
+
+Fixes transition out of DST for times during the first hour
+the day after the transition.
+
+Fixes [REPD-922].
