@@ -99,7 +99,7 @@ class StringFile( string data, mixed|void _st )
 {
   int offset;
 
-  string _sprintf()
+  protected string _sprintf()
   {
     return "StringFile("+strlen(data)+","+offset+")";
   }
@@ -176,7 +176,7 @@ class ModuleCopies
   {
     return values(copies);
   }
-  string _sprintf (int flag)
+  protected string _sprintf (int flag)
   {
     return flag == 'O' && ("ModuleCopies("+sizeof(copies)+")");
   }
@@ -3622,7 +3622,7 @@ class RequestID
     destruct_threadbound_session_objects();
   }
 
-  string _sprintf (int flag)
+  protected string _sprintf (int flag)
   {
     return flag == 'O' && ("RequestID(" + (raw_url||"") + ")"
 #ifdef ID_OBJ_DEBUG
@@ -3706,7 +3706,7 @@ class MultiStatusStatus
     return http_code + msg_hash;
   }
 
-  string _sprintf (int flag)
+  protected string _sprintf (int flag)
   {
     return flag == 'O' &&
       sprintf ("MultiStatusStatus(%d,%O)", http_code, message);
@@ -3809,7 +3809,7 @@ class MultiStatusPropStat
     }
   }
 
-  string _sprintf (int flag)
+  protected string _sprintf (int flag)
   {
     return flag == 'O' && sprintf ("MultiStatusPropStat(%O)", properties);
   }
