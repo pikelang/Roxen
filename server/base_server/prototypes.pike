@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.136 2004/05/25 18:56:52 mast Exp $";
+constant cvs_version="$Id$";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -88,7 +88,7 @@ class StringFile( string data, mixed|void _st )
 {
   int offset;
 
-  string _sprintf()
+  protected string _sprintf()
   {
     return "StringFile("+strlen(data)+","+offset+")";
   }
@@ -162,7 +162,7 @@ class ModuleCopies
   {
     return values(copies);
   }
-  string _sprintf( ) { return "ModuleCopies("+sizeof(copies)+")"; }
+  protected string _sprintf( ) { return "ModuleCopies("+sizeof(copies)+")"; }
 }
 
 // Simulate an import of useful stuff from Parser.XML.Tree.
@@ -312,7 +312,7 @@ class Configuration
 
   class Priority
   {
-    string _sprintf()
+    protected string _sprintf()
     {
       return "Priority()";
     }
@@ -786,7 +786,7 @@ class CacheKey
     }
   }
 
-  string _sprintf (int flag)
+  protected string _sprintf (int flag)
   {
     return flag == 'O' && ("CacheKey()"
 #ifdef ID_CACHEKEY_DEBUG
@@ -1715,7 +1715,7 @@ class RequestID
     return conf;
   }
 
-  string _sprintf (int flag)
+  protected string _sprintf (int flag)
   {
     return flag == 'O' && ("RequestID(" + (raw_url||"") + ")"
 #ifdef ID_OBJ_DEBUG
@@ -1757,7 +1757,7 @@ class MultiStatusStatus (int http_code, void|string message)
     return http_code + (message && hash (message));
   }
 
-  string _sprintf (int flag)
+  protected string _sprintf (int flag)
   {
     return flag == 'O' &&
       sprintf ("MultiStatusStatus(%d,%O)", http_code, message);
@@ -1854,7 +1854,7 @@ class MultiStatusPropStat
     }
   }
 
-  string _sprintf (int flag)
+  protected string _sprintf (int flag)
   {
     return flag == 'O' && sprintf ("MultiStatusPropStat(%O)", properties);
   }
