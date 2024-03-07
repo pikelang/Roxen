@@ -1,0 +1,10 @@
+subject: Roxen 7.2: Prototypes: Protect _sprintf() in RequestID.
+from: 25ac7083290c8392a418284a012ad334c72a90f5
+to: a5bda2ba1f159876747b2f69e2af470637954c78
+originator: Erik Allemann
+depends: roxen/7.2.313|2024-01-26T134223
+restart: true
+
+• Prototypes: Protect _sprintf() in RequestID.
+
+Also protects _sprintf() in a few other places.
