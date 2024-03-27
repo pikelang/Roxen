@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.451 2011/05/24 14:17:48 mast Exp $
+// $Id$
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.451 2011/05/24 14:17:48 mast Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1879,6 +1879,10 @@ protected class SQLKey
 	  m_delete (dbs_for_thread, db_name);
       }
       real = 0;
+    } else if (has_value(errmsg, "was not locked with LOCK TABLES")) {
+      report_debug("**** %s: Table locking error detected: %s",
+                   ctime(time()) - "\n", errmsg);
+      describe_thread(this_thread());
     }
     throw (err);
   }
