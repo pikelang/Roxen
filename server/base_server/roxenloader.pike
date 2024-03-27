@@ -2814,6 +2814,10 @@ protected class SQLKey
           m_delete (dbs_for_thread, db_name);
       }
       real = 0;
+    } else if (has_value(errmsg, "was not locked with LOCK TABLES")) {
+      report_debug("**** %s: Table locking error detected: %s",
+                   ctime(time()) - "\n", errmsg);
+      roxen->describe_thread(this_thread());
     }
     throw (err);
   }
