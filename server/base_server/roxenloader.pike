@@ -2817,7 +2817,7 @@ protected class SQLKey
     } else if (has_value(errmsg, "was not locked with LOCK TABLES")) {
       report_debug("**** %s: Table locking error detected: %s",
                    ctime(time()) - "\n", errmsg);
-      describe_thread(this_thread());
+      roxen->describe_thread(this_thread());
     }
     throw (err);
   }
