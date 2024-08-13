@@ -1117,7 +1117,7 @@ mixed parse(RequestID id)
           <th style='width:20px'>&nbsp;</th>
           <th style='width:11em; text-align:left;'>Id</th>
           <th style='width:auto; text-align:left'>Patch Name</th>
-          <th style='width:14em; text-align:left'>Time of Installation</th>
+          <th style='width:15.5em; text-align:left'>Time of Installation</th>
         </tr>
 ";
   res += list_patches(id, plib, "installed");
