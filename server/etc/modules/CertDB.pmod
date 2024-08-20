@@ -633,6 +633,8 @@ mapping(string:string|sql_row|array(sql_row)) get_keypair_metadata(int keypair_i
       if (sizeof(tmp)) {
         res->key->pem_path = tmp[0]->path;
       }
+    } else {
+      res->stale = "true";
     }
   }
 
@@ -657,6 +659,8 @@ mapping(string:string|sql_row|array(sql_row)) get_keypair_metadata(int keypair_i
       if (sizeof(tmp)) {
         res->certs[-1]->pem_path = tmp[0]->path;
       }
+    } else {
+      res->stale = "true";
     }
   }
 

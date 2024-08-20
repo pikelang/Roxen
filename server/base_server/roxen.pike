@@ -2753,23 +2753,41 @@ class StartTLSProtocol
       return ids;
     }
 
-    protected array(string) render_keypair(int keypair_id)
+    // NB: The force flag is used to show expired or deleted certificates
+    //     that are still in use.
+    protected array(string) render_keypair(int keypair_id, int|void force)
     {
       array(Crypto.Sign.State|array(string)) keypair =
         CertDB.get_keypair(keypair_id);
       if (!keypair) {
+        if (!force) return ({});
         return ({ "<td colspan='2'>" +
                   LOC_C(1129, "Lost certificate") +
                   "</td>" });
       }
+
+      array(string) res = ({});
+
+      mapping keypair_metadata = CertDB.get_keypair_metadata(keypair_id);
+      if (!keypair_metadata) {
+        keypair_metadata = ([ "stale": "true" ]);
+      }
+      if (keypair_metadata->stale) {
+        if (!force) {
+          return ({});
+        }
+        res += ({ "<td colspan='2'><b>" +
+                  LOC_C(0, "Stale certificate") +
+                  ".</b>" });
+      }
+
       [Crypto.Sign.State private_key, array(string) certs] = keypair;
 
       Standards.X509.TBSCertificate tbs =
         Standards.X509.decode_certificate(certs[0]);
 
-      array(string) res = ({});
-
       if (!tbs) {
+        if (!force) return ({});
         res += ({ "<td colspan='2'><b>" +
                   LOC_C(1130, "Invalid certificate") +
                   ".</b>" });
@@ -2847,6 +2865,7 @@ class StartTLSProtocol
                                        format_time());
         if (tbs->not_after < time(1)) {
           // Already expired.
+          if (!force) return ({});
           res += ({
             sprintf("<td>%s</td>"
                     "<td><font color='&usr.warncolor;'>%s</font>\n"
@@ -2868,8 +2887,6 @@ class StartTLSProtocol
             sprintf("<td>%s</td><td>%s</td>", LOC_C(1137, "Expires"), tmp),
           });
         }
-
-        mapping keypair_metadata = CertDB.get_keypair_metadata(keypair_id);
 
         array(string) paths =
           keypair_metadata->certs->pem_path +
@@ -2897,19 +2914,24 @@ class StartTLSProtocol
       return res;
     }
 
-    protected array(string) render_element(string keypair_name)
+    protected array(string) render_element(string keypair_name, int|void force)
     {
-      return map(CertDB.get_keypairs_by_name(keypair_name), render_keypair) *
-        ({});
+      // Always show all certificates in YES_I_KNOW_WHAT_I_AM_DOING mode.
+#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+      array(string) res =
+        map(CertDB.get_keypairs_by_name(keypair_name), render_keypair) * ({});
+      if (sizeof(res) || !force) return res;
+#endif
+
+      // All keypairs are stale or expired or similar, but they are selected...
+      return map(CertDB.get_keypairs_by_name(keypair_name),
+                 render_keypair, 1) * ({});
     }
 
     string render_form(RequestID id, void|mapping additional_args) {
       array(string) current = Array.uniq(sort(map(query(), _name)));
-      string res = "<table width='100%'>\n";
-      foreach( get_choice_list(); int i; mixed elem ) {
-        if (i != 0) {
-          res += "<tr><td colspan='3'><hr/></td></tr>\n";
-        }
+      string res = "";
+      foreach(get_choice_list(), mixed elem) {
         mapping m = ([
           "type": "checkbox",
           "name": path(),
@@ -2919,15 +2941,20 @@ class StartTLSProtocol
           m->checked="checked";
           current -= ({ m->value });
         }
-        array(string) el_rows = render_element(elem);
-        res += sprintf("<tr><td rowspan='%d'>%s</td>"
-                       "%s"
-                       "</tr>\n",
-                       sizeof(el_rows),
-                       Roxen.make_tag( "input", m),
-                       el_rows[0]);
-        foreach(el_rows[1..], string row) {
-          res += sprintf("<tr>%s</tr>", row);
+        array(string) el_rows = render_element(elem, !!m->checked);
+        if (sizeof(el_rows)) {
+          if (sizeof(res)) {
+            res += "<tr><td colspan='3'><hr/></td></tr>\n";
+          }
+          res += sprintf("<tr><td rowspan='%d'>%s</td>"
+                         "%s"
+                         "</tr>\n",
+                         sizeof(el_rows),
+                         Roxen.make_tag( "input", m),
+                         el_rows[0]);
+          foreach(el_rows[1..], string row) {
+            res += sprintf("<tr>%s</tr>", row);
+          }
         }
       }
       // Make an entry for the current values if they're not in the list,
@@ -2941,11 +2968,14 @@ class StartTLSProtocol
           "checked": "checked",
         ]);
         string title = sprintf(LOC_C(1121,"(stale value %s)"), value);
+        if (sizeof(res)) {
+          res += "<tr><td colspan='3'><hr/></td></tr>\n";
+        }
         res += sprintf("<tr><td>%s</td><td>%s</td></tr>\n",
                        Roxen.make_tag( "input", m),
                        Roxen.html_encode_string(title));
       }
-      return res + "</table>";
+      return "<table width='100%'>\n" + res + "</table>";
     }
 
     string low_decode_keypair_id(mixed val) {
