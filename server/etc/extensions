@@ -649,6 +649,7 @@ cdr	application/x-coreldraw
 cdrw	application/x-coreldraw
 chat	application/x-chat
 che	application/x-up-cacheop
+cjs application/x-javascript
 ckl	application/x-fortezza-ckl
 class	application/x-java-vm
 cnc	application/x-cnc
@@ -714,6 +715,7 @@ mdz	application/vnd.ms-access
 me	application/x-troff-me
 mfp	application/mirage
 mif	application/x-mif
+mjs application/x-javascript
 mm	application/x-meme
 mocha	application/x-javascript
 mpire	application/x-mpire
@@ -872,7 +874,7 @@ svr	x-world/x-svr
 vrt	x-world/x-vrt
 wrz	x-world/x-vrml
 
-##talk	plugin/talker 
+##talk	plugin/talker
 wan	plugin/wanimate
 waf	plugin/wanimate
 
