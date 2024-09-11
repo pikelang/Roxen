@@ -4230,7 +4230,7 @@ class MultiStatus
     DAV_WERROR("Rendering XML took %dus.\n", gethrtime() -  startts);
 #if 0
     startts = gethrtime();
-    string xml2 = render();
+    string xml2 = string_to_utf8(render());
     DAV_WERROR("Render(2) took %dus.\n", gethrtime() - startts);
 
     if (sizeof(xml) < 65536) {
@@ -4238,7 +4238,7 @@ class MultiStatus
     }
 #endif
 #else
-    string xml = render();
+    string xml = string_to_utf8(render());
     DAV_WERROR("Render(2) took %dus.\n", gethrtime() - startts);
 #if 0
     if (sizeof(xml) < 65536) {
