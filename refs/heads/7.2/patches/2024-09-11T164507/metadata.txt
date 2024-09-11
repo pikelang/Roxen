@@ -1,0 +1,10 @@
+subject: Roxen 7.2: [RT38835] FIND_PROP: Fix issue with Latin-1 encoded paths in multistatus
+from: 25273efd1e979c6c5da4aced277a8c026e5f045e
+to: 35f955be1e117ffd12987d8313e9354107e79f88
+originator: Samuel Lerstrom
+depends: 2024-07-29T150343
+restart: true
+
+• FIND_PROP: Fix issue with Latin-1 encoded paths in multistatus.
+
+Fixes [EP-2168].
