@@ -1,0 +1,10 @@
+subject: Roxen 8.0: [EP-2168] Fix issue with Latin-1 encoded paths in multistatus.
+from: 900688226bdcc79e9c9cb99c8a94714f89500955
+to: e1a6c5056dffce23ebe72c2a28c2944cfbb5f0a3
+originator: Erik Allemann
+depends: 2024-08-16T100402
+restart: true
+
+• FIND_PROP: Fix issue with Latin-1 encoded paths in multistatus.
+
+Fixes [EP-2168].
