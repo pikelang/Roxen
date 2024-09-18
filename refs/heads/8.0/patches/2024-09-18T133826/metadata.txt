@@ -1,0 +1,10 @@
+subject: Roxen 8.0:  [REPD-1226] Fix DST transition issues in low_time_dequantifier()
+from: e1a6c5056dffce23ebe72c2a28c2944cfbb5f0a3
+to: b79d023f5f762b4abda9e563db279a880d018783
+originator: Administrator
+depends: 2024-09-12T090738
+restart: true
+
+• Roxen: Fix DST transition issues in low_time_dequantifier().
+
+Fixes [REPD-1226].
