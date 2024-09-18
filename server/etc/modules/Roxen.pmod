@@ -3450,9 +3450,11 @@ mapping(string:int) low_time_dequantifier(mapping m, void|int|mapping t )
   //! Valid units are seconds, minutes, beats, hours, days, weeks,
   //! months and years.
 {
+  int is_lt = 1;
   mapping(string:int) res = ([]);
   if (mappingp(t)) {
-    res = t;
+    res = t + ([]);
+    is_lt = zero_type(t->timezone) || !!t->timezone;
   } else {
     res = localtime(t);
     if (!t) {
@@ -3463,6 +3465,7 @@ mapping(string:int) low_time_dequantifier(mapping m, void|int|mapping t )
 
   mapping(string:int) delta = (mapping(string:int))m;
 
+  // First cook the deltas.
   if (m->beats) {
     delta->seconds += (int)(((float)m->beats) * 86.4);
   }
@@ -3471,15 +3474,14 @@ mapping(string:int) low_time_dequantifier(mapping m, void|int|mapping t )
     delta->days += delta->weeks * 7;
   }
 
+  // Second adjust the time of day.
   int dirty;
-  foreach(({ "seconds", "minutes", "hours", "days", "months" }), string field) {
+  foreach(({ "seconds", "minutes", "hours" }), string field) {
     if (delta[field]) {
       string tsfield = ([
         "seconds":"sec",
         "minutes":"min",
         "hours":"hour",
-        "days":"mday",
-        "months":"mon",
       ])[field];
       res[tsfield] += delta[field];
       dirty = 1;
@@ -3487,22 +3489,37 @@ mapping(string:int) low_time_dequantifier(mapping m, void|int|mapping t )
   }
 
   if (dirty) {
+    mapping(string:int) pre = res;
+
     // Normalize.
-    if (res->timezone) {
+    if (is_lt) {
       res = localtime(mktime(res));
     } else {
       res = gmtime(mktime(res));
     }
+
+    dirty = 0;
   }
 
-  if (delta->years) {
-    res->year += delta->years;
+  // Third adjust the date.
+  foreach(({ "days", "months", "years" }), string field) {
+    if (delta[field]) {
+      string tsfield = ([
+        "days": "mday",
+        "months": "mon",
+        "years": "year",
+      ])[field];
+      res[tsfield] += delta[field];
+      dirty = 1;
+    }
+  }
 
+  if (dirty) {
     mixed err = catch {
         // Normalize.
         mapping(string:int) tmp = res + ([]);
         tmp->hour = 12;	// Keep away from day threshold.
-        if (tmp->timezone) {
+        if (is_lt) {
           tmp = localtime(mktime(tmp));
         } else {
           tmp = gmtime(mktime(tmp));
@@ -3511,6 +3528,11 @@ mapping(string:int) low_time_dequantifier(mapping m, void|int|mapping t )
         res->mday = tmp->mday;	/* In case of leap day. */
         res->wday = tmp->wday;	/* Likely to differ. */
         res->yday = tmp->yday;	/* In case of leap year. */
+
+        if (is_lt) {
+          // Normalize again as res may now target an invalid time due to DST.
+          res = localtime(mktime(res));
+        }
       };
     if (err
 #ifndef DEBUG
@@ -3523,6 +3545,8 @@ mapping(string:int) low_time_dequantifier(mapping m, void|int|mapping t )
       master()->handle_error(err);
 #endif
     }
+
+    dirty = 0;
   }
 
   return res;
