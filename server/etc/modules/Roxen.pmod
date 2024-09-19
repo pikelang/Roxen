@@ -3743,6 +3743,8 @@ mapping(string:int) low_time_dequantifier(mapping m, void|int|mapping t )
 
         if (is_lt) {
           // Normalize again as res may now target an invalid time due to DST.
+          tmp = localtime(mktime(res));
+          res->timezone = tmp->timezone;
           res = localtime(mktime(res));
         }
       };
