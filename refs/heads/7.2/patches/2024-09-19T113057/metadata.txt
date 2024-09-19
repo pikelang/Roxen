@@ -1,0 +1,13 @@
+subject: Roxen 7.2: [REPD-1226] Roxen: Fix more DST transition issues in low_time_dequantifier()
+from: 4047d7cef6d66fe76c152b424ab17c404cf61686
+to: 88b77e3a4c91e879559d3550dca8c9aa9dc84a94
+originator: Administrator
+depends: 2024-09-18T135115
+restart: true
+
+• Roxen: Fix more DST transition issues in low_time_dequantifier().
+
+Fixes issue where the normalization of the timezone offset
+could cause a date change in the result.
+
+Fixes [REPD-1226].
