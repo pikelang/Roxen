@@ -137,6 +137,23 @@ void test_spawn_pike( array args,
   test_true( `==, expected_stdout, data );
 }
 
+void test_time_dequantifier()
+{
+  foreach(({ ({ localtime(1729893600), ([ "days": 1 ]),
+                localtime(1729980000) }),
+             ({ localtime(1729893600), ([ "days": 5 ]),
+                localtime(1730329200) }),
+             ({ localtime(1729980000), ([ "days": 4 ]),
+                localtime(1730329200) }),
+             ({ localtime(1729980000), ([ "months": 1 ]),
+                localtime(1732662000) }),
+             ({ localtime(1729980000), ([ "years": 1 ]),
+                localtime(1764198000) }),
+          }), array(mapping(string:int)) t) {
+    test_equal(t[2], Roxen.low_time_dequantifier, t[1], t[0]);
+  }
+}
+
 void run_tests( Configuration c )
 {
   // Test (some) public APIs in the 'roxen' and 'roxenloader' objects.
@@ -202,6 +219,8 @@ void run_tests( Configuration c )
   test_equal( "1_2", Roxen.short_name, "\xbd" );
   test_equal( "foo_bar", Roxen.short_name, "Foo/Bar" );
   test_equal( "foo_bar_1_2", Roxen.short_name, "Foo/Bar\xa7\xbd" );
+
+  test_time_dequantifier();
 
   // Some MySQL configuration tests.
 
