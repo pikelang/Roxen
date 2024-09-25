@@ -2384,9 +2384,9 @@ class StartTLSProtocol
   } while (0)
 
 #if constant(SSL.Constants.PROTOCOL_TLS_MAX)
-  protected void set_version(SSLContext|void ctx)
+  protected void set_version(SSLContext|Variable.Variable|void ctx)
   {
-    if (!ctx) ctx = this_program::ctx;
+    if (!ctx || ctx->is_variable) ctx = this_program::ctx;
     ctx->min_version = query("ssl_min_version");
   }
 #endif
