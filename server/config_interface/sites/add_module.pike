@@ -24,6 +24,7 @@ array(string) class_description( string d, RequestID id )
     return ({"Local modules", "" });
 
   string n = Stdio.read_bytes( d+"/INFO" );
+  catch { n = utf8_to_string(n); };
   sscanf( n, "<"+id->misc->config_locale+">%s"
           "</"+id->misc->config_locale+">", n );
   sscanf( n, "%*s<name>%s</name>", name  );
