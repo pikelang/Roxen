@@ -1,0 +1,13 @@
+subject: Roxen 7.2: StartTLSProtocol: Fix run time setting of SSL version limits
+from: 88b77e3a4c91e879559d3550dca8c9aa9dc84a94
+to: 01fa7f339fc0b5c9b86f287307ac299a038dfede
+originator: Administrator
+depends: 2024-09-19T113057
+restart: true
+
+• StartTLSProtocol: Fix run time setting of SSL version limits.
+
+When setting ssl_min_version or ssl_max_version, set_version()
+will be called with a Variable.Variable (NOT an SSLContext).
+
+Fixes internal server error.
