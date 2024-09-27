@@ -1,0 +1,8 @@
+subject: Roxen 8.0: Admin Interface: Module INFO files may now use UTF-8
+from: bfffc78f60fe8d496876d8a6ad9171165370070c
+to: 5414a2e2ceb6f87321a57340b30bcd1f744c818c
+originator: Administrator
+depends: 2024-09-27T085907
+restart: true
+
+• Admin Interface: Module INFO files may now use UTF-8.
