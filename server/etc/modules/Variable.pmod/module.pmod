@@ -1142,6 +1142,44 @@ class Text
 }
 
 
+protected int color_counter = 1;
+
+class Color
+//! HTML5-based color picker
+{
+  inherit String;
+  constant type = "Color";
+  int width = 10;
+
+  string render_form(RequestID id, void|mapping additional_args)
+  {
+    //  Assign a random "id" attribute if none is given by caller
+    additional_args =
+      ([ "id": "inp-color-" + color_counter++ ]) +
+      (additional_args || ([ ]) );
+    string text_id = additional_args->id;
+    string color_id = text_id + "-color";
+
+    return
+      ::render_form(id, additional_args) +
+      "\xA0"
+      "<input type='color' "
+      "       id='" + color_id + "' "
+      "       data-text-id='" + text_id + "' "
+      "       value='" + Roxen.html_encode_string(query()) + "'/>"
+      "<script language='javascript'>"
+      "  var colEl = document.getElementById('" + color_id + "');\n"
+      "  if (colEl) colEl.addEventListener('input', color_sel_cb);\n"
+      "  function color_sel_cb(evt) {\n"
+      "    var text_id = evt.target.getAttribute('data-text-id');\n"
+      "    var txtEl = document.getElementById(text_id);\n"
+      "    if (txtEl) txtEl.value = evt.target.value;\n"
+      "  }"
+      "</script>";
+  }
+}
+
+
 
 // =====================================================================
 // Password
