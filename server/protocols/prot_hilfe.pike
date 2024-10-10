@@ -251,7 +251,7 @@ class Connection
     void got_data( void|string d )
     {
       string d_trim = d && String.trim_all_whites(d);
-      if( !d || (d_trim == "quit") )
+      if( !d || (d_trim == "quit") || (d_trim == "exit") )
       {
         begone( );
         return;
