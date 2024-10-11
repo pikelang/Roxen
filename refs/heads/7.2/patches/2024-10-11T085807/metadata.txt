@@ -1,0 +1,8 @@
+subject: Roxen 7.2: Treat "exit" as alias to "quit" to avoid killing server.
+from: 01fa7f339fc0b5c9b86f287307ac299a038dfede
+to: c626a74d8e7f1179f84ffae29ce9b8bdb417d90c
+originator: Erik Allemann
+depends: 2024-09-27T092131
+restart: true
+
+• Treat "exit" as alias to "quit" to avoid killing server.
