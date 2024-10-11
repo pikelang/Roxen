@@ -3740,6 +3740,7 @@ mapping(string:int) low_time_dequantifier(mapping m, void|int|mapping t )
         res->mday = tmp->mday;	/* In case of leap day. */
         res->wday = tmp->wday;	/* Likely to differ. */
         res->yday = tmp->yday;	/* In case of leap year. */
+        res->year = tmp->year;	/* In case of passing between Dec and Jan. */
 
         if (is_lt) {
           // Normalize again as res may now target an invalid time due to DST.
