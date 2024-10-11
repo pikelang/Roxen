@@ -145,12 +145,18 @@ void test_time_dequantifier()
                 localtime(1730329200) }),
              ({ localtime(1729980000), ([ "days": 4 ]),
                 localtime(1730329200) }),
+             ({ localtime(1729893600), ([ "days": 67 ]),
+                localtime(1735686000) }),
              ({ localtime(1729980000), ([ "months": 1 ]),
                 localtime(1732662000) }),
+             ({ localtime(1729980000), ([ "months": 3 ]),
+                localtime(1737932400) }),
              ({ localtime(1729980000), ([ "years": 1 ]),
                 localtime(1761519600) }),
              ({ localtime(1729980000), ([ "months": 1, "years": 1 ]),
                 localtime(1764198000) }),
+             ({ localtime(1729980000), ([ "months": 3, "years": 1 ]),
+                localtime(1769468400) }),
           }), array(mapping(string:int)) t) {
     test_equal(t[2], Roxen.low_time_dequantifier, t[1], t[0]);
   }
