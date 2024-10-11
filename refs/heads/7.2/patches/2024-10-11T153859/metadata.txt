@@ -1,0 +1,10 @@
+subject: Roxen 7.2:  [REPD-1226][REPD-1301] Roxen: Fix year transition issue in low_time_dequantifier().
+from: c626a74d8e7f1179f84ffae29ce9b8bdb417d90c
+to: 34196b02fd00245b9c16e696df01b67e44e08389
+originator: Erik Allemann
+depends: 2024-10-11T085807
+restart: true
+
+• Roxen: Fix year transition issue in low_time_dequantifier().
+
+Fixes [REPD-1226] and [REPD-1301].
