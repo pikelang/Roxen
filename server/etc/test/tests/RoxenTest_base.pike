@@ -157,6 +157,8 @@ void test_time_dequantifier()
                 localtime(1764198000) }),
              ({ localtime(1729980000), ([ "months": 3, "years": 1 ]),
                 localtime(1769468400) }),
+             ({ localtime(1712008800), ([ "years": -2023, "days": 275 ]),
+                localtime(-62103977608) }),
           }), array(mapping(string:int)) t) {
     test_equal(t[2], Roxen.low_time_dequantifier, t[1], t[0]);
   }
