@@ -400,9 +400,6 @@ void roxen_perror(sprintf_format format, sprintf_args ... args)
     }
     last_was_nl = format[-1] == '\n';
 
-#ifdef RUN_SELF_TEST
-    low_roxen_perror(format);
-#else
     array(string) a = format/"\n";
     int i;
 
@@ -429,7 +426,6 @@ void roxen_perror(sprintf_format format, sprintf_args ... args)
 #endif
       low_roxen_perror(format_timestamp() + a[-1]);
     }
-#endif
   }
 
   if (delayed_nl) last_was_nl = -1;
