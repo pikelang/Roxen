@@ -58,21 +58,16 @@ setup_environment() {
 dp() {
   if [ "x$SILENT_START" = "xy" ] ; then 
      :
-  elif [ "x$self_test" = "xy" ]; then
-    echo "$@" >&2
   else
-    echo "                               :" "$@" >&2
+    echo "$(date '+%Y-%m-%d %_H:%M:%S')            :" "$@" >&2
   fi
 }
 
 dp_no_nl() {
   if [ "x$SILENT_START" = "xy" ] ; then 
      :
-  elif [ "x$self_test" = "xy" ]; then
-    echo "$@" | tr -d '
-' >&2
   else
-    echo "                               :" "$@" | tr -d '
+    echo "$(date '+%Y-%m-%d %_H:%M:%S')            :" "$@" | tr -d '
 ' >&2
   fi
 }
