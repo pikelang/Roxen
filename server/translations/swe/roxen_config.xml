@@ -2981,8 +2981,8 @@ gruppen skall lagras i MySQL:en som kör på datorn &lt;i&gt;wyrm&lt;/i&gt; med an
 </str>
 
 <str id="492">
-<o>Every %s %s at %s o'clock.</o>
-<t>Var %s %s vid klockan %s.</t>
+<o>Every %s %s at %s:%s o'clock.</o>
+<t>Var %s %s vid klockan %s:%s.</t>
 </str>
 
 <str id="493">
