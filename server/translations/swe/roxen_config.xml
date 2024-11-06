@@ -125,17 +125,17 @@
 <o>&lt;p&gt;The priority of the module.&lt;/p&gt;
 &lt;p&gt;Modules with the same priority can be assumed to be called in random order.&lt;/p&gt;
 </o>
-<t>Modulens prioritet, dï¿½r 9 ï¿½r hï¿½gst och 0 ï¿½r lï¿½gst. Moduler med samma prioritet kan antas anropas i slumpvis ordning.</t>
+<t>Modulens prioritet, där 9 är högst och 0 är lägst. Moduler med samma prioritet kan antas anropas i slumpvis ordning.</t>
 </str>
 
 <str id="16">
 <o>Security: Patterns</o>
-<t>Sï¿½kerhet: Behï¿½righetsregler</t>
+<t>Säkerhet: Behörighetsregler</t>
 </str>
 
 <str id="18">
 <o>Security: Security level</o>
-<t>Sï¿½kerhet: Sï¿½kerhetsnivï¿½</t>
+<t>Säkerhet: Säkerhetsnivå</t>
 </str>
 
 <str id="20">
@@ -145,8 +145,8 @@
 
 <str id="21">
 <o>If true, this site will be selected in preference of other sites when virtual hosting is used and no host header is supplied, or the supplied host header does not match the address of any of the other servers.</o>
-<t>Om ja sï¿½ kommer den hï¿½r siten att vï¿½ljas fï¿½re andra nï¿½r det finns flera virtuella servrar och
-klienten inte anger / anger en okï¿½nd host-header.</t>
+<t>Om ja så kommer den här siten att väljas före andra när det finns flera virtuella servrar och
+klienten inte anger / anger en okänd host-header.</t>
 </str>
 
 <str id="22">
@@ -156,7 +156,7 @@ klienten inte anger / anger en okï¿½nd host-header.</t>
 
 <str id="23">
 <o>This text will be visible in the administration interface, it can be quite useful to use as a memory helper.</o>
-<t>Denna text kommer att visas i admingrï¿½nssnittet.</t>
+<t>Denna text kommer att visas i admingränssnittet.</t>
 </str>
 
 <str id="24">
@@ -166,10 +166,10 @@ klienten inte anger / anger en okï¿½nd host-header.</t>
 
 <str id="25">
 <o>This is the name that will be used in the administration interface. If this is left empty, the actual name of the site will be used.</o>
-<t>Det hï¿½r ï¿½r namnet som kommer att synas i
-admingrï¿½nssnittet. Om du lï¿½mnar det hï¿½r fï¿½ltet tomt kommer
-sajtens ursprungliga namn (det du skrev in nï¿½r du skapade sajten)
-att anvï¿½ndas.</t>
+<t>Det här är namnet som kommer att synas i
+admingränssnittet. Om du lämnar det här fältet tomt kommer
+sajtens ursprungliga namn (det du skrev in när du skapade sajten)
+att användas.</t>
 </str>
 
 <str id="26">
@@ -508,7 +508,7 @@ below.&lt;/p&gt;
 
 <str id="29">
 <o>Log requests</o>
-<t>Ska Roxen logga alla fï¿½rfrï¿½gningar till en logfil?</t>
+<t>Ska Roxen logga alla förfrågningar till en logfil?</t>
 </str>
 
 <str id="30">
@@ -524,10 +524,10 @@ below.&lt;/p&gt;
 %H    Hostname
 &lt;/pre&gt;</o>
 <t>Filen som Roxen loggar i. 
-Du kan anvï¿½nda fï¿½ljande kontrollkoder:
+Du kan använda följande kontrollkoder:
 &lt;pre&gt;
-%y    ï¿½r     (t.ex. '1997')
-%m    Mï¿½nad  (t.ex. '08')
+%y    År     (t.ex. '1997')
+%m    Månad  (t.ex. '08')
 %d    Datum  (t.ex. '10')
 %h    Timme  (t.ex. '00')
 %H    Datornamn
@@ -536,25 +536,25 @@ Du kan anvï¿½nda fï¿½ljande kontrollkoder:
 
 <str id="32">
 <o>Logging: No Logging for</o>
-<t>Loggning: Logga inte fï¿½r</t>
+<t>Loggning: Logga inte för</t>
 </str>
 
 <str id="33">
 <o>Don't log requests from hosts with an IP number which matches any of the patterns in this list. This also affects the access counter log.</o>
-<t>Logga inte nï¿½gra fï¿½rfrï¿½gningar vars IP-nummer matchar
-nï¿½got av de mï¿½nster som stï¿½r i den hï¿½r listan.  Den hï¿½r variabeln
-pï¿½verkar ï¿½ven &lt;accessed&gt; RXML-styrkoden.</t>
+<t>Logga inte några förfrågningar vars IP-nummer matchar
+något av de mönster som står i den här listan.  Den här variabeln
+påverkar även &lt;accessed&gt; RXML-styrkoden.</t>
 </str>
 
 <str id="34">
 <o>Domain</o>
-<t>Domï¿½n</t>
+<t>Domän</t>
 </str>
 
 <str id="35">
 <o>The domain name of the server. The domain name is used to generate default URLs, and to generate email addresses.</o>
-<t>Serverns domï¿½nnamn. Anvï¿½nds av en del RXML styrkoder fï¿½r att generera
-epostadresser, samt fï¿½r att generera skï¿½nsvï¿½rdet fï¿½r serverurl-variablen.</t>
+<t>Serverns domännamn. Används av en del RXML styrkoder för att generera
+epostadresser, samt för att generera skönsvärdet för serverurl-variablen.</t>
 </str>
 
 <str id="36">
@@ -571,13 +571,13 @@ blank.
 
 &lt;p&gt;Note that setting this doesn't make the server accessible; you must
 also set 'URLs'.</o>
-<t>Det hï¿½r ï¿½r huvud-URL:en till din startsida. Vï¿½rdet anvï¿½nds till exempel
-i undantagsfall fï¿½r att generera absoluta URL:ar till servern, men vanligtvis
-anvï¿½nds URL:ar skickade frï¿½n webblï¿½sarna. Om fï¿½ltet lï¿½mnas tomt hï¿½rleds en
-URL frï¿½n den fï¿½rsta posten i instï¿½llningen fï¿½r 'URL:er'.
+<t>Det här är huvud-URL:en till din startsida. Värdet används till exempel
+i undantagsfall för att generera absoluta URL:ar till servern, men vanligtvis
+används URL:ar skickade från webbläsarna. Om fältet lämnas tomt härleds en
+URL från den första posten i inställningen för 'URL:er'.
 
-&lt;p&gt;Observera att denna instï¿½llning inte ï¿½r tillrï¿½cklig fï¿½r att gï¿½ra
-servern ï¿½tkomlig; dï¿½ mï¿½ste ï¿½ven ange 'URL:er'.
+&lt;p&gt;Observera att denna inställning inte är tillräcklig för att göra
+servern åtkomlig; då måste även ange 'URL:er'.
 </t>
 </str>
 
@@ -593,115 +593,115 @@ servern ï¿½tkomlig; dï¿½ mï¿½ste ï¿½ven ange 'URL:er'.
 
 <str id="41">
 <o>Some modules may want to create links to internal resources. This setting configures an internally handled location that can be used for such purposes.  Simply select a location that you are not likely to use for regular resources.</o>
-<t>Vissa moduler kan vilja skapa lï¿½nkar till interna resurser.
-Denna instï¿½llning konfigurerar en internt hanterad placering som kan anvï¿½ndas
-fï¿½r sï¿½dana ï¿½ndamï¿½l.  Vï¿½lj bara en placering som du fï¿½rmodligen inte kommer
-behï¿½va fï¿½r vanliga resurser.</t>
+<t>Vissa moduler kan vilja skapa länkar till interna resurser.
+Denna inställning konfigurerar en internt hanterad placering som kan användas
+för sådana ändamål.  Välj bara en placering som du förmodligen inte kommer
+behöva för vanliga resurser.</t>
 </str>
 
 <str id="42">
 <o>Throttling: Server; Enabled</o>
-<t>Bandbreddsbegrï¿½nsning: Servernivï¿½: Aktiverad</t>
+<t>Bandbreddsbegränsning: Servernivå: Aktiverad</t>
 </str>
 
 <str id="43">
 <o>If set, per-server bandwidth throttling will be enabled. It will allow you to limit the total available bandwidth for this site.&lt;br /&gt;Bandwidth is assigned using a Token Bucket. The principle under which it works is: for each byte we send we use a token. Tokens are added to a repository at a constant rate. When there's not enough, we can't transmit. When there's too many, they "spill" and are lost.</o>
-<t>Om den hï¿½r variablen ï¿½r pï¿½ sï¿½ kommer bandvisddsbegrï¿½nsning
-pï¿½ servernivï¿½ att ske. Det gï¿½r det mï¿½jligt fï¿½r dig att begrï¿½nsa den totala
-bandbredden som den hï¿½r virtuella servern anvï¿½nder.
+<t>Om den här variablen är på så kommer bandvisddsbegränsning
+på servernivå att ske. Det gör det möjligt för dig att begränsa den totala
+bandbredden som den här virtuella servern använder.
 &lt;p&gt;
-Bandbredden rï¿½knas ut genom att anvï¿½nda en poletthink. Principen som den
-arbetar efter ï¿½r: Fï¿½r varje byte som sï¿½nds sï¿½ anvï¿½nds en polett, poletter
-stoppas i hinken i en konstant hastighet. Nï¿½r det inte finns nï¿½gra poletter
-sï¿½ avstï¿½nnar dataskickande tills en polett blir tillgï¿½nglig. Nï¿½r det ï¿½r fï¿½r
-mï¿½nga poletter i hinken sï¿½ kommer de nya som kommer in att "ramla brevid".</t>
+Bandbredden räknas ut genom att använda en poletthink. Principen som den
+arbetar efter är: För varje byte som sänds så används en polett, poletter
+stoppas i hinken i en konstant hastighet. När det inte finns några poletter
+så avstännar dataskickande tills en polett blir tillgänglig. När det är för
+många poletter i hinken så kommer de nya som kommer in att "ramla brevid".</t>
 </str>
 
 <str id="44">
 <o>Throttling: Server; Average available bandwidth</o>
-<t>Bandbreddsbegrï¿½nsning: Servernivï¿½: Genomsnittlig tillgï¿½nglig bandbredd</t>
+<t>Bandbreddsbegränsning: Servernivå: Genomsnittlig tillgänglig bandbredd</t>
 </str>
 
 <str id="45">
 <o>This is the average bandwidth available to this site in bytes/sec (the bucket "fill rate").</o>
-<t>Det hï¿½r ï¿½r den genomsnittliga bandbredden som ï¿½r tillgï¿½nglig fï¿½r servern (hastigheten med vilken hinken fylls).</t>
+<t>Det här är den genomsnittliga bandbredden som är tillgänglig för servern (hastigheten med vilken hinken fylls).</t>
 </str>
 
 <str id="46">
 <o>Throttling: Server; Bucket Depth</o>
-<t>Bandbreddsbegrï¿½nsning: Servernivï¿½: Hinkstorlek</t>
+<t>Bandbreddsbegränsning: Servernivå: Hinkstorlek</t>
 </str>
 
 <str id="47">
 <o>This is the maximum depth of the bucket. After a long enough period of inactivity, a request will get this many unthrottled bytes of data, before throttling kicks back in.&lt;br&gt;Set equal to the Fill Rate in order not to allow any data bursts. This value determines the length of the time over which the bandwidth is averaged.</o>
-<t>Det hï¿½r ï¿½r det maximala antalet poletter som fï¿½r plats i hinken.
-Om det hï¿½r vï¿½rdet ï¿½r lika stort som den
-genomsnittliga tillgï¿½ngliga bandbredden sï¿½ tillï¿½ts inga 
-tillfï¿½lliga datapulser nï¿½r servern har varit inaktiv ett tag
+<t>Det här är det maximala antalet poletter som får plats i hinken.
+Om det här värdet är lika stort som den
+genomsnittliga tillgängliga bandbredden så tillåts inga 
+tillfälliga datapulser när servern har varit inaktiv ett tag
 utan data skickas alltid med max den bandbredden.</t>
 </str>
 
 <str id="48">
 <o>Throttling: Server; Minimum Grant</o>
-<t>Bandbreddsbegrï¿½nsning: Servernivï¿½: Minimalt antal bytes</t>
+<t>Bandbreddsbegränsning: Servernivå: Minimalt antal bytes</t>
 </str>
 
 <str id="49">
 <o>When the bandwidth availability is below this value, connections will be delayed rather than granted minimal amounts of bandwidth. The purpose is to avoid sending too small packets (which would increase the IP overhead).</o>
-<t>Nï¿½r det tillgï¿½ngliga antalet poletter (alltsï¿½ bytes) ï¿½r mindre ï¿½n det hï¿½r
-vï¿½rdet sï¿½ fï¿½rdrï¿½js fï¿½rbindelser. Detta fï¿½r att undvika att skicka fï¿½r smï¿½ paket, vilket
-ï¿½ker andelen data som bara bestï¿½r av paketheaders.</t>
+<t>När det tillgängliga antalet poletter (alltså bytes) är mindre än det här
+värdet så fördröjs förbindelser. Detta för att undvika att skicka för små paket, vilket
+öker andelen data som bara består av paketheaders.</t>
 </str>
 
 <str id="50">
 <o>Throttling: Server; Maximum Grant</o>
-<t>Bandbreddsbegrï¿½nsning: Servernivï¿½: Maximalt antal bytes</t>
+<t>Bandbreddsbegränsning: Servernivå: Maximalt antal bytes</t>
 </str>
 
 <str id="51">
 <o>This is the maximum number of bytes assigned in a single request to a connection. Keeping this number low will share bandwidth more evenly among the pending connections, but keeping it too low will increase IP overhead and (marginally) CPU usage. You'll want to set it just a tiny bit lower than any integer multiple of your network's MTU (typically 1500 for ethernet).</o>
-<t>Det hï¿½r ï¿½r det maximala antalet bytes som en fï¿½rbindelse kan fï¿½.
-Om det hï¿½r vï¿½rdet ï¿½r lï¿½gt sï¿½ fï¿½rdelas bandbredden mer jï¿½mnt mellan olika
-fï¿½rbindelser, men om det ï¿½r fï¿½r lï¿½gt sï¿½ ï¿½kar overheaden frï¿½n IP och TCP.
+<t>Det här är det maximala antalet bytes som en förbindelse kan få.
+Om det här värdet är lågt så fördelas bandbredden mer jämnt mellan olika
+förbindelser, men om det är för lågt så ökar overheaden från IP och TCP.
 &lt;br /&gt;&lt;br /&gt;
-Sï¿½tt det till ett vï¿½rde som ï¿½r aningens lï¿½gre ï¿½n en jï¿½mn multipel av
-ditt nï¿½tverks MTU (normala ethernetfï¿½rbindelser har en MTU pï¿½ 1500).</t>
+Sätt det till ett värde som är aningens lägre än en jämn multipel av
+ditt nätverks MTU (normala ethernetförbindelser har en MTU på 1500).</t>
 </str>
 
 <str id="52">
 <o>Throttling: Request; Enabled</o>
-<t>Bandbreddsbegrï¿½nsning: Fï¿½rbindelsenivï¿½: Aktiverad</t>
+<t>Bandbreddsbegränsning: Förbindelsenivå: Aktiverad</t>
 </str>
 
 <str id="53">
 <o>If set, per-request bandwidth throttling will be enabled.</o>
-<t>Om aktiverad sï¿½ begrï¿½nsas bandbredden individuellt per fï¿½rbindelse.</t>
+<t>Om aktiverad så begränsas bandbredden individuellt per förbindelse.</t>
 </str>
 
 <str id="54">
 <o>Throttling: Request; Minimum guarranteed bandwidth</o>
-<t>Bandbreddsbegrï¿½nsning: Fï¿½rbindelsenivï¿½: Minimal bandbredd</t>
+<t>Bandbreddsbegränsning: Förbindelsenivå: Minimal bandbredd</t>
 </str>
 
 <str id="55">
 <o>The maximum bandwidth each connection (in bytes/sec) can use is determined combining a number of modules. But doing so can lead to too small or even negative bandwidths for particularly unlucky requests. This variable guarantees a minimum bandwidth for each request.</o>
-<t>Den maximala bandbredden som varje fï¿½rbindelse fï¿½r bestï¿½ms av en kombination
-av de bandbreddsbegrï¿½nsningsmoduler som ï¿½r adderade i servern. Men ibland
-sï¿½ blir det framrï¿½knade vï¿½rdet vï¿½ldigt lï¿½gt, och en del riktigt otursamma
-fï¿½rbindelser kan rï¿½ka hamna pï¿½ 0 eller mindre bytes per sekund.  &lt;br /&gt;&lt;br /&gt;
-Den hï¿½r variablen garanterar en viss minimal bandbredd fï¿½r alla requests</t>
+<t>Den maximala bandbredden som varje förbindelse får bestäms av en kombination
+av de bandbreddsbegränsningsmoduler som är adderade i servern. Men ibland
+så blir det framräknade värdet väldigt lågt, och en del riktigt otursamma
+förbindelser kan råka hamna på 0 eller mindre bytes per sekund.  &lt;br /&gt;&lt;br /&gt;
+Den här variablen garanterar en viss minimal bandbredd för alla requests</t>
 </str>
 
 <str id="56">
 <o>Throttling: Request; Bucket Depth Multiplier</o>
-<t>Bandbreddsbegrï¿½nsning: Fï¿½rbindelsenivï¿½: Hinkstorlek</t>
+<t>Bandbreddsbegränsning: Förbindelsenivå: Hinkstorlek</t>
 </str>
 
 <str id="57">
 <o>The average bandwidth available for each request will be determined by the modules combination. The bucket depth will be determined multiplying the rate by this factor.</o>
-<t>Den genomsnittliga bandbredden som varje fï¿½rbindelse bestï¿½ms av
-de adderade bandbreddsbegrï¿½nsningsmodulerna. Hinkstorleken bestï¿½ms genom att
-multiplicera detta vï¿½rde med den hï¿½r faktorn.</t>
+<t>Den genomsnittliga bandbredden som varje förbindelse bestäms av
+de adderade bandbreddsbegränsningsmodulerna. Hinkstorleken bestäms genom att
+multiplicera detta värde med den här faktorn.</t>
 </str>
 
 <str id="58">
@@ -711,59 +711,59 @@ multiplicera detta vï¿½rde med den hï¿½r faktorn.</t>
 
 <str id="59">
 <o>What to return when there is no resource or file available at a certain location.</o>
-<t>Det hï¿½r meddelandet returneras om en anvï¿½ndare frï¿½gar efter en
+<t>Det här meddelandet returneras om en användare frågar efter en
   resurs som inte finns.</t>
 </str>
 
 <str id="60">
 <o>Welcome text</o>
-<t>Vï¿½lkomstmeddelande</t>
+<t>Välkomstmeddelande</t>
 </str>
 
 <str id="61">
 <o>The text shown to the user on connect.</o>
-<t>Texten som visas fï¿½r anvï¿½ndaren vid uppkoppling.</t>
+<t>Texten som visas för användaren vid uppkoppling.</t>
 </str>
 
 <str id="62">
 <o>User session limit</o>
-<t>Anvï¿½ndarsessioner</t>
+<t>Användarsessioner</t>
 </str>
 
 <str id="63">
 <o>The maximum number of times a user can connect at once. 0 means unlimited.</o>
-<t>Max antal uppkopplingar som en anvï¿½ndare kan ha samtidigt. 0 innebï¿½r obegrï¿½nsat.</t>
+<t>Max antal uppkopplingar som en användare kan ha samtidigt. 0 innebär obegränsat.</t>
 </str>
 
 <str id="64">
 <o>Allow named ftp</o>
-<t>Tillï¿½t anvï¿½ndarftp</t>
+<t>Tillåt användarftp</t>
 </str>
 
 <str id="65">
 <o>If yes, non-anonymous users can connect. Note that for password authentication to be performed you will need to have the "Authentication: Password" module in your site.</o>
-<t>Om ja sï¿½ tillï¿½ts icke-anonyma anvï¿½ndare. Observera att fï¿½r
-lï¿½senordsautenticering skall ske behï¿½ver du ha modulen "Autenticering: Lï¿½senord" i din sajt.</t>
+<t>Om ja så tillåts icke-anonyma användare. Observera att för
+lösenordsautenticering skall ske behöver du ha modulen "Autenticering: Lösenord" i din sajt.</t>
 </str>
 
 <str id="66">
 <o>Allow login with incorrect password/user</o>
-<t>Tillï¿½t inloggning med felaktigt lï¿½senord/anvï¿½ndare</t>
+<t>Tillåt inloggning med felaktigt lösenord/användare</t>
 </str>
 
 <str id="67">
 <o>If yes, users can connect with the wrong password and/or username. This is useful since things like .htaccess files can later on authenticate the user.</o>
-<t>Om ja sï¿½ kan anvï¿½ndare ansluta med fel lï¿½senord och/eller anvï¿½ndarnamn. Det kan vara anvï¿½ndbart om tex .htaccess-filer senare kan verifiera anvï¿½ndaren.</t>
+<t>Om ja så kan användare ansluta med fel lösenord och/eller användarnamn. Det kan vara användbart om tex .htaccess-filer senare kan verifiera användaren.</t>
 </str>
 
 <str id="68">
 <o>Allow anonymous ftp</o>
-<t>Tillï¿½t anonym ftp</t>
+<t>Tillåt anonym ftp</t>
 </str>
 
 <str id="69">
 <o>If yes, anonymous users are allowed to connect.</o>
-<t>Om ja sï¿½ tillï¿½ts anonyma anvï¿½ndare.</t>
+<t>Om ja så tillåts anonyma användare.</t>
 </str>
 
 <str id="70">
@@ -773,7 +773,7 @@ lï¿½senordsautenticering skall ske behï¿½ver du ha modulen "Autenticering: Lï¿½s
 
 <str id="71">
 <o>If this string is set to anything but the empty string, it should specify a file containing a list of valid shells. Users with shells that are not in this list will not be allowed to log in.</o>
-<t>Denna instï¿½llning bï¿½r vara tom, eller peka pï¿½ en fil innehï¿½llande en lista ï¿½ver giltiga inloggningsskal. Anvï¿½ndare vars inloggningsskal inte finns med i denna listan tillï¿½ts inte heller logga in.</t>
+<t>Denna inställning bör vara tom, eller peka på en fil innehållande en lista över giltiga inloggningsskal. Användare vars inloggningsskal inte finns med i denna listan tillåts inte heller logga in.</t>
 </str>
 
 <str id="72">
@@ -783,27 +783,27 @@ lï¿½senordsautenticering skall ske behï¿½ver du ha modulen "Autenticering: Lï¿½s
 
 <str id="73">
 <o>Show 'Internal server error' messages to the user. This is very useful if you are debugging your own modules or writing Pike scripts.</o>
-<t>Visa interna server fel fï¿½r anvï¿½ndaren av servern. Det kan vara anvï¿½ndbart nï¿½r du utvecklar egna moduler eller Pikeskript.</t>
+<t>Visa interna server fel för användaren av servern. Det kan vara användbart när du utvecklar egna moduler eller Pikeskript.</t>
 </str>
 
 <str id="74">
 <o>Logging: Set unique browser id cookies</o>
-<t>Loggning: Sï¿½tt en unik cookie fï¿½r alla webblï¿½sare</t>
+<t>Loggning: Sätt en unik cookie för alla webbläsare</t>
 </str>
 
 <str id="75">
 <o>If set to Yes, all clients that accept cookies will get a unique 'user-id-cookie', which can then be used in the log and in scripts to track individual users.</o>
-<t>Om du sï¿½tter den hï¿½r variabeln till 'Ja' sï¿½ kommer alla klienter som accepterar cookies att fï¿½ en unik cookie satt med namnet 'RoxenUserID'. Den hï¿½r cookien kan anvï¿½ndas i skript fï¿½r att spï¿½ra individuella anvï¿½ndare.</t>
+<t>Om du sätter den här variabeln till 'Ja' så kommer alla klienter som accepterar cookies att få en unik cookie satt med namnet 'RoxenUserID'. Den här cookien kan användas i skript för att spåra individuella användare.</t>
 </str>
 
 <str id="76">
 <o>Logging: Set ID cookies only once</o>
-<t>Loggning: Sï¿½tt bara cookien en gï¿½ng per anvï¿½ndare</t>
+<t>Loggning: Sätt bara cookien en gång per användare</t>
 </str>
 
 <str id="77">
 <o>If set to Yes, Roxen will attempt to set unique browser ID cookies only upon receiving the first request (and again after some minutes). Thus, if the user doesn't allow the cookie to be set, she won't be bothered with multiple requests.</o>
-<t>Om den hï¿½r variablen ï¿½r satt till 'Ja' sï¿½ kommer Roxen bara fï¿½rsï¿½ka sï¿½tta den unika klientcookien en gï¿½ng. Det gï¿½r att om anvï¿½ndaren inte tillï¿½ter att cookien sï¿½tts sï¿½ slipper hon eller han i alla fall nya frï¿½gor under nï¿½gra minuter.</t>
+<t>Om den här variablen är satt till 'Ja' så kommer Roxen bara försöka sätta den unika klientcookien en gång. Det gör att om användaren inte tillåter att cookien sätts så slipper hon eller han i alla fall nya frågor under några minuter.</t>
 </str>
 
 <str id="86">
@@ -818,7 +818,7 @@ lï¿½senordsautenticering skall ske behï¿½ver du ha modulen "Autenticering: Lï¿½s
 &lt;p&gt;This is a list of certificates, intermediate and root certificates, and corresponding private key files in any order.&lt;/p&gt;
 &lt;p&gt;If a path is relative, it will first be searched for relative to %s, and if not found there relative to %s.&lt;/p&gt;
 </o>
-<t>SSL-certifikatfilen/-erna som den hï¿½r porten ska anvï¿½nda. Om sï¿½kvï¿½gen ï¿½r relativ kommer den fï¿½rst sï¿½kas relativt %s, och om ej funnen dï¿½r relativt %s. </t>
+<t>SSL-certifikatfilen/-erna som den här porten ska använda. Om sökvägen är relativ kommer den först sökas relativt %s, och om ej funnen där relativt %s. </t>
 </str>
 
 <str id="88">
@@ -829,23 +829,23 @@ lï¿½senordsautenticering skall ske behï¿½ver du ha modulen "Autenticering: Lï¿½s
 <str id="89">
 <changed from="The SSL key file to use. If the path is relative, it will first be searched for relative to %s, and if not found there relative to %s. You do not have to specify a key file, leave this field empty to use the certificate file only."/>
 <o>The SSL key file to use. If the path is relative, it will first be searched for relative to %s, and if not found there relative to %s. You do not have to specify a key file, leave this field empty to use the certificate file only. This field is obsolete, since the same setting can be done in &lt;b&gt;SSL certificate file(s)&lt;/b&gt;.</o>
-<t>SSL-nyckelfilen som den hï¿½r porten ska anvï¿½nda. Om sï¿½kvï¿½gen ï¿½r relativ kommer den fï¿½rst sï¿½kas relativt %s, och om ej funnen dï¿½r relativt %s. Du behï¿½ver inte ange en nyckelfil, lï¿½mna det hï¿½r fï¿½ltet tomt om du bara har en certifikatfil.</t>
+<t>SSL-nyckelfilen som den här porten ska använda. Om sökvägen är relativ kommer den först sökas relativt %s, och om ej funnen där relativt %s. Du behöver inte ange en nyckelfil, lämna det här fältet tomt om du bara har en certifikatfil.</t>
 </str>
 
 <str id="90">
 <o>Logging: Log entire file length in restored connections</o>
-<t>Loggning: Logga hela fillï¿½ngden vid ï¿½terstartad nerladdning</t>
+<t>Loggning: Logga hela fillängden vid återstartad nerladdning</t>
 </str>
 
 <str id="91">
 <o>If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will still be correct.&lt;/p&gt;</o>
-<t>Nï¿½r den hï¿½r flaggan ï¿½r satt sï¿½ loggar Roxen hela lï¿½ngden pï¿½
-en fil vars nerladdning ï¿½terstartas. Om en anvï¿½ndare fï¿½rst
+<t>När den här flaggan är satt så loggar Roxen hela längden på
+en fil vars nerladdning återstartas. Om en användare först
 laddar hem 100 bytes av en fil och sedan laddar hem de 
-ï¿½terstï¿½ende 900 bytes av filen med en Range-request sï¿½ 
+återstående 900 bytes av filen med en Range-request så 
 kommer Roxen logga det som alla 1000 bytes hade laddats hem.
-&lt;p&gt;Detta kan vara anvï¿½ndbart om du vill se om en anvï¿½ndare
-har lyckats ladda hem hela filen. Nackdelen ï¿½r att bandbreddsstatistiken i loggfilen ï¿½r inkorrekt. Statistiken i Roxen kommer dock vara rï¿½tt.&lt;/p&gt;</t>
+&lt;p&gt;Detta kan vara användbart om du vill se om en användare
+har lyckats ladda hem hela filen. Nackdelen är att bandbreddsstatistiken i loggfilen är inkorrekt. Statistiken i Roxen kommer dock vara rätt.&lt;/p&gt;</t>
 </str>
 
 <str id="92">
@@ -855,28 +855,28 @@ har lyckats ladda hem hela filen. Nackdelen ï¿½r att bandbreddsstatistiken i log
 
 <str id="93">
 <o>The default font to use when modules request a font.</o>
-<t>Nï¿½r moduler ber om en typsnitt som inte finns, eller skriver
-grafisk text utan att ange ett typsnitt, sï¿½ anvï¿½nds det hï¿½r typsnittet.</t>
+<t>När moduler ber om en typsnitt som inte finns, eller skriver
+grafisk text utan att ange ett typsnitt, så används det här typsnittet.</t>
 </str>
 
 <str id="94">
 <o>Font directories</o>
-<t>Typsnittssï¿½kvï¿½g</t>
+<t>Typsnittssökväg</t>
 </str>
 
 <str id="95">
 <o>This is where the fonts are located.</o>
-<t>Sï¿½kvï¿½g till dï¿½r typsnitten finns.</t>
+<t>Sökväg till där typsnitten finns.</t>
 </str>
 
 <str id="521">
 <o>Font oversampling</o>
-<t>Typsnittsï¿½versampling</t>
+<t>Typsnittsöversampling</t>
 </str>
 
 <str id="522">
 <o>If set to Yes, fonts will be oversampled resulting in higher quality but more fuzz. This will require clearing of various graphics caches like the Graphic text and GButton caches to take full effect.</o>
-<t>Om satt till ja kommer typsnitt att ï¿½versamplas fï¿½r hï¿½gre kvalitet men med viss oskï¿½rpa. En ï¿½ndring krï¿½ver rensning av olika grafikcachar som exempelvis Graphic Text och Gbutton fï¿½r att nï¿½ ï¿½nskad effekt.</t>
+<t>Om satt till ja kommer typsnitt att översamplas för högre kvalitet men med viss oskärpa. En ändring kräver rensning av olika grafikcachar som exempelvis Graphic Text och Gbutton för att nå önskad effekt.</t>
 </str>
 
 <str id="96">
@@ -886,7 +886,7 @@ grafisk text utan att ange ett typsnitt, sï¿½ anvï¿½nds det hï¿½r typsnittet.</t
 
 <str id="97">
 <o>This is the default file path that will be prepended to the log file path in all the default modules and the site.</o>
-<t>Alla nya loggar som skapas fï¿½r det hï¿½r prefixet.</t>
+<t>Alla nya loggar som skapas får det här prefixet.</t>
 </str>
 
 <str id="98">
@@ -896,12 +896,12 @@ grafisk text utan att ange ett typsnitt, sï¿½ anvï¿½nds det hï¿½r typsnittet.</t
 
 <str id="99">
 <o>If set to Yes, caching will be enabled.</o>
-<t>Om ja sï¿½ anvï¿½nds cache i alla proxymoduler som hanterar det.</t>
+<t>Om ja så används cache i alla proxymoduler som hanterar det.</t>
 </str>
 
 <str id="100">
 <o>Cache: Proxy Disk Cache Clean size</o>
-<t>Cache: Proxydiskcache, minsta rensningsmï¿½ngd</t>
+<t>Cache: Proxydiskcache, minsta rensningsmängd</t>
 </str>
 
 <str id="101">
@@ -916,7 +916,7 @@ grafisk text utan att ange ett typsnitt, sï¿½ anvï¿½nds det hï¿½r typsnittet.</t
 
 <str id="103">
 <o>If less than this amount of disk space or inodes (in %) is left, the cache will remove a few files. This check may work half-hearted if the diskcache is spread over several filesystems.</o>
-<t>Om det ï¿½r mindre plats (i %) ledigt pï¿½ disken ï¿½n vad som anges i den hï¿½r variabeln sï¿½ kommer en cacherensning ske.</t>
+<t>Om det är mindre plats (i %) ledigt på disken än vad som anges i den här variabeln så kommer en cacherensning ske.</t>
 </str>
 
 <str id="104">
@@ -936,7 +936,7 @@ grafisk text utan att ange ett typsnitt, sï¿½ anvï¿½nds det hï¿½r typsnittet.</t
 
 <str id="107">
 <o>How many cache files (inodes) may be on disk before a garbage collect is done? May be left at zero to disable this check.</o>
-<t>Om det finns fler ï¿½n sï¿½ hï¿½r mï¿½nga filer i cachen kommer en cacherensning ske. Sï¿½tt den hï¿½r variabeln till noll fï¿½r att hoppa ï¿½ver detta test.</t>
+<t>Om det finns fler än så här många filer i cachen kommer en cacherensning ske. Sätt den här variabeln till noll för att hoppa över detta test.</t>
 </str>
 
 <str id="108">
@@ -946,7 +946,7 @@ grafisk text utan att ange ett typsnitt, sï¿½ anvï¿½nds det hï¿½r typsnittet.</t
 
 <str id="109">
 <o>How file size should be treated during garbage collect. Each X bytes count as a second, so that larger files will be removed first.</o>
-<t>Normalt sï¿½tt sï¿½ rensas ï¿½ldsta filerna bort fï¿½rst. Den hï¿½r variabeln anger hur mï¿½nga bytes som ska motsvara en sekund, fï¿½r att pï¿½ sï¿½ sï¿½tt rensa stï¿½rre filer tidigare.</t>
+<t>Normalt sätt så rensas äldsta filerna bort först. Den här variabeln anger hur många bytes som ska motsvara en sekund, för att på så sätt rensa större filer tidigare.</t>
 </str>
 
 <str id="110">
@@ -956,8 +956,8 @@ grafisk text utan att ange ett typsnitt, sï¿½ anvï¿½nds det hï¿½r typsnittet.</t
 
 <str id="111">
 <o>This is the base directory where cached files will reside. To avoid mishaps, 'roxen_cache/' is always appended to this variable.</o>
-<t>Den hï¿½r variabeln anger vad cachen ska sparas. Fï¿½r att undvika fatala misstag sï¿½ adderas alltid
-'roxen_cache/' efter den hï¿½r variabelns vï¿½rde nï¿½r den sï¿½tts om.</t>
+<t>Den här variabeln anger vad cachen ska sparas. För att undvika fatala misstag så adderas alltid
+'roxen_cache/' efter den här variabelns värde när den sätts om.</t>
 </str>
 
 <str id="112">
@@ -967,31 +967,31 @@ grafisk text utan att ange ett typsnitt, sï¿½ anvï¿½nds det hï¿½r typsnittet.</t
 
 <str id="113">
 <o>This is the number of directories to hash the contents of the disk cache into. Changing this value currently invalidates the whole cache, since the cache cannot find the old files. In the future, the cache will be recalculated when this value is changed.</o>
-<t>Diskcachen lagrar datan i flera bibliotek, den hï¿½r variabeln anger i hur mï¿½nga olika bibliotek som datan ska lagras. Om du ï¿½ndrar pï¿½ den hï¿½r variabeln sï¿½ blir hela den gamla cachen invaliderad.</t>
+<t>Diskcachen lagrar datan i flera bibliotek, den här variabeln anger i hur många olika bibliotek som datan ska lagras. Om du ändrar på den här variabeln så blir hela den gamla cachen invaliderad.</t>
 </str>
 
 <str id="114">
 <o>Cache: Proxy Disk Cache Keep without Content-Length</o>
-<t>Cache: Proxydiskcachen behï¿½ller filer utan angiven fillï¿½ngd</t>
+<t>Cache: Proxydiskcachen behåller filer utan angiven fillängd</t>
 </str>
 
 <str id="115">
 <o>Keep files without Content-Length header information in the cache?</o>
-<t>Spara filer ï¿½ven om de inte har nï¿½gon angiven fillï¿½ngd. 
-Cachen kan innehï¿½lla trasiga filer om den hï¿½r
-variabeln ï¿½r satt, men fler filer kan sparas</t>
+<t>Spara filer även om de inte har någon angiven fillängd. 
+Cachen kan innehålla trasiga filer om den här
+variabeln är satt, men fler filer kan sparas</t>
 </str>
 
 <str id="116">
 <o>Cache: Proxy Disk Cache Refreshes on Last-Modified</o>
-<t>Cache: Proxydiskcachen beror pï¿½ Last-Modifed headern</t>
+<t>Cache: Proxydiskcachen beror på Last-Modifed headern</t>
 </str>
 
 <str id="117">
 <o>If set, refreshes files without Expire header information when they have reached double the age they had when they got cached. This may be useful for some regularly updated docs as online newspapers.</o>
-<t>Om den hï¿½r variabeln ï¿½r satt sï¿½ kommer ï¿½ven filer utan Expire header att tas
-bort ur cachen nï¿½r de blir dubbelt sï¿½ gamla som de var nï¿½r de hï¿½mtades frï¿½n
-kï¿½llservern, om de har en Last-Modified header som anger nï¿½r de senast ï¿½ndrades</t>
+<t>Om den här variabeln är satt så kommer även filer utan Expire header att tas
+bort ur cachen när de blir dubbelt så gamla som de var när de hämtades från
+källservern, om de har en Last-Modified header som anger när de senast ändrades</t>
 </str>
 
 <str id="118">
@@ -1001,9 +1001,9 @@ kï¿½llservern, om de har en Last-Modified header som anger nï¿½r de senast ï¿½nd
 
 <str id="119">
 <o>How many days shall files without Expires and without Last-Modified header information be kept?</o>
-<t>Hur mï¿½nga dagar ska en fil utan bï¿½de Expire och
-Last-Modified behï¿½llas i cachen? Om du sï¿½tter den
-hï¿½r variabeln till noll kommer de inte att sparas alls.</t>
+<t>Hur många dagar ska en fil utan både Expire och
+Last-Modified behållas i cachen? Om du sätter den
+här variabeln till noll kommer de inte att sparas alls.</t>
 </str>
 
 <str id="120">
@@ -1013,19 +1013,19 @@ hï¿½r variabeln till noll kommer de inte att sparas alls.</t>
 
 <str id="121">
 <o>Information about garbage collector runs, removed and refreshed files, cache and disk status goes here.</o>
-<t>Information om cacherensningskï¿½rningar sparas i den hï¿½r filen.</t>
+<t>Information om cacherensningskörningar sparas i den här filen.</t>
 </str>
 
 <str id="124">
 <o>Identify, Use default identification string</o>
-<t>Identifiera Roxen med normala identitetsstrï¿½ngen</t>
+<t>Identifiera Roxen med normala identitetssträngen</t>
 </str>
 
 <str id="125">
 <o>Setting this variable to No will display the "Identify as" node where you can state what Roxen should call itself when talking to clients.&lt;br /&gt;It is possible to disable this so that you can enter an identification-string that does not include the actual version of Roxen, as recommended by the HTTP/1.0 and HTTP/1.1 RFCs:&lt;p&gt;&lt;blockquote&gt;&lt;i&gt;Note: Revealing the specific software version of the server may allow the server machine to become more vulnerable to attacks against software that is known to contain security holes. Server implementors are encouraged to make this field a configurable option.&lt;/i&gt;&lt;/blockquote&gt;&lt;/p&gt;</o>
-<t>Ska Roxen anvï¿½nda sin verkliga identifikationsstrï¿½ng?
-Om du sï¿½tter den hï¿½r variabeln till 'nej' sï¿½ kommer du att
-fï¿½ vï¿½lja vad Roxen ska identifiera sig som.</t>
+<t>Ska Roxen använda sin verkliga identifikationssträng?
+Om du sätter den här variabeln till 'nej' så kommer du att
+få välja vad Roxen ska identifiera sig som.</t>
 </str>
 
 <str id="126">
@@ -1035,12 +1035,12 @@ fï¿½ vï¿½lja vad Roxen ska identifiera sig som.</t>
 
 <str id="127">
 <o>Enter the name that Roxen should use when talking to clients. </o>
-<t>Det hï¿½r ï¿½r det namn som Roxen kommer att anvï¿½nda sig av gentemot omvï¿½rlden.</t>
+<t>Det här är det namn som Roxen kommer att använda sig av gentemot omvärlden.</t>
 </str>
 
 <str id="128">
 <o>Change uid and gid to</o>
-<t>Byt anvï¿½ndarID/gruppID till</t>
+<t>Byt användarID/gruppID till</t>
 </str>
 
 <str id="129">
@@ -1053,72 +1053,72 @@ be used. The syntax is user[:group].
 effect. Note that it also can lead to file permission errors if the
 Roxen process no longer can read files it previously has written.
 The start script attempts to fix this for the standard file locations.&lt;/p&gt;</o>
-<t>Nï¿½r Roxen startas som root (fï¿½r att kunna ï¿½ppna port 80), vï¿½xla till detta
-anvï¿½ndar-ID och grupp-ID sï¿½ snart porten har ï¿½ppnats. Om du anger ett
-symboliskt anvï¿½ndarnamn kommer den fï¿½rvalda gruppen fï¿½r den anvï¿½ndaren att
-vï¿½ljas. Syntaxen ï¿½r anvï¿½ndare[:grupp].
+<t>När Roxen startas som root (för att kunna öppna port 80), växla till detta
+användar-ID och grupp-ID så snart porten har öppnats. Om du anger ett
+symboliskt användarnamn kommer den förvalda gruppen för den användaren att
+väljas. Syntaxen är användare[:grupp].
 
-&lt;p&gt;En serveromstart behï¿½vs fï¿½r att en ï¿½ndring skall fï¿½ effekt.
-Observera att det kan orsaka rï¿½ttighetsfel om Roxen inte lï¿½ngre kan lï¿½sa
-filer som den tidigare skrivit. Startscriptet fï¿½rsï¿½ker korrigera detta fï¿½r
-kï¿½nda stï¿½llen.&lt;/p&gt;</t>
+&lt;p&gt;En serveromstart behövs för att en ändring skall få effekt.
+Observera att det kan orsaka rättighetsfel om Roxen inte längre kan läsa
+filer som den tidigare skrivit. Startscriptet försöker korrigera detta för
+kända ställen.&lt;/p&gt;</t>
 </str>
 
 <str id="130">
 <o>Change uid and gid permanently</o>
-<t>Byt anvï¿½ndarID/gruppID permanent</t>
+<t>Byt användarID/gruppID permanent</t>
 </str>
 
 <str id="131">
 <o>If this variable is set, Roxen will set it's uid and gid permanently. This disables the 'exec script as user' features for CGI, and also 'access files as user' in the filesystems, but it gives better security.</o>
-<t>Om Roxen byter anvï¿½ndarID och gruppID permanent kommer det inte gï¿½ att konfigurera nya
-portar under 1024, det kommer inte heller gï¿½ att kï¿½ra CGI- och pike-skript som
-den anvï¿½ndare som ï¿½ger skriptet. Dï¿½remot sï¿½ kommer sï¿½kerheten att vara hï¿½gre,
-eftersom ingen kan fï¿½ Roxen att gï¿½ra nï¿½got som administratï¿½rsanvï¿½ndaren root.</t>
+<t>Om Roxen byter användarID och gruppID permanent kommer det inte gå att konfigurera nya
+portar under 1024, det kommer inte heller gå att köra CGI- och pike-skript som
+den användare som äger skriptet. Däremot så kommer säkerheten att vara högre,
+eftersom ingen kan få Roxen att göra något som administratörsanvändaren root.</t>
 </str>
 
 <str id="132">
 <o>Module directories</o>
-<t>Modulsï¿½kvï¿½g</t>
+<t>Modulsökväg</t>
 </str>
 
 <str id="133">
 <o>This is a list of directories where Roxen should look for modules. Can be relative paths, from the directory you started Roxen. The directories are searched in order for modules.</o>
-<t>En lista med bibliotek som kommer att sï¿½kas igenom nï¿½r en
-modul ska laddas. Biblioteksnamnen kan vara relativa frï¿½n biblioteket 
-dï¿½r Roxen startades, 
-och de kommer att sï¿½kas igenom i den ordning som de stï¿½r i listan.</t>
+<t>En lista med bibliotek som kommer att sökas igenom när en
+modul ska laddas. Biblioteksnamnen kan vara relativa från biblioteket 
+där Roxen startades, 
+och de kommer att sökas igenom i den ordning som de står i listan.</t>
 </str>
 
 <str id="134">
 <o>Client supports regexps</o>
-<t>Webblï¿½sares funktionalitet</t>
+<t>Webbläsares funktionalitet</t>
 </str>
 
 <str id="135">
 <o>What do the different clients support?
 &lt;br /&gt;The default information is normally fetched from the file server/etc/supports in your Roxen directory.</o>
-<t>En databas ï¿½ver vilka funktioner de olika blï¿½ddrarna som anvï¿½nds klarar av.
-  Normalt sett hï¿½mtas den hï¿½r databasen frï¿½n filen server/etc/supports, men
-  du kan om du vill specifiera fler mï¿½nster i den hï¿½r variabeln. Formatet ser
-  ur sï¿½ hï¿½r:
+<t>En databas över vilka funktioner de olika bläddrarna som används klarar av.
+  Normalt sett hämtas den här databasen från filen server/etc/supports, men
+  du kan om du vill specifiera fler mönster i den här variabeln. Formatet ser
+  ur så här:
  &lt;pre&gt;
-  reguljï¿½rt uttryck 	funktion, funktion
-  reguljï¿½rt uttryck 	funktion, funktion
+  reguljärt uttryck 	funktion, funktion
+  reguljärt uttryck 	funktion, funktion
   ...&lt;/pre&gt;
-Se filen server/etc/supports fï¿½r en mer utfï¿½rlig dokumentation
+Se filen server/etc/supports för en mer utförlig dokumentation
 </t>
 </str>
 
 <str id="136">
 <o>Logging: Audit trail</o>
-<t>Loggning: Logga alla anvï¿½ndaridvï¿½xlingar</t>
+<t>Loggning: Logga alla användaridväxlingar</t>
 </str>
 
 <str id="137">
 <o>If Audit trail is set to Yes, all changes of uid will be logged in the Event log.</o>
-<t>Om du slï¿½r pï¿½ den ï¿½r funktionen sï¿½ kommer Roxen logga i debugloggen (eller
-systemloggen om den funktionen anvï¿½nds) sï¿½ fort anvï¿½ndaridt byts av nï¿½gon
+<t>Om du slår på den är funktionen så kommer Roxen logga i debugloggen (eller
+systemloggen om den funktionen används) så fort användaridt byts av någon
 anledning.</t>
 </str>
 
@@ -1130,8 +1130,8 @@ anledning.</t>
 <str id="139">
 <o>What method to use for the debug log, default is file, but syslog is also available. When using file, the output is really sent to stdout and stderr, but this is handled by the start script.</o>
 <t>Hur ska Roxens debug (fel-, informations- och varnings-meddelanden) loggas?
-Normalt sett sï¿½ loggas de till debugloggen (logs/debug/default.1 etc), men de
-kan ï¿½ven skickas till systemloggen om du vill.</t>
+Normalt sett så loggas de till debugloggen (logs/debug/default.1 etc), men de
+kan även skickas till systemloggen om du vill.</t>
 </str>
 
 <str id="140">
@@ -1151,8 +1151,8 @@ kan ï¿½ven skickas till systemloggen om du vill.</t>
 
 <str id="143">
 <o>If set and syslog is used, the error/debug message will be printed to the system console as well as to the system log.</o>
-<t>Ska Roxen logga till konsolen? Om den hï¿½r variabeln ï¿½r satt
-kommer alla meddelanden som gï¿½r till systemloggen att ï¿½ven
+<t>Ska Roxen logga till konsolen? Om den här variabeln är satt
+kommer alla meddelanden som går till systemloggen att även
 skickas till systemets konsol.</t>
 </str>
 
@@ -1163,8 +1163,8 @@ skickas till systemets konsol.</t>
 
 <str id="145">
 <o>When using SYSLOG, which log type should be used.</o>
-<t>Nï¿½r systemloggen anvï¿½nds, vilken loggningstyp ska
-Roxen anvï¿½nda?</t>
+<t>När systemloggen används, vilken loggningstyp ska
+Roxen använda?</t>
 </str>
 
 <str id="146">
@@ -1174,11 +1174,11 @@ Roxen anvï¿½nda?</t>
 
 <str id="147">
 <o>When syslog is used, how much should be sent to it?&lt;br /&gt;&lt;hr /&gt;Fatal:    Only messages about fatal errors&lt;br /&gt;Errors:   Only error or fatal messages&lt;br /&gt;Warning:  Warning messages as well&lt;br /&gt;Debug:    Debug messager as well&lt;br /&gt;All:      Everything&lt;br /&gt;</o>
-<t>Nï¿½r systemlogen anvï¿½nds, vad ska skickas till den?&lt;br /&gt;&lt;hr /&gt;
-          Fatala:    Bara felmeddelenaden som ï¿½r uppmï¿½rkta som fatala&lt;br /&gt;
+<t>När systemlogen används, vad ska skickas till den?&lt;br /&gt;&lt;hr /&gt;
+          Fatala:    Bara felmeddelenaden som är uppmärkta som fatala&lt;br /&gt;
           Fel:       Bara felmeddelanden och fatala fel&lt;br /&gt;
-          Varningar: Samma som ovan, men ï¿½ven alla varningsmeddelanden&lt;br /&gt;
-          Debug:     Samma som ovan, men ï¿½ven alla felmeddelanden&lt;br /&gt;
+          Varningar: Samma som ovan, men även alla varningsmeddelanden&lt;br /&gt;
+          Debug:     Samma som ovan, men även alla felmeddelanden&lt;br /&gt;
           Allt:     Allt&lt;br /&gt;</t>
 </str>
 
@@ -1189,22 +1189,22 @@ Roxen anvï¿½nda?</t>
 
 <str id="149">
 <o>When syslog is used, this will be the identification of the Roxen daemon. The entered value will be appended to all logs.</o>
-<t>Nï¿½r systemloggen anvï¿½nds sï¿½ kommer vï¿½rdet av den hï¿½r variabeln anvï¿½ndas
-  fï¿½r att identifiera den hï¿½r Roxenservern i loggarna.</t>
+<t>När systemloggen används så kommer värdet av den här variabeln användas
+  för att identifiera den här Roxenservern i loggarna.</t>
 </str>
 
 <str id="150">
 <o>Number of threads to run</o>
-<t>Antal trï¿½dar</t>
+<t>Antal trådar</t>
 </str>
 
 <str id="151">
 <o>The number of simultaneous threads Roxen will use.
 &lt;p&gt;Please note that even if this is one, Roxen will still be able to serve multiple requests, using a select loop based system.
 &lt;i&gt;This is quite useful if you have more than one CPU in your machine, or if you have a lot of slow NFS accesses.&lt;/i&gt;&lt;/p&gt;&lt;p&gt;Do not increase this over 20 unless you have a very good reason to do so.&lt;/p&gt;</o>
-<t>Antalet trï¿½dar som Roxen skall anvï¿½nda.
-&lt;p&gt;Observera att ï¿½ven om vï¿½rdet sï¿½tts till ett sï¿½ kan Roxen hantera flera fï¿½rfrï¿½gningar med en select-loop-baserad implementation.
-&lt;i&gt;Detta ï¿½r anvï¿½ndbart om du har flera CPU:er i servern eller mï¿½nga lï¿½ngsamma NFS-accesser.&lt;/i&gt;&lt;/p&gt;&lt;p&gt;Ange inte mer ï¿½n 20 om du inte har goda skï¿½l att gï¿½ra sï¿½.&lt;/p&gt;</t>
+<t>Antalet trådar som Roxen skall använda.
+&lt;p&gt;Observera att även om värdet sätts till ett så kan Roxen hantera flera förfrågningar med en select-loop-baserad implementation.
+&lt;i&gt;Detta är användbart om du har flera CPU:er i servern eller många långsamma NFS-accesser.&lt;/i&gt;&lt;/p&gt;&lt;p&gt;Ange inte mer än 20 om du inte har goda skäl att göra så.&lt;/p&gt;</t>
 </str>
 
 <str id="154">
@@ -1215,38 +1215,38 @@ Roxen anvï¿½nda?</t>
 
 <str id="155">
 <o>If set, the anti-block-system will be enabled. This will restart the server after a configurable number of minutes if it locks up. If you are running in a single threaded environment heavy calculations will also halt the server. In multi-threaded mode bugs such as eternal loops will not cause the server to reboot, since only one thread is blocked. In general there is no harm in having this option enabled. </o>
-<t>Ska antilï¿½ssystemet vara igï¿½ng? Om det ï¿½r det sï¿½ kommer Roxen automatiskt
-  att starta om om den har hï¿½ngt sig mer ï¿½n nï¿½gra minuter. Oftast sï¿½ beror
-  hï¿½ngningar pï¿½ buggar i antingen operativsystemet eller i en modul. Den
-  senare typen av hï¿½ngningar pï¿½verkar inte en trï¿½dad roxen, medans den fï¿½rsta
-  typen gï¿½r det.</t>
+<t>Ska antilåssystemet vara igång? Om det är det så kommer Roxen automatiskt
+  att starta om om den har hängt sig mer än några minuter. Oftast så beror
+  hängningar på buggar i antingen operativsystemet eller i en modul. Den
+  senare typen av hängningar påverkar inte en trådad roxen, medans den första
+  typen gör det.</t>
 </str>
 
 <str id="156">
 <changed from="Auto Restart: ABS Timeout"/>
 <o>Auto Maintenance: ABS Timeout</o>
-<t>Auto-omstart: Tidsbegrï¿½nsning</t>
+<t>Auto-omstart: Tidsbegränsning</t>
 </str>
 
 <str id="157">
 <o>If the server is unable to accept connection for this many minutes, it will be restarted. You need to find a balance: if set too low, the server will be restarted even if it's doing legal things (like generating many images), if set too high you might get a long downtime if the server for some reason locks up.</o>
-<t>Om servern inte svarar pï¿½ nï¿½gra anrop under sï¿½ hï¿½r mï¿½nga
-minuter sï¿½ kommer Roxen startas om automatiskt.  Om du
-har en vï¿½ldigt lï¿½ngsam dator kan en minut vara fï¿½r
-kort tid fï¿½r en del saker, t.ex. diagramritning kan ta
+<t>Om servern inte svarar på några anrop under så här många
+minuter så kommer Roxen startas om automatiskt.  Om du
+har en väldigt långsam dator kan en minut vara för
+kort tid för en del saker, t.ex. diagramritning kan ta
 ett bra tag.</t>
 </str>
 
 <str id="158">
 <o>Default language</o>
-<t>Sprï¿½k</t>
+<t>Språk</t>
 </str>
 
 <str id="159">
 <o>Locale, used to localize all messages in Roxen. Standard means using the default locale, which varies according to the values of the 'LC_MESSAGES' and 'LANG' environment variables.</o>
-<t>Den hï¿½r variablen anger vilket sprï¿½k Roxen ska anvï¿½nda.
-'standard' betyder att sprï¿½ket sï¿½tts automatiskt frï¿½n
-vï¿½rdet av omgivningsvariablerna LC_MESSAGES och LANG.</t>
+<t>Den här variablen anger vilket språk Roxen ska använda.
+'standard' betyder att språket sätts automatiskt från
+värdet av omgivningsvariablerna LC_MESSAGES och LANG.</t>
 </str>
 
 <str id="160">
@@ -1257,9 +1257,9 @@ vï¿½rdet av omgivningsvariablerna LC_MESSAGES och LANG.</t>
 
 <str id="161">
 <o>If set, Roxen will automatically restart after a configurable number of days. Since Roxen uses a monolith, non-forking server model the process tends to grow in size over time. This is mainly due to heap fragmentation but may also sometimes be because of memory leaks.</o>
-<t>Roxen har stï¿½d fï¿½r att starta om automatiskt dï¿½ och dï¿½. Eftersom Roxen ï¿½r en
-monolitisk icke-forkande server (en enda lï¿½nglivad process) sï¿½ tenderar
-processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men kan ibland ï¿½ven orsakas av minneslï¿½ckor.</t>
+<t>Roxen har stöd för att starta om automatiskt då och då. Eftersom Roxen är en
+monolitisk icke-forkande server (en enda långlivad process) så tenderar
+processen att växa med tiden. Det beror främst på minnesfragmentation men kan ibland även orsakas av minnesläckor.</t>
 </str>
 
 <str id="172">
@@ -1269,7 +1269,7 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="173">
 <o>Save the variable documentation strings as comments in the configuration files. Only useful if you read or edit the config files directly.</o>
-<t>Spara variabeldokumentationen som kommentarer i konfigurationsfiler. Endast anvï¿½ndbart om du lï¿½ser eller editerar i konfigurationsfilerna direkt.</t>
+<t>Spara variabeldokumentationen som kommentarer i konfigurationsfiler. Endast användbart om du läser eller editerar i konfigurationsfilerna direkt.</t>
 </str>
 
 <str id="174">
@@ -1284,12 +1284,12 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="176">
 <o>Show advanced configuration options</o>
-<t>Visa avancerade instï¿½llningar</t>
+<t>Visa avancerade inställningar</t>
 </str>
 
 <str id="177">
 <o>Show all possible configuration options, not only the ones that are most often changed.</o>
-<t>Visa alla tillgï¿½ngliga instï¿½llningar, inte bara de som oftast brukar stï¿½llas in.</t>
+<t>Visa alla tillgängliga inställningar, inte bara de som oftast brukar ställas in.</t>
 </str>
 
 <str id="180">
@@ -1299,32 +1299,32 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="181">
 <o>Show settings and actions that are not normaly useful for non-developer users. If you develop your own Roxen modules, this option is for you.</o>
-<t>Visa instï¿½llningar och funktioner som normalt inte ï¿½r anvï¿½ndbara fï¿½r icke-utvecklare. Om du utvecklar egna Roxenmoduler bï¿½r du aktivera detta val.</t>
+<t>Visa inställningar och funktioner som normalt inte är användbara för icke-utvecklare. Om du utvecklar egna Roxenmoduler bör du aktivera detta val.</t>
 </str>
 
 <str id="182">
 <o>Background color</o>
-<t>Bakgrundsfï¿½rg</t>
+<t>Bakgrundsfärg</t>
 </str>
 
 <str id="183">
 <o>Administration interface background color.</o>
-<t>Admingrï¿½nssnittets bakgrundsfï¿½rg</t>
+<t>Admingränssnittets bakgrundsfärg</t>
 </str>
 
 <str id="184">
 <o>Text color</o>
-<t>Textfï¿½rg</t>
+<t>Textfärg</t>
 </str>
 
 <str id="185">
 <o>Administration interface text color.</o>
-<t>Admingrï¿½nssnittets textfï¿½rg</t>
+<t>Admingränssnittets textfärg</t>
 </str>
 
 <str id="186">
 <o>Link color</o>
-<t>Lï¿½nkfï¿½rg</t>
+<t>Länkfärg</t>
 </str>
 
 <str id="187">
@@ -1334,7 +1334,7 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="188">
 <o>Administration interface font.</o>
-<t>Typsnittet som anvï¿½nds i admingrï¿½nssnittet.</t>
+<t>Typsnittet som används i admingränssnittet.</t>
 </str>
 
 <str id="189">
@@ -1344,17 +1344,17 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="191">
 <o>All Permissions</o>
-<t>Alla rï¿½ttigheter</t>
+<t>Alla rättigheter</t>
 </str>
 
 <str id="192">
 <o>View Settings</o>
-<t>Visa instï¿½llningar</t>
+<t>Visa inställningar</t>
 </str>
 
 <str id="194">
 <o>Edit Global Variables</o>
-<t>Editera globala instï¿½llningar</t>
+<t>Editera globala inställningar</t>
 </str>
 
 <str id="196">
@@ -1369,7 +1369,7 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="198">
 <o>Shutdown</o>
-<t>Stï¿½nga ner</t>
+<t>Stänga ner</t>
 </str>
 
 <str id="199">
@@ -1379,7 +1379,7 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="200">
 <o>Add Modules</o>
-<t>Lï¿½gg till moduler</t>
+<t>Lägg till moduler</t>
 </str>
 
 <str id="bA">
@@ -1399,17 +1399,17 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="203">
 <o>Next</o>
-<t>Nï¿½sta</t>
+<t>Nästa</t>
 </str>
 
 <str id="204">
 <o>Administration Interface</o>
-<t>Admingrï¿½nssnittet</t>
+<t>Admingränssnittet</t>
 </str>
 
 <str id="206">
 <o>User</o>
-<t>Anvï¿½ndare</t>
+<t>Användare</t>
 </str>
 
 <str id="cw">
@@ -1469,17 +1469,17 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="220">
 <o>Your Settings</o>
-<t>Instï¿½llningar</t>
+<t>Inställningar</t>
 </str>
 
 <str id="221">
 <o>Users</o>
-<t>Anvï¿½ndare</t>
+<t>Användare</t>
 </str>
 
 <str id="226">
 <o>Permission denied</o>
-<t>ï¿½tkomst nekad</t>
+<t>Åtkomst nekad</t>
 </str>
 
 <str id="227">
@@ -1494,7 +1494,7 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="247">
 <o>Clear Log</o>
-<t>Tï¿½m loggbok</t>
+<t>Töm loggbok</t>
 </str>
 
 <str id="249">
@@ -1514,12 +1514,12 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="256">
 <o>Settings</o>
-<t>Instï¿½llningar</t>
+<t>Inställningar</t>
 </str>
 
 <str id="251">
 <o>Add Module</o>
-<t>Lï¿½gg till modul</t>
+<t>Lägg till modul</t>
 </str>
 
 <str id="252">
@@ -1549,7 +1549,7 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="dt">
 <o>Administrator logged on as %s from %s.</o>
-<t>Administratï¿½r loggade in som %s frï¿½n %s.</t>
+<t>Administratör loggade in som %s från %s.</t>
 </str>
 
 <str id="264">
@@ -1564,7 +1564,7 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="266">
 <o>Will be loaded from: </o>
-<t>Laddas frï¿½n: </t>
+<t>Laddas från: </t>
 </str>
 
 <str id="267">
@@ -1574,12 +1574,12 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="272">
 <o>Reload Module List</o>
-<t>Hï¿½mta modullistan igen</t>
+<t>Hämta modullistan igen</t>
 </str>
 
 <str id="273">
 <o>Select one or several modules to add.</o>
-<t>Markera en eller flera moduler som ska lï¿½ggas till.</t>
+<t>Markera en eller flera moduler som ska läggas till.</t>
 </str>
 
 <str id="274">
@@ -1589,7 +1589,7 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="275">
 <o>The size of the data cache used to speed up requests for commonly requested files, in KBytes</o>
-<t>Storleken pï¿½ datacachen, i kilobytes, som anvï¿½nds fï¿½r att snabba upp fï¿½rfrï¿½gningar av ofta hï¿½mtade filer.</t>
+<t>Storleken på datacachen, i kilobytes, som används för att snabba upp förfrågningar av ofta hämtade filer.</t>
 </str>
 
 <str id="276">
@@ -1599,7 +1599,7 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="277">
 <o>The maximum size of a file that is to be considered for the cache, in KBytes.</o>
-<t>De maximala storleken fï¿½r filer som ska lagras i datacachen i KBytes</t>
+<t>De maximala storleken för filer som ska lagras i datacachen i KBytes</t>
 </str>
 
 <str id="278">
@@ -1609,7 +1609,7 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="279">
 <o>If true, the list of sites will be presented in a compact format suitable for servers with many sites.</o>
-<t>Om ja sï¿½ kommer listan ï¿½ver sajter att presenteras i ettt kompaktare format. Lï¿½mpligt fï¿½r servrar med mï¿½nga sajter.</t>
+<t>Om ja så kommer listan över sajter att presenteras i ettt kompaktare format. Lämpligt för servrar med många sajter.</t>
 </str>
 
 <str id="280">
@@ -1634,12 +1634,12 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="288">
 <o>Really compact</o>
-<t>Vï¿½ldigt kompakt</t>
+<t>Väldigt kompakt</t>
 </str>
 
 <str id="290">
 <o>Module event log for '%s' cleared by %s (%s) from %s</o>
-<t>Modulloggen fï¿½r '%s' rensad av %s (%s) frï¿½n %s</t>
+<t>Modulloggen för '%s' rensad av %s (%s) från %s</t>
 </str>
 
 <str id="292">
@@ -1649,7 +1649,7 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="293">
 <o>Hits</o>
-<t>Trï¿½ffar</t>
+<t>Träffar</t>
 </str>
 
 <str id="294">
@@ -1674,32 +1674,32 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="298">
 <o>Event log cleared by %s from %s</o>
-<t>Loggen rensad av %s frï¿½n %s</t>
+<t>Loggen rensad av %s från %s</t>
 </str>
 
 <str id="300">
 <o>This port was requested, but binding it failed.</o>
-<t>Den hï¿½r porten efterfrï¿½gades, men kunde inte bindas.</t>
+<t>Den här porten efterfrågades, men kunde inte bindas.</t>
 </str>
 
 <str id="1">
 <o>Initial variables for </o>
-<t>Begynnelseinstï¿½llningar fï¿½r </t>
+<t>Begynnelseinställningar för </t>
 </str>
 
 <str id="190">
 <o>Initial variables for the site</o>
-<t>Begynnelseinstï¿½llningar fï¿½r sajten</t>
+<t>Begynnelseinställningar för sajten</t>
 </str>
 
 <str id="229">
 <o>Page charset</o>
-<t>Teckenuppsï¿½ttning</t>
+<t>Teckenuppsättning</t>
 </str>
 
 <str id="230">
 <o>The charset to use when rendering configuration interface pages.</o>
-<t>Den teckenuppsï¿½ttning som anvï¿½nds i admingrï¿½nssnittet.</t>
+<t>Den teckenuppsättning som används i admingränssnittet.</t>
 </str>
 
 <str id="234">
@@ -1709,17 +1709,17 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="235">
 <o>Are you sure you want to disable the site %s?</o>
-<t>ï¿½r du sï¿½ker pï¿½ att du vill ta bort konfigurationen fï¿½r %s?</t>
+<t>Är du säker på att du vill ta bort konfigurationen för %s?</t>
 </str>
 
 <str id="236">
 <o>Default variable sort order</o>
-<t>Fï¿½rinstï¿½lld sorteringsordning</t>
+<t>Förinställd sorteringsordning</t>
 </str>
 
 <str id="237">
 <o>The default order variables are sorted in</o>
-<t>Den ordning som variablerna fï¿½rst soretas i</t>
+<t>Den ordning som variablerna först soretas i</t>
 </str>
 
 <str id="238">
@@ -1729,27 +1729,27 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="239">
 <o>As defined</o>
-<t>Fï¿½rdefinierad</t>
+<t>Fördefinierad</t>
 </str>
 
 <str id="240">
 <o>Alphabetical, changed first</o>
-<t>Alfabetisk, ï¿½ndringar fï¿½rst</t>
+<t>Alfabetisk, ändringar först</t>
 </str>
 
 <str id="241">
 <o>As defined, changed first</o>
-<t>Fï¿½rdefinierad, ï¿½ndringar fï¿½rst</t>
+<t>Fördefinierad, ändringar först</t>
 </str>
 
 <str id="242">
 <o>Changed variables are highlighted</o>
-<t>ï¿½ndrade variabler ï¿½r markerade</t>
+<t>Ändrade variabler är markerade</t>
 </str>
 
 <str id="243">
 <o>How to highlight variables that does not have their default value</o>
-<t>Hur variabler som ï¿½r ï¿½ndrade till nï¿½got annat ï¿½n deras fï¿½rdefinierade vï¿½rde ska markeras</t>
+<t>Hur variabler som är ändrade till något annat än deras fördefinierade värde ska markeras</t>
 </str>
 
 <str id="244">
@@ -1759,12 +1759,12 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="268">
 <o>Different background color</o>
-<t>Annan bakgrundsfï¿½rg</t>
+<t>Annan bakgrundsfärg</t>
 </str>
 
 <str id="302">
 <o>Add a header</o>
-<t>Lï¿½gg till huvud</t>
+<t>Lägg till huvud</t>
 </str>
 
 <str id="303">
@@ -1774,7 +1774,7 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 
 <str id="304">
 <o>If true, tasks are grouped acording to type, otherwise all tasks will be listed on one page</o>
-<t>Om sann sï¿½ grupperas funktionerna enligt typ, annars listas de pï¿½ en sida
+<t>Om sann så grupperas funktionerna enligt typ, annars listas de på en sida
 </t>
 </str>
 
@@ -1785,32 +1785,32 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 &lt;p&gt;&lt;h2&gt;Example&lt;/h2&gt; Modules:&lt;ul&gt; &lt;li&gt;  User filesystem, &lt;i&gt;security level&lt;/i&gt; 1&lt;/li&gt; &lt;li&gt;  Filesystem module, &lt;i&gt;security level&lt;/i&gt; 3&lt;/li&gt; &lt;li&gt;  CGI module, &lt;i&gt;security level&lt;/i&gt; 2&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
 &lt;p&gt;A request handled by "User filesystem" is assigned a &lt;i&gt;trust level&lt;/i&gt; of one after the &lt;i&gt;security level&lt;/i&gt; of that module. That request can then not be handled by the "CGI module" since that module has a higher &lt;i&gt;security level&lt;/i&gt; than the requests trust level.&lt;/p&gt;
 &lt;p&gt;On the other hand, a request handled by the the "Filesystem module" could later be handled by the "CGI module".&lt;/p&gt;</o>
-<t>Modulens sï¿½kerhetsnivï¿½ bestï¿½mmer om en fï¿½rfrï¿½gan skall hanteras av modulen.
+<t>Modulens säkerhetsnivå bestämmer om en förfrågan skall hanteras av modulen.
 &lt;p&gt;
-  &lt;h2&gt;Sï¿½kerhetsnivï¿½ vs pï¿½litlighetsnivï¿½&lt;/h2&gt;
-  Varje modul har en valbar &lt;i&gt;sï¿½kerhetsnivï¿½&lt;/i&gt;. Varje fï¿½rfrï¿½gan tilldelas en pï¿½litlighetsnivï¿½. Vid hï¿½gre &lt;i&gt;pï¿½litlighetsnivï¿½&lt;/i&gt; ges tillgï¿½ng till moduler med hï¿½gre &lt;i&gt;sï¿½kerhetsnivï¿½&lt;/i&gt;.
+  &lt;h2&gt;Säkerhetsnivå vs pålitlighetsnivå&lt;/h2&gt;
+  Varje modul har en valbar &lt;i&gt;säkerhetsnivå&lt;/i&gt;. Varje förfrågan tilldelas en pålitlighetsnivå. Vid högre &lt;i&gt;pålitlighetsnivå&lt;/i&gt; ges tillgång till moduler med högre &lt;i&gt;säkerhetsnivå&lt;/i&gt;.
 &lt;p&gt;
   &lt;h2&gt;Definitioner&lt;/h2&gt;
   &lt;ul&gt;
-    &lt;li&gt;En fï¿½rfrï¿½gans initiala pï¿½litlighetsnivï¿½ ï¿½r oï¿½ndligt hï¿½g.&lt;/li&gt;
-    &lt;li&gt; En fï¿½rfrï¿½gan kommer bara hanteras av en modul om dess &lt;i&gt;pï¿½litlighetsnivï¿½&lt;/i&gt; ï¿½r hï¿½gre eller lika med modulens &lt;i&gt;sï¿½kerhetsnivï¿½&lt;/i&gt;.&lt;/li&gt;
-    &lt;li&gt; Varje gï¿½ng en fï¿½rfrï¿½gan hanteras av en modul sï¿½tts fï¿½rfrï¿½gans &lt;i&gt;pï¿½litlighetsnivï¿½&lt;/i&gt; till det lï¿½gre av dess &lt;i&gt;pï¿½litlighetsnivï¿½&lt;/i&gt; och modulens &lt;i&gt;sï¿½kerhetsnivï¿½&lt;/i&gt;, &lt;i&gt;undantaget&lt;/i&gt; om modulens sï¿½kerhetsnivï¿½ ï¿½r 0 vilket ï¿½r ett specialfall som betyder att ingen ï¿½ndring sker.&lt;/li&gt;
+    &lt;li&gt;En förfrågans initiala pålitlighetsnivå är oändligt hög.&lt;/li&gt;
+    &lt;li&gt; En förfrågan kommer bara hanteras av en modul om dess &lt;i&gt;pålitlighetsnivå&lt;/i&gt; är högre eller lika med modulens &lt;i&gt;säkerhetsnivå&lt;/i&gt;.&lt;/li&gt;
+    &lt;li&gt; Varje gång en förfrågan hanteras av en modul sätts förfrågans &lt;i&gt;pålitlighetsnivå&lt;/i&gt; till det lägre av dess &lt;i&gt;pålitlighetsnivå&lt;/i&gt; och modulens &lt;i&gt;säkerhetsnivå&lt;/i&gt;, &lt;i&gt;undantaget&lt;/i&gt; om modulens säkerhetsnivå är 0 vilket är ett specialfall som betyder att ingen ändring sker.&lt;/li&gt;
   &lt;/ul&gt;&lt;/p&gt;
 &lt;p&gt;
   &lt;h2&gt;Exempel&lt;/h2&gt;
   Moduler:
   &lt;ul&gt;
-    &lt;li&gt;  Anvï¿½ndarfilsystem, &lt;i&gt;sï¿½kerhetsnivï¿½&lt;/i&gt; 1&lt;/li&gt;
-    &lt;li&gt;  Filsystemsmodul, &lt;i&gt;sï¿½kerhetsnivï¿½&lt;/i&gt; 3&lt;/li&gt;
-    &lt;li&gt;  CGI-modul, &lt;i&gt;sï¿½kerhetsnivï¿½&lt;/i&gt; 2&lt;/li&gt;
+    &lt;li&gt;  Användarfilsystem, &lt;i&gt;säkerhetsnivå&lt;/i&gt; 1&lt;/li&gt;
+    &lt;li&gt;  Filsystemsmodul, &lt;i&gt;säkerhetsnivå&lt;/i&gt; 3&lt;/li&gt;
+    &lt;li&gt;  CGI-modul, &lt;i&gt;säkerhetsnivå&lt;/i&gt; 2&lt;/li&gt;
   &lt;/ul&gt;
 &lt;/p&gt;
 &lt;p&gt;
-  En fï¿½rfrï¿½gan hanterad av "Anvï¿½ndarfilsystem" tilldelas en &lt;i&gt;pï¿½litlighetsnivï¿½&lt;/i&gt; pï¿½ ett efter den modulens &lt;i&gt;sï¿½kerhetsnivï¿½&lt;/i&gt;.
-  Den fï¿½rfrï¿½gan kan senare inte hanteras av "CGI-modul" eftersom den modulen har en &lt;i&gt;sï¿½kerhetsnivï¿½&lt;/i&gt; som ï¿½r hï¿½gre ï¿½n fï¿½rfrï¿½gans pï¿½litlighetsnivï¿½.
+  En förfrågan hanterad av "Användarfilsystem" tilldelas en &lt;i&gt;pålitlighetsnivå&lt;/i&gt; på ett efter den modulens &lt;i&gt;säkerhetsnivå&lt;/i&gt;.
+  Den förfrågan kan senare inte hanteras av "CGI-modul" eftersom den modulen har en &lt;i&gt;säkerhetsnivå&lt;/i&gt; som är högre än förfrågans pålitlighetsnivå.
 &lt;/p&gt;
 &lt;p&gt;
-  ï¿½ andra sidan kan en fï¿½rfrï¿½gan som hanteras av "Filsystemsmodul" senare hanteras av "CGI-modul".
+  Å andra sidan kan en förfrågan som hanteras av "Filsystemsmodul" senare hanteras av "CGI-modul".
 &lt;/p&gt;
 </t>
 </str>
@@ -1829,63 +1829,63 @@ processen att vï¿½xa med tiden. Det beror frï¿½mst pï¿½ minnesfragmentation men 
 <o>If no file match a given resource all directories above the wanted file is searched for one of the files in this list.&lt;p&gt;
 As an example, if the file /foo/bar/not_there.html is wanted, and this list contains the default value of 404.inc, these files will be searched for, in this order:&lt;/p&gt;&lt;br /&gt;  /foo/bar/404.inc, /foo/404.inc and /404.inc.&lt;p&gt;
 The inclusion file can access the form variables form.orig-file and form.orig-url to identify the original page that was requested.</o>
-<t>Om ingen fil matchar en given URL sï¿½ letas alla katalognivï¿½er ovanfï¿½r den
-efterfrï¿½gade filen igenom efter en av de i den hï¿½r listan listade
+<t>Om ingen fil matchar en given URL så letas alla katalognivåer ovanför den
+efterfrågade filen igenom efter en av de i den här listan listade
 filerna.&lt;p&gt;
-Som ett exempel, om filen '/foo/bar/inte_dï¿½r.html' efterfrï¿½gas och
-den hï¿½r listan innehï¿½ller '404.inc', sï¿½ kommer fï¿½ljande filer att
-anvï¿½ndas: /foo/bar/404.inc, /foo/404.inc och /404.inc.&lt;p&gt;
-Den inkluderade filen kan utnyttja formulï¿½rvariablerna form.orig-file och form.orig-url fï¿½r att identifiera den ursprungligt refererade sidan.</t>
+Som ett exempel, om filen '/foo/bar/inte_där.html' efterfrågas och
+den här listan innehåller '404.inc', så kommer följande filer att
+användas: /foo/bar/404.inc, /foo/404.inc och /404.inc.&lt;p&gt;
+Den inkluderade filen kan utnyttja formulärvariablerna form.orig-file och form.orig-url för att identifiera den ursprungligt refererade sidan.</t>
 </str>
 
 <str id="309">
 <o>Require user with the 'hilfe' permission</o>
-<t>Krï¿½ver en anvï¿½ndare med 'hilfe'-behï¿½righet</t>
+<t>Kräver en användare med 'hilfe'-behörighet</t>
 </str>
 
 <str id="310">
 <o>If yes, require a user with the hilfe permission set, otherwise, any configuration interface user will be allowed, even one with only the view settings permission.</o>
-<t>Om ja sï¿½ krï¿½vs det att anvï¿½ndaren har hilfe-behï¿½righet. Annars sï¿½ fungerar det med vilken administratï¿½sanvï¿½ndare som helst, ï¿½ven en utan skrivrï¿½ttigheter</t>
+<t>Om ja så krävs det att användaren har hilfe-behörighet. Annars så fungerar det med vilken administratösanvändare som helst, även en utan skrivrättigheter</t>
 </str>
 
 <str id="311">
 <o>Site event log for '%s' cleared by %s (%s) from %s</o>
-<t>Sajtloggen fï¿½r '%s' blev rensad av %s (%s) frï¿½n %s</t>
+<t>Sajtloggen för '%s' blev rensad av %s (%s) från %s</t>
 </str>
 
 <str id="313">
 <o>An email address must contain "@".</o>
-<t>En emailadress mï¿½ste innehï¿½lla ett "@".</t>
+<t>En emailadress måste innehålla ett "@".</t>
 </str>
 
 <str id="314">
 <o>The email address domain contains forbidden characters.</o>
-<t>Email-adressens domï¿½n innehï¿½ller fï¿½rbjudna tecken.</t>
+<t>Email-adressens domän innehåller förbjudna tecken.</t>
 </str>
 
 <str id="315">
 <o>The email address user contains forbidden characters.</o>
-<t>Email-adressens anvï¿½ndare innehï¿½ller fï¿½rbjudna tecken.</t>
+<t>Email-adressens användare innehåller förbjudna tecken.</t>
 </str>
 
 <str id="316">
 <o>The email address does not contain a user.</o>
-<t>Email-adressen saknar anvï¿½ndare.</t>
+<t>Email-adressen saknar användare.</t>
 </str>
 
 <str id="317">
 <o>The email address does not contain a domain.</o>
-<t>Email-adressen saknar domï¿½n.</t>
+<t>Email-adressen saknar domän.</t>
 </str>
 
 <str id="318">
 <o>The email address begins with an character that is not legal in that position.</o>
-<t>Email-adressen bï¿½rjar med ett tecken som inte ï¿½r tillï¿½tet dï¿½r.</t>
+<t>Email-adressen börjar med ett tecken som inte är tillåtet där.</t>
 </str>
 
 <str id="319">
 <o>The domain %s could not be found.</o>
-<t>Domï¿½nen %s kunde inte hittas.</t>
+<t>Domänen %s kunde inte hittas.</t>
 </str>
 
 <str id="326">
@@ -1895,57 +1895,57 @@ Den inkluderade filen kan utnyttja formulï¿½rvariablerna form.orig-file och form
 
 <str id="328">
 <o>Value is bigger than %s, adjusted</o>
-<t>Vï¿½rdet ï¿½r stï¿½rre ï¿½n %s. ï¿½ndrat</t>
+<t>Värdet är större än %s. Ändrat</t>
 </str>
 
 <str id="329">
 <o>Value is less than %s, adjusted</o>
-<t>Vï¿½rdet ï¿½r mindre ï¿½n %s. ï¿½ndrat</t>
+<t>Värdet är mindre än %s. Ändrat</t>
 </str>
 
 <str id="330">
 <o>You most likely want an ending '/' on this variable</o>
-<t>Du vill troligtvis ha ett avslutande '/' efter den hï¿½r variabeln</t>
+<t>Du vill troligtvis ha ett avslutande '/' efter den här variabeln</t>
 </str>
 
 <str id="331">
 <o>%s is not a directory</o>
-<t>%s ï¿½r inte en katalog</t>
+<t>%s är inte en katalog</t>
 </str>
 
 <str id="332">
 <o>(keep stale value %s)</o>
-<t>(behï¿½ller det gamla vï¿½rdet %s)</t>
+<t>(behåller det gamla värdet %s)</t>
 </str>
 
 <str id="333">
 <o>Assuming http://*:%[0]d/ for %[0]d</o>
-<t>Antar http://*:%[0]d/ fï¿½r %[0]d</t>
+<t>Antar http://*:%[0]d/ för %[0]d</t>
 </str>
 
 <str id="334">
 <o>Empty URL field</o>
-<t>Tomt URL-fï¿½lt</t>
+<t>Tomt URL-fält</t>
 </str>
 
 <str id="335">
 <o>%s does not conform to URL syntax</o>
-<t>%s fï¿½ljer inte URL-syntaxen</t>
+<t>%s följer inte URL-syntaxen</t>
 </str>
 
 <str id="338">
 <o>Changed %s to %s</o>
-<t>ï¿½ndrade %s till %s</t>
+<t>Ändrade %s till %s</t>
 </str>
 
 <str id="339">
 <o>SSL support not available in this Pike version.</o>
-<t>SSL-support finns inte tillgï¿½ngligt i denna version av Pike.</t>
+<t>SSL-support finns inte tillgängligt i denna version av Pike.</t>
 </str>
 
 <str id="340">
 <o>Please use %s instead.</o>
-<t>Var god, anvï¿½nd %s istï¿½llet.</t>
+<t>Var god, använd %s istället.</t>
 </str>
 
 <str id="341">
@@ -1955,7 +1955,7 @@ Den inkluderade filen kan utnyttja formulï¿½rvariablerna form.orig-file och form
 
 <str id="342">
 <o>Warning: The protocol %s is not known by roxen</o>
-<t>Varning: Roxen kï¿½nner inte till protokollet %s</t>
+<t>Varning: Roxen känner inte till protokollet %s</t>
 </str>
 
 <str id="344">
@@ -2001,17 +2001,17 @@ Den inkluderade filen kan utnyttja formulï¿½rvariablerna form.orig-file och form
 
 <str id="5">
 <o>Interface language</o>
-<t>Administrationsgrï¿½nssnittets sprï¿½k</t>
+<t>Administrationsgränssnittets språk</t>
 </str>
 
 <str id="19">
 <o>Select the Administration interface language.</o>
-<t>Vï¿½lj administrationsgrï¿½nssnittets sprï¿½k.</t>
+<t>Välj administrationsgränssnittets språk.</t>
 </str>
 
 <str id="152">
 <o>%O is not an integer</o>
-<t>%O ï¿½r inte ett heltal</t>
+<t>%O är inte ett heltal</t>
 </str>
 
 <str id="153">
@@ -2025,30 +2025,30 @@ Den inkluderade filen kan utnyttja formulï¿½rvariablerna form.orig-file och form
 <t>&lt;dl&gt;
 &lt;dt&gt;Normal&lt;/dt&gt;&lt;dd&gt;Visa modulnamn och dokumentation med bilder.&lt;/dd&gt;
 &lt;dt&gt;Snabb&lt;/dt&gt;&lt;dd&gt;Som Normal, men utan typbilder.&lt;/dd&gt;
-&lt;dt&gt;Snabbare&lt;/dt&gt;&lt;dd&gt;Som Normal, men tillï¿½ter att man vï¿½ljer flera moduler samtidigt.&lt;/dd&gt;
-&lt;dt&gt;Kompakt&lt;/dt&gt;&lt;dd&gt;Visar bara namnet pï¿½ modulerna. Tillï¿½ter att man lï¿½gger till flera moduler samtidigt.&lt;/dd&gt;
-&lt;dt&gt;Vï¿½ldigt kompakt&lt;/dt&gt;&lt;dd&gt;Som Kompakt, men utan modulklasser.&lt;/dd&gt;
+&lt;dt&gt;Snabbare&lt;/dt&gt;&lt;dd&gt;Som Normal, men tillåter att man väljer flera moduler samtidigt.&lt;/dd&gt;
+&lt;dt&gt;Kompakt&lt;/dt&gt;&lt;dd&gt;Visar bara namnet på modulerna. Tillåter att man lägger till flera moduler samtidigt.&lt;/dd&gt;
+&lt;dt&gt;Väldigt kompakt&lt;/dt&gt;&lt;dd&gt;Som Kompakt, men utan modulklasser.&lt;/dd&gt;
 &lt;/dl&gt;</t>
 </str>
 
 <str id="222">
 <o>Create new user</o>
-<t>Skapa ny anvï¿½ndare</t>
+<t>Skapa ny användare</t>
 </str>
 
 <str id="223">
 <o>Delete old user</o>
-<t>Ta bort anvï¿½ndare</t>
+<t>Ta bort användare</t>
 </str>
 
 <str id="224">
 <o>Create User</o>
-<t>Skapa anvï¿½ndare</t>
+<t>Skapa användare</t>
 </str>
 
 <str id="225">
 <o>User ID</o>
-<t>Anvï¿½ndar-ID</t>
+<t>Användar-ID</t>
 </str>
 
 <str id="248">
@@ -2072,15 +2072,15 @@ the sites menu, a lowercased, filesystem-friendly version will become
 the virtual server's configuration file name as well as the name of
 its log file directory.
 </o>
-<t>Namnet pï¿½ konfigurationen mï¿½ste innehï¿½lla tecken utï¿½ver
-mellanslag eller tab, det fï¿½r inte innehï¿½lla '?', '!', '/', '\', '~', '"', ''', '`',
+<t>Namnet på konfigurationen måste innehålla tecken utöver
+mellanslag eller tab, det får inte innehålla '?', '!', '/', '\', '~', '"', ''', '`',
 '#', '$', '%', '&amp;amp;', '=', ';', ':', '_', '&amp;lt;', '&amp;gt;', '|', '*',
 ej vara
 'CVS', 'Global Variables' eller 'global variables', och inte
-heller vara namnet fï¿½r en redan existerande konfiguration. Namnet
-kommer att visas i sajtmenyn. En gemen, filsystemsvï¿½nlig
-konfigurationsfil och loggbibliotek kommer ocksï¿½ att namnges
-utifrï¿½n detta namn.</t>
+heller vara namnet för en redan existerande konfiguration. Namnet
+kommer att visas i sajtmenyn. En gemen, filsystemsvänlig
+konfigurationsfil och loggbibliotek kommer också att namnges
+utifrån detta namn.</t>
 </str>
 
 <str id="271">
@@ -2090,7 +2090,7 @@ utifrï¿½n detta namn.</t>
 
 <str id="296">
 <o>Illegal site name</o>
-<t>Otillï¿½tet sajtnamn</t>
+<t>Otillåtet sajtnamn</t>
 </str>
 
 <str id="195">
@@ -2105,27 +2105,27 @@ utifrï¿½n detta namn.</t>
 
 <str id="232">
 <o>Crunch activity</o>
-<t>Hï¿½ndelser i Crunch</t>
+<t>Händelser i Crunch</t>
 </str>
 
 <str id="262">
 <o>Recently changed Crunch reports</o>
-<t>Nyligen ï¿½ndrade Crunch-rapporter</t>
+<t>Nyligen ändrade Crunch-rapporter</t>
 </str>
 
 <str id="263">
 <o>News from www.roxen.com</o>
-<t>Nyheter pï¿½ www.roxen.com</t>
+<t>Nyheter på www.roxen.com</t>
 </str>
 
 <str id="281">
 <o>The news headlines from www.roxen.com</o>
-<t>Nyhetsrubrikerna frï¿½n www.roxen.com</t>
+<t>Nyhetsrubrikerna från www.roxen.com</t>
 </str>
 
 <str id="283">
 <o>Unknown box %s</o>
-<t>Okï¿½nd ruta %s</t>
+<t>Okänd ruta %s</t>
 </str>
 
 <str id="285">
@@ -2135,12 +2135,12 @@ utifrï¿½n detta namn.</t>
 
 <str id="287">
 <o>Content boxes on the Startpage</o>
-<t>Informationsrutor pï¿½ startsidan</t>
+<t>Informationsrutor på startsidan</t>
 </str>
 
 <str id="289">
 <o>Small Content Boxes</o>
-<t>Smï¿½ informationsrutor</t>
+<t>Små informationsrutor</t>
 </str>
 
 <str id="327">
@@ -2150,17 +2150,17 @@ utifrï¿½n detta namn.</t>
 
 <str id="343">
 <o>The theme to use</o>
-<t>Anvï¿½nd fï¿½ljande tema</t>
+<t>Använd följande tema</t>
 </str>
 
 <str id="358">
 <o>Changed</o>
-<t>ï¿½ndrad</t>
+<t>Ändrad</t>
 </str>
 
 <str id="359">
 <o>Unchanged</o>
-<t>Ofï¿½rï¿½ndrad</t>
+<t>Oförändrad</t>
 </str>
 
 <str id="360">
@@ -2170,22 +2170,22 @@ utifrï¿½n detta namn.</t>
 
 <str id="363">
 <o>Documentation links</o>
-<t>Dokumentationslï¿½nkar</t>
+<t>Dokumentationslänkar</t>
 </str>
 
 <str id="364">
 <o>Links to the inline documentation</o>
-<t>Lï¿½nkar till inline-dokumentationen</t>
+<t>Länkar till inline-dokumentationen</t>
 </str>
 
 <str id="365">
 <o>Welcome message</o>
-<t>Vï¿½lkomstmeddelande</t>
+<t>Välkomstmeddelande</t>
 </str>
 
 <str id="366">
 <o>Roxen welcome message and news</o>
-<t>Roxen vï¿½lkomstmeddelande och nyheter</t>
+<t>Roxen välkomstmeddelande och nyheter</t>
 </str>
 
 <str id="218">
@@ -2215,7 +2215,7 @@ utifrï¿½n detta namn.</t>
 
 <str id="371">
 <o>CPU-time used</o>
-<t>Anvï¿½nd CPU-tid</t>
+<t>Använd CPU-tid</t>
 </str>
 
 <str id="372">
@@ -2230,10 +2230,10 @@ utifrï¿½n detta namn.</t>
 
 <str id="9">
 <o>The server secret is a string used in some cryptographic functions, such as calculating unique, non-guessable session id's. Change this value into something that is hard to guess, unless you are satisfied with what your computers random generator has produced.</o>
-<t>Serverhemligheten ï¿½r en strï¿½ng som anvï¿½nds i kryptografiska
-funktioner, som t.ex. berï¿½kningen av unika sessionsnycklar. ï¿½ndra det
-hï¿½r vï¿½rdet till nï¿½got som ï¿½r svï¿½rt att gissa om du inte ï¿½r nï¿½jd med
-det vï¿½rde som din dators slumptalsfunktion har rï¿½knat fram ï¿½t dig.</t>
+<t>Serverhemligheten är en sträng som används i kryptografiska
+funktioner, som t.ex. beräkningen av unika sessionsnycklar. Ändra det
+här värdet till något som är svårt att gissa om du inte är nöjd med
+det värde som din dators slumptalsfunktion har räknat fram åt dig.</t>
 </str>
 
 <str id="164">
@@ -2248,55 +2248,55 @@ det vï¿½rde som din dators slumptalsfunktion har rï¿½knat fram ï¿½t dig.</t>
 
 <str id="166">
 <o>This filesystem serves the administration interface</o>
-<t>Det hï¿½r filsystemet tillhandahï¿½ller administratï¿½rsgrï¿½nssnittets sidor</t>
+<t>Det här filsystemet tillhandahåller administratörsgränssnittets sidor</t>
 </str>
 
 <str id="168">
 <o>Hide</o>
-<t>Gï¿½m</t>
+<t>Göm</t>
 </str>
 
 <str id="169">
 <o>Login attempt from %s</o>
-<t>Inloggningsfï¿½rsï¿½k frï¿½n %s</t>
+<t>Inloggningsförsök från %s</t>
 </str>
 
 <str id="167">
 <o>Form font size</o>
-<t>Typsnittsstorlek fï¿½r formulï¿½r</t>
+<t>Typsnittsstorlek för formulär</t>
 </str>
 
 <str id="178">
 <o>The fontsize of the variables in the configuration interface</o>
-<t>Typsnittsstorleken fï¿½r variabler i konfigurationsinterfacet</t>
+<t>Typsnittsstorleken för variabler i konfigurationsinterfacet</t>
 </str>
 
 <str id="179">
 <o>Documentation font size</o>
-<t>Typsnittsstorlek fï¿½r dokumentationen</t>
+<t>Typsnittsstorlek för dokumentationen</t>
 </str>
 
 <str id="193">
 <o>The fontsize of the documentation in the configuration interface</o>
-<t>Typsnittsstorleken fï¿½r dokumentation i konfigurationsinterfacet</t>
+<t>Typsnittsstorleken för dokumentation i konfigurationsinterfacet</t>
 </str>
 
 <str id="205">
 <o>Minimum allowed bitrate</o>
-<t>Minsta tillï¿½tna datahastighet</t>
+<t>Minsta tillåtna datahastighet</t>
 </str>
 
 <str id="215">
 <o>The minimum allowed bitrate, in bits/second. If the  client is slower than this set bitrate, it will be disconnected (after a timeout). Setting this higher than 14000 is not recommended if you have modem users.</o>
-<t>Den lï¿½gsta tillï¿½tna datahastigheten, i bit/sekund. Om klienten ï¿½r
-lï¿½ngsammare ï¿½n den hï¿½r instï¿½llda hastigheten sï¿½ kommer den kopplas
-ner (efter en timeout). Det ï¿½r inte rekommenderat att den hï¿½r
-variabeln sï¿½tts till ett vï¿½rde stï¿½rre ï¿½n 14000 om du har modemanvï¿½ndare.</t>
+<t>Den lägsta tillåtna datahastigheten, i bit/sekund. Om klienten är
+långsammare än den här inställda hastigheten så kommer den kopplas
+ner (efter en timeout). Det är inte rekommenderat att den här
+variabeln sätts till ett värde större än 14000 om du har modemanvändare.</t>
 </str>
 
 <str id="233">
 <o>bytecode data</o>
-<t>binï¿½rdata</t>
+<t>binärdata</t>
 </str>
 
 <str id="374">
@@ -2316,17 +2316,17 @@ variabeln sï¿½tts till ett vï¿½rde stï¿½rre ï¿½n 14000 om du har modemanvï¿½ndar
 
 <str id="378">
 <o>Reset query</o>
-<t>Nollstï¿½ll frï¿½ga</t>
+<t>Nollställ fråga</t>
 </str>
 
 <str id="379">
 <o>Run query</o>
-<t>Kï¿½r frï¿½ga</t>
+<t>Kör fråga</t>
 </str>
 
 <str id="382">
 <o>Failed to enable %s</o>
-<t>Misslyckades med att ï¿½ppna %s</t>
+<t>Misslyckades med att öppna %s</t>
 </str>
 
 <str id="383">
@@ -2373,27 +2373,27 @@ variabeln sï¿½tts till ett vï¿½rde stï¿½rre ï¿½n 14000 om du har modemanvï¿½ndar
 
 <str id="246">
 <o>Compatibility level</o>
-<t>Kompatibilitetsnivï¿½</t>
+<t>Kompatibilitetsnivå</t>
 </str>
 
 <str id="257">
 <o>Passive port minimum</o>
-<t>Minimal port fï¿½r PASV</t>
+<t>Minimal port för PASV</t>
 </str>
 
 <str id="320">
 <o>Minimum port number to use in the PASV/EPSV response.</o>
-<t>Det lï¿½gsta portnummer som ska anvï¿½ndas som svar till PASV/EPSV kommando</t>
+<t>Det lägsta portnummer som ska användas som svar till PASV/EPSV kommando</t>
 </str>
 
 <str id="321">
 <o>Passive port maximum</o>
-<t>Maximal port fï¿½r PASV</t>
+<t>Maximal port för PASV</t>
 </str>
 
 <str id="322">
 <o>Maximum port number to use in the PASV/EPSV response.</o>
-<t>Det hï¿½gsta portnummret som ska anvï¿½ndas som svar till ett
+<t>Det högsta portnummret som ska användas som svar till ett
 PASV/EPSV kommando</t>
 </str>
 
@@ -2404,35 +2404,35 @@ PASV/EPSV kommando</t>
 
 <str id="14">
 <o>Module list mode</o>
-<t>Modullistningslï¿½ge</t>
+<t>Modullistningsläge</t>
 </str>
 
 <str id="15">
 <o>The module list mode. One of &lt;dl&gt;&lt;dt&gt;Folded&lt;/dt&gt;&lt;dd&gt;Modules in the same group are folded&lt;/dd&gt;&lt;dt&gt;Folded with JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Like Folded, but when you move the mouse over a folded group, a menu with the folded modules will popup&lt;/dd&gt;&lt;dt&gt;Unfolded&lt;/dt&gt;&lt;dd&gt;Like the 'old' Roxen 2.1 list&lt;/dd&gt;&lt;/dl&gt;</o>
 <t>Modullistningsmodellen. En av
-&lt;dl&gt;&lt;dt&gt;Ihopfï¿½lld&lt;/dt&gt;
-&lt;dd&gt;Moduler i samma grupp ï¿½r ihoppfï¿½lld&lt;/dd&gt;
-&lt;dt&gt;Ihopfï¿½lld med JavaScript-popup&lt;/dt&gt;
-&lt;dd&gt;Som Ihopfï¿½lld, men nï¿½r musen dras ï¿½ver en grupp dyker
+&lt;dl&gt;&lt;dt&gt;Ihopfälld&lt;/dt&gt;
+&lt;dd&gt;Moduler i samma grupp är ihoppfälld&lt;/dd&gt;
+&lt;dt&gt;Ihopfälld med JavaScript-popup&lt;/dt&gt;
+&lt;dd&gt;Som Ihopfälld, men när musen dras över en grupp dyker
 en meny med modulerna upp&lt;/dd&gt;
-&lt;dt&gt;Uppfï¿½lld&lt;/dt&gt;
+&lt;dt&gt;Uppfälld&lt;/dt&gt;
 &lt;dd&gt;Samma variant som den 'gamla' listan i Roxen 2.1&lt;/dd&gt;
 &lt;/dl&gt;</t>
 </str>
 
 <str id="17">
 <o>Folded with JavaScript popup</o>
-<t>Ihopfï¿½lld med JavaScript-popup</t>
+<t>Ihopfälld med JavaScript-popup</t>
 </str>
 
 <str id="122">
 <o>Folded</o>
-<t>Ihoppfï¿½ld</t>
+<t>Ihoppfäld</t>
 </str>
 
 <str id="123">
 <o>Unfolded (Old style)</o>
-<t>Uppfï¿½lld (gamla varianten)</t>
+<t>Uppfälld (gamla varianten)</t>
 </str>
 
 <str id="219">
@@ -2442,13 +2442,13 @@ en meny med modulerna upp&lt;/dd&gt;
 
 <str id="291">
 <o>The method to use to authenticate configuration interface users.</o>
-<t>Metoden som ska anvï¿½ndas fï¿½r att authentifiera
-konfigurationsgrï¿½nssnittsanvï¿½ndare</t>
+<t>Metoden som ska användas för att authentifiera
+konfigurationsgränssnittsanvändare</t>
 </str>
 
 <str id="301">
 <o>HTTP Basic passwords</o>
-<t>HTTP Basic lï¿½senord</t>
+<t>HTTP Basic lösenord</t>
 </str>
 
 <str id="325">
@@ -2459,7 +2459,7 @@ konfigurationsgrï¿½nssnittsanvï¿½ndare</t>
 <str id="384">
 <o>Warning: The theme %s  no longer exists, using default.
 </o>
-<t>Varning: Temat %s existerar inte lï¿½ngre. Anvï¿½nder det vanliga temat istï¿½llet.</t>
+<t>Varning: Temat %s existerar inte längre. Använder det vanliga temat istället.</t>
 </str>
 
 <str id="385">
@@ -2494,37 +2494,37 @@ modules.&lt;/p&gt;
   &lt;li&gt;There are no compatibility differences between 5.0 and 5.1, so
   those two compatibility levels can be used interchangeably.&lt;/li&gt;
 &lt;/ul&gt;</o>
-<t>&lt;p&gt;Kompatibilitetsnivï¿½n anvï¿½nds av olika moduler fï¿½r att vï¿½lja
-korrekt beteende fï¿½r att vara kompatibla med ï¿½ldre Roxen-versioner. Nï¿½r
-en serverkonfiguration skapas sï¿½tts denna variabel till aktuell version.
-Efter detta ï¿½ndras den aldrig automatiskt fï¿½r att sï¿½kerstï¿½lla att
-serverkonfigurationer som flyttas frï¿½n ï¿½ldre Roxen-versioner ligger kvar
-pï¿½ rï¿½tt nivï¿½..&lt;/p&gt;
+<t>&lt;p&gt;Kompatibilitetsnivån används av olika moduler för att välja
+korrekt beteende för att vara kompatibla med äldre Roxen-versioner. När
+en serverkonfiguration skapas sätts denna variabel till aktuell version.
+Efter detta ändras den aldrig automatiskt för att säkerställa att
+serverkonfigurationer som flyttas från äldre Roxen-versioner ligger kvar
+på rätt nivå..&lt;/p&gt;
 
-&lt;p&gt;Variabeln kan ï¿½ndras manuellt men det krï¿½ver att sajten testas
-noggrant efterï¿½t. Hela serverkonfigurationen behï¿½ver laddas om vid en
-ï¿½ndring sï¿½ att alla moduler ser det nya vï¿½rdet.&lt;/p&gt;
+&lt;p&gt;Variabeln kan ändras manuellt men det kräver att sajten testas
+noggrant efteråt. Hela serverkonfigurationen behöver laddas om vid en
+ändring så att alla moduler ser det nya värdet.&lt;/p&gt;
 
-&lt;p&gt;Observationer om kompatibilitetsnivï¿½n:&lt;/p&gt;
+&lt;p&gt;Observationer om kompatibilitetsnivån:&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;2.4 gï¿½ller ï¿½ven versionen som gick under namnet 3.2. Det var en
-  release av Roxen CMS som innehï¿½ll Roxen WebServer 2.4.&lt;/li&gt;
+  &lt;li&gt;2.4 gäller även versionen som gick under namnet 3.2. Det var en
+  release av Roxen CMS som innehöll Roxen WebServer 2.4.&lt;/li&gt;
 
-  &lt;li&gt;2.5 motsvarar ingen slï¿½ppt version. Denna kompatibilitetsnivï¿½
-  anvï¿½nds endast fï¿½r att aktivera nï¿½gra optimeringar som var inkompatibla
-  med 2.4, frï¿½mst optimeringar av "cache static"-taggar inuti
+  &lt;li&gt;2.5 motsvarar ingen släppt version. Denna kompatibilitetsnivå
+  används endast för att aktivera några optimeringar som var inkompatibla
+  med 2.4, främst optimeringar av "cache static"-taggar inuti
   &amp;lt;cache&amp;gt;-taggen.&lt;/li&gt;
 
-  &lt;li&gt;Det finns inga kompatibilitetsskillnader mellan 5.0 och 5.1 sï¿½
-  dessa tvï¿½ kompatibilitetsnivï¿½er kan anvï¿½ndas likvï¿½rdigt.&lt;/li&gt;
+  &lt;li&gt;Det finns inga kompatibilitetsskillnader mellan 5.0 och 5.1 så
+  dessa två kompatibilitetsnivåer kan användas likvärdigt.&lt;/li&gt;
 &lt;/ul&gt;</t>
 </str>
 
 <str id="387">
 <changed from="Auto Restart: Schedule"/>
 <o>Auto Maintenance: Restart Schedule</o>
-<t>Auto-omstart: Schemalï¿½ggning</t>
+<t>Auto-omstart: Schemaläggning</t>
 </str>
 
 <str id="388">
@@ -2539,7 +2539,7 @@ noggrant efterï¿½t. Hela serverkonfigurationen behï¿½ver laddas om vid en
 
 <str id="389">
 <o>Fetching data from %s...</o>
-<t>Hï¿½mtar data frï¿½n %s...</t>
+<t>Hämtar data från %s...</t>
 </str>
 
 <str id="396">
@@ -2559,7 +2559,7 @@ noggrant efterï¿½t. Hela serverkonfigurationen behï¿½ver laddas om vid en
 
 <str id="399">
 <o>Todays comic from MegaTokyo</o>
-<t>Dagens serie frï¿½n MegaTokyo</t>
+<t>Dagens serie från MegaTokyo</t>
 </str>
 
 <str id="402">
@@ -2574,7 +2574,7 @@ noggrant efterï¿½t. Hela serverkonfigurationen behï¿½ver laddas om vid en
 
 <str id="404">
 <o>Make a backup</o>
-<t>Skapa sï¿½kerhetskopia</t>
+<t>Skapa säkerhetskopia</t>
 </str>
 
 <str id="405">
@@ -2584,33 +2584,33 @@ noggrant efterï¿½t. Hela serverkonfigurationen behï¿½ver laddas om vid en
 
 <str id="406">
 <o>Please specify an URL to define an external database</o>
-<t>Ange en URL fï¿½r att definiera en extern databas</t>
+<t>Ange en URL för att definiera en extern databas</t>
 </str>
 
 <str id="407">
 <o>It is not possible to connect to %s.</o>
-<t>Det gï¿½r inte att ansluta till %s.</t>
+<t>Det går inte att ansluta till %s.</t>
 </str>
 
 <str id="408">
 <o>Please specify a name for the database</o>
-<t>Ange ett namn fï¿½r databasen</t>
+<t>Ange ett namn för databasen</t>
 </str>
 
 <str id="409">
 <o>%s is an internal database, used by Roxen. Please select another name.</o>
-<t>%s ï¿½r en intern databas som anvï¿½nds av Roxen. Vï¿½lj ett annat namn.</t>
+<t>%s är en intern databas som används av Roxen. Välj ett annat namn.</t>
 </str>
 
 <str id="410">
 <o>%s is a MySQL keyword, used by MySQL. Please select another name.</o>
-<t>%s ï¿½r ett MySQL-nyckelord. Vï¿½lj ett annat namn.</t>
+<t>%s är ett MySQL-nyckelord. Välj ett annat namn.</t>
 </str>
 
 <str id="414">
 <changed from="Copy or rename this database"/>
 <o>Configure external database connection</o>
-<t>Kopiera eller dï¿½p om denna databas</t>
+<t>Kopiera eller döp om denna databas</t>
 </str>
 
 <str id="418">
@@ -2631,12 +2631,12 @@ noggrant efterï¿½t. Hela serverkonfigurationen behï¿½ver laddas om vid en
 
 <str id="425">
 <o>Are you sure you want to delete all tables in %s?</o>
-<t>ï¿½r du sï¿½ker pï¿½ att du vill radera alla tabeller i %s?</t>
+<t>Är du säker på att du vill radera alla tabeller i %s?</t>
 </str>
 
 <str id="426">
 <o>Query took %[0].3fs, %[1]d rows in the reply</o>
-<t>Frï¿½gan tog %[0].3fs, %[1]d rader i svaret</t>
+<t>Frågan tog %[0].3fs, %[1]d rader i svaret</t>
 </str>
 
 <str id="428">
@@ -2651,7 +2651,7 @@ noggrant efterï¿½t. Hela serverkonfigurationen behï¿½ver laddas om vid en
 
 <str id="430">
 <o>The table is an anonymous table defined by the module.</o>
-<t>Tabellen ï¿½r en anonym tabell definierad av modulen.</t>
+<t>Tabellen är en anonym tabell definierad av modulen.</t>
 </str>
 
 <str id="431">
@@ -2676,7 +2676,7 @@ noggrant efterï¿½t. Hela serverkonfigurationen behï¿½ver laddas om vid en
 
 <str id="435">
 <o>When the group is created, the checked databases will be imported as well</o>
-<t>Nï¿½r gruppen skapas kommer markerade databaser att importeras</t>
+<t>När gruppen skapas kommer markerade databaser att importeras</t>
 </str>
 
 <str id="437">
@@ -2707,7 +2707,7 @@ noggrant efterï¿½t. Hela serverkonfigurationen behï¿½ver laddas om vid en
 <str id="442">
 <o>The name of the database. To make it easy on your users, please use
 all lowercase characters, and avoid 'odd' characters.</o>
-<t>Namnet pï¿½ databasen. Anvï¿½nd helst smï¿½ bokstï¿½ver och undvik 'konstiga' tecken.</t>
+<t>Namnet på databasen. Använd helst små bokstäver och undvik 'konstiga' tecken.</t>
 </str>
 
 <str id="443">
@@ -2716,10 +2716,10 @@ local Roxen MySQL server, or some other MySQL server specified in the
 URL setting of the chosen group. The permissions of the database are
 manged by Roxen. &lt;i&gt;External&lt;/i&gt; means that the database resides in
 another server, which can be another MySQL instance or something else.</o>
-<t>Databastyp. &lt;i&gt;Intern&lt;/i&gt; innebï¿½r att den skapas i Roxens interna MySQL-server
-eller i nï¿½gon MySQL-server som anges i URL-instï¿½llningen fï¿½r den valda gruppen. Databasens
-rï¿½ttigheter hanteras automatiskt av Roxen. &lt;i&gt;Extern&lt;/i&gt; innebï¿½r att databasen
-ligger i en annan server, vilket innebï¿½r en annan MySQL-instans eller nï¿½got annat.</t>
+<t>Databastyp. &lt;i&gt;Intern&lt;/i&gt; innebär att den skapas i Roxens interna MySQL-server
+eller i någon MySQL-server som anges i URL-inställningen för den valda gruppen. Databasens
+rättigheter hanteras automatiskt av Roxen. &lt;i&gt;Extern&lt;/i&gt; innebär att databasen
+ligger i en annan server, vilket innebär en annan MySQL-instans eller något annat.</t>
 </str>
 
 <str id="444">
@@ -2730,15 +2730,15 @@ ligger i en annan server, vilket innebï¿½r en annan MySQL-instans eller nï¿½got 
 <str id="446">
 <o>The URL to the database. It is only used for &lt;i&gt;external&lt;/i&gt;
 databases.</o>
-<t>URL:en fï¿½r databasen. Den anvï¿½nds endast fï¿½r &lt;i&gt;externa&lt;/i&gt; databaser.</t>
+<t>URL:en för databasen. Den används endast för &lt;i&gt;externa&lt;/i&gt; databaser.</t>
 </str>
 
 <str id="447">
 <o>The group to put the database in. For &lt;i&gt;internal&lt;/i&gt; databases, the
 URL setting in the group also specifies which MySQL server the
 database is created in.</o>
-<t>En grupp som databasen placeras i. Fï¿½r &lt;i&gt;interna&lt;/i&gt; databaser styr
-gruppens URL ocksï¿½ vilken MySQL-server som databasen skapas i.</t>
+<t>En grupp som databasen placeras i. För &lt;i&gt;interna&lt;/i&gt; databaser styr
+gruppens URL också vilken MySQL-server som databasen skapas i.</t>
 </str>
 
 <str id="448">
@@ -2764,8 +2764,8 @@ server external databases will be created in.&lt;/p&gt;
 &lt;p&gt;If a group has a URL set, it will be used to select the database
 server in which the database will be created. Please note that it
 must be a MySQL server.&lt;/p&gt;</o>
-<t>&lt;p&gt;Grupperna anvï¿½nds frï¿½mst fï¿½r att gruppera databaserna i
-administrationsgrï¿½nssnittet men ï¿½r ocksï¿½ ett fï¿½rval fï¿½r var externa
+<t>&lt;p&gt;Grupperna används främst för att gruppera databaserna i
+administrationsgränssnittet men är också ett förval för var externa
 MySQL-databaser skall skapas.&lt;/p&gt;
 
 &lt;p&gt; Om en grupp har en URL angiven kommer den styra vilken
@@ -2781,12 +2781,12 @@ med en MySQL-server.&lt;/p&gt;
 
 <str id="453">
 <o>The identifier of the group. This is used internally in Roxen, and must be unique. If you leave it as automatic, an identifier is selected automatically.</o>
-<t>Identifieraren fï¿½r gruppen. Den anvï¿½nds internt i Roxen och mï¿½ste vara unik. Om du lï¿½mnar den som automatisk kommer en identifierare tilldelas automatiskt.</t>
+<t>Identifieraren för gruppen. Den används internt i Roxen och måste vara unik. Om du lämnar den som automatisk kommer en identifierare tilldelas automatiskt.</t>
 </str>
 
 <str id="454">
 <o>The name of the database group. This is what is shown in the configuration interface.</o>
-<t>Namnet pï¿½ databasgruppen. Det kommer vara synligt i konfigurationsgrï¿½nssnittet.</t>
+<t>Namnet på databasgruppen. Det kommer vara synligt i konfigurationsgränssnittet.</t>
 </str>
 
 <str id="455">
@@ -2796,10 +2796,10 @@ example, if you want all databases created in the group to end up in
 the MySQL running on the host &lt;i&gt;wyrm&lt;/i&gt;, using the account with
 the username &lt;i&gt;foo&lt;/i&gt; and password &lt;i&gt;bar&lt;/i&gt;, set this URL to
 &lt;i&gt;foo:bar@wyrm&lt;/i&gt;.</o>
-<t>Denna URL anvï¿½nds fï¿½r &lt;i&gt;interna&lt;/i&gt; databaser skapade i denna grupp och anger
-vilken MySQL-server de skall skapas i. Till exempel, om du ï¿½nskar att alla databaser skapade i
-gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; med anvï¿½ndarnamnet
-&lt;i&gt;foo&lt;/i&gt; och lï¿½senordet &lt;i&gt;bar&lt;/i&gt;, ange URL:en
+<t>Denna URL används för &lt;i&gt;interna&lt;/i&gt; databaser skapade i denna grupp och anger
+vilken MySQL-server de skall skapas i. Till exempel, om du önskar att alla databaser skapade i
+gruppen skall lagras i MySQL:en som kör på datorn &lt;i&gt;wyrm&lt;/i&gt; med användarnamnet
+&lt;i&gt;foo&lt;/i&gt; och lösenordet &lt;i&gt;bar&lt;/i&gt;, ange URL:en
 &lt;i&gt;foo:bar@wyrm&lt;/i&gt;.</t>
 </str>
 
@@ -2820,17 +2820,17 @@ gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; me
 
 <str id="460">
 <o>Restore</o>
-<t>ï¿½terstï¿½ll</t>
+<t>Återställ</t>
 </str>
 
 <str id="461">
 <o>Restore the following tables from the backup</o>
-<t>ï¿½terstï¿½ll fï¿½ljande tabller frï¿½n sï¿½kerhetskopian</t>
+<t>Återställ följande tabller från säkerhetskopian</t>
 </str>
 
 <str id="462">
 <o>Restore the tables to the following database</o>
-<t>ï¿½terstï¿½ll tabellerna till fï¿½ljande databas</t>
+<t>Återställ tabellerna till följande databas</t>
 </str>
 
 <str id="463">
@@ -2845,7 +2845,7 @@ gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; me
 
 <str id="465">
 <o>Database Backups</o>
-<t>Sï¿½kerhetskopior</t>
+<t>Säkerhetskopior</t>
 </str>
 
 <str id="466">
@@ -2855,52 +2855,52 @@ gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; me
 
 <str id="467">
 <o>%d entries skipped. Present in log on disk</o>
-<t>%d poster ï¿½verhoppade. Finns i loggen pï¿½ disk</t>
+<t>%d poster överhoppade. Finns i loggen på disk</t>
 </str>
 
 <str id="468">
 <o>This site listens to the following ports:</o>
-<t>Denna sajt lyssnar pï¿½ fï¿½ljande portar:</t>
+<t>Denna sajt lyssnar på följande portar:</t>
 </str>
 
 <str id="469">
 <o>Databases that will no longer be used</o>
-<t>Databaser som inte lï¿½ngre kommer anvï¿½ndas</t>
+<t>Databaser som inte längre kommer användas</t>
 </str>
 
 <str id="470">
 <o>If you do not want to delete this database, uncheck the checkmark in front of it</o>
-<t>Om du inte vill radera denna databas ska du ta bort markeringen framfï¿½r namnet</t>
+<t>Om du inte vill radera denna databas ska du ta bort markeringen framför namnet</t>
 </str>
 
 <str id="471">
 <o>If you do not want to delete one or more of these databases, uncheck the checkmark in front of the ones you want to keep.</o>
-<t>Om du inte vill radera en eller flera av fï¿½ljande databaser ska du ta bort markeringen framfï¿½r de som du vill behï¿½lla.</t>
+<t>Om du inte vill radera en eller flera av följande databaser ska du ta bort markeringen framför de som du vill behålla.</t>
 </str>
 
 <str id="472">
 <o>%d entries skipped. Present in log on disk.</o>
-<t>%d poster ï¿½verhoppade. Finns i loggen pï¿½ disk.</t>
+<t>%d poster överhoppade. Finns i loggen på disk.</t>
 </str>
 
 <str id="473">
 <o>Value</o>
-<t>Vï¿½rde</t>
+<t>Värde</t>
 </str>
 
 <str id="474">
 <o>Show changes</o>
-<t>Visa ï¿½ndringar</t>
+<t>Visa ändringar</t>
 </str>
 
 <str id="475">
 <o>Restore default value</o>
-<t>ï¿½terstï¿½ll standardvï¿½rde</t>
+<t>Återställ standardvärde</t>
 </str>
 
 <str id="476">
 <o>Change in content</o>
-<t>Innehï¿½llsï¿½ndring</t>
+<t>Innehållsändring</t>
 </str>
 
 <str id="477">
@@ -2947,12 +2947,12 @@ gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; me
 
 <str id="485">
 <o>Sunday</o>
-<t>sï¿½ndag</t>
+<t>söndag</t>
 </str>
 
 <str id="486">
 <o>Monday</o>
-<t>mï¿½ndag</t>
+<t>måndag</t>
 </str>
 
 <str id="487">
@@ -2977,11 +2977,11 @@ gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; me
 
 <str id="491">
 <o>Saturday</o>
-<t>lï¿½rdag</t>
+<t>lördag</t>
 </str>
 
 <str id="492">
-<o>Every %s %s at %s:%s o'clock..</o>
+<o>Every %s %s at %s:%s o'clock.</o>
 <t>Var %s %s vid klockan %s:%s.</t>
 </str>
 
@@ -2997,37 +2997,37 @@ gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; me
 
 <str id="495">
 <o>Error in stored value.</o>
-<t>Fel i lagrat vï¿½rde.</t>
+<t>Fel i lagrat värde.</t>
 </str>
 
 <str id="496">
 <o>Value %s does not match the regexp %s.</o>
-<t>Vï¿½rdet %s matchar inte regexp-uttrycket %s.</t>
+<t>Värdet %s matchar inte regexp-uttrycket %s.</t>
 </str>
 
 <str id="497">
 <o>Value %s does not match the glob %s.</o>
-<t>Vï¿½rdet %s matchar inte glob-uttrycket %s.</t>
+<t>Värdet %s matchar inte glob-uttrycket %s.</t>
 </str>
 
 <str id="498">
 <o>Value %s must be at least %d characters long. (%d character short)</o>
-<t>Vï¿½rdet %s mï¿½ste vara minst %d tecken lï¿½ngt. (%d tecken saknas)</t>
+<t>Värdet %s måste vara minst %d tecken långt. (%d tecken saknas)</t>
 </str>
 
 <str id="499">
 <o>Value %s must not be more than %d characters long. (%d character too long)</o>
-<t>Vï¿½rdet %s fï¿½r inte vara mer ï¿½n %d tecken lï¿½ngt. (%d tecken fï¿½r mycket)</t>
+<t>Värdet %s får inte vara mer än %d tecken långt. (%d tecken för mycket)</t>
 </str>
 
 <str id="500">
 <o>Value %s is not uppercased.</o>
-<t>Vï¿½rdet %s ï¿½r inte i versaler.</t>
+<t>Värdet %s är inte i versaler.</t>
 </str>
 
 <str id="501">
 <o>Value %s is not lowercased.</o>
-<t>Vï¿½rdet %s ï¿½r inte i gemener.</t>
+<t>Värdet %s är inte i gemener.</t>
 </str>
 
 <str id="502">
@@ -3037,57 +3037,57 @@ gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; me
 
 <str id="78">
 <o>All database backups currently available</o>
-<t>Alla tillgï¿½ngliga sï¿½kerhetskopierade databaser</t>
+<t>Alla tillgängliga säkerhetskopierade databaser</t>
 </str>
 
 <str id="79">
 <o>&lt;p&gt;No backups are currently available. To make a backup of a database, focus on it in the Databases tab, and click on the make backup button. Please note that you can only make backups of databases managed by Roxen.&lt;/p&gt;</o>
-<t>&lt;p&gt;Inga sï¿½kerhetskopior finns fï¿½r nï¿½rvarande tillgï¿½ngliga. Fï¿½r att skapa en sï¿½kerhetskopia av en databas vï¿½ljer du den under fliken Databaser och klickar pï¿½ knappen fï¿½r sï¿½kerhetskopia. Observera att du endast kan skapa sï¿½kerhetskopior av databaser som Roxen hanterar.&lt;/p&gt;</t>
+<t>&lt;p&gt;Inga säkerhetskopior finns för närvarande tillgängliga. För att skapa en säkerhetskopia av en databas väljer du den under fliken Databaser och klickar på knappen för säkerhetskopia. Observera att du endast kan skapa säkerhetskopior av databaser som Roxen hanterar.&lt;/p&gt;</t>
 </str>
 
 <str id="80">
 <o>No data entered.
 </o>
-<t>Inget vï¿½rde angivet.
+<t>Inget värde angivet.
 </t>
 </str>
 
 <str id="81">
 <o>Data is not a float.
 </o>
-<t>Vï¿½rdet ï¿½r inte ett flyttal.
+<t>Värdet är inte ett flyttal.
 </t>
 </str>
 
 <str id="82">
 <o>Found the string %O trailing after the float.
 </o>
-<t>Pï¿½trï¿½ffade strï¿½ngen %O efter flyttalet.
+<t>Påträffade strängen %O efter flyttalet.
 </t>
 </str>
 
 <str id="83">
 <o>Data is not an integer
 </o>
-<t>Vï¿½rdet ï¿½r inte ett heltal
+<t>Värdet är inte ett heltal
 </t>
 </str>
 
 <str id="84">
 <o>Found the string %O trailing after the integer.
 </o>
-<t>Pï¿½trï¿½ffade strï¿½ngen %O efter heltalet.
+<t>Påträffade strängen %O efter heltalet.
 </t>
 </str>
 
 <str id="85">
 <o>Default module tab</o>
-<t>Fï¿½rvald modulflik</t>
+<t>Förvald modulflik</t>
 </str>
 
 <str id="162">
 <o>The tab that will be selected by default when you select a module.</o>
-<t>Den flik som kommer visas som fï¿½rsta val nï¿½r du vï¿½ljer en modul.</t>
+<t>Den flik som kommer visas som första val när du väljer en modul.</t>
 </str>
 
 <str id="163">
@@ -3097,17 +3097,17 @@ gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; me
 
 <str id="337">
 <o>If enabled, Roxen will enable various replication systems needed to set up multiple frontend systems. You will need a database named 'replicate' that resides in a shared mysql server for this to work. Also, all servers has to have this flag set. Roxen must be restarted before changes to this variable takes effect.</o>
-<t>Om pï¿½slagen sï¿½ kommer Roxen aktivera diverse replikeringsfunktioner som nyttjas av frontends. Du behï¿½ver en databas dï¿½pt till 'replicate' i en delad MySQL-server fï¿½r att detta skall fungera korrekt. Vidare mï¿½ste alla servrar ha denna instï¿½llning pï¿½slagen. Du mï¿½ste starta om Roxen fï¿½r att en ï¿½ndring av denna instï¿½llning skall fï¿½ effekt.</t>
+<t>Om påslagen så kommer Roxen aktivera diverse replikeringsfunktioner som nyttjas av frontends. Du behöver en databas döpt till 'replicate' i en delad MySQL-server för att detta skall fungera korrekt. Vidare måste alla servrar ha denna inställning påslagen. Du måste starta om Roxen för att en ändring av denna inställning skall få effekt.</t>
 </str>
 
 <str id="361">
 <o>Are you sure you want to delete the database %s and the data?</o>
-<t>Vill du verkligen radera databasen %s och dess innehï¿½ll?</t>
+<t>Vill du verkligen radera databasen %s och dess innehåll?</t>
 </str>
 
 <str id="362">
 <o>Are you sure you want to delete the database %s? No data will be deleted from the remote database.</o>
-<t>Vill du verkligen ta bort databasen %s? Inget innehï¿½ll kommer fï¿½rsvinna frï¿½n den externa databasen.</t>
+<t>Vill du verkligen ta bort databasen %s? Inget innehåll kommer försvinna från den externa databasen.</t>
 </str>
 
 <str id="503">
@@ -3122,12 +3122,12 @@ gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; me
 
 <str id="324">
 <o>Change group for this database</o>
-<t>Byt grupp fï¿½r denna databas</t>
+<t>Byt grupp för denna databas</t>
 </str>
 
 <str id="423">
 <o>Changing group for %s</o>
-<t>Byter grupp fï¿½r %s</t>
+<t>Byter grupp för %s</t>
 </str>
 
 <str id="445">
@@ -3152,12 +3152,12 @@ gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; me
 
 <str id="507">
 <o>Cannot list fields in %s databases</o>
-<t>Kan inte lista fï¿½lten i databasen %s</t>
+<t>Kan inte lista fälten i databasen %s</t>
 </str>
 
 <str id="373">
 <o>Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  If you specify a IP# in the field it will take precedence over the hostname.</o>
-<t>Bind till dessa URL:ar. Du kan anvï¿½nda '*' och '?' som glob-uttryck (anvï¿½ndning av dessa gï¿½r normalt att alla IP-adresser binds pï¿½ din server). Om du anger ett IP-nummer i fï¿½ltet sï¿½ ï¿½vertrumfar det ett hostnamn.</t>
+<t>Bind till dessa URL:ar. Du kan använda '*' och '?' som glob-uttryck (användning av dessa gör normalt att alla IP-adresser binds på din server). Om du anger ett IP-nummer i fältet så övertrumfar det ett hostnamn.</t>
 </str>
 
 <str id="508">
@@ -3167,7 +3167,7 @@ gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; me
 
 <str id="509">
 <o>Select site</o>
-<t>Vï¿½lj sajt</t>
+<t>Välj sajt</t>
 </str>
 
 <str id="510">
@@ -3182,12 +3182,12 @@ gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; me
 
 <str id="336">
 <o>The license file for this configuration.</o>
-<t>Licensfil fï¿½r denna konfiguration</t>
+<t>Licensfil för denna konfiguration</t>
 </str>
 
 <str id="511">
 <o> The module is locked and not part of the license. To enable this module please select a valid license and restart the server.</o>
-<t> Modulen ï¿½r lï¿½st och ingï¿½r inte i licensen. Vï¿½lj en giltig licensfil och starta om servern fï¿½r att aktivera modulen.</t>
+<t> Modulen är låst och ingår inte i licensen. Välj en giltig licensfil och starta om servern för att aktivera modulen.</t>
 </str>
 
 <str id="514">
@@ -3202,7 +3202,7 @@ gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; me
 
 <str id="516">
 <o>Administrator</o>
-<t>Administratï¿½r</t>
+<t>Administratör</t>
 </str>
 
 <str id="517">
@@ -3232,17 +3232,17 @@ gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; me
 
 <str id="353">
 <o>You can not delete this group because it is not empty.</o>
-<t>Du kan inte radera denna grupp eftersom den inte ï¿½r tom.</t>
+<t>Du kan inte radera denna grupp eftersom den inte är tom.</t>
 </str>
 
 <str id="354">
 <o>Are you sure you want to delete the group %s?</o>
-<t>ï¿½r du sï¿½ker pï¿½ att du vill radera gruppen %s?</t>
+<t>Är du säker på att du vill radera gruppen %s?</t>
 </str>
 
 <str id="355">
 <o>Please give a name for the group.</o>
-<t>Ange ett namn fï¿½r gruppen.</t>
+<t>Ange ett namn för gruppen.</t>
 </str>
 
 <str id="356">
@@ -3277,12 +3277,12 @@ gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; me
 
 <str id="525">
 <o>Other</o>
-<t>ï¿½vriga</t>
+<t>Övriga</t>
 </str>
 
 <str id="526">
 <o>requests</o>
-<t>fï¿½rfrï¿½gningar</t>
+<t>förfrågningar</t>
 </str>
 
 <str id="527">
@@ -3292,7 +3292,7 @@ gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; me
 
 <str id="400">
 <o>Select site to drop.</o>
-<t>Vï¿½lj sajt att ta bort.</t>
+<t>Välj sajt att ta bort.</t>
 </str>
 
 <str id="no">
@@ -3312,12 +3312,12 @@ gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; me
 
 <str id="518">
 <o>Support EPRT/EPSV</o>
-<t>Stï¿½d fï¿½r EPRT/EPSV</t>
+<t>Stöd för EPRT/EPSV</t>
 </str>
 
 <str id="528">
 <o>Enable support for the EPRT and EPSV commands (RFC2428).Some firewalls don't handle these commands properly, so depending on your network configuration you may need to disable them. </o>
-<t>Aktivera stï¿½d fï¿½r EPRT- och EPSV-kommandon (RFC2428). Vissa brandvï¿½ggar hanterar inte dessa kommandon korrekt sï¿½ du kan behï¿½va stï¿½nga av dem beroende pï¿½ din nï¿½tverkskonfiguration.</t>
+<t>Aktivera stöd för EPRT- och EPSV-kommandon (RFC2428). Vissa brandväggar hanterar inte dessa kommandon korrekt så du kan behöva stänga av dem beroende på din nätverkskonfiguration.</t>
 </str>
 
 <str id="529">
@@ -3329,7 +3329,7 @@ gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; me
 <str id="530">
 <changed from="The new name of the database. To make it easy on your users, use all lowercaps characters, and avoid hard to type characters."/>
 <o>The name for the database. It is recommended to use only lowercase letters &lt;tt&gt;[a-z]&lt;/tt&gt;, numbers and &lt;tt&gt;-&lt;/tt&gt; (dash).</o>
-<t>Namnet pï¿½ databasen. Anvï¿½nd helst smï¿½ bokstï¿½ver och undvik svï¿½rskrivna tecken.</t>
+<t>Namnet på databasen. Använd helst små bokstäver och undvik svårskrivna tecken.</t>
 </str>
 
 <str id="411">
@@ -3340,7 +3340,7 @@ gruppen skall lagras i MySQL:en som kï¿½r pï¿½ datorn &lt;i&gt;wyrm&lt;/i&gt; me
 <str id="412">
 <o>With each authentication required response this file is sent and displayed if the authentication fails or the user choose not to authenticate at all.&lt;p&gt;
 The file is searched for in parent directories in the same manner as the no such file message override files.</o>
-<t>Fï¿½r varje svar som krï¿½ver autenticering skickas denna fil ifall autenticeringen misslyckas eller inte slutfï¿½rs.&lt;p&gt;Filen sï¿½ks i fï¿½rï¿½lderkataloger pï¿½ samma vis som 'Filen finns inte'-meddelandefilen.</t>
+<t>För varje svar som kräver autenticering skickas denna fil ifall autenticeringen misslyckas eller inte slutförs.&lt;p&gt;Filen söks i förälderkataloger på samma vis som 'Filen finns inte'-meddelandefilen.</t>
 </str>
 
 <str id="413">
@@ -3350,7 +3350,7 @@ The file is searched for in parent directories in the same manner as the no such
 
 <str id="420">
 <o>What to return when an authentication attempt failed.</o>
-<t>Svar som skickas nï¿½r ett autenticeringsfï¿½rsï¿½k misslyckas.</t>
+<t>Svar som skickas när ett autenticeringsförsök misslyckas.</t>
 </str>
 
 <str id="421">
@@ -3370,12 +3370,12 @@ The file is searched for in parent directories in the same manner as the no such
 
 <str id="259">
 <o>Path to a program to compress log files, e.g. &lt;tt&gt;/usr/bin/bzip2&lt;/tt&gt; or &lt;tt&gt;/usr/bin/gzip&lt;/tt&gt;. &lt;b&gt;Note&amp;nbsp;1:&lt;/b&gt; The active log file is never compressed. Log rotation needs to be used using the "Log file" filename substitutions (e.g. &lt;tt&gt;$LOGDIR/mysite/Log.%y-%m-%d&lt;/tt&gt;). &lt;b&gt;Note&amp;nbsp;2:&lt;/b&gt; Compression is limited to scanning files with filename substitutions within a fixed directory (e.g. &lt;tt&gt;$LOGDIR/mysite/Log.%y-%m-%d&lt;/tt&gt;, not &lt;tt&gt;$LOGDIR/mysite/%y/Log.%m-%d&lt;/tt&gt;).</o>
-<t>Sï¿½kvï¿½g till ett program som komprimerar loggfiler, till exempel
+<t>Sökväg till ett program som komprimerar loggfiler, till exempel
 &lt;tt&gt;/usr/bin/bzip2&lt;/tt&gt; eller &lt;tt&gt;/usr/bin/gzip&lt;/tt&gt;.
 &lt;b&gt;Observera&amp;nbsp;1:&lt;/b&gt; Den aktiva loggfilen komprimeras aldrig.
-Loggrotation mï¿½ste vara pï¿½slaget och anvï¿½nda "Loggfil"-kontrollkoder
+Loggrotation måste vara påslaget och använda "Loggfil"-kontrollkoder
 (t.ex. &lt;tt&gt;$LOGDIR/mysite/Log.%y-%m-%d&lt;/tt&gt;).
-&lt;b&gt;Observera&amp;nbsp;2:&lt;/b&gt; Komprimering sï¿½ker endast efter filnamn
+&lt;b&gt;Observera&amp;nbsp;2:&lt;/b&gt; Komprimering söker endast efter filnamn
 med kontrollkoder inom en specifik katalog (t.ex. &lt;tt&gt;$LOGDIR/mysite/Log.%y-%m-%d&lt;/tt&gt;,
 ej &lt;tt&gt;$LOGDIR/mysite/%y/Log.%m-%d&lt;/tt&gt;).</t>
 </str>
@@ -3387,12 +3387,12 @@ ej &lt;tt&gt;$LOGDIR/mysite/%y/Log.%m-%d&lt;/tt&gt;).</t>
 
 <str id="533">
 <o>Enter a identifier that will be displayed in the head of  config interface. This makes it easier to distinguish between different site configurations. </o>
-<t>Vï¿½lj en identifierare som visas i sidhuvudet i konfigurationsgrï¿½nssnittet. Gï¿½r det enklare att sï¿½rskilja flera konfigurationer. </t>
+<t>Välj en identifierare som visas i sidhuvudet i konfigurationsgränssnittet. Gör det enklare att särskilja flera konfigurationer. </t>
 </str>
 
 <str id="534">
 <o>Logging: Dump threads by file polling</o>
-<t>Loggning: Dumpa trï¿½dar med filpollning</t>
+<t>Loggning: Dumpa trådar med filpollning</t>
 </str>
 
 <str id="535">
@@ -3415,29 +3415,29 @@ environments; there you can just send a SIGQUIT signal to the pike
 process to get a thread dump.&lt;/p&gt;
 
 &lt;p&gt;Enabling this creates a dedicated thread.&lt;/p&gt;</o>
-<t>&lt;p&gt;Detta tillval kan nyttjas fï¿½r att skapa dumpar av alla trï¿½dar i
-debugloggen i situationer sï¿½ administratï¿½rsgrï¿½nssnittet inte svarar.&lt;/p&gt;
+<t>&lt;p&gt;Detta tillval kan nyttjas för att skapa dumpar av alla trådar i
+debugloggen i situationer så administratörsgränssnittet inte svarar.&lt;/p&gt;
 
-&lt;p&gt;Det fungerar genom att sï¿½ka efter en fil namngiven som
+&lt;p&gt;Det fungerar genom att söka efter en fil namngiven som
 "&lt;i&gt;&amp;lt;konfigurationsnamn&amp;gt;&lt;/i&gt;.dump_threads" i samma
 katalog som debugloggen.
-&lt;i&gt;&amp;lt;konfigurationsnamn&amp;gt;&lt;/i&gt; ï¿½r namnet pï¿½ serverns konfiguration, d.v.s.
-samma som grundnamnet pï¿½ loggfilen (vanligtvis "default"). Om denna fil existerar skapas en trï¿½ddump och sedan
+&lt;i&gt;&amp;lt;konfigurationsnamn&amp;gt;&lt;/i&gt; är namnet på serverns konfiguration, d.v.s.
+samma som grundnamnet på loggfilen (vanligtvis "default"). Om denna fil existerar skapas en tråddump och sedan
 raderas filen.
 
-Om en fil namngiven pï¿½ formen "&lt;i&gt;&amp;lt;konfigurationsnamn&amp;gt;&lt;/i&gt;.dump_threads.&lt;i&gt;&amp;lt;n&amp;gt;&lt;/i&gt;"
-existerar, dï¿½r &lt;i&gt;&amp;lt;n&amp;gt;&lt;/i&gt; ï¿½r ett heltal, kommer &lt;i&gt;n&lt;/i&gt; st trï¿½ddumpar skapas med en minuts
+Om en fil namngiven på formen "&lt;i&gt;&amp;lt;konfigurationsnamn&amp;gt;&lt;/i&gt;.dump_threads.&lt;i&gt;&amp;lt;n&amp;gt;&lt;/i&gt;"
+existerar, där &lt;i&gt;&amp;lt;n&amp;gt;&lt;/i&gt; är ett heltal, kommer &lt;i&gt;n&lt;/i&gt; st tråddumpar skapas med en minuts
 mellanrum.&lt;/p&gt;
 
-&lt;p&gt;Observera att denna metod normalt sett inte ï¿½r nï¿½dvï¿½ndig i Unix-lika miljï¿½er; dï¿½r kan du helt enkelt
-skicka signalen SIGQUIT till pike-processen fï¿½r att generera en trï¿½ddump.&lt;/p&gt;
+&lt;p&gt;Observera att denna metod normalt sett inte är nödvändig i Unix-lika miljöer; där kan du helt enkelt
+skicka signalen SIGQUIT till pike-processen för att generera en tråddump.&lt;/p&gt;
 
-&lt;p&gt;Vid aktivering skapas en dedikerad trï¿½d.&lt;/p&gt;</t>
+&lt;p&gt;Vid aktivering skapas en dedikerad tråd.&lt;/p&gt;</t>
 </str>
 
 <str id="536">
 <o>Change default character set</o>
-<t>Byt fï¿½rvald teckenkodning</t>
+<t>Byt förvald teckenkodning</t>
 </str>
 
 <str id="537">
@@ -3452,17 +3452,17 @@ skicka signalen SIGQUIT till pike-processen fï¿½r att generera en trï¿½ddump.&lt
 
 <str id="539">
 <o>Changing default character set for %s</o>
-<t>Byter fï¿½rvald teckenkodning fï¿½r %s</t>
+<t>Byter förvald teckenkodning för %s</t>
 </str>
 
 <str id="540">
 <o>Old default character set</o>
-<t>Tidigare fï¿½rvald teckenkodning</t>
+<t>Tidigare förvald teckenkodning</t>
 </str>
 
 <str id="541">
 <o>New default character set</o>
-<t>Ny fï¿½rvald teckenkodning</t>
+<t>Ny förvald teckenkodning</t>
 </str>
 
 <str id="542">
@@ -3497,7 +3497,7 @@ skicka signalen SIGQUIT till pike-processen fï¿½r att generera en trï¿½ddump.&lt
 
 <str id="548">
 <o>Default charset:</o>
-<t>Fï¿½rvald teckenkodning:</t>
+<t>Förvald teckenkodning:</t>
 </str>
 
 <str id="549">
@@ -3509,7 +3509,7 @@ skicka signalen SIGQUIT till pike-processen fï¿½r att generera en trï¿½ddump.&lt
 
 <str id="550">
 <o>Site Permissions</o>
-<t>Sajtrï¿½ttigheter</t>
+<t>Sajträttigheter</t>
 </str>
 
 <str id="551">
@@ -3531,43 +3531,43 @@ power and bandwidth. Requests that end up in the protocol cache will
 be served in the compressed form directly from the protocol cache, so
 for such requests the processing power overhead can be held relatively
 low.</o>
-<t>Bestï¿½mmer om HTTP-komprimering skall anvï¿½ndas. Mï¿½nga sorters textinnehï¿½ll
-(HTML, CSS, JavaScript o.s.v.) kan komprimeras mycket sï¿½ en aktivering kan
-fï¿½rbï¿½ttra besï¿½karnas upplevda sajtprestanda. Det blir dock en kompromiss
-mellan serverns processorkapacitet och bandbredd. Fï¿½rfrï¿½gningar som fï¿½r trï¿½ff
-i protokollcachen kommer besvaras i komprimerad form direkt frï¿½n denna cache;
-i dessa fall kommer processorbelastningen bli fï¿½rhï¿½llandevis lï¿½g.</t>
+<t>Bestämmer om HTTP-komprimering skall användas. Många sorters textinnehåll
+(HTML, CSS, JavaScript o.s.v.) kan komprimeras mycket så en aktivering kan
+förbättra besökarnas upplevda sajtprestanda. Det blir dock en kompromiss
+mellan serverns processorkapacitet och bandbredd. Förfrågningar som får träff
+i protokollcachen kommer besvaras i komprimerad form direkt från denna cache;
+i dessa fall kommer processorbelastningen bli förhållandevis låg.</t>
 </str>
 
 <str id="1002">
 <o>Compression: Enabled MIME-types</o>
-<t>Komprimering: MIME-typer fï¿½r aktivering</t>
+<t>Komprimering: MIME-typer för aktivering</t>
 </str>
 
 <str id="1003">
 <o>The MIME types for which to enable compression. The forms "maintype/*" and "maintype/subtype" are allowed, but globbing on the general form (such as "maintype/*subtype" or "maintype/sub*") is not allowed and such globs will be silently ignored.</o>
-<t>De MIME-typer fï¿½r vilka komprimering slï¿½s pï¿½. Tillï¿½tna varianter ï¿½r "huvudtyp/*" och "huvudtyp/undertyp"
-medan allmï¿½nna glob-uttryck (exempelvis "huvudtyp/*undertyp" eller "huvudtyp/sub*") ï¿½r otillï¿½tna och ignoreras utan fï¿½rvarning.</t>
+<t>De MIME-typer för vilka komprimering slås på. Tillåtna varianter är "huvudtyp/*" och "huvudtyp/undertyp"
+medan allmänna glob-uttryck (exempelvis "huvudtyp/*undertyp" eller "huvudtyp/sub*") är otillåtna och ignoreras utan förvarning.</t>
 </str>
 
 <str id="1004">
 <o>Compression: Minimum content size</o>
-<t>Komprimering: Minsta innehï¿½llsstorlek</t>
+<t>Komprimering: Minsta innehållsstorlek</t>
 </str>
 
 <str id="1005">
 <o>The minimum file size for which to enable compression. (It might not be worth it to compress a request if it can fit into a single TCP/IP packet anyways.)</o>
-<t>Minsta storlek dï¿½r komprimering anvï¿½nds. (Det kan vara bortkastat arbete att komprimera ett svar om det ï¿½ndï¿½ fï¿½r plats i ett enstaka TCP/IP-paket.)</t>
+<t>Minsta storlek där komprimering används. (Det kan vara bortkastat arbete att komprimera ett svar om det ändå får plats i ett enstaka TCP/IP-paket.)</t>
 </str>
 
 <str id="1006">
 <o>Compression: Maximum content size</o>
-<t>Komprimering: Stï¿½rsta innehï¿½llsstorlek</t>
+<t>Komprimering: Största innehållsstorlek</t>
 </str>
 
 <str id="1007">
 <o>The maximum file size for which to enable compression. Note that the general protocol cache entry size limit applies, so if the compression of dynamic requests is disabled, files larger than the protocol cache maximum file size setting will never be served compressed regardless of this setting.</o>
-<t>Stï¿½rsta storlek dï¿½r komprimering anvï¿½nds. Observera att protokollcachens ordinarie storleksbegrï¿½nsning ocksï¿½ spelar in; om komprimering av dynamiska fï¿½rfrï¿½gningar ï¿½r avstï¿½ngd kommer filer stï¿½rre ï¿½n protokollcachens maximala filstorleksvï¿½rde aldrig att levereras i komprimerad form oavsett denna instï¿½llning.</t>
+<t>Största storlek där komprimering används. Observera att protokollcachens ordinarie storleksbegränsning också spelar in; om komprimering av dynamiska förfrågningar är avstängd kommer filer större än protokollcachens maximala filstorleksvärde aldrig att levereras i komprimerad form oavsett denna inställning.</t>
 </str>
 
 <str id="1008">
@@ -3577,20 +3577,20 @@ medan allmï¿½nna glob-uttryck (exempelvis "huvudtyp/*undertyp" eller "huvudtyp/s
 
 <str id="1009">
 <o>The compression level to use (integer between 1 and 9). Higher number means more compression at the cost of processing power and vice versa. You may need to restart the server for this setting to take effect.</o>
-<t>ï¿½nskad komprimeringsgrad (heltal mellan 1 och 9). Ett hï¿½gre vï¿½rde ger bï¿½ttre komprimering till priset av ï¿½kad processorbelastning och vice versa. Du kan behï¿½va starta om servern fï¿½r att ï¿½ndringar skall slï¿½ igenom.</t>
+<t>Önskad komprimeringsgrad (heltal mellan 1 och 9). Ett högre värde ger bättre komprimering till priset av ökad processorbelastning och vice versa. Du kan behöva starta om servern för att ändringar skall slå igenom.</t>
 </str>
 
 <str id="1010">
 <o>Compression: Compress dynamic requests</o>
-<t>Komprimeringsgrad: Komprimera dynamiska fï¿½rfrï¿½gningar</t>
+<t>Komprimeringsgrad: Komprimera dynamiska förfrågningar</t>
 </str>
 
 <str id="1011">
 <o>If enabled, even requests that aren't cacheable in the protocol cache will be compressed. If the site has many lightweight requests that are not protocol cacheable, the processing overhead may become relatively large with this setting turned on.</o>
-<t>Om pï¿½slagen sï¿½ kommer ï¿½ven fï¿½rfrï¿½gningar som inte placeras i protokollcachen
-att komprimeras. Om sajten har mï¿½nga enkla fï¿½rfrï¿½gningar som inte passar ihop med
-protokollcachen kommer processorbelastningen att ï¿½ka fï¿½rhï¿½llandevis mycket nï¿½r
-denna instï¿½llning ï¿½r pï¿½.</t>
+<t>Om påslagen så kommer även förfrågningar som inte placeras i protokollcachen
+att komprimeras. Om sajten har många enkla förfrågningar som inte passar ihop med
+protokollcachen kommer processorbelastningen att öka förhållandevis mycket när
+denna inställning är på.</t>
 </str>
 
 <str id="1012">
@@ -3611,15 +3611,15 @@ denna instï¿½llning ï¿½r pï¿½.</t>
 <str id="1015">
 <o>Check MySQL tables on server start, and automatically repair if necessary. &lt;b&gt;Fast&lt;/b&gt; checks only tables that haven't been closed properly. &lt;b&gt;Normal&lt;/b&gt; checks for general errors. &lt;b&gt;Medium&lt;/b&gt; catches 99.99 % of all errors. Should be good enough for most cases. &lt;b&gt;Extended&lt;/b&gt; checks the tables VERY throughly.  Only use this in extreme cases as myisamchk should normally be able to find out if the table is OK even without this switch.</o>
 <t>Kontrollerar MySQL-tabeller vid serverstart och reparerar dem automatiskt vid behov. 
-&lt;b&gt;Fast&lt;/b&gt; kontrollerar endast tabeller som inte stï¿½ngts korrekt.
-&lt;b&gt;Normal&lt;/b&gt; kontrollerar allmï¿½nna fel.
-&lt;b&gt;Medium&lt;/b&gt; fï¿½ngar 99.99 % av alla fel vilket skall rï¿½cka i normalfall.
-&lt;b&gt;Extended&lt;/b&gt; kontrollerar tabellerna Vï¿½LDIGT noga. Anvï¿½nd endast i undantagsfall eftersom myisamchk fï¿½rvï¿½ntas avgï¿½ra om tabellen ï¿½r OK ï¿½ven utan detta val.</t>
+&lt;b&gt;Fast&lt;/b&gt; kontrollerar endast tabeller som inte stängts korrekt.
+&lt;b&gt;Normal&lt;/b&gt; kontrollerar allmänna fel.
+&lt;b&gt;Medium&lt;/b&gt; fångar 99.99 % av alla fel vilket skall räcka i normalfall.
+&lt;b&gt;Extended&lt;/b&gt; kontrollerar tabellerna VÄLDIGT noga. Använd endast i undantagsfall eftersom myisamchk förväntas avgöra om tabellen är OK även utan detta val.</t>
 </str>
 
 <str id="1016">
 <o>Logging: Dump threads for slow requests</o>
-<t>Loggning: Dumpa trï¿½dar vid lï¿½ngsamma fï¿½rfrï¿½gningar</t>
+<t>Loggning: Dumpa trådar vid långsamma förfrågningar</t>
 </str>
 
 <str id="1017">
@@ -3643,49 +3643,49 @@ monitor to be disabled from the start by adding the define
 or in the DEFINES environment variable).&lt;/p&gt;
 
 &lt;p&gt;Enabling this creates a dedicated thread.&lt;/p&gt;</o>
-<t>&lt;o&gt;&lt;p&gt;Detta aktiverar intern ï¿½vervakning som dumpar alla trï¿½dar i
-debugloggen nï¿½r nï¿½gon fï¿½rfrï¿½gan, bakgrundsjobb eller backend-trï¿½den har
-kï¿½rt i mer ï¿½n det antal sekunder som anges i instï¿½llningarna "Timeout
-vid lï¿½ngsamma fï¿½rfrï¿½gningar" och "Timeout vid lï¿½ngsam backend".&lt;/p&gt;
+<t>&lt;o&gt;&lt;p&gt;Detta aktiverar intern övervakning som dumpar alla trådar i
+debugloggen när någon förfrågan, bakgrundsjobb eller backend-tråden har
+kört i mer än det antal sekunder som anges i inställningarna "Timeout
+vid långsamma förfrågningar" och "Timeout vid långsam backend".&lt;/p&gt;
 
-&lt;p&gt;Denna instï¿½llning ï¿½r en rï¿½knare: Ett positivt vï¿½rde avbryter
-ï¿½vervakningen efter att detta antal trï¿½ddumpar har skett, -1 aktiverar
-ï¿½vervakningen permanent och noll stï¿½nger av den. Positiva vï¿½rden ï¿½r inte
-permanenta utan nollstï¿½lls nï¿½r servern startar om.&lt;/p&gt;
+&lt;p&gt;Denna inställning är en räknare: Ett positivt värde avbryter
+övervakningen efter att detta antal tråddumpar har skett, -1 aktiverar
+övervakningen permanent och noll stänger av den. Positiva värden är inte
+permanenta utan nollställs när servern startar om.&lt;/p&gt;
 
-&lt;p&gt;&lt;b&gt;Varning:&lt;/b&gt; Om du anger en fï¿½r kort timeout i
-kombination med en hï¿½g eller obefintlig grï¿½ns kan debugloggen fyllas upp
-mycket snabbt och servern bli vï¿½ldigt lï¿½ngsam pï¿½ grund av loggningen.
-Om det sker och det ï¿½r svï¿½rt att ï¿½terstï¿½lla instï¿½llningarna kan du tvinga
-bort ï¿½vervakningen vid uppstart genom att ge startflaggan "NO_SLOW_REQ_BT"
-(d.v.s. lï¿½gg till "-DNO_SLOW_REQ_BT" till startscriptet eller i
-miljï¿½variabeln DEFINES).&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;Varning:&lt;/b&gt; Om du anger en för kort timeout i
+kombination med en hög eller obefintlig gräns kan debugloggen fyllas upp
+mycket snabbt och servern bli väldigt långsam på grund av loggningen.
+Om det sker och det är svårt att återställa inställningarna kan du tvinga
+bort övervakningen vid uppstart genom att ge startflaggan "NO_SLOW_REQ_BT"
+(d.v.s. lägg till "-DNO_SLOW_REQ_BT" till startscriptet eller i
+miljövariabeln DEFINES).&lt;/p&gt;
 
-&lt;p&gt;Vid aktivering skapas en dedikerad trï¿½d.&lt;/p&gt;</t>
+&lt;p&gt;Vid aktivering skapas en dedikerad tråd.&lt;/p&gt;</t>
 </str>
 
 <str id="1018">
 <o>Feature disabled by NO_SLOW_REQ_BT define.</o>
-<t>Funktionen avstï¿½ngd via startflaggan NO_SLOW_REQ_BT.</t>
+<t>Funktionen avstängd via startflaggan NO_SLOW_REQ_BT.</t>
 </str>
 
 <str id="1019">
 <o>Logging: Slow request timeout</o>
-<t>Loggning: Timeout vid lï¿½ngsamma fï¿½rfrï¿½gningar</t>
+<t>Loggning: Timeout vid långsamma förfrågningar</t>
 </str>
 
 <str id="1020">
 <o>&lt;p&gt;The timeout in seconds for requests or background jobs to trig a
 thread dump. Zero disables monitoring of those. See the "Dump threads
 for slow requests" setting for details.&lt;/p&gt;</o>
-<t>&lt;p&gt;Timeout i sekunder vid fï¿½rfrï¿½gningar och bakgrundsjobb innan en
-trï¿½ddump sker. Noll stï¿½nger av ï¿½vervakningen. Se "Dumpa trï¿½dar vid
-lï¿½ngsamma fï¿½rfrï¿½gningar" fï¿½r mer information.&lt;/p&gt;</t>
+<t>&lt;p&gt;Timeout i sekunder vid förfrågningar och bakgrundsjobb innan en
+tråddump sker. Noll stänger av övervakningen. Se "Dumpa trådar vid
+långsamma förfrågningar" för mer information.&lt;/p&gt;</t>
 </str>
 
 <str id="1021">
 <o>Logging: Slow backend timeout</o>
-<t>Loggning: Timeout vid lï¿½ngsam backend</t>
+<t>Loggning: Timeout vid långsam backend</t>
 </str>
 
 <str id="1022">
@@ -3702,18 +3702,18 @@ small.&lt;/p&gt;
 &lt;p&gt;Note that a good value for this is very dependent on hardware. The
 default setting here is conservative and probably should be lowered to
 be of real use.&lt;/p&gt;</o>
-<t>&lt;p&gt;Timeout i sekunder fï¿½r backend-trï¿½den innan en trï¿½ddump sker.
-Noll stï¿½nger av ï¿½vervakningen. Se "Dumpa trï¿½dar vid lï¿½ngsamma fï¿½rfrï¿½gningar"
-fï¿½r mer information.&lt;/p&gt;
+<t>&lt;p&gt;Timeout i sekunder för backend-tråden innan en tråddump sker.
+Noll stänger av övervakningen. Se "Dumpa trådar vid långsamma förfrågningar"
+för mer information.&lt;/p&gt;
 
-&lt;p&gt;Backend-trï¿½den ï¿½r en speciell trï¿½d som hanterar huvuddelen av I/O
-och fï¿½rdelar inkommande fï¿½rfrï¿½gningar. Den bï¿½r aldrig bli upptagen i lï¿½ngre
-perioder eftersom servern dï¿½ i praktiken blir oï¿½tkomlig. Av den anledningen
-bï¿½r denna timeout vara lï¿½g.&lt;/p&gt;
+&lt;p&gt;Backend-tråden är en speciell tråd som hanterar huvuddelen av I/O
+och fördelar inkommande förfrågningar. Den bör aldrig bli upptagen i längre
+perioder eftersom servern då i praktiken blir oåtkomlig. Av den anledningen
+bör denna timeout vara låg.&lt;/p&gt;
 
-&lt;p&gt;Observera att vad som ï¿½r ett bra timeout-vï¿½rde i hï¿½gsta grad beror
-pï¿½ hï¿½rdvaran. Standardvï¿½rdet ï¿½r konservativt satt och behï¿½ver sannolikt
-sï¿½nkas vid riktig anvï¿½ndning.&lt;/p&gt;</t>
+&lt;p&gt;Observera att vad som är ett bra timeout-värde i högsta grad beror
+på hårdvaran. Standardvärdet är konservativt satt och behöver sannolikt
+sänkas vid riktig användning.&lt;/p&gt;</t>
 </str>
 
 <str id="1023">
@@ -3728,12 +3728,12 @@ sï¿½nkas vid riktig anvï¿½ndning.&lt;/p&gt;</t>
 
 <str id="1024">
 <o>Contains all documentation.</o>
-<t>Innehï¿½ller all dokumentation.</t>
+<t>Innehåller all dokumentation.</t>
 </str>
 
 <str id="1025">
 <o>Unknown database</o>
-<t>Okï¿½nd databas</t>
+<t>Okänd databas</t>
 </str>
 
 <str id="1042">
@@ -3744,14 +3744,14 @@ sï¿½nkas vid riktig anvï¿½ndning.&lt;/p&gt;</t>
           </o>
 <t>
             &lt;b&gt;Varning!&lt;/b&gt;&lt;br /&gt;
-            Detta kan ta lï¿½ng tid att slutfï¿½ra.&lt;br/&gt;
-            Tidsï¿½tgï¿½ngen beror pï¿½ hur stora tabellerna ï¿½r.&lt;br/&gt;
+            Detta kan ta lång tid att slutföra.&lt;br/&gt;
+            Tidsåtgången beror på hur stora tabellerna är.&lt;br/&gt;
 </t>
 </str>
 
 <str id="1026">
 <o>Backup schedules</o>
-<t>Schema fï¿½r backup</t>
+<t>Schema för backup</t>
 </str>
 
 <str id="1027">
@@ -3781,7 +3781,7 @@ sï¿½nkas vid riktig anvï¿½ndning.&lt;/p&gt;</t>
 
 <str id="1032">
 <o>Sundays,Mondays,Tuesdays,Wednesdays,Thursdays,Fridays,Saturdays</o>
-<t>Sï¿½ndagar,Mï¿½ndagar,Tisdagar,Onsdagar,Torsdagar,Fredagar,Lï¿½rdagar</t>
+<t>Söndagar,Måndagar,Tisdagar,Onsdagar,Torsdagar,Fredagar,Lördagar</t>
 </str>
 
 <str id="1033">
@@ -3801,7 +3801,7 @@ sï¿½nkas vid riktig anvï¿½ndning.&lt;/p&gt;</t>
 
 <str id="1036">
 <o>Unlimited</o>
-<t>Obegrï¿½nsad</t>
+<t>Obegränsad</t>
 </str>
 
 <str id="1037">
@@ -3821,17 +3821,17 @@ sï¿½nkas vid riktig anvï¿½ndning.&lt;/p&gt;</t>
 
 <str id="1040">
 <o>Note: This schedule is also used to schedule backups for Roxen's internal databases.</o>
-<t>Observera: Detta schema anvï¿½nds ocksï¿½ fï¿½r backup av Roxens interna databaser.</t>
+<t>Observera: Detta schema används också för backup av Roxens interna databaser.</t>
 </str>
 
 <str id="1041">
 <o>Are you sure you want to restore the default value?</o>
-<t>ï¿½r du sï¿½ker pï¿½ att du vill ï¿½terstï¿½lla standardvï¿½rdet?</t>
+<t>Är du säker på att du vill återställa standardvärdet?</t>
 </str>
 
 <str id="1043">
 <o>Cache: Memory cache size</o>
-<t>Cache: Storlek pï¿½ minnescache</t>
+<t>Cache: Storlek på minnescache</t>
 </str>
 
 <str id="1044">
@@ -3850,24 +3850,24 @@ optimal setting here is the one that in general keeps the Roxen
 process at a size that avoids swapping and leaves enough memory for
 buffers and other processes that need to run at the same time (e.g.
 the Roxen instance of the MySQL server).&lt;/p&gt;</o>
-<t>&lt;p&gt;Maximal storlek i MByte fï¿½r alla RAM-cachar tillsammans. Denna grï¿½ns
-pï¿½verkar de cachar som syns i &lt;a
+<t>&lt;p&gt;Maximal storlek i MByte för alla RAM-cachar tillsammans. Denna gräns
+påverkar de cachar som syns i &lt;a
 href='/actions/?action=cachestatus.pike&amp;class=status'&gt;Cachestatus&lt;/a&gt;-sidan.&lt;/p&gt;
 
-&lt;p&gt;Observera att det finns mï¿½nga fler saker i Roxen WebServer som
-krï¿½ver minnesutrymme, bland annat cachar som inte hanteras av den gemensamma
-RAM-cachen. Det finns ocksï¿½ olika former av indirekt minnesfï¿½rbrukning som
-inte redovisas i storleksberï¿½kningarna. Allt sammantaget betyder det att vï¿½rdet
-som anges hï¿½r inte rakt av kan ï¿½versï¿½ttas till storleken pï¿½ Roxen-processen sï¿½
-som operativsystemet visar den. En optimal instï¿½llning hï¿½r vore sï¿½dan att Roxen
-i normalfallet ï¿½r tillrï¿½ckligt liten fï¿½r att undvika swappning och lï¿½mnar
-lagom plats fï¿½r buffrar och andra processer som kï¿½r samtidigt (t.ex. den
-MySQL-server som Roxen anvï¿½nder).&lt;/p&gt;</t>
+&lt;p&gt;Observera att det finns många fler saker i Roxen WebServer som
+kräver minnesutrymme, bland annat cachar som inte hanteras av den gemensamma
+RAM-cachen. Det finns också olika former av indirekt minnesförbrukning som
+inte redovisas i storleksberäkningarna. Allt sammantaget betyder det att värdet
+som anges här inte rakt av kan översättas till storleken på Roxen-processen så
+som operativsystemet visar den. En optimal inställning här vore sådan att Roxen
+i normalfallet är tillräckligt liten för att undvika swappning och lämnar
+lagom plats för buffrar och andra processer som kör samtidigt (t.ex. den
+MySQL-server som Roxen använder).&lt;/p&gt;</t>
 </str>
 
 <str id="1045">
 <o>Cache: Memory cache GC interval</o>
-<t>Cache: Intervall fï¿½r minnesskrï¿½psamling</t>
+<t>Cache: Intervall för minnesskräpsamling</t>
 </str>
 
 <str id="1046">
@@ -3880,36 +3880,36 @@ this GC is not required to keep the cache sizes down.&lt;/p&gt;
 &lt;p&gt;Running this GC too seldom causes some RAM caches to contain many
 invalid cache entries, which could push out valid cache entries.
 Running it too often causes unnecessary server load.&lt;/p&gt;</o>
-<t>&lt;p&gt;Intervall i sekunder mellan skrï¿½psamling av RAM-minnet. Denna
-skrï¿½psamlare tar bort poster i RAM-cachar som har nï¿½tt sin tidsgrï¿½ns eller
-ï¿½r ogiltiga av andra anledningar och gï¿½r dï¿½rmed plats fï¿½r nya poster. Den
-instï¿½llda storleksgrï¿½nsen upprï¿½tthï¿½lls nï¿½r nya poster lï¿½ggs till sï¿½ denna
-skrï¿½psamling ï¿½r inte nï¿½dvï¿½ndig fï¿½r att begrï¿½nsa utrymmet.&lt;/p&gt;
+<t>&lt;p&gt;Intervall i sekunder mellan skräpsamling av RAM-minnet. Denna
+skräpsamlare tar bort poster i RAM-cachar som har nått sin tidsgräns eller
+är ogiltiga av andra anledningar och gör därmed plats för nya poster. Den
+inställda storleksgränsen upprätthålls när nya poster läggs till så denna
+skräpsamling är inte nödvändig för att begränsa utrymmet.&lt;/p&gt;
 
-&lt;p&gt;Om denna skrï¿½psamling sker fï¿½r sï¿½llan kommer vissa RAM-cachar
-innehï¿½lla mï¿½nga ogiltiga poster vilket trï¿½nger undan giltiga poster. Fï¿½r
-tï¿½ta intervall kan ï¿½ka belastningen pï¿½ servern i onï¿½dan.&lt;/p&gt;
+&lt;p&gt;Om denna skräpsamling sker för sällan kommer vissa RAM-cachar
+innehålla många ogiltiga poster vilket tränger undan giltiga poster. För
+täta intervall kan öka belastningen på servern i onödan.&lt;/p&gt;
 </t>
 </str>
 
 <str id="1047">
 <o>Module is disabled</o>
-<t>Modulen ï¿½r avstï¿½ngd</t>
+<t>Modulen är avstängd</t>
 </str>
 
 <str id="1048">
 <o>Server too busy message</o>
-<t>Meddelande nï¿½r servern ï¿½r upptagen</t>
+<t>Meddelande när servern är upptagen</t>
 </str>
 
 <str id="1049">
 <o>What to return if the server is too busy. See also "Handler queue timeout".</o>
-<t>Svar som skickas nï¿½r servern ï¿½r upptagen. Se ï¿½ven "Tidsgrï¿½ns fï¿½r hanteringskï¿½n".</t>
+<t>Svar som skickas när servern är upptagen. Se även "Tidsgräns för hanteringskön".</t>
 </str>
 
 <str id="1050">
 <o>Handler queue timeout</o>
-<t>Tidsgrï¿½ns fï¿½r hanteringskï¿½n</t>
+<t>Tidsgräns för hanteringskön</t>
 </str>
 
 <str id="1051">
@@ -3917,21 +3917,21 @@ tï¿½ta intervall kan ï¿½ka belastningen pï¿½ servern i onï¿½dan.&lt;/p&gt;
 the handler queue will not be processed. Instead, a 503 error code and the
 "Server too busy message" will be returned to the client. This may help the
 server to cut down the queue length after spikes of heavy load.</o>
-<t>Fï¿½rfrï¿½gningar som har vï¿½ntat detta antal sekunder i hanteringskï¿½n kommer
-ej att behandlas. Istï¿½llet skickas felkod 503 tillsammas med "Meddelande nï¿½r
-servern ï¿½r upptagen" till klienten. Detta kan hjï¿½lpa servern att reducera
-kï¿½lï¿½ngden efter en belastningstopp.</t>
+<t>Förfrågningar som har väntat detta antal sekunder i hanteringskön kommer
+ej att behandlas. Istället skickas felkod 503 tillsammas med "Meddelande när
+servern är upptagen" till klienten. Detta kan hjälpa servern att reducera
+kölängden efter en belastningstopp.</t>
 </str>
 
 <str id="1052">
 <o>Proxy: Use proxy (experimental)</o>
-<t>Proxy: Anvï¿½nd proxy (experimentell)</t>
+<t>Proxy: Använd proxy (experimentell)</t>
 </str>
 
 <str id="1053">
 <o>Use proxy for outgoing requests. E.g. when browsing external web sites through the Linkbrowser or when Insert cached-href fetches data from an external location.</o>
-<t>Anvï¿½nd en proxy fï¿½r utgï¿½ende fï¿½rfrï¿½gningar. Exempelvis nï¿½r man navigerar till externa webbsajter med Lï¿½nkbrowsern eller nï¿½r Insert cached-href hï¿½mtar data frï¿½n
-en extern kï¿½lla.</t>
+<t>Använd en proxy för utgående förfrågningar. Exempelvis när man navigerar till externa webbsajter med Länkbrowsern eller när Insert cached-href hämtar data från
+en extern källa.</t>
 </str>
 
 <str id="1054">
@@ -3941,27 +3941,27 @@ en extern kï¿½lla.</t>
 
 <str id="1055">
 <o>The URL of the proxy to use for outgoing requests.</o>
-<t>URL:en fï¿½r proxyn fï¿½r utgï¿½ende fï¿½rfrï¿½gningar.</t>
+<t>URL:en för proxyn för utgående förfrågningar.</t>
 </str>
 
 <str id="1056">
 <o>Proxy: Proxy username</o>
-<t>Proxy: Proxyns anvï¿½ndarnamn</t>
+<t>Proxy: Proxyns användarnamn</t>
 </str>
 
 <str id="1057">
 <o>Username for proxy authorization.</o>
-<t>Anvï¿½ndarnamn fï¿½r att autenticera mot proxyn.</t>
+<t>Användarnamn för att autenticera mot proxyn.</t>
 </str>
 
 <str id="1058">
 <o>Proxy: Proxy password</o>
-<t>Proxy: Proxyns lï¿½senord</t>
+<t>Proxy: Proxyns lösenord</t>
 </str>
 
 <str id="1059">
 <o>Password for proxy authorization.</o>
-<t>Lï¿½senord fï¿½r att autenticera mot proxyn.</t>
+<t>Lösenord för att autenticera mot proxyn.</t>
 </str>
 
 <str id="1060">
@@ -3973,29 +3973,29 @@ en extern kï¿½lla.</t>
 <o>The directory the backup will be saved in. If you chose auto, Roxen
 will generate a directory name that includes the database name and
 today's date in &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</o>
-<t>Katalogen som backupen lagras i. Om du vï¿½ljer auto kommer Roxen
+<t>Katalogen som backupen lagras i. Om du väljer auto kommer Roxen
 att skapa ett katalognamn som inkluderar databasens namn och dagens
 datum i &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</t>
 </str>
 
 <str id="1062">
 <o>Error running query %d: %s</o>
-<t>Ett fel intrï¿½ffade vid frï¿½ga %d: %s</t>
+<t>Ett fel inträffade vid fråga %d: %s</t>
 </str>
 
 <str id="1063">
 <o>Error connecting to database: </o>
-<t>Ett fel intrï¿½ffade vid anslutning mot databas: </t>
+<t>Ett fel inträffade vid anslutning mot databas: </t>
 </str>
 
 <str id="1064">
 <o>Tip: Put '--' on a line to ignore everything below it.</o>
-<t>Tips: Skriv '--' pï¿½ en egen rad fï¿½r att ignorera alla fï¿½ljande rader.</t>
+<t>Tips: Skriv '--' på en egen rad för att ignorera alla följande rader.</t>
 </str>
 
 <str id="1065">
 <o>Uncheck/Check All</o>
-<t>Vï¿½lj ingen/alla</t>
+<t>Välj ingen/alla</t>
 </str>
 
 <str id="1066">
