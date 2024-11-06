@@ -3100,8 +3100,8 @@ the username &lt;i&gt;foo&lt;/i&gt; and password &lt;i&gt;bar&lt;/i&gt;, set thi
 </str>
 
 <str id="492">
-<o>Every %s %s at %s o'clock.</o>
-<t>Jeden %s %s um %s Uhr.</t>
+<o>Every %s %s at %s:%s o'clock.</o>
+<t>Jeden %s %s um %s:%s Uhr.</t>
 </str>
 
 <str id="493">
