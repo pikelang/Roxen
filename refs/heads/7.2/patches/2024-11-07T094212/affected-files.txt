@@ -1,0 +1,4 @@
+Modified files:
+  etc/include/version.h
+  translations/deu/roxen_config.xml
+  translations/swe/roxen_config.xml
