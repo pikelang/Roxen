@@ -1,0 +1,12 @@
+subject: Roxen 8.0: [EPD-657] Variable.Schedule fix for German and Swedish
+from: 28a850464db981d4f49aa0a258671a873467021b
+to: c26e400d041f48011f2d8f4d7209194cede3219b
+originator: Erik Allemann
+depends: 2024-10-14T135237
+restart: true
+
+• Variable.Schedule fix for German
+
+Fixes [EPD-657] some more.
+
+• Variable.Schedule fix for Swedish
