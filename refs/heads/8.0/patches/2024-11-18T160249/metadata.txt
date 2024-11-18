@@ -1,0 +1,8 @@
+subject: Roxen 8.0:  Add Variable.Color.
+from: c26e400d041f48011f2d8f4d7209194cede3219b
+to: b7f6970ff082f98df34e2de038a5146cd81405b9
+originator: Erik Allemann
+depends: 2024-11-07T095512
+restart: true
+
+• Add Variable.Color.
