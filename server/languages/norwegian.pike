@@ -90,7 +90,7 @@ string number(int num)
    case 19: return "nitten";
    case 20: return "tjue";
    case 30: return "tretti";
-   case 40: return "forti";
+   case 40: return "førti";
    case 50: return "femti";
    case 60: return "seksti";
    case 70: return "sytti";
