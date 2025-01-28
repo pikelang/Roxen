@@ -1,0 +1,6 @@
+Added files:
+  languages/_xml_glue/nno.xml
+  languages/nynorsk.pike
+Modified files:
+  etc/include/version.h
+  languages/norwegian.pike
