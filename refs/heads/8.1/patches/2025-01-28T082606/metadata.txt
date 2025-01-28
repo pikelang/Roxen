@@ -1,0 +1,12 @@
+subject: Roxen 8.1: [EPD-1508] Add support for nynorsk
+from: 074dcc142fa56c4bbd9e5140b46bcf0cc37e60c3
+to: 99d398bc6665e3326e5a9b9f3965278c43b756fc
+originator: Marcus Wellhardh
+depends: roxen/8.1.207
+restart: true
+
+• Add Norwegian Nynorsk language plugin
+
+EPD-1508 Add support for nynorsk
+
+• Fix spelling on Norwegian "førti"
