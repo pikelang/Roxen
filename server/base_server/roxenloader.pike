@@ -4396,9 +4396,9 @@ the correct system time.
   add_constant ("describe_backtrace", describe_backtrace);
   add_constant ("call_out", call_out);
 
-#ifdef INTERNAL_ERROR_DEBUG
+#if defined(INTERNAL_ERROR_DEBUG) || defined(RUN_SELF_TEST)
   add_constant("throw", paranoia_throw);
-#endif /* INTERNAL_ERROR_DEBUG */
+#endif /* INTERNAL_ERROR_DEBUG || RUN_SELF_TEST */
 
   add_constant( "mark_fd", mark_fd );
   add_constant( "isodate", isodate );
