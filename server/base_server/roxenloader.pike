@@ -2154,14 +2154,34 @@ void write_current_time()
 //!   Exists for detection of code that throws non-errors.
 void paranoia_throw(mixed err)
 {
-  if ((arrayp(err) && ((sizeof([array]err) < 2) || !stringp(([array]err)[0]) ||
-                       !arrayp(([array]err)[1]) ||
-                       !(arrayp(([array(array)]err)[1][0])||stringp(([array(array)]err)[1][0])))) ||
-      (!arrayp(err) && (!objectp(err) || !([object]err)->is_generic_error))) {
+  do {
+    if (arrayp(err) && (sizeof([array]err) > 1) &&
+        stringp(([array]err)[0]) && arrayp(([array]err)[1]) &&
+        ((arrayp(([array(array)]err)[1][0]) ||
+          stringp(([array(array)]err)[1][0])))) {
+      /* Old-style error.
+       *
+       * ({ "Error.\n", backtrace })
+       */
+      continue;
+    }
+    if (objectp(err) && ([object]err)->is_generic_error) {
+      /* New-style error. */
+      continue;
+    }
+    if (intp(err)) {
+      /* AC throws integers from eg AC.ProtPoint()->parse_with_module_vars(). */
+      continue;
+    }
+    if (objectp(err) || zero_type(([object]err)->tag_throw)) {
+     /* RXML throws an object with a single variable "tag_throw". */
+      continue;
+    }
+
     report_debug(sprintf("Warning: throwing non-error: %O\n"
                          "From: %s\n",
                          err, describe_backtrace(backtrace())));
-  }
+  } while(0);
   throw(err);
 }
 
