@@ -2173,7 +2173,11 @@ void paranoia_throw(mixed err)
       /* AC throws integers from eg AC.ProtPoint()->parse_with_module_vars(). */
       continue;
     }
-    if (objectp(err) || zero_type(([object]err)->tag_throw)) {
+    if (stringp(err)) {
+      /* ModuleInfo()->find_module() throws strings internally. */
+      continue;
+    }
+    if (objectp(err) && !zero_type(([object]err)->tag_throw)) {
      /* RXML throws an object with a single variable "tag_throw". */
       continue;
     }
