@@ -2807,6 +2807,70 @@ protected class SQLResKey
   }
 }
 
+private void sq_cache_free(Sql.Sql real, string db_name, int reuse_in_thread)
+{
+  if (!real) return;
+
+#if 0
+  if (reuse_in_thread) {
+    // FIXME: This won't work well; destroy() might get called from
+    // any thread when an object is refcount garbed.
+    //
+    // NB: Now it is even worse, as we are called via two levels
+    //     of indirection; call_out and roxen.handle.
+    mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
+    if (dbs_for_thread[db_name] == real) {
+      m_delete (dbs_for_thread, db_name);
+      if (!sizeof (dbs_for_thread)) sql_reuse_in_thread->set (0);
+    }
+  }
+#endif
+
+#ifndef NO_DB_REUSE
+  if (real->master_sql->reset) {
+    // Reset state.
+    mixed err = catch {
+        real->master_sql->reset();
+      };
+    if (err) {
+      real = UNDEFINED;
+      string descr = describe_error(err);
+      if (has_value(lower_case(descr), "has gone away")) {
+        werror("%s\n", descr);
+      } else {
+        throw(err);
+      }
+    }
+  }
+
+  mixed key;
+  catch {
+    key = sq_cache_lock();
+  };
+
+#ifdef DB_DEBUG
+  werror("%O added to free list\n", this );
+#ifdef OBJ_COUNT_DEBUG
+  m_delete(my_mysql_last_user, __object_count);
+#endif
+#endif
+  if( !--sql_active_list[db_name] )
+    m_delete( sql_active_list, db_name );
+  sql_free_list[ db_name ] = ({ SQLTimeout(real) }) +
+    (sql_free_list[ db_name ]||({}));
+  if( `+( 0, @map(values( sql_free_list ),sizeof ) ) > 20 )
+  {
+#ifdef DB_DEBUG
+    werror("Free list too large. Cleaning.\n" );
+#endif
+    clear_connect_to_my_mysql_cache();
+  }
+#else
+  // Slow'R'us
+  call_out(gc,0);
+#endif
+}
+
 //!
 protected class SQLKey
 {
@@ -2923,17 +2987,21 @@ protected class SQLKey
   {
     Sql.sql_result o;
     if (mixed err = catch {
+#ifdef SQL_DB_TRACE
+        report_debug("SQL_TRACE: Sql(%O)->big_typed_query(%O%{, %O%})\n",
+                     db_name, f, args);
+#endif
         o = real->big_typed_query( f, @args );
 #ifdef SQL_DB_TRACE
         if (trace_enabled) {
-          report_debug("SQL_TRACE: Sql(%O)->big_query(%O%{, %O%}) ==>\n",
+          report_debug("SQL_TRACE: Sql(%O)->big_typed_query(%O%{, %O%}) ==>\n",
                        db_name, f, args);
         }
 #endif
       }) {
 #ifdef SQL_DB_TRACE
       if (trace_enabled) {
-        report_debug("SQL_TRACE: Sql(%O)->big_query(%O%{, %O%}) failed:\n",
+        report_debug("SQL_TRACE: Sql(%O)->big_typed_query(%O%{, %O%}) failed:\n",
                      db_name, f, args);
       }
 #endif
@@ -2998,22 +3066,14 @@ protected class SQLKey
     real_db_name = real->master_sql->query_db && real->master_sql->query_db();
   }
 
+  // NB: Must be signal safe.
+  //
+  // Ie: No I/O, no mutexes, etc.
   protected void destroy()
   {
-    // FIXME: Ought to be abstracted to an sq_cache_free().
 #ifdef DB_DEBUG
     all_wrapped_sql_objects[real]=0;
 #endif
-
-    if (reuse_in_thread) {
-      // FIXME: This won't work well; destroy() might get called from
-      // any thread when an object is refcount garbed.
-      mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
-      if (dbs_for_thread[db_name] == real) {
-        m_delete (dbs_for_thread, db_name);
-        if (!sizeof (dbs_for_thread)) sql_reuse_in_thread->set (0);
-      }
-    }
 
     if (!real) return;
 
@@ -3025,38 +3085,15 @@ protected class SQLKey
       return;
     }
 
-#ifndef NO_DB_REUSE
-    mixed key;
-    catch {
-      key = sq_cache_lock();
-    };
-
-    if (real->master_sql->reset) {
-      // Reset state.
-      real->master_sql->reset();
+    // Perform the actual connection reuse from a
+    // context where I/O and mutexes are ok.
+    if (!master()->asyncp() || !roxen) {
+      // Still booting.
+      destruct(real);
+    } else {
+      call_out(roxen.low_handle, 0,
+               sq_cache_free, real, db_name, reuse_in_thread);
     }
-
-#ifdef DB_DEBUG
-    werror("%O added to free list\n", this );
-#ifdef OBJ_COUNT_DEBUG
-    m_delete(my_mysql_last_user, __object_count);
-#endif
-#endif
-    if( !--sql_active_list[db_name] )
-      m_delete( sql_active_list, db_name );
-    sql_free_list[ db_name ] = ({ SQLTimeout(real) }) +
-      (sql_free_list[ db_name ]||({}));
-    if( `+( 0, @map(values( sql_free_list ),sizeof ) ) > 20 )
-    {
-#ifdef DB_DEBUG
-      werror("Free list too large. Cleaning.\n" );
-#endif
-      clear_connect_to_my_mysql_cache();
-    }
-#else
-    // Slow'R'us
-    call_out(gc,0);
-#endif
   }
 
   protected mixed `[]( string what )
@@ -4536,8 +4573,10 @@ the correct system time.
     exit(1);
   }
 
-  // Restore describe_backtrace(), which was zapped by the new master.
-  add_constant ("describe_backtrace", describe_backtrace);
+  // Restore describe_backtrace() and werror(), which were
+  // zapped by the new master.
+  add_constant("describe_backtrace", describe_backtrace);
+  add_constant("werror", roxen_perror);
 
 #if constant( Gz.inflate )
   add_constant("grbz",lambda(string d){return Gz.inflate()->inflate(d);});
