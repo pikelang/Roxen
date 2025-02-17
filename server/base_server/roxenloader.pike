@@ -2283,7 +2283,7 @@ Roxen 6.0 should be run with Pike 8.0 or newer.
     add_package(dir);
   }
 
-#ifdef RUN_SELF_TEST
+#if defined(RUN_SELF_TEST) || (defined(LOAD_ALL_CUSTOMERS) && defined(DEBUG))
   // Add all customer packages.
   foreach(lget_dir("customers") || ({}), string dir) {
     dir = combine_path("customers", dir);

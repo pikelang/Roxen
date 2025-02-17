@@ -421,6 +421,9 @@ parse_args() {
   --customer=*)
       pass="$pass --package=customers/`echo $1 | sed -e's/^--customer=//'`"
       ;;
+  --all-customers)
+      DEFINES="-DLOAD_ALL_CUSTOMERS $DEFINES"
+      ;;
   '--program')
     program="$2"
     once=2
@@ -593,6 +596,10 @@ the default arguments.
 
       .B--customer=CUSTB.:            Add package customers/CUST to the
                                   Roxen search path.
+
+      .B--all-customers=CUSTB.:       Add all customers/CUST to the Roxen search
+                                  path. NOTE! This also requires that the
+                                  .B-DDEBUGB. flag is set
 
       .B--programB.:                  Start a different program with the Roxen
                                   Pike. As an example,
