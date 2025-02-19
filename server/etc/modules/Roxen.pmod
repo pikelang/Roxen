@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.170 2004/03/03 15:59:11 mast Exp $
+// $Id$
 
 #include <roxen.h>
 #include <config.h>
@@ -382,13 +382,17 @@ mapping(string:mixed) http_rxml_answer( string rxml, RequestID id,
        ([function(string,RequestID,Stdio.File:string)]id->conf->parse_rxml)
        (rxml, id, file);
   HTTP_WERR("RXML answer ("+(type||"text/html")+")");
-  return (["data":rxml,
-	   "type":(type||"text/html"),
-	   "stat":id->misc->defines[" _stat"],
-	   "error":id->misc->defines[" _error"],
-	   "rettext":id->misc->defines[" _rettext"],
-	   "extra_heads":id->misc->defines[" _extra_heads"],
-	   ]);
+  mapping(string:mixed) ret = ([
+    "data": rxml,
+    "type":(type||"text/html"),
+  ]);
+  foreach(({ "error", "extra_heads", "rettext", "stat" }), string field) {
+    mixed val = id->misc->defines[ " _" + field ];
+    if (!undefinedp(val)) {
+      ret[field] = val;
+    }
+  }
+  return ret;
 }
 
 
