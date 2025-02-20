@@ -2456,7 +2456,7 @@ class Patcher
     }
 
     // Make an array of the paths where we want to check for the dir
-    array all_paths = ({ installed_path, import_path });
+    array all_paths = ({ import_path, installed_path });
 
     foreach(all_paths, string path)
     {
