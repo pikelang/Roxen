@@ -1,0 +1,16 @@
+subject: Roxen 8.1: [REPD-1409] Roxen: http_rxml_answer() do not set unused fields to zero, [REPD-1414] Patch: Scan import path before installed path
+from: 99d398bc6665e3326e5a9b9f3965278c43b756fc
+to: b76a55aa3591c363aea827d93eb74c2cccd5b9a2
+originator: Marcus Wellhardh
+depends: 2025-01-28T082606
+restart: true
+
+• Patch: Scan import path before installed path
+
+This should fix REPD-1414
+
+• Roxen: http_rxml_answer() do not set unused fields to zero.
+
+Potential fix for [REPD-1409] (where recrse_find_properties()
+complains about find_properties() having returned a mapping
+where the field rettext was zero.
