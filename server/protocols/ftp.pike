@@ -1,12 +1,14 @@
+#charset utf-8
+
 // This is a roxen protocol module.
-// Copyright © 1997 - 2009, Roxen IS.
+// Copyright Â© 1997 - 2009, Roxen IS.
 
 /*
  * FTP protocol mk 2
  *
  * $Id$
  *
- * Henrik Grubbström <grubba@roxen.com>
+ * Henrik GrubbstrÃ¶m <grubba@roxen.com>
  */
 
 /*
