@@ -1,12 +1,14 @@
+#charset utf-8
+
 // This is a roxen protocol module.
-// Copyright © 1997 - 2009, Roxen IS.
+// Copyright Â© 1997 - 2009, Roxen IS.
 
 /*
  * FTP protocol mk 2
  *
  * $Id$
  *
- * Henrik Grubbström <grubba@roxen.com>
+ * Henrik GrubbstrÃ¶m <grubba@roxen.com>
  */
 
 /*
@@ -2068,8 +2070,8 @@ class FTPSession
     session = session || master_session;
 
     switch(file && file->error) {
-    case 301:
-    case 302:
+    case 301:	// HTTP_MOVED_PERM
+    case 302:	// HTTP_FOUND
       if (file->extra_heads && file->extra_heads->Location) {
         send(504, ({ sprintf(LOCALE(87, "'%s': %s: Redirect to %O."),
                              cmd, f, file->extra_heads->Location) }));
@@ -2077,21 +2079,31 @@ class FTPSession
         send(504, ({ sprintf(LOCALE(88, "'%s': %s: Redirect."), cmd, f) }));
       }
       break;
-    case 401:
+    case 401:	// HTTP_UNAUTH
       send(530, ({ sprintf(LOCALE(89, "'%s': %s: Access denied."),
                            cmd, f) }));
       break;
-    case 403:
+    case 403:	// HTTP_FORBIDDEN
       send(451, ({ sprintf(LOCALE(90, "'%s': %s: Forbidden."),
                            cmd, f) }));
       break;
-    case 405:
+    case 405:	// HTTP_METHOD_INVALID
       send(550, ({ sprintf(LOCALE(91, "'%s': %s: Method not allowed."),
                            cmd, f) }));
       break;
-    case 500:
+    case 408:	// HTTP_TIMEOUT
+    case 500:	// HTTP_INTERNAL_ERR
       send(451, ({ sprintf(LOCALE(93, "'%s': Requested action aborted: "
                                   "local error in processing."), cmd) }));
+      break;
+    case 501:	// HTTP_NOT_IMPL
+      send(502, ({ sprintf(LOCALE(0, "'%s': Command not implemented."),
+                           cmd) }));
+      break;
+    case 503:	// HTTP_UNAVAIL
+      send(450, ({ sprintf(LOCALE(0, "'%s': Requested action not taken. "
+                                  "File unavailable (e.g., file busy)."),
+                           cmd) }));
       break;
     default:
       if (!file) {
