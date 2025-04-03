@@ -1,0 +1,17 @@
+subject: Roxen 8.1: [REPD-1438] FTP: Improved error fidelity, FTP: Change file encoding to UTF-8
+from: b76a55aa3591c363aea827d93eb74c2cccd5b9a2
+to: 2bb48751866a98a1b90429956be29244993e788b
+originator: Marcus Wellhardh
+depends: 2025-02-24T113129
+restart: true
+
+• FTP: Improved error fidelity.
+
+Adds special cases for http error codes 408, 501 and 503.
+Previously these all mapped to ftp error code 550.
+
+Also some improved internal documentation.
+
+Related to [REPD-1438].
+
+• FTP: Change file encoding to UTF-8.
