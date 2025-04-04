@@ -2071,7 +2071,7 @@ protected class SQLKey
       // Cf [EP-2227].
       return lambda(mixed... args) {
         return ([function(mixed...:mixed)]res)(@args);
-      }
+      };
     }
     return res;
   }
