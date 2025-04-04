@@ -2064,7 +2064,16 @@ protected class SQLKey
       case "big_query": return big_query;
       case "big_typed_query": return big_typed_query;
     }
-    return real[what];
+    mixed res = real[what];
+    if (callablep(res)) {
+      // Return a trampoline holding our object,
+      // so that we do not get destructed prematurely.
+      // Cf [EP-2227].
+      return lambda(mixed... args) {
+        return ([function(mixed...:mixed)]res)(@args);
+      }
+    }
+    return res;
   }
 
   protected string _sprintf(int type)
