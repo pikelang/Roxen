@@ -183,6 +183,10 @@ mapping parse_directory(RequestID id)
 {
   string f = id->not_query;
 
+  if (!id->conf->stat_file(f, id)) {
+    return 0;
+  }
+
   // First fix the URL
   //
   // It must end with "/" or "/."
