@@ -3,7 +3,7 @@
 // Index files only module, a directory module that will not try to
 // generate any directory listings, instead only using index files.
 
-constant cvs_version = "$Id: indexfiles.pike,v 1.18 2000/11/27 06:17:11 per Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 inherit "module";
@@ -41,6 +41,9 @@ mapping parse_directory(RequestID id)
   // Redirect to an url with a '/' at the end, to make relative links
   // work as expected.
   string f = id->not_query;
+  if (!id->conf->stat_file(f, id)) {
+    return 0;
+  }
   if(strlen(f) > 1)
   {
     if(f[-1]!='/') return Roxen.http_redirect(f+"/", id);

@@ -15,7 +15,7 @@
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_directories",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: directories.pike,v 1.90 2000/12/04 22:40:02 nilsson Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 constant default_template= #"
@@ -180,6 +180,10 @@ void start(int n, Configuration c)
 mapping parse_directory(RequestID id)
 {
   string f = id->not_query;
+
+  if (!id->conf->stat_file(f, id)) {
+    return 0;
+  }
 
   // First fix the URL
   //
