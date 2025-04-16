@@ -1,0 +1,4 @@
+Modified files:
+  etc/include/version.h
+  modules/directories/directories.pike
+  modules/directories/indexfiles.pike
