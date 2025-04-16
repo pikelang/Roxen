@@ -1,0 +1,16 @@
+subject: Roxen 8.1: [REPD-1453] Directories: Fail non-existing directories with 404. [REPD-1461] Widening of adminUI menu bar.
+from: 2bb48751866a98a1b90429956be29244993e788b
+to: da35672ffcaefb357ce422b996ad2681781a13b8
+originator: Erik Allemann
+depends: 2025-04-03T161916
+restart: true
+
+• Widen left column in configuration interface
+
+REPD-1461 Widening of adminUI menu bar
+
+• Directories: Fail non-existing directories with 404.
+
+Previously they would first get a redirect to end with '/'.
+
+Needed for [REPD-1453].
