@@ -1,0 +1,12 @@
+subject: Roxen 8.0: [REPD-1453] Directories: Fail non-existing directories with 404.
+from: a5ba5238dd4bb386c27c8876dc85fdec2b24f19a
+to: 2040c00a3b816c32e88b8f927d4a961c761aecb4
+originator: Erik Allemann
+depends: 2025-02-24T112818
+restart: true
+
+• Directories: Fail non-existing directories with 404.
+
+Previously they would first get a redirect to end with '/'.
+
+Needed for [REPD-1453].
