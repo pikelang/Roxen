@@ -1,0 +1,10 @@
+subject: Roxen 8.1: [REPD-1460] Prometheus: Add some special cases for numRequestsPerPrio et al
+from: da35672ffcaefb357ce422b996ad2681781a13b8
+to: 068964ef6997c5760324e9412b2ed33a95d82427
+originator: Marcus Wellhardh
+depends: 2025-04-16T100800
+restart: true
+
+• Prometheus: Add some special cases for numRequestsPerPrio et al.
+
+Fixes [REPD-1460].
