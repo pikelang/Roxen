@@ -433,7 +433,10 @@ array(PrometheusValue) get_snmp_rows()
                     return histogram_label(entry, "queueNumRuns");
                   },
                ]),
-               /* Start (fake) module oids. */
+               /* Start (fake) module oids.
+                *
+                * Cf array in get_snmp_rows().
+                */
                ([ "oid_prefix": "-1.0.2",
                   "aspects": ({ "interval" }),
                   "interval":
@@ -499,6 +502,36 @@ array(PrometheusValue) get_snmp_rows()
                     return "since start";
                   },
                   "type_instance": "activeBadPlannerUsers",
+               ]),
+               ([ "oid_prefix": "-1.4.17",
+                  "type_instance": "numRequestsPerPrio",
+                  "aspects": ({ "priority" }),
+                  "priority":
+                  lambda(mapping entry) {
+                    return histogram_label(entry, "numRequestsPerPrio");
+                  },
+                  "doc": "Number of requests of each priority that have "
+                  "been handled.",
+               ]),
+               ([ "oid_prefix": "-1.4.18",
+                  "type_instance": "queueTimePerPrio",
+                  "aspects": ({ "priority" }),
+                  "priority":
+                  lambda(mapping entry) {
+                    return histogram_label(entry, "queueTimePerPrio");
+                  },
+                  "doc": "Accumulated total queue time in seconds for "
+                  "requests of each priority.",
+               ]),
+               ([ "oid_prefix": "-1.4.19",
+                  "type_instance": "requestTimePerPrio",
+                  "aspects": ({ "priority" }),
+                  "priority":
+                  lambda(mapping entry) {
+                    return histogram_label(entry, "requestTimePerPrio");
+                  },
+                  "doc": "Accumulated total request time in seconds for "
+                  "requests of each priority.",
                ]),
                ([ "oid_prefix": "-1.5.15",
                   "type": "histogram",
