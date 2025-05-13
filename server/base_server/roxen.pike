@@ -7298,6 +7298,8 @@ int main(int argc, array tmp)
   if(configuration_dir[-1] != '/')
     configuration_dir += "/";
 
+  mkdir(configuration_dir + "_volatile");
+
   restore_global_variables(); // restore settings...
 
   cache.set_total_size_limit (query ("mem_cache_size") * 1024 * 1024);

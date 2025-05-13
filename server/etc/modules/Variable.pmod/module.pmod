@@ -261,6 +261,9 @@ class Variable
     //!     Should be configured initially.
     //!   @value VAR_INVISIBLE
     //!     The variable is permanently hidden from view.
+    //!   @value VAR_VOLATILE
+    //!     The variable may be updated automatically and
+    //!     is stored apart from the manually set values.
     //! @endint
   {
     return all_flags[_id];
@@ -281,12 +284,21 @@ class Variable
     //!     Should be configured initially.
     //!   @value VAR_INVISIBLE
     //!     The variable is permanently hidden from view.
+    //!   @value VAR_VOLATILE
+    //!     The variable may be updated automatically and
+    //!     is stored apart from the manually set values.
     //! @endint
   {
     if(!flags )
       m_delete( all_flags, _id );
     else
       all_flags[_id] = flags;
+  }
+
+  //! Check if the variable is volatile (@expr{1@}) or not (@expr{0@}).
+  int(0..1) check_volatile()
+  {
+    return !!(all_flags[_id] & VAR_VOLATILE);
   }
 
   int check_visibility( RequestID id,

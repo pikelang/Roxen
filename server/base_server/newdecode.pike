@@ -215,13 +215,15 @@ string trim_ws( string indata )
 }
 
 string encode_config_region(mapping m, string reg, Configuration c,
-                            int comments)
+                            int comments, int|void volatiles)
 {
   string res = "";
   string v;
 
   if( reg == "EnabledModules" )
   {
+    if (volatiles) return "";
+
     foreach( sort(indices( m )), string q ) {
       string cmt;
       if (comments)
@@ -240,6 +242,8 @@ string encode_config_region(mapping m, string reg, Configuration c,
 
   foreach(sort(indices(m)), v)
   {
+    if (has_prefix(v, "volatile_") != volatiles) continue;
+
     string doc;
     switch(v)
     {
@@ -263,8 +267,11 @@ string encode_config_region(mapping m, string reg, Configuration c,
        break;
     }
 
+    string vv = v;
+    if (volatiles) vv = vv[sizeof("volatile_")..];
+
     if(comments && c && c->get_doc_for)
-      doc = c->get_doc_for( reg, v );
+      doc = c->get_doc_for( reg, vv );
     if(doc)
       res += ("\n  <!--\n    "+
               replace(replace(sprintf("%*-=s",74,trim_ws(doc)),
@@ -273,14 +280,14 @@ string encode_config_region(mapping m, string reg, Configuration c,
               +"\n   -->\n");
     string enc = encode_mixed(m[v],c,1);
     if (has_value (enc, "\n"))
-      res += "  <var name='" + v + "'>" + enc + "</var>\n";
+      res += "  <var name='" + vv + "'>" + enc + "</var>\n";
     else
-      res += sprintf ("  %-30s %s </var>\n", "<var name='"+v+"'>", enc);
+      res += sprintf ("  %-30s %s </var>\n", "<var name='"+vv+"'>", enc);
   }
   return res;
 }
 
-string encode_regions(mapping r, Configuration c)
+string encode_regions(mapping r, Configuration c, int(0..1)|void volatiles)
 {
   string v;
   string res =
@@ -291,7 +298,7 @@ string encode_regions(mapping r, Configuration c)
           ({"EnabledModules"}) + sort(indices(r) - ({"EnabledModules"})) :
           sort(indices(r)), v)
     res += "<region name='"+v+"'>\n" +
-             encode_config_region(r[v],v,c,comments)
+             encode_config_region(r[v], v, c, comments, volatiles)
            + "</region>\n\n";
   res += "</roxen-config>\n";
   return string_to_utf8( res );

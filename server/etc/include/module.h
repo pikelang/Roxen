@@ -22,6 +22,7 @@
 
 #define TAGDOCUMENTATION mapping tagdocumentation(){return [mapping]get_value_from_file(__FILE__,"tagdoc","#define manual\n");}
 
+// !!!!!!!!!!! OBSOLETE !!!!!!!!!!!
 #define ROXEN_MAJOR_VERSION 6
 #define ROXEN_MINOR_VERSION 0
 
@@ -61,6 +62,7 @@
 
 #define VAR_PUBLIC        0x4000
 #define VAR_NO_DEFAULT    0x8000
+#define VAR_VOLATILE     0x10000
 
 #define MOD_ALLOW	         1
 #define MOD_USER	         2
