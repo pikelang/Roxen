@@ -1071,7 +1071,7 @@ be of real use.</p>"));
                 "may also sometimes be because of memory leaks.")
           );
 
-  definvisvar( "last_suicide", 0, TYPE_INT );
+  definvisvar( "last_suicide", 0, TYPE_INT|VAR_VOLATILE );
   
   defvar("suicide_schedule",
          Variable.Schedule( ({ 2, 1, 1, 0, 4 }), 0,
