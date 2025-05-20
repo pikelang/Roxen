@@ -7298,8 +7298,6 @@ int main(int argc, array tmp)
   if(configuration_dir[-1] != '/')
     configuration_dir += "/";
 
-  mkdir(configuration_dir + "_volatile");
-
   restore_global_variables(); // restore settings...
 
   cache.set_total_size_limit (query ("mem_cache_size") * 1024 * 1024);
@@ -7502,6 +7500,8 @@ int main(int argc, array tmp)
   set_u_and_gid(); // Running with the right [e]uid:[e]gid from this point on.
 
   create_pid_file(pid_file);
+
+  mkdir(configuration_dir + "_volatile");
 
 #ifdef THREADS
   // NB: Start the threads *after* set_u_and_gid() has been called
