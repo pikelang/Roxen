@@ -166,7 +166,7 @@ string encode_mixed(mixed from, Configuration c, int|void indent)
    }
    default:
      if (objectp (from))
-       return "<mod>"+name_of_module(from,c)+"</mod>";
+       return "<str>"+name_of_module(from,c)+"</str>";
      report_debug("I do not know how to encode "+
                   sprintf("%t (%O)\n", from, from)+"\n");
      return "<int>0</int>";
