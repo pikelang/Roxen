@@ -235,7 +235,10 @@ private mapping safe_read_config_file(string(8bit) config_file)
 #endif
         fd = open(base + suffix, "r");
         if (!fd) {
-          if (suffix != ".new~") {
+          // NB: Do not complain about not finding ephemeral file (*.new~),
+          //     or volatile files (it is not an error for volatile files
+          //     to be deleted).
+          if ((suffix != ".new~") && !has_prefix(config_file, "_volatile")) {
             report_warning("Failed to open configuration %sfile %O.\n",
                            sizeof(suffix)?"backup ":"",
                            base + suffix);
@@ -443,6 +446,12 @@ void store( string reg, mapping(string:mixed) vars, int q,
     if(!sizeof( m ))
       m_delete( data, reg );
   }
+
+#ifdef DEBUG_CONFIG
+  report_debug("CONFIG: Vars: %O\n"
+               "CONFIG: M: %O\n",
+               vars, m);
+#endif
 
   // Call any potential special save callbacks.
   indices(savers)();
