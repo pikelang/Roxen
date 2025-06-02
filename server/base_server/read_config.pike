@@ -1,5 +1,6 @@
+#charset utf-8
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2009, Roxen IS.
+// Copyright Â© 1996 - 2009, Roxen IS.
 // $Id$
 
 #include <module.h>
@@ -59,7 +60,7 @@ array(string) list_all_configurations()
 private	mapping call_outs = ([]);
 private	Thread.Mutex call_outs_mutex = Thread.Mutex();
 private	int counter = 0;
-void save_it(string cl, mapping data)
+void save_it(string cl, array(mapping) data)
 {
   Thread.MutexKey lock = call_outs_mutex->lock();
   if( call_outs[ cl ] ) {
@@ -69,7 +70,7 @@ void save_it(string cl, mapping data)
 #endif
     remove_call_out( call_outs[ cl ]->callout );
   }
-  data = COPY(data);
+  data = ({ COPY(data[0]), COPY(data[1]) });
   counter++;
   call_outs[ cl ] = ([ "callout" : call_out( really_save_it, 0.1,
                                              cl, data, counter ),
@@ -166,7 +167,7 @@ private void safe_save_config_file(string(8bit) conf_file, string(8bit) data)
   }
 }
 
-private void really_save_it( string cl, mapping data, int counter )
+private void really_save_it( string cl, array(mapping) data, int counter )
 {
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Writing configuration file for cl %O, count %O\n",
@@ -186,11 +187,11 @@ private void really_save_it( string cl, mapping data, int counter )
 
   // First the main configuration file.
   string(8bit) config_name = replace(string_to_utf8(cl), " ", "_");
-  string enc_data = encode_regions( data, config );
+  string enc_data = encode_regions( data[0], config );
   safe_save_config_file(config_name, enc_data);
 
   // Then any volatile variables.
-  enc_data = encode_regions(data, config, 1);
+  enc_data = encode_regions(data[1], config);
   safe_save_config_file("_volatile/" + config_name, enc_data);
 
   Thread.MutexKey lock = call_outs_mutex->lock();
@@ -283,27 +284,30 @@ private mapping safe_read_config_file(string(8bit) config_file)
   return ([]);
 }
 
-private mapping merge_mappings(mapping a, mapping b)
-{
-  a += ([]);
-  foreach(b; mixed i; mixed v) {
-    a[i] += v;
-  }
-
-  return a;
-}
-
-mapping read_it(string cl)
+//! Return an array of mappings where the first contains the
+//! non-volatile variables for all modules, and the second
+//! the volatile variables.
+//!
+//! @param cl
+//!   Base configuration file name.
+//!
+//! @note
+//!   This differs from Roxen 8.2 and earlier, where it
+//!   simply returned a mapping.
+array(mapping) read_it(string cl)
 {
   Thread.MutexKey lock = call_outs_mutex->lock();
-  if (call_outs[cl]) {
+  mapping cl_info;
+  if ((cl_info = call_outs[cl])) {
 #ifdef DEBUG_CONFIG
     report_debug ("CONFIG: Reading data for %O count %O from call out list.\n",
-                  cl, call_outs[cl]->counter);
+                  cl, cl_info->counter);
 #endif
-    return call_outs[cl]->data;
+    return cl_info->data;
   }
   lock = 0;
+
+  if (cl == last_read) return last_data;
 
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Read configuration file for cl "+cl+"\n");
@@ -315,10 +319,15 @@ mapping read_it(string cl)
 
   mapping volatile_data = safe_read_config_file("_volatile/" + config_file);
 
-  return merge_mappings(data, volatile_data);
+  array(mapping) ret = ({ data, volatile_data });
+
+  last_read = cl;
+  last_data = ret;
+
+  return ret;
 }
 
-
+//! Remove a region (ie typically a module) from a configuration.
 void remove( string reg , Configuration current_configuration )
 {
   string cl;
@@ -333,8 +342,9 @@ void remove( string reg , Configuration current_configuration )
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Remove "+reg+" in "+cl+"\n");
 #endif
-  mapping data = read_it(cl);
-  m_delete( data, reg );
+  array(mapping) data = read_it(cl);
+  m_delete( data[0], reg );
+  m_delete( data[1], reg );
   save_it( cl, data );
 }
 
@@ -344,7 +354,7 @@ void remove_configuration( string name )
   string volatile_f;
   f = configuration_dir + replace(name, " ", "_");
   volatile_f = configuration_dir + "_volatile/" + replace(name, " ", "_");
-  if(!file_stat( f ))   
+  if(!file_stat( f ))
     f = configuration_dir+name;
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Remove "+f+"\n");
@@ -393,6 +403,7 @@ void store( string reg, mapping(string:mixed) vars, int q,
 //!       A mapping from string to raw values. This is used
 //!       when @[q] is @expr{1@}. This is typically only used
 //!       for the @expr{"EnabledModules"@} region.
+//!       Note that this variant does NOT support volatile variables.
 //!   @endmixed
 //!
 //! @param q
@@ -403,6 +414,7 @@ void store( string reg, mapping(string:mixed) vars, int q,
 {
   string cl;
   mapping m;
+  mapping volatile_m;
 
 #ifndef IN_INSTALL
   if(!current_configuration)
@@ -415,48 +427,56 @@ void store( string reg, mapping(string:mixed) vars, int q,
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Store "+reg+" in "+cl+"\n");
 #endif
-  mapping data;
+  array(mapping) data;
   if( cl == last_read )
     data = last_data;
-  else 
+  else
     data = read_it(cl);
 
-  mapping old_reg = data[ reg ];
+  mapping old_reg = data[0][ reg ];
+  mapping old_volatile_reg = data[1][ reg ];
 
   mapping(function(:void):int(1..1)) savers = ([]);
 
-  if(q)
-    data[ reg ] = m = vars;
-  else
+  if(q) {
+    data[0][ reg ] = m = vars;
+    volatile_m = old_volatile_reg;
+  } else
   {
     m = ([ ]);
+    volatile_m = ([ ]);
     foreach ([mapping(string:Variable.Variable)] vars;
              string name; Variable.Variable var) {
-      if (var->check_volatile()) {
-        name = "volatile_" + name;
-      }
       if (var->save) {
         // Support for special save callbacks.
         savers[var->save] = 1;
       } else {
-        m[ name ] = var->encode();
+        if (var->check_volatile()) {
+          volatile_m[ name ] = var->encode();
+        } else {
+          m[ name ] = var->encode();
+        }
       }
     }
-    data[ reg ] = m;
+    data[0][ reg ] = m;
     if(!sizeof( m ))
-      m_delete( data, reg );
+      m_delete( data[0], reg );
+    data[1][ reg ] = volatile_m;
+    if(!sizeof( volatile_m ))
+      m_delete( data[1], reg );
   }
 
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Vars: %O\n"
-               "CONFIG: M: %O\n",
-               vars, m);
+               "CONFIG: M: %O\n"
+               "CONFIG: Volatile_M: %O\n",
+               vars, m, volatile_m);
 #endif
 
   // Call any potential special save callbacks.
   indices(savers)();
 
-  if( equal( old_reg, m ) ) {
+  if( equal( old_reg, m ) &&  equal( old_volatile_reg, volatile_m ) ) {
 #ifdef DEBUG_CONFIG
     report_debug ("CONFIG: Not storing %O in %O since data is equal.\n", reg, cl);
 #endif
@@ -467,7 +487,7 @@ void store( string reg, mapping(string:mixed) vars, int q,
 }
 
 string last_read;
-mapping last_data;
+array(mapping) last_data;
 
 //! Retrieve configuration settings for a region of a configuration.
 //!
@@ -494,15 +514,14 @@ mapping(string:mixed) retrieve(string reg,
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Retrieve "+reg+" in "+cl+"\n");
 #endif
-  if( cl == last_read )
-    return COPY( last_data[ reg ] );
 
-  mapping res = read_it( cl );
-  if( res )
-  {
-    last_read = cl;
-    last_data = res;
-    return COPY( res[ reg ] );
+  array(mapping) res = read_it( cl );
+  if( res ) {
+    mapping ret = COPY( res[0][reg] );
+    if (res[1] && res[1][reg]) {
+      ret += res[1][reg];
+    }
+    return ret;
   }
   return ([]);
 }

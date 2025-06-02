@@ -1,5 +1,6 @@
+#charset utf-8
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2009, Roxen IS.
+// Copyright Â© 1996 - 2009, Roxen IS.
 // $Id$
 
 // The magic below is for the 'install' program
@@ -215,15 +216,15 @@ string trim_ws( string indata )
 }
 
 string encode_config_region(mapping m, string reg, Configuration c,
-                            int comments, int|void volatiles)
+                            int comments)
 {
   string res = "";
   string v;
 
+  if (!m || !sizeof(m)) return "";
+
   if( reg == "EnabledModules" )
   {
-    if (volatiles) return "";
-
     foreach( sort(indices( m )), string q ) {
       string cmt;
       if (comments)
@@ -242,8 +243,6 @@ string encode_config_region(mapping m, string reg, Configuration c,
 
   foreach(sort(indices(m)), v)
   {
-    if (has_prefix(v, "volatile_") != volatiles) continue;
-
     string doc;
     switch(v)
     {
@@ -267,11 +266,8 @@ string encode_config_region(mapping m, string reg, Configuration c,
        break;
     }
 
-    string vv = v;
-    if (volatiles) vv = vv[sizeof("volatile_")..];
-
     if(comments && c && c->get_doc_for)
-      doc = c->get_doc_for( reg, vv );
+      doc = c->get_doc_for( reg, v );
     if(doc)
       res += ("\n  <!--\n    "+
               replace(replace(sprintf("%*-=s",74,trim_ws(doc)),
@@ -280,14 +276,14 @@ string encode_config_region(mapping m, string reg, Configuration c,
               +"\n   -->\n");
     string enc = encode_mixed(m[v],c,1);
     if (has_value (enc, "\n"))
-      res += "  <var name='" + vv + "'>" + enc + "</var>\n";
+      res += "  <var name='" + v + "'>" + enc + "</var>\n";
     else
-      res += sprintf ("  %-30s %s </var>\n", "<var name='"+vv+"'>", enc);
+      res += sprintf ("  %-30s %s </var>\n", "<var name='"+v+"'>", enc);
   }
   return res;
 }
 
-string encode_regions(mapping r, Configuration c, int(0..1)|void volatiles)
+string encode_regions(mapping r, Configuration c)
 {
   string v;
   string res =
@@ -296,10 +292,12 @@ string encode_regions(mapping r, Configuration c, int(0..1)|void volatiles)
   int comments = all_constants()->roxen->query ("config_file_comments");
   foreach(r->EnabledModules ?
           ({"EnabledModules"}) + sort(indices(r) - ({"EnabledModules"})) :
-          sort(indices(r)), v)
+          sort(indices(r)), v) {
+    if (!r[v] || !sizeof(r[v])) continue;
     res += "<region name='"+v+"'>\n" +
-             encode_config_region(r[v], v, c, comments, volatiles)
+             encode_config_region(r[v], v, c, comments)
            + "</region>\n\n";
+  }
   res += "</roxen-config>\n";
   return string_to_utf8( res );
 }
