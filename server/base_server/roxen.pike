@@ -1108,12 +1108,8 @@ void release_handler_threads (int numthreads)
     cond->broadcast();
 
     if (threads_to_create > 0) {
-      array(object) new_threads = ({});
       for (int n = 0; n < threads_to_create; number_of_threads++, n++)
-        new_threads += ({ do_thread_create( "Handle Thread [" +
-                                            number_of_threads + "]",
-                                            handler_thread, number_of_threads ) });
-      handler_threads += new_threads;
+        start_handler_thread();
       report_notice ("Created %d new handler threads to compensate "
                      "for %d blocked ones.\n",
                      threads_to_create, blocked_threads);
