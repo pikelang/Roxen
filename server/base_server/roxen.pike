@@ -708,7 +708,7 @@ protected array(object|int(-1..0)) handler_threads = ({});
 //! is time to die (by setting them to zero).
 
 protected int handler_timestamp;
-//! Bumped when a handler thread gets an item from the queue.
+//! Bumped when a handler thread has finished a job from the queue.
 
 //! Keeps track of active handler threads.
 //!
@@ -747,6 +747,11 @@ protected void handler_governor()
         }
       } else {
         // The handler queue is empty.
+
+        // Bump the handler timestamp in case all handler threads
+        // are idle in order to avoid the race above when a job
+        // has been added but no handler thread has taken it yet.
+        handler_timestamp = time(1);
         if (number_of_threads > query("numthreads")) {
           // Inform the most recent handler thread that
           // it is time to die.
@@ -832,7 +837,6 @@ local protected void handler_thread(int id)
         cache_clear_deltas();
         THREAD_WERR("Handle thread ["+id+"] waiting for next event");
         if(arrayp(h = low_handle_queue->read())) {
-          handler_timestamp = time(1);
           if (!h[0]) {
             THREAD_WERR(sprintf("Handle thread [%O] got NULL callback: %s",
                                 id, debug_format_queue_task(h)));
@@ -924,6 +928,7 @@ local protected void handler_thread(int id)
           threads_on_hold--;
           THREAD_WERR("Handle thread [" + id + "] released");
         }
+        handler_timestamp = time(1);
       } while(handler_threads[id] == this_thread());
     }) {
       if (thread_flagged_as_busy)
