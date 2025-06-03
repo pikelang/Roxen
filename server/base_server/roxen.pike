@@ -757,7 +757,7 @@ protected void handler_governor()
           // it is time to die.
           //
           // It will die after it has handled the next item.
-          THREAD_WERR("Handler queue empty. Reducing number of threads.\n");
+          report_notice("Handler queue empty. Reducing number of threads.\n");
           thread_reap_cnt++;
           handler_threads[--number_of_threads] = -1;
         }
@@ -955,7 +955,7 @@ local protected void handler_thread(int id)
       }
     }
   }
-  report_debug("Handle thread ["+id+"] stopped.\n");
+  report_notice("Handle thread ["+id+"] stopped.\n");
   thread_reap_cnt--;
   handler_threads[id] = 0;
 #ifdef NSERIOUS
@@ -993,7 +993,7 @@ protected void start_handler_thread()
     number_of_threads--;
     return;
   }
-  THREAD_WERR("Starting Handle Thread [" + id + "]...\n");
+  report_notice("Starting Handle Thread [" + id + "]...\n");
   handler_threads[id] =
     do_thread_create( "Handle Thread [" + id + "]", handler_thread, id );
 }
@@ -1115,7 +1115,8 @@ void release_handler_threads (int numthreads)
                                             handler_thread, number_of_threads ) });
       handler_threads += new_threads;
       report_notice ("Created %d new handler threads to compensate "
-                     "for %d blocked ones.\n", threads_to_create, blocked_threads);
+                     "for %d blocked ones.\n",
+                     threads_to_create, blocked_threads);
     }
   }
   else {
