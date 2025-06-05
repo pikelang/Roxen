@@ -55,6 +55,22 @@ string format_backtrace(array bt, object id)
   string res="";
   foreach(bt-({""}), string line)
   {
+    //  Expand Thread.Mutex(/*locked by 0x....*/)
+    string bt_separator = "Thread.Mutex(/*locked by ";
+    if (has_value(line, bt_separator)) {
+      array(string) bt_segs = line / bt_separator;
+      foreach (bt_segs; int idx; string bt_seg) {
+        if (sscanf(bt_seg, "0x%[0-9a-fA-F]*/", string th_hex_addr)) {
+          if (string th_name = Roxen.thread_name_from_addr("0x" + th_hex_addr)) {
+            bt_segs[idx] =
+              "0x" + th_hex_addr + " - " + th_name +
+              bt_seg[sizeof(th_hex_addr) + 2..];
+          }
+        }
+      }
+      line = bt_segs * bt_separator;
+    }
+
     line += get_id( (line/":")[0] );
     res += ("<li value="+(--q)+"> "+Roxen.html_encode_string(line)+"<br />\n");
   }
@@ -107,6 +123,14 @@ mixed parse( RequestID id )
       h3.closed {
         background-image: url('&usr.unfold;');
       }
+      h3 > s {
+        float: right;
+        padding-top: 8px;
+        font-size: 60%;
+        font-weight: normal;
+        text-decoration: none;
+        opacity: 0.5;
+      }
     </style>
     <script language='javascript'>
      function toggle_vis(div_id, h3) {
@@ -132,12 +156,13 @@ mixed parse( RequestID id )
     res +=
       sprintf ("<h3 class='%s' "
                " onclick='toggle_vis(\"%s\", this); return false;'>"
-               "%s%s</h3>\n"
+               "%s%s<s>%s</s></h3>\n"
                "<ol class='%s' id='%s'> %s</ol>\n",
                open_state,
                "bt_" + div_num,
                th_names[threads[i]],
                busy_time,
+               sprintf("0x%x", threads[i]->id_number()),
                open_state,
                "bt_" + div_num,
                format_backtrace(describe_backtrace(threads[i]->backtrace())/
