@@ -1,0 +1,8 @@
+subject: Roxen 8.2: Include numeric thread ID and expand "locked by" references
+from: b2ba329a3af40e7b22da179a77b12ae70ebb6850
+to: f8b97c35161e03e12ef959be730c79793ae802a5
+originator: Marcus Wellhardh
+depends: roxen/8.2.287
+restart: true
+
+• Include numeric thread ID and expand "locked by" references.
