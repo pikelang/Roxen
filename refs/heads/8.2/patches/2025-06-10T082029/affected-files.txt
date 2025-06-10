@@ -1,0 +1,3 @@
+Modified files:
+  config_interface/actions/threads.pike
+  etc/include/version.h
