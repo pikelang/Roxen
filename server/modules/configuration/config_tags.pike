@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.191 2006/03/06 13:04:04 jonasw Exp $";
+constant cvs_version = "$Id$";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -468,9 +468,11 @@ mapping get_variable_map( string s, object mod, RequestID id, int noset )
 	LOCALE(502,"Diff")+"</link-gbutton></a>";
     if(!res["diff-txt"])
       res["diff-txt"]="";
+    res->counter = var->_counter;
     res->id = var->_id;
     res->changed = !var->is_defaulted();
-    res->cid = res->changed*-10000000+res->id;
+    res->ccounter = res->counter - res->changed * 10000000;
+    res->cid = res->ccounter; // Compat.
     string n = (string) var->name();
     res->name = has_value(n, ":") ? ((n / ":")[1..] * ":") : n;
     res->cname = (!res->changed)+res->name;
@@ -578,10 +580,10 @@ array get_variable_maps( object mod,
 
   switch(  config_setting("sortorder") )
   {
-    default:                    sort( variables->name, variables );  break;
-    case "as defined":          sort( variables->id,   variables );  break;
-    case "changed/as defined":  sort( variables->cid,  variables );  break;
-    case "changed/alphabetical":sort( variables->cname,variables );  break;
+    default:                    sort( variables->name,     variables );  break;
+    case "as defined":          sort( variables->counter,  variables );  break;
+    case "changed/as defined":  sort( variables->ccounter, variables );  break;
+    case "changed/alphabetical":sort( variables->cname,    variables );  break;
   }
 
   if( !fnset )
