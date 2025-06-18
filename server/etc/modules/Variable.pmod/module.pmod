@@ -197,7 +197,7 @@ class Variable
   int _counter = unique_vid++;
   // Used for sorting the variables.
 
-  string _id = unique_prefix + "_" + (string) counter;
+  string _id = unique_prefix + "_" + (string)_counter;
   // used for indexing the mappings.
 
   static mixed _initial; // default value
