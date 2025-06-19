@@ -720,6 +720,11 @@ protected int handler_timestamp;
 //! Runs via @[call_out()] once every second.
 protected void handler_governor()
 {
+  if (is_shutting_down()) {
+    // Stop the governor and do not add more threads when shutting down.
+    return;
+  }
+
   mixed err = catch {
       if (low_handle_queue->size()) {
         // NB: There is a minor race here for servers that have a low
