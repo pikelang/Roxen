@@ -239,7 +239,10 @@ setup_for_tests() {
       eval "\"$pike\" $PIKEARGS $DEFINES \"$SELF_TEST_DIR/scripts/setup.pike\" \"$SELF_TEST_DIR\" \"$VARDIR\""
     fi
     once=${once:-1}
-    debug=0
+    # Support --debug.
+    if [ "x$debug" != "x1" ]; then
+        debug=0
+    fi
     #remove_dumped=1
 }
 
