@@ -1,0 +1,8 @@
+subject: Roxen 8.2: Start: Support combining --self-test and --debug
+from: f8b97c35161e03e12ef959be730c79793ae802a5
+to: 4ed6a55b0715b126ab8e357a969f31d54f70fc47
+originator: Marcus Wellhardh
+depends: 2025-06-10T082029
+restart: true
+
+• Start: Support combining --self-test and --debug.
