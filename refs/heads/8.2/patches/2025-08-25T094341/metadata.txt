@@ -1,0 +1,12 @@
+subject: Roxen 8.2:  Loader: Improved signal safety for SQLKey. Avoid performing I/O operations directly from destroy().
+from: 4ed6a55b0715b126ab8e357a969f31d54f70fc47
+to: 245dc0d7ba7a737f43716e944c61519aa31a9d5e
+originator: Erik Allemann
+depends: 2025-08-22T113233
+restart: true
+
+• Loader: Improved signal safety for SQLKey.
+
+Avoid performing I/O operations directly from destroy().
+
+Also improved support for Pike 9.0 and later.
