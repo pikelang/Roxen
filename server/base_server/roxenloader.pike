@@ -3696,6 +3696,7 @@ Process.Process low_start_mysql( string datadir,
   int force = !file_stat( query_mysql_config_file(datadir) );
   string cfg_file = (Stdio.read_bytes(query_mysql_config_file(datadir)) ||
                      "[mysqld]\n"
+                     "max-connections = 1000\n"
                      "max_allowed_packet = 128M\n"
                      "net_buffer_length = 8K\n"
                      "query-cache-type = 2\n"
@@ -3730,6 +3731,25 @@ Process.Process low_start_mysql( string datadir,
                        ({ "", "", "", "", "", "",
                        }));
     force = 1;
+  }
+
+  if (!has_value(normalized_cfg_file, "max-connections")) {
+    // Increase the maximum number of concurrent connections
+    // from the default (150 + 1) to something reasonable.
+    array a = cfg_file/"[mysqld]";
+    if (sizeof(a) > 1) {
+      report_debug("Adding max-connections to %s.\n",
+                   query_mysql_config_file(datadir));
+      a[1] = "\n"
+        "max-connections = 1000" + a[1];
+      cfg_file = a * "[mysqld]";
+      force = 1;
+    } else {
+      report_warning("Mysql configuration file %s lacks "
+                     "a max-connections entry,\n"
+                     "and automatic repairer failed.\n",
+                     query_mysql_config_file(datadir));
+    }
   }
 
   if ((normalized_mysql_version > "005.000.") &&
