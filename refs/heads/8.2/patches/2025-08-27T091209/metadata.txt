@@ -1,0 +1,8 @@
+subject: Roxen 8.2: MariaDB/MySQL: Increase max-connections to 1000 (default 150 + 1).
+from: 245dc0d7ba7a737f43716e944c61519aa31a9d5e
+to: 76047b97293f2147f733d5b8a63c7c96d812447b
+originator: Erik Allemann
+depends: 2025-08-25T094341
+restart: true
+
+• MariaDB/MySQL: Increase max-connections to 1000 (default 150 + 1).
