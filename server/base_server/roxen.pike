@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.636 2001/02/23 07:13:37 mast Exp $";
+constant cvs_version="$Id$";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -868,6 +868,64 @@ void background_run (int|float delay, function func, mixed... args)
   // Can't do much better when we haven't got threads..
   call_out (func, delay, @args);
 #endif
+}
+
+protected Thread.Queue bg_futures = Thread.Queue();
+protected int bg_futures_count;
+
+protected void next_bg_future(mixed|void ignored)
+{
+  array(mixed) job = bg_futures->try_read();
+  if (!arrayp(job)) {
+    bg_futures_count--;
+    // Race protection...
+    job = bg_futures->try_read();
+    if (!job) return;
+    bg_futures_count++;
+  }
+
+  [Concurrent.Promise p, function(mixed...:mixed) fun, array(mixed) args] = job;
+
+  if (!p || !fun) {
+    if (p) {
+      p->failure(({ "Background future destructed.\n", ({}) }));
+      return;
+    }
+
+    // Promise destructed. Skip running this job.
+    background_run(0, next_bg_future);
+    return;
+  }
+
+  mixed err = catch {
+      Concurrent.Future res = Concurrent.resolve(fun(@args));
+      res->on_success(p->success);
+      res->on_failure(p->failure);
+      return;
+    };
+  p->failure(err);
+}
+
+//! Call a function in the background and return a @[Concurrent.Future]
+//! for its return value.
+//!
+//! The function may return a @[Concurrent.Future] in which case up to
+//! @expr{query("bg_futures_throttle")@} may be active concurrently.
+Concurrent.Future background_future(function(mixed...:mixed) fun, mixed... args)
+{
+  Concurrent.Promise p = Concurrent.Promise();
+
+  bg_futures->write(({ p, fun, args }));
+
+  int n = query("bg_futures_throttle");
+  if (!n || (bg_futures_count < n)) {
+    bg_futures_count++;
+    p->on_success(next_bg_future);
+    p->on_failure(next_bg_future);
+    background_run(0, next_bg_future);
+  }
+
+  return p->future();
 }
 
 class BackgroundProcess

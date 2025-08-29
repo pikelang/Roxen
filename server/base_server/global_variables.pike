@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.62 2001/01/29 07:50:20 per Exp $
+// $Id$
 
 /*
 #pragma strict_types
@@ -506,6 +506,13 @@ void define_global_variables(  )
 	  "<i>This is quite useful if you have more than one CPU in "
 	  "your machine, or if you have a lot of slow NFS accesses.</i></p>"));
 #endif // THREADS
+
+  defvar("bg_futures_throttle", 4,
+         LOCALE(0, "Number of concurrent background futures"),
+         TYPE_INT,
+         LOCALE(0, "<p>The number of background futures that may execute "
+                "concurrently.</p>\n"
+                "<p>Set to zero for no limit</p>\n"));
 
 #ifndef __NT__
   defvar("abs_engage", 0, LOCALE(154, "ABS: Enable Anti-Block-System"), 
