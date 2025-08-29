@@ -915,9 +915,9 @@ Concurrent.Future background_future(function(mixed...:mixed) fun, mixed... args)
 {
   Concurrent.Promise p = Concurrent.Promise();
 
-  bg_futures->write(({ p, fun, args }));
   p->on_success(next_bg_future);
   p->on_failure(next_bg_future);
+  bg_futures->write(({ p, fun, args }));
 
   int n = query("bg_futures_throttle");
   if (!n || (bg_futures_count < n)) {
