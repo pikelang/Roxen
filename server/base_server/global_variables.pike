@@ -964,6 +964,13 @@ be of real use.</p>"));
           "very good reason to do so.</p>"));
 #endif // THREADS
 
+  defvar("bg_futures_throttle", 4,
+         LOCALE(0, "Number of concurrent background futures"),
+         TYPE_INT,
+         LOCALE(0, "<p>The number of background futures that may execute "
+                "concurrently.</p>\n"
+                "<p>Set to zero for no limit</p>\n"));
+
 #ifndef __NT__
   defvar("abs_engage", 0, LOCALE(154, "Auto Maintenance: Enable Anti-Block-System"),
          TYPE_FLAG|VAR_MORE,
