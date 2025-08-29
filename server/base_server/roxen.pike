@@ -916,12 +916,12 @@ Concurrent.Future background_future(function(mixed...:mixed) fun, mixed... args)
   Concurrent.Promise p = Concurrent.Promise();
 
   bg_futures->write(({ p, fun, args }));
+  p->on_success(next_bg_future);
+  p->on_failure(next_bg_future);
 
   int n = query("bg_futures_throttle");
   if (!n || (bg_futures_count < n)) {
     bg_futures_count++;
-    p->on_success(next_bg_future);
-    p->on_failure(next_bg_future);
     background_run(0, next_bg_future);
   }
 
