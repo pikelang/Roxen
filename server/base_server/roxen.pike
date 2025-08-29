@@ -1529,6 +1529,64 @@ mixed background_run (int|float delay, function func, mixed... args)
 #endif
 }
 
+protected Thread.Queue bg_futures = Thread.Queue();
+protected int bg_futures_count;
+
+protected void next_bg_future(mixed|void ignored)
+{
+  array(mixed) job = bg_futures->try_read();
+  if (!arrayp(job)) {
+    bg_futures_count--;
+    // Race protection...
+    job = bg_futures->try_read();
+    if (!job) return;
+    bg_futures_count++;
+  }
+
+  [Concurrent.Promise p, function(mixed...:mixed) fun, array(mixed) args] = job;
+
+  if (!p || !fun) {
+    if (p) {
+      p->failure(({ "Background future destructed.\n", ({}) }));
+      return;
+    }
+
+    // Promise destructed. Skip running this job.
+    background_run(0, next_bg_future);
+    return;
+  }
+
+  mixed err = catch {
+      Concurrent.Future res = Concurrent.resolve(fun(@args));
+      res->on_success(p->success);
+      res->on_failure(p->failure);
+      return;
+    };
+  p->failure(err);
+}
+
+//! Call a function in the background and return a @[Concurrent.Future]
+//! for its return value.
+//!
+//! The function may return a @[Concurrent.Future] in which case up to
+//! @expr{query("bg_futures_throttle")@} may be active concurrently.
+Concurrent.Future background_future(function(mixed...:mixed) fun, mixed... args)
+{
+  Concurrent.Promise p = Concurrent.Promise();
+
+  p->on_success(next_bg_future);
+  p->on_failure(next_bg_future);
+  bg_futures->write(({ p, fun, args }));
+
+  int n = query("bg_futures_throttle");
+  if (!n || (bg_futures_count < n)) {
+    bg_futures_count++;
+    background_run(0, next_bg_future);
+  }
+
+  return p->future();
+}
+
 class BackgroundProcess
 //! A class to do a task repeatedly in the background, in a way that
 //! makes as little impact as possible on the incoming requests (using
