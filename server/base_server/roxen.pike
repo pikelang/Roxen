@@ -1529,8 +1529,8 @@ mixed background_run (int|float delay, function func, mixed... args)
 #endif
 }
 
-protected Thread.Queue bg_futures = Thread.Queue();
-protected int bg_futures_count;
+/*protected*/ Thread.Queue bg_futures = Thread.Queue();
+/*protected*/ int bg_futures_count;
 
 protected void next_bg_future(mixed|void ignored)
 {
