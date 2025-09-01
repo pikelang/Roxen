@@ -1,0 +1,16 @@
+subject: Roxen 8.2: Added roxen.background_future() with cleaner code and bug fixes, providing a Concurrent.Future alternative to background_run() with higher concurrency support.
+from: 76047b97293f2147f733d5b8a63c7c96d812447b
+to: d0174652411ba041a59e7593f3a3aa75167c6955
+originator: Erik Allemann
+depends: 2025-08-27T091209
+restart: true
+
+• Core: roxen.background_future: Somewhat cleaner code.
+
+• Core: Fix propagation bug in roxen.background_future().
+
+• Core: Add roxen.background_future().
+
+This is similar to background_run(), but returns a Concurrent.Future
+with the result, and may have a greater concurrency than the ordinary
+background jobs.
