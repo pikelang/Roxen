@@ -481,6 +481,11 @@ class Queue
     buffer[w_ptr++]=v;
     r_cond::signal();
   }
+
+  array peek_array()
+  {
+    return buffer[r_ptr..w_ptr-1];
+  }
 }
 #endif
 
@@ -673,8 +678,8 @@ protected void report_slow_thread_finished (Thread.Thread thread,
 // 	   thread_create( f, @args );
 //  };
 // }
-local protected Queue low_handle_queue = Queue();
-local protected Queue handle_queue = Queue();
+local Queue low_handle_queue = Queue();
+local Queue handle_queue = Queue();
 //! Queues of things to handle.
 //!
 //! An entry consists of an @expr{array(function fp, array args)@}.
@@ -1282,7 +1287,7 @@ function async_sig_start( function f, int really )
 }
 
 #ifdef THREADS
-protected Thread.Queue bg_queue = Thread.Queue();
+Thread.Queue bg_queue = Thread.Queue();
 protected Thread.Thread bg_process_thread;
 
 // Use a time buffer to strike a balance if the server is busy and
@@ -1536,8 +1541,8 @@ mixed background_run (int|float delay, function func, mixed... args)
 #endif
 }
 
-/*protected*/ Thread.Queue bg_futures = Thread.Queue();
-/*protected*/ int bg_futures_count;
+Thread.Queue bg_futures = Thread.Queue();
+int bg_futures_count;
 
 protected void next_bg_future(mixed|void ignored)
 {
