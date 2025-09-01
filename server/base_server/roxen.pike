@@ -486,6 +486,11 @@ class Queue
     buffer[w_ptr++]=v;
     r_cond::signal();
   }
+
+  array peek_array()
+  {
+    return buffer[r_ptr..w_ptr-1];
+  }
 }
 
 // This is easier than when there is no threads.
@@ -494,7 +499,7 @@ function async_sig_start( function f, int really )
 {
   return lambda( mixed ... args ) { thread_create( f, @args ); };
 }
-local static Queue handle_queue = Queue();
+local Queue handle_queue = Queue();
 //! Queue of things to handle.
 //! An entry consists of an array(function fp, array args)
 
@@ -806,7 +811,7 @@ function async_sig_start( function f, int really )
 #endif /* THREADS */
 
 #ifdef THREADS
-static Queue bg_queue = Queue();
+Queue bg_queue = Queue();
 static int bg_process_running;
 
 static void bg_process_queue()
@@ -870,8 +875,8 @@ void background_run (int|float delay, function func, mixed... args)
 #endif
 }
 
-protected Thread.Queue bg_futures = Thread.Queue();
-protected int bg_futures_count;
+Thread.Queue bg_futures = Thread.Queue();
+int bg_futures_count;
 
 protected void next_bg_future(mixed|void ignored)
 {
