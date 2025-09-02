@@ -1,0 +1,8 @@
+subject: Roxen 8.2: Remove protected on bg_futures.
+from: d0174652411ba041a59e7593f3a3aa75167c6955
+to: 4767731a4e313a082815869cdeea5635e9bbe2bb
+originator: Erik Allemann
+depends: 2025-09-01T110834
+restart: true
+
+• Remove protected on bg_futures.
