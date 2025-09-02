@@ -14,11 +14,15 @@ mixed parse( RequestID id )
 {
   string res="";
   int thr=1;
-
+  res +=
+    "<h2>Pending jobs</h2>\n\n"
+    "<p><cf-refresh/></p>\n\n";
   res += "<h3>Handler queue</h3>\n\n"
     "<p>These are jobs that will run as soon as there is "
     "a handler thread available.</p>\n\n"
     "<ul>\n";
+  string prev_line = "";
+  int count = 0;
   foreach(roxen->handle_queue->peek_array(), array entry) {
     if (!arrayp(entry) || !sizeof(entry)) continue;
     mixed val = entry[0];
@@ -34,12 +38,36 @@ mixed parse( RequestID id )
     } else {
       fun = val;
     }
-    string args = master()->Describer()->describe_comma_list(entry[1..]);
+    string args = master()->Describer()->describe_comma_list(entry[1..],
+                                                             0x7fffffff);
 
     fun = Roxen.html_encode_string(fun);
     args = Roxen.html_encode_string(args);
 
-    res += sprintf("<li><tt>%s(%s)</tt></li>\n", fun, args);
+    string line = sprintf("<li><tt>%s(%s)</tt></li>\n", fun, args);
+
+    if (prev_line == line) {
+      count++;
+      continue;
+    }
+
+    if (count) {
+      if (count > 1) {
+        res += sprintf(" <i>Repeated %d times.</i>", count);
+      }
+      res += "</li>\n";
+    }
+
+    res += line;
+    prev_line = line;
+    count = 1;
+  }
+
+  if (count) {
+    if (count > 1) {
+      res += sprintf(" <i>Repeated %d times.</i>", count);
+    }
+    res += "</li>\n";
   }
   res += "</ul>\n\n";
 
@@ -47,6 +75,8 @@ mixed parse( RequestID id )
     "<p>These are jobs that will run as soon as the previous background job "
     "has completed.</p>\n\n"
     "<ul>\n";
+  prev_line = "";
+  count = 0;
   foreach(roxen->bg_queue->peek_array(), array entry) {
     if (!arrayp(entry) || !sizeof(entry)) continue;
     mixed val = entry[0];
@@ -62,19 +92,49 @@ mixed parse( RequestID id )
     } else {
       fun = val;
     }
-    string args = master()->Describer()->describe_comma_list(entry[1..]);
+    string args = master()->Describer()->describe_comma_list(entry[1..],
+                                                             0x7fffffff);
 
     fun = Roxen.html_encode_string(fun);
     args = Roxen.html_encode_string(args);
 
-    res += sprintf("<li><tt>%s(%s)</tt></li>\n", fun, args);
+    string line = sprintf("<li><tt>%s(%s)</tt></li>\n", fun, args);
+
+    if (prev_line == line) {
+      count++;
+      continue;
+    }
+
+    if (count) {
+      if (count > 1) {
+        res += sprintf(" <i>Repeated %d times.</i>", count);
+      }
+      res += "</li>\n";
+    }
+
+    res += line;
+    prev_line = line;
+    count = 1;
+  }
+
+  if (count) {
+    if (count > 1) {
+      res += sprintf(" <i>Repeated %d times.</i>", count);
+    }
+    res += "</li>\n";
   }
   res += "</ul>\n\n";
 
   res += "<h3>Background future queue</h3>\n\n"
-    "<p>These are jobs that will be put on the background queue one at a time "
-    "when the active background futures has complete.</p>\n\n"
+    "<p>These are asynchronous jobs that will be put on the background "
+    "queue one at a time when the active background futures complete.</p>\n\n"
+    "<p>The number of active jobs is controlled by the global setting "
+    "<b>Number of concurrent background futures</b> (currently " +
+    (roxen->query("bg_futures_throttle") || "unlimited") + ").</p>\n"
     "<ul>\n";
+
+  prev_line = "";
+  count = 0;
   foreach(roxen->bg_futures->peek_array(), array entry) {
     if (!arrayp(entry) || (sizeof(entry) < 2) || !entry[0]) continue;
     string promise = sprintf("%O", entry[0]);
@@ -93,16 +153,40 @@ mixed parse( RequestID id )
     } else {
       fun = val;
     }
-    string args = master()->Describer()->describe_comma_list(entry[1..]);
+    string args = master()->Describer()->describe_comma_list(entry[1..],
+                                                             0x7fffffff);
 
     promise = Roxen.html_encode_string(promise);
     fun = Roxen.html_encode_string(fun);
     args = Roxen.html_encode_string(args);
 
-    res += sprintf("<li><tt><b>%s:</b> %s(%s)</tt></li>\n", promise, fun, args);
+    string line = sprintf("<li><tt><b>%s:</b> %s(%s)</tt>", promise, fun, args);
+
+    if (prev_line == line) {
+      count++;
+      continue;
+    }
+
+    if (count) {
+      if (count > 1) {
+        res += sprintf(" <i>Repeated %d times.</i>", count);
+      }
+      res += "</li>\n";
+    }
+
+    res += line;
+    prev_line = line;
+    count = 1;
+  }
+
+  if (count) {
+    if (count > 1) {
+      res += sprintf(" <i>Repeated %d times.</i>", count);
+    }
+    res += "</li>\n";
   }
   res += "</ul>\n\n";
 
-  return res+"<p><cf-ok/></p>";
+  return res+"<table border='0'><tr><td><cf-refresh/></td><td><cf-ok/></td></tr></table>\n";
 }
 
