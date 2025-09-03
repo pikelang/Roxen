@@ -1,5 +1,11 @@
 // $Id$
 
+#include <roxen.h>
+
+//  Must match minute intervals in widget menu
+constant minute_interval = 5;
+
+
 #if constant(roxenp)
 inherit /*Variable*/.Variable;
 
@@ -340,7 +346,7 @@ int main(int argc, array(string) argv)
       use_utc = 1;
       mapping(string:int) lt = localtime(when);
       lt->sec = 0;
-      lt->min -= (lt->min % 15);
+      lt->min -= (lt->min % minute_interval);
       mapping m;
       int got;
       if (val[3]) {
@@ -386,7 +392,7 @@ int main(int argc, array(string) argv)
       use_utc = 0;
       lt = localtime(when);
       lt->sec = 0;
-      lt->min -= (lt->min % 15);
+      lt->min -= (lt->min % minute_interval);
       if (val[3]) {
         m = next_or_same_day(lt, val[3] - 1, val[4], val[5]);
         got = mktime(m);
@@ -910,7 +916,7 @@ private mapping next_or_same_time(mapping from, int hour, int minute,
     if (minute < 0) {
       return from;
     }
-    if ((from->min - (from->min % 15)) == minute) {
+    if ((from->min - (from->min % minute_interval)) == minute) {
       return from;
     }
   }
@@ -997,7 +1003,7 @@ int get_next( int last )
 
   mapping m = localtime( last || time(1) );
   m->sec = 0;
-  m->min -= (m->min % 15);
+  m->min -= (m->min % minute_interval);
   if( !vals[VALS_DAY] ) {
     // Every n:th day at x.
     if (!last)
@@ -1085,8 +1091,11 @@ string render_form( RequestID id, void|mapping additional_args )
     inp3 = HTML.select(path()+"4",
                        "000102030405060708091011121314151617181920212223"/2,
                        sprintf("%02d", vals[VALS_HOUR]));
+    //  NOTE: Any changes here must be reflected in "minute_interval" constant
+    array(string) min_options = "000510152025303540455055" / 2;
+    ASSERT_IF_DEBUG(sizeof(min_options) == 60 / minute_interval);
     inp4 = HTML.select(path()+"5",
-                       "000510152025303540455055"/2,
+                       min_options,
                        sprintf("%02d", vals[VALS_MINUTE]));
 
     res += "<tr valign='top'><td><input name='" + path() + "' value='2' type='radio' " +
