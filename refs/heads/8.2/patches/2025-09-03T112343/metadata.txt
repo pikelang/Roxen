@@ -1,0 +1,10 @@
+subject: Roxen 8.2: Fix internal tests following minute granularity change. Follow-up fix to support more granular minute options.
+from: 4788a18d6c14a0008515d51234a81476211bf9c6
+to: 36bc133850543357e9ffa319d481d9963a9675d8
+originator: Erik Allemann
+depends: 2025-09-03T092834
+restart: true
+
+• Fix internal tests following minute granularity change.
+
+• Follow-up fix to support more granular minute options.
