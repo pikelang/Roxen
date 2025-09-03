@@ -1,12 +1,12 @@
 // $Id$
 
-#include <roxen.h>
-
 //  Must match minute intervals in widget menu
 constant minute_interval = 5;
 
 
 #if constant(roxenp)
+#include <roxen.h>
+
 inherit /*Variable*/.Variable;
 
 //! This class implements a scheduler widget with three main states,
@@ -346,7 +346,7 @@ int main(int argc, array(string) argv)
       use_utc = 1;
       mapping(string:int) lt = localtime(when);
       lt->sec = 0;
-      lt->min -= (lt->min % minute_interval);
+      lt->min -= (lt->min % 15 /*minute_interval*/);
       mapping m;
       int got;
       if (val[3]) {
@@ -392,7 +392,7 @@ int main(int argc, array(string) argv)
       use_utc = 0;
       lt = localtime(when);
       lt->sec = 0;
-      lt->min -= (lt->min % minute_interval);
+      lt->min -= (lt->min % 15 /*minute_interval*/);
       if (val[3]) {
         m = next_or_same_day(lt, val[3] - 1, val[4], val[5]);
         got = mktime(m);
