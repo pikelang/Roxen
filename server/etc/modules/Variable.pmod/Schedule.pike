@@ -1086,7 +1086,7 @@ string render_form( RequestID id, void|mapping additional_args )
                        "000102030405060708091011121314151617181920212223"/2,
                        sprintf("%02d", vals[VALS_HOUR]));
     inp4 = HTML.select(path()+"5",
-                       "00153045"/2,
+                       "000510152025303540455055"/2,
                        sprintf("%02d", vals[VALS_MINUTE]));
 
     res += "<tr valign='top'><td><input name='" + path() + "' value='2' type='radio' " +
