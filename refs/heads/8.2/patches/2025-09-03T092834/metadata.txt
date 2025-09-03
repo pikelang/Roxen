@@ -1,0 +1,8 @@
+subject: Roxen 8.2: More options in minute selector.
+from: 4767731a4e313a082815869cdeea5635e9bbe2bb
+to: 4788a18d6c14a0008515d51234a81476211bf9c6
+originator: Erik Allemann
+depends: 2025-09-02T092215
+restart: true
+
+• More options in minute selector.
