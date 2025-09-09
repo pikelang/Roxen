@@ -1,0 +1,7 @@
+subject: Roxen 8.2: Sync with 8.2.441 release 2.
+from: 36bc133850543357e9ffa319d481d9963a9675d8
+to: 01dfb49b2465900bd0c7913dd7710f3a1d71716b
+originator: Henrik Grubbström (Grubba) <grubba@grubba.org>
+depends: 2025-09-03T112343
+
+Sync with 8.2.441 release 2.
