@@ -18,6 +18,11 @@ constant thread_safe=1;
 
 //<locale-token project="mod_filesystem">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_filesystem",X,Y)
+
+//<locale-token project="roxen_config"> CONFIG_LOCALE </locale-token>
+#define CONFIG_LOCALE(X,Y)    \
+  ([string](mixed)Locale.translate("roxen_config",roxenp()->locale->get(),X,Y))
+
 // end of the locale related stuff
 
 #ifdef FILESYSTEM_DEBUG
@@ -171,9 +176,16 @@ void create()
 	 LOCALE(28,"If set, it will be possible to upload files with the HTTP "
 		"method PUT, or through FTP."));
 
-  defvar("delete", 0, LOCALE(29,"Handle the DELETE method"), TYPE_FLAG,
-	 LOCALE(30,"If set, it will be possible to delete files with the HTTP "
-		"method DELETE, or through FTP."));
+  defvar("delete",
+         Variable.IntChoice(0,
+                            ([ 0: CONFIG_LOCALE("no", "No"),
+                               1: CONFIG_LOCALE("yes", "Yes"),
+                               2: LOCALE(0, "Pretend"),
+                            ]), 0,
+                            LOCALE(29,"Handle the DELETE method"),
+                            LOCALE(30,"If set, it will be possible to delete "
+                                   "files with the HTTP method DELETE, or "
+                                   "through FTP.")));
 
   defvar("check_auth", 1, LOCALE(31,"Require authentication for modification"),
 	 TYPE_FLAG,
@@ -1492,6 +1504,12 @@ mixed find_file( string f, RequestID id )
       id->misc->error_code = 405;
       TRACE_LEAVE("DELETE of internal file is disallowed");
       return 0;
+    }
+
+    if (query("delete") == 2) {
+      // Pretend.
+      TRACE_LEAVE("DELETE: Pretend");
+      return Roxen.http_status(204,(norm_f+" DELETED from the server"));
     }
 
     if (query("no_symlinks") && (contains_symlinks(path, f))) {
