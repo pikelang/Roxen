@@ -1,0 +1,3 @@
+Modified files:
+  etc/include/version.h
+  modules/filesystems/filesystem.pike
