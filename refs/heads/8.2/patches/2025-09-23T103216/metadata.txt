@@ -1,0 +1,10 @@
+subject: Roxen 8.2: [REPD-1558] Filesystem: Add pretend mode for supporting DELETE
+from: 01dfb49b2465900bd0c7913dd7710f3a1d71716b
+to: a47cebab32506a0f928ff8a202480dd0832d0c4d
+originator: Marcus Wellhardh
+depends: roxen/8.2.441|2025-09-09T175959
+restart: true
+
+• Filesystem: Add pretend mode for supporting DELETE.
+
+Fixes [REPD-1558].
