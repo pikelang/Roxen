@@ -597,7 +597,8 @@ class FSGarbWrapper(string id)
   {
     GC_WERR("FSGC: FSGarbWrapper %O destructed.\n", id);
     FSGarb g = m_delete(fsgarbs, id);
-    if (g) destruct(g);
+    // NB: Give the meta_fsgc thread a second to stop using the FSGarb.
+    if (g) call_out(destruct, 1, g);
   }
 
   protected string _sprintf(int c, mapping|void opts)
