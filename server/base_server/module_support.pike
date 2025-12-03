@@ -161,6 +161,8 @@ class BasicModule
         [_my_configuration, _module_local_identifier] = init_info;
         return _my_configuration->name + "/" + _module_local_identifier;
       }
+
+      werror("Unexpected bootstrap info: %O\n", init_info);
     }();
 
   void report_fatal(sprintf_format fmt, sprintf_args ... args)
@@ -356,7 +358,7 @@ class ModuleInfo( string sname, string filename )
       }
     }
     
-    string _sprintf()
+    protected string _sprintf()
     {
       return sprintf("LoadFailed(%s)", sname);
     }
@@ -404,6 +406,12 @@ class ModuleInfo( string sname, string filename )
       // There should be at least one configuration present here.
       roxenp()->configurations[0];
 
+    // NB: Save the bootstrap info in case of reentrancy
+    //     (eg via inherit "roxen-module://...").
+    array(mixed) save_bi = roxenp()->bootstrap_info->get();
+    roxenp()->bootstrap_info->set (({bootstrap_conf,
+                                     sname + "#" + copy_num}));
+
     roxenloader.ErrorContainer ec = roxenloader.ErrorContainer();
     roxenloader.push_compile_error_handler( ec );
     mixed err = catch
@@ -422,9 +430,6 @@ class ModuleInfo( string sname, string filename )
         }
       }
 
-      roxenp()->bootstrap_info->set (({bootstrap_conf,
-                                       sname + "#" + copy_num}));
-
       if (!prog) {
         throw(0);
       }
@@ -436,7 +441,7 @@ class ModuleInfo( string sname, string filename )
         ret = DisabledModule();
       }
 
-      roxenp()->bootstrap_info->set (0);
+      roxenp()->bootstrap_info->set (save_bi);
 
       if (conf && (type & MODULE_DEPRECATED)) {
         report_warning("Adding deprecated module %s to configuration %s.\n",
@@ -450,7 +455,7 @@ class ModuleInfo( string sname, string filename )
 
     RoxenModule ret = !silent && LoadFailed(filename && ec);
 
-    roxenp()->bootstrap_info->set (0);
+    roxenp()->bootstrap_info->set(save_bi);
 
     if( err ) {
       if( stringp( err ) )
