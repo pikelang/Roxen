@@ -176,7 +176,7 @@ mapping|int resolv_get_file(object c, object nid)
   return ([]);
 }
 
-void resolv_handle_request(object c, object nid)
+mixed resolv_handle_request(object c, object nid)
 {
   int again;
   mixed file;
@@ -203,7 +203,7 @@ void resolv_handle_request(object c, object nid)
     }
   } while(again);
 
-  if(!resolv_get_file(c, nid))
+  if(!file && !(file = resolv_get_file(c, nid)))
   {
     foreach(c->last_modules(), funp)
     {
@@ -211,10 +211,10 @@ void resolv_handle_request(object c, object nid)
       if(file = funp(nid)) {
         if (file == 1) {
           nid->misc->trace_enter("Returned recurse", 0);
-          resolv_handle_request(c, nid);
+          file = resolv_handle_request(c, nid);
           nid->misc->trace_leave("Recurse done");
           nid->misc->trace_leave("Last try done");
-          return;
+          return file;
         }
         nid->misc->trace_leave("Returns data");
         break;
@@ -222,6 +222,8 @@ void resolv_handle_request(object c, object nid)
         nid->misc->trace_leave("");
     }
   }
+
+  return file;
 }
 
 string parse( RequestID id )
@@ -372,7 +374,7 @@ string parse( RequestID id )
     hrvstart = gethrvtime();
 #endif
 
-    resolv_handle_request(nid->conf, nid);
+    mixed file = resolv_handle_request(nid->conf, nid);
 
     int endtime = HRTIME();
     string trace_timetype;
@@ -384,6 +386,74 @@ string parse( RequestID id )
     while(level>0)
       trace_leave_ol ("Trace nesting inconsistency!", endtime);
     res += resolv + "</ol>\n";
+
+    if (!mappingp(file)) {
+      if (nid->misc->error_code) {
+        file = Roxen.http_status(nid->misc->error_code,
+                     Roxen.http_status_messages[nid->misc->error_code]);
+      } else {
+        file = nid->conf->error_file(nid);
+      }
+    }
+
+    // Describe the contents of file.
+    // Cf protocols/http.pike:send_result() for some special cases.
+
+    res +=
+      "<p>Result:<br />\n"
+      "<dl>\n";
+
+    do {
+      if ((file->file == -1) || (file->leave_me)) {
+        // Pipe in progress.
+        res += "<dd><b>Pipe in progress<b></dd>\n";
+        break;
+      }
+
+      if ((file->type == "raw") || file->raw) {
+        res += "<dd>Raw mode</dd>\n";
+        file->raw = 1;
+      } else {
+        // Not raw mode.
+        if ((sizeof(file) <= 1) && nid->multi_status) {
+          file = nid->multi_status->http_answer();
+        }
+
+        res += sprintf("<dd>Status: <b>%d</b> %s</dd>\n",
+                       file->error,
+                       Roxen.html_encode_string(file->rettext ||
+                             Roxen.http_status_messages[file->error] || ""));
+
+        if (file->error == Protocols.HTTP.HTTP_NO_CONTENT) {
+          file->len = 0;
+          file->data = "";
+        }
+
+        res += "<dd><hr/></dd>\n";
+
+        mapping(string:string) heads = nid->make_response_headers(file);
+        array(string) h = indices(heads);
+        sort(map(h, lower_case), h);
+        foreach(h, string header) {
+          res += "<dd>" + Roxen.html_encode_string(header) + ": <tt>" +
+            Roxen.html_encode_string(heads[header] || "") + "</tt></dd>\n";
+        }
+
+        res += "<dd><hr/></dd>\n";
+
+        if (file->data) {
+          res += sprintf("<dd>Data: %d character string.</dd>\n",
+                         sizeof(file->data));
+        }
+        if (objectp(file->file)) {
+          res += sprintf("<dd>File: <tt>%s</tt></dd>\n",
+                         Roxen.html_encode_string(sprintf("%O", file->file)));
+        }
+      }
+    } while(0);
+
+    res += "</dl>\n"
+      "</p>\n";
 
     if (trace_timetype) {
       res += format_time (hrrstart, hrvstart, endtime);
