@@ -752,6 +752,7 @@ class LSFile
       session = RequestID2(session || master_session);
       session->method = "DIR";
       long = replace(long, "//", "/");
+      session->raw_url = session->not_query = long;
       st = session->conf->stat_file(long, session);
       stat_cache[long] = st;
       destruct(session);
@@ -914,6 +915,7 @@ class LSFile
       }
       RequestID session = RequestID2(master_session);
       session->method = "DIR";
+      session->raw_url = session->not_query = long;
 
       mixed err;
       mapping(string:array) dir;
@@ -995,7 +997,7 @@ class LSFile
       }
       session = RequestID2(master_session);
       session->method = "LIST";
-      session->not_query = long;
+      session->raw_url = session->not_query = long;
       session->conf->log(([ "error":200, "len":sizeof(listing) ]), session);
     }
     if (!dir_stack->ptr) {
@@ -1087,6 +1089,7 @@ class LSFile
       RequestID session = RequestID2(master_session);
       session->method = "LIST";
       string long = fix_path(short);
+      session->raw_url = session->not_query = long;
       array|object st = stat_file(long, session);
       if (st) {
         if ((< -2, -3 >)[st[1]] &&
@@ -1124,7 +1127,7 @@ class LSFile
       string s = list_files(files, cwd);	// May modify dir_stack (-R)
       output(s);
       RequestID session = RequestID2(master_session);
-      session->not_query = Array.map(files, fix_path) * " ";
+      session->raw_url = session->not_query = Array.map(files, fix_path) * " ";
       session->method = "LIST";
       session->conf->log(([ "error":200, "len":sizeof(s) ]), session);
       destruct(session);
@@ -2039,7 +2042,7 @@ class FTPSession
 
     session = RequestID2(session || master_session);
     session->method = "STAT";
-    session->not_query = fname;
+    session->raw_url = session->not_query = fname;
 
     foreach(conf->first_modules(), function funp) {
       if ((file = funp(session))) {
@@ -2139,7 +2142,7 @@ class FTPSession
 
     // The caller is assumed to have made a new session object for us
     // but not to set not_query in it..
-    session->not_query = fname;
+    session->raw_url = session->not_query = fname;
 
     if (objectp(file) || arrayp(file)) {
       array|object st = file;
@@ -2607,7 +2610,9 @@ class FTPSession
               array(string) dir;
               RequestID id = RequestID2(master_session);
               id->method = "LIST";
-              dir = id->conf->find_dir(combine_path(cwd, path*"/")+"/", id);
+              string long = combine_path(cwd, path*"/")+"/";
+              id->raw_url = id->not_query = long;
+              dir = id->conf->find_dir(long, id);
               if (dir && sizeof(dir)) {
                 dir = glob(part, dir);
                 if ((< '*', '?' >)[part[0]]) {
@@ -2657,7 +2662,8 @@ class FTPSession
                                         object m_id) {
                                    object id = RequestID2(m_id);
                                    id->method = "LIST";
-                                   id->not_query = combine_path(cwd, short);
+                                   id->raw_url =
+                                     id->not_query = combine_path(cwd, short);
                                    mapping res =
                                      id->conf->stat_file(id->not_query, id);
                                    destruct(id);
@@ -2794,7 +2800,7 @@ class FTPSession
     RequestID session = RequestID2(master_session);
     session->method = "LIST";
     // For logging purposes...
-    session->not_query = Array.map(argv[1..], fix_path)*" ";
+    session->raw_url = session->not_query = Array.map(argv[1..], fix_path)*" ";
 
     mapping file = ([]);
 
@@ -3326,7 +3332,7 @@ class FTPSession
     cwd = "/";
     master_session->method = "LOGIN";
     if ((< 0, "", "ftp", "anonymous" >)[user]) {
-      master_session->not_query = "Anonymous";
+      master_session->raw_url = master_session->not_query = "Anonymous";
       user = 0;
       if (port_obj->query_option("anonymous_ftp")) {
         if (check_login()) {
@@ -3359,7 +3365,7 @@ class FTPSession
       }
       if (check_login()) {
         send(331, ({ sprintf(LOCALE(118, "Password required for %s."), user) }));
-        master_session->not_query = user;
+        master_session->raw_url = master_session->not_query = user;
         conf->log(([ "error":407 ]), master_session);
       } else {
         // Session limit exceeded.
@@ -3382,7 +3388,8 @@ class FTPSession
         if (login()) {
           send(230, ({ LOCALE(120, "Guest login ok, access restrictions apply.") }));
           master_session->method = "LOGIN";
-          master_session->not_query = "Anonymous User:"+args;
+          master_session->raw_url = master_session->not_query =
+            "Anonymous User:"+args;
           conf->log(([ "error":200 ]), master_session);
           logged_in = -1;
         } else {
@@ -3415,7 +3422,7 @@ class FTPSession
     args = "CENSORED_PASSWORD";	// Censored in case of backtrace.
     master_session->method = "LOGIN";
     master_session->realauth = user + ":" + password;
-    master_session->not_query = user;
+    master_session->raw_url = master_session->not_query = user;
 
     master_session->misc->user = user;           // Loophole for new API
     master_session->misc->password = password;  // Otherwise we have to emulate
@@ -3506,6 +3513,7 @@ class FTPSession
 
       RequestID2 stat_session = RequestID2(master_session);
       stat_session->method = "STAT";
+      stat_session->raw_url = stat_session->not_query = home;
       array(int)|object st = conf->stat_file(home, stat_session);
       destruct(stat_session);
 
@@ -3534,7 +3542,7 @@ class FTPSession
 
     object session = RequestID2(master_session);
     session->method = "CWD";
-    session->not_query = ncwd;
+    session->raw_url = session->not_query = ncwd;
 
     array|object st = conf->stat_file(ncwd, session);
     ncwd = session->not_query; // Makes internal redirects to work.
@@ -3614,7 +3622,7 @@ class FTPSession
     send(0, 0);		// EOF marker.
 
     master_session->method = "QUIT";
-    master_session->not_query = user || "Anonymous";
+    master_session->raw_url = master_session->not_query = user || "Anonymous";
     conf->log(([ "error":200 ]), master_session);
 
     // Reinitialize the connection.
@@ -3885,7 +3893,7 @@ class FTPSession
     RequestID session = RequestID2(master_session);
 
     session->method = "GET";
-    session->not_query = args;
+    session->raw_url = session->not_query = args;
 
     mapping file;
     if (file = open_file(args, session, "RETR")) {
@@ -3998,7 +4006,7 @@ class FTPSession
 
     session->method = "MV";
     session->misc->move_from = rename_from;
-    session->not_query = args;
+    session->raw_url = session->not_query = args;
     if (open_file(args, session, "MOVE")) {
       send(250, ({ sprintf(LOCALE(165, "%s moved to %s."), rename_from, args) }));
       session->conf->log(([ "error":200 ]), session);
@@ -4034,6 +4042,7 @@ class FTPSession
 
     session->method = "DIR";
 
+    session->raw_url = session->not_query = long;
     array|object st = stat_file(long, session);
 
     if (st) {
@@ -4054,6 +4063,7 @@ class FTPSession
 
     session->method = "DIR";
 
+    session->raw_url = session->not_query = args;
     array|object st = stat_file(args, session);
 
     if (st && (st[1] < 0)) {
@@ -4179,6 +4189,7 @@ class FTPSession
     session->misc->len = 0;
     session->method = "DELETE";
 
+    session->raw_url = session->not_query = args;
     array|object st = stat_file(args, session);
 
     if (!st) {
@@ -4536,7 +4547,7 @@ class FTPSession
 
     session->method = "CHMOD";
     session->misc->mode = mode;
-    session->not_query = fname;
+    session->raw_url = session->not_query = fname;
     if (open_file(fname, session, "CHMOD")) {
       send(250, ({ sprintf(LOCALE(193, "Changed permissions of %s to 0%o."),
                            fname, mode) }));
@@ -4608,7 +4619,8 @@ class FTPSession
           destruct(pasv_port);
         }
         master_session->method = "QUIT";
-        master_session->not_query = user || "Anonymous";
+        master_session->raw_url = master_session->not_query =
+          user || "Anonymous";
         master_session->conf->log(([ "error":408 ]), master_session);
       } else {
         // Not time yet to sever the connection.
@@ -4798,7 +4810,7 @@ class FTPSession
     }
 
     master_session->method = "QUIT";
-    master_session->not_query = user || "Anonymous";
+    master_session->raw_url = master_session->not_query = user || "Anonymous";
     conf->log(([ "error":204, "request_time":(time(1)-master_session->time) ]),
               master_session);
     // Make sure we disappear...
