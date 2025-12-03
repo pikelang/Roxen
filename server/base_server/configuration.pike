@@ -1892,7 +1892,7 @@ string examine_return_mapping(mapping m)
 
    if (m->extra_heads)
       m->extra_heads=mkmapping(Array.map(indices(m->extra_heads),
-                                         lower_case),
+                                         Roxen.canonicalize_http_header),
                                values(m->extra_heads));
    else
       m->extra_heads=([]);
@@ -1901,16 +1901,16 @@ string examine_return_mapping(mapping m)
    {
       case 302: // redirect
          if (m->extra_heads &&
-             (m->extra_heads->location))
-           res = sprintf("Returned redirect to %O ", m->extra_heads->location);
+             (m->extra_heads->Location))
+           res = sprintf("Returned redirect to %O ", m->extra_heads->Location);
          else
            res = "Returned redirect, but no location header. ";
          break;
 
       case 401:
-         if (m->extra_heads["www-authenticate"])
+         if (m->extra_heads["WWW-Authenticate"])
            res = sprintf("Returned authentication failed: %O ",
-                         m->extra_heads["www-authenticate"]);
+                         m->extra_heads["WWW-Authenticate"]);
          else
            res = "Returned authentication failed. ";
          break;
@@ -1946,9 +1946,9 @@ string examine_return_mapping(mapping m)
    else if (m->file) res += "(open file)";
    else if (m->upgrade_websocket) res += "(upgrade to websocket)";
 
-   if (stringp(m->extra_heads["content-type"]) ||
+   if (stringp(m->extra_heads["Content-Type"]) ||
        stringp(m->type)) {
-      res += sprintf(" of %O", m->type||m->extra_heads["content-type"]);
+      res += sprintf(" of %O", m->type||m->extra_heads["Content-Type"]);
    }
 
    return res;
@@ -2563,7 +2563,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
         LOCK(tmp[1]);
         fid=tmp[1]( file[ strlen(loc) .. ] + id->extra_extension, id);
         UNLOCK();
-        TRACE_LEAVE("");
+        TRACE_LEAVE(sprintf("find_file returned: %O", fid));
         PROF_LEAVE(Roxen.get_owning_module(tmp[1])->module_name,"location");
         if(fid)
         {
@@ -2661,6 +2661,9 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     {
       TRACE_LEAVE("Returning data");
       return (mapping)fid;
+    } else if (!fid) {
+      TRACE_LEAVE("No such directory.");
+      return 0;
     }
   }
 
