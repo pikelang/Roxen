@@ -3674,15 +3674,15 @@ class MultiStatusStatus
     // we have it in the responsedescription instead.
     node->add_child(SimpleTextNode(sprintf("HTTP/1.1 %d ", http_code)));
 
-    if (message) {
-      if (stringp(message)) {
-        //  Delayed XML node creation so we get expected namespace
-        SimpleNode node = SimpleElementNode("DAV:responsedescription", ([]));
-        node->add_child(SimpleTextNode(message||""));
-        response_node->add_child(node);
-      } else {
-        response_node->add_child(message);
-      }
+    if (!message || (message == "")) message = "XX";
+
+    if (stringp(message)) {
+      //  Delayed XML node creation so we get expected namespace
+      SimpleNode node = SimpleElementNode("DAV:responsedescription", ([]));
+      node->add_child(SimpleTextNode(message));
+      response_node->add_child(node);
+    } else {
+      response_node->add_child(message);
     }
   }
 
@@ -4118,7 +4118,7 @@ class MultiStatus
               !sizeof(cs[0]->get_children())) {
             buf->add(DAV_PRETTY("    ") "<status>HTTP/1.1 ",
                      (string)n->http_code,
-                     " </status>" DAV_PRETTY("\n")
+                     " XX</status>" DAV_PRETTY("\n")
                      DAV_PRETTY("    ") "<error>" DAV_PRETTY("\n")
                      DAV_PRETTY("      ") "<", cs[0]->get_full_name(), "/>"
                      DAV_PRETTY("\n")
@@ -4207,7 +4207,7 @@ class MultiStatus
           }
           buf->add(DAV_PRETTY("      ") "</prop>" DAV_PRETTY("\n")
                    DAV_PRETTY("      ") "<status>HTTP/1.1 ", http_code,
-                   " </status>" DAV_PRETTY("\n")
+                   " XX</status>" DAV_PRETTY("\n")
                    DAV_PRETTY("    ") "</propstat>" DAV_PRETTY("\n"));
           good = 1;
         }
