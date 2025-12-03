@@ -635,6 +635,15 @@ private
       // Typically a string like "5.5.30", "5.5.39-MariaDB" or
       // "10.0.13-MariaDB".
     };
+    if (!db_version) {
+      // In MariaDB 11 the file seems to have been renamed.
+      catch {
+        db_version =
+          Stdio.read_bytes(combine_path(roxenloader.query_mysql_data_dir(),
+                                        "mariadb_upgrade_info"));
+        // Typically a string like "11.4.7-MariaDB".
+      };
+    }
     db_version = db_version && (db_version - "\n");
     // MariaDB 10.3 ends the entry with a \0 instead of a \n.
     db_version = db_version && (db_version - "\0");
@@ -671,6 +680,7 @@ private
 #endif
                                      "-S", roxenloader.query_mysql_socket(),
                                      "--user=rw",
+                                     "--force",	// Needed for minor upgrades.
                                      // "--verbose",
                                   }))->wait();
         if (err) {
@@ -1302,6 +1312,19 @@ private class SqlSqlStaleChecker (protected Sql.Sql sql)
   protected mixed `->( string i )
   {
     return `[](i);
+  }
+  protected string _sprintf(int c)
+  {
+    if (c != 'O') return UNDEFINED;
+    return sprintf("%O(%O)", object_program(this), sql);
+  }
+
+  protected void destroy(int cause)
+  {
+    if (!cause) {	// Explicit destruct.
+      master()->handle_error(({ sprintf("%O: Explicit destruct!\n", this),
+                                backtrace() }));
+    }
   }
 }
 #endif
@@ -3327,8 +3350,7 @@ protected void create()
         "  comment blob not null, "
         "  pattern varchar(255) not null default '')");
 
-  catch(query("INSERT INTO groups (name,lname,comment,pattern) VALUES "
-      " ('internal','Uncategorized','Databases without any group','')"));
+  create_group("internal", "Uncategorized", "Databases without any group", "");
 
   query("CREATE TABLE IF NOT EXISTS module_tables ("
         "  conf varchar(80) not null, "
