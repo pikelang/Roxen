@@ -1,4 +1,2 @@
 # The Java module is not needed by REP.
 java
-modules/scripting/servlet.pike
-modules/scripting/webapp.pike

@@ -1,3 +1,2 @@
-snmpagent.pike
 # The Java module is not needed by REP.
-javamodule.pike
+java.pike
