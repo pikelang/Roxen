@@ -504,6 +504,18 @@ public class Session
           }
         }
 
+        // FIXME: This is just pure wrong. If data is JSON this will be
+        //        appended to the JSON data, which will end up being invalid
+        //        JSON. This is a brain fart mundial. I really don't know what
+        //        I was thinking when I wrote this code.
+        //
+        //        I don't feel like messing with this code ATM, but a workaround
+        //        if you end up here when posting both data and passing
+        //        query variables, is to explicitly set the content length
+        //        header yourself.
+        //
+        //        I guess all this query variable mess in this block can be
+        //        removed alltogether.
         if (sizeof(data) && query_variables) {
           data += "&" + Protocols.HTTP.http_encode_query(query_variables);
         }
