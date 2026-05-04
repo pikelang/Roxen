@@ -2235,6 +2235,10 @@ class Protocol
       // We choose the last entry in sorted_urls since that's the most
       // generic one and therefore probably the best option for a
       // fallback.
+      if (!sizeof(urls) || !sizeof(sorted_urls)) {
+        URL2CONF_MSG("%O %O No configured URLs!\n", this, url);
+        return UNDEFINED;
+      }
       url_data = urls[sorted_urls[-1]];
       if (id) {
         id->misc->defaulted_conf = 4;
