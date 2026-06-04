@@ -4044,6 +4044,66 @@ protected int eaccess(string path, void|string mode)
 }
 #endif
 
+#ifndef SMTP_RELAY
+// Simulate relay() with /usr/lib/sendmail.
+void relay(string sender, string email_user, string email_host,
+           Stdio.File msg_file)
+{
+  string sendmail_bin;
+#ifndef __NT__
+  sendmail_bin = Process.search_path("sendmail");
+  if (!sendmail_bin) {
+    // Look in some common places.
+    foreach(({ "/sbin/sendmail", "/usr/sbin/sendmail",
+               "/usr/lib/sendmail", "/usr/lib64/sendmail" }),
+            string path) {
+      if (Stdio.exist(path)) {
+        sendmail_bin = path;
+        break;
+      }
+    }
+  }
+#endif
+  if (!sendmail_bin) {
+    report_debug("No sendmail binary found.\n"
+                 "You may want to enable SMTP_RELAY.\n");
+  } else {
+    mapping(string:string) sendmail_env = ([]);
+#if constant(geteuid)
+    if (geteuid()) {
+      string home_dir = getenv("HOME");
+      // Some wrapper scripts for /lib/sendmail apparently
+      // store temporary files in $HOME.
+      //
+      // Set up a temporary home dir if we can't write to $HOME.
+      if (!home_dir || !eaccess(home_dir, "w")) {
+        home_dir = sprintf("/tmp/roxen-home-%d", geteuid());
+        mkdir(home_dir, 0744);
+      }
+      sendmail_env["HOME"] = home_dir;
+    }
+#endif
+    Stdio.File fd = Stdio.File();
+    Process.Process p =
+      Process.Process(({ sendmail_bin,
+                         email_user + "@" + email_host,
+                      }),
+                      ([ "stdin": fd->pipe(),
+                         "env": sendmail_env,
+                      ]));
+    if (p) {
+      string msg = msg_file->read();
+      fd->write(msg);
+      fd->close();
+      p->wait();
+    } else {
+      report_debug("Failed to spawn sendfile binary.\n");
+      fd->close();
+    }
+  }
+}
+#endif
+
 #ifndef __NT__
 protected int abs_started;
 protected int handlers_alive;
@@ -4150,61 +4210,9 @@ void engage_abs(int n, Stdio.Buffer|void abs_buf)
                                            gethostname()),
                    ]));
     msg->setcharset("utf8");
-#ifdef SMTP_RELAY
+
     array(string) a = query("abs_email")/"@";
     relay(query("abs_sender"), a[0], a[1], Stdio.FakeFile((string)msg));
-#else
-    string sendmail_bin;
-#ifndef __NT__
-    sendmail_bin = Process.search_path("sendmail");
-    if (!sendmail_bin) {
-      // Look in some common places.
-      foreach(({ "/sbin/sendmail", "/usr/sbin/sendmail",
-                 "/usr/lib/sendmail", "/usr/lib64/sendmail" }),
-              string path) {
-        if (Stdio.exist(path)) {
-          sendmail_bin = path;
-          break;
-        }
-      }
-    }
-#endif
-    if (!sendmail_bin) {
-      report_debug("No sendmail binary found.\n"
-                   "You may want to enable SMTP_RELAY.\n");
-    } else {
-      mapping(string:string) sendmail_env = ([]);
-#if constant(geteuid)
-      if (geteuid()) {
-        string home_dir = getenv("HOME");
-        // Some wrapper scripts for /lib/sendmail apparently
-        // store temporary files in $HOME.
-        //
-        // Set up a temporary home dir if we can't write to $HOME.
-        if (!home_dir || !eaccess(home_dir, "w")) {
-          home_dir = sprintf("/tmp/roxen-home-%d", geteuid());
-          mkdir(home_dir, 0744);
-        }
-        sendmail_env["HOME"] = home_dir;
-      }
-#endif
-      Stdio.File fd = Stdio.File();
-      Process.Process p =
-        Process.Process(({ sendmail_bin,
-                           query("abs_email"),
-                        }),
-                        ([ "stdin": fd->pipe(),
-                           "env": sendmail_env,
-                        ]));
-      if (p) {
-        fd->write((string)msg);
-        fd->close();
-        p->wait();
-      } else {
-        fd->close();
-      }
-    }
-#endif
   }
   low_engage_abs();
 }
