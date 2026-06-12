@@ -432,3 +432,8 @@ i.timing {
     opacity: 0.4;
     cursor: default;
 }
+
+/* Fix top-level tab bar click targets */
+body > table:first-child > tbody > tr:last-child > td > a {
+    display: inline-block;
+}
