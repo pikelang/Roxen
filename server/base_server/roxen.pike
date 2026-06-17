@@ -8189,9 +8189,11 @@ protected LogFormat compile_log_format( string fmt )
 {
   add_constant( "___LogFormat", LogFormat );
 
-  // Note similar code in compile_security_pattern.
+  // NOTE: Similar code in compile_security_pattern().
 
-  string kmd5 = md5( fmt );
+  // NB: Suffix with \0UTF8 to force recompilation of patterns
+  //     from before mandatory utf-8 encoding of the log entries.
+  string kmd5 = md5( fmt + "\0UTF8" );
 
   object con = dbm_cached_get("local");
 
@@ -8337,11 +8339,11 @@ protected LogFormat compile_log_format( string fmt )
   }
 
   a_func += sprintf(#"
-      string data = sprintf( %O%{,
-        %s%} );", a_format, a_args );
+      string data = string_to_utf8(sprintf( %O%{,
+        %s%} ));", a_format, a_args );
   e_func += sprintf(#"
-      string data = sprintf( %O%{,
-        %s%} );", e_format, e_args );
+      string data = string_to_utf8(sprintf( %O%{,
+        %s%} ));", e_format, e_args );
  
   if (log_flags & LOG_ASYNC_HOST)
   {
