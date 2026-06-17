@@ -304,7 +304,7 @@ void run_tests( Configuration c )
 
 
   array(string) logged;
-  void do_log( string what ) {  logged = what/"\23417";  };
+  void do_log( string what ) {  logged = utf8_to_string(what)/"\23417";  };
   
   time();
   test( roxen.run_log_format, format1, do_log, http_id, fake_response );
