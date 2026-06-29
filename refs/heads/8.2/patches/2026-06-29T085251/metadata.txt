@@ -1,0 +1,12 @@
+subject: Roxen 8.2: Testsuite: Fix fall-out from utf8 encoding of access log.  [EP-2462] Core: compile_log_format() now UTF-8 encodes the data to write.
+from: a47cebab32506a0f928ff8a202480dd0832d0c4d
+to: 4f7c6476a3833879da91e9e2ae266bdfd86ca9d3
+originator: Erik Allemann
+depends: 2025-09-23T103216
+restart: true
+
+• Testsuite: Fix fall-out from utf8 encoding of access log.
+
+• Core: compile_log_format() now UTF-8 encodes the data to write.
+
+Fixes [EP-2462].
