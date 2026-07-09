@@ -30,11 +30,11 @@ string get_locale();
 #endif /* !__LOCALEOBJECT */
 
 #ifndef _STR_LOCALE
-#define _STR_LOCALE(X, Y, Z)    Locale.translate(X, __LOCALE(), Y, Z)
+#define _STR_LOCALE(X, Y, Z)    ((Y)?Locale.translate(X, __LOCALE(), Y, Z):(Z))
 #endif /* !_STR_LOCALE */
 
 #ifndef _DEF_LOCALE
-#  define _DEF_LOCALE(X, Y, Z) ([object(Locale.DeferredLocale)|string]((mixed)Locale.DeferredLocale(X,__LOCALE,Y,Z)))
+#  define _DEF_LOCALE(X, Y, Z) ([object(Locale.DeferredLocale)|string]((mixed)(Y)?Locale.DeferredLocale(X,__LOCALE,Y,Z):(Z)))
 #endif /* !_DEF_LOCALE */
 
 #ifndef _LOCALE_FUN
