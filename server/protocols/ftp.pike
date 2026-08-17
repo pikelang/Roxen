@@ -4878,7 +4878,12 @@ class FTPSession
     }
 
     master_session = RequestID2();
-    master_session->remoteaddr = (fd->query_address()/" ")[0];
+    string addr = fd->query_address();
+    if (!addr) {
+      werror("Failed to get remote address for %O: Error: %d: %s\n",
+             fd, fd->errno(), strerror(fd->errno()));
+    }
+    master_session->remoteaddr = (addr/" ")[0];
     master_session->conf = conf;
     master_session->port_obj = c;
     master_session->my_fd = fd;
@@ -4886,7 +4891,12 @@ class FTPSession
     master_session->misc->pref_languages = PrefLanguages();
     ::create(fd, got_command, 0, con_closed, ([]));
 
-    array a = fd->query_address(1)/" ";
+    addr = fd->query_address(1);
+    if (!addr) {
+      werror("Failed to get local address for %O: Error: %d: %s\n",
+             fd, fd->errno(), strerror(fd->errno()));
+    }
+    array a = addr/" ";
     local_addr = a[0];
     local_port = (int)a[1];
     e_mode = has_value(local_addr, ":")?"2":"1";
