@@ -4865,8 +4865,23 @@ class FTPSession
       use_ssl = SSL_ALL;
     }
 
+    string addr = fd->query_address();
+    if (!addr) {
+      if (fd->errno() == System.ENOTCONN) {
+        // Race with the kernel of some OSes (eg Linux) where
+        // the peer has already sent an RST. This has been
+        // observed with the Nagios connection tester.
+        //
+        // Close our end and abort this connection.
+        fd->close();
+        destruct();
+        return;
+      }
+      werror("Failed to get remote address for %O: Error: %d: %s\n",
+             fd, fd->errno(), strerror(fd->errno()));
+    }
     master_session = RequestID2();
-    master_session->remoteaddr = (fd->query_address()/" ")[0];
+    master_session->remoteaddr = (addr/" ")[0];
     master_session->conf = conf;
     master_session->port_obj = c;
     master_session->my_fd = fd;
@@ -4918,6 +4933,9 @@ void create(object f, object c)
       // the connection during long uploads.
       f->set_keepalive(1);
     }
-    FTPSession(f, c);
+    if (!FTPSession(f, c)) {
+      // FTPSession self-destructed.
+      destruct();
+    }
   }
 }
