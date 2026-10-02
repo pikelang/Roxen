@@ -93,6 +93,7 @@
 #include <stat.h>
 
 //#define FTP2_DEBUG
+//#define FTP2_TELNET_DEBUG
 
 #define FTP2_XTRA_HELP ({ "Report any bugs at http://community.roxen.com/crunch/" })
 
@@ -107,6 +108,14 @@
 # define DWRITE(X ...)	werror(X)
 #else
 # define DWRITE(X ...)
+#endif
+
+// CAVEAT EMPTOR: Enabling this option will cause any passwords
+//                provided via PASS to appear in the debug log!
+#ifdef FTP2_TELNET_DEBUG
+# define TDWRITE(X ...)	werror(X)
+#else
+# define TDWRITE(X ...)
 #endif
 
 //<locale-token project="prot_ftp">LOCALE</locale-token>
@@ -1219,7 +1228,7 @@ class TelnetSession {
           }
         } else {
           // Error.
-          DWRITE("TELNET: write failed: errno:%d\n", fd->errno());
+          TDWRITE("TELNET: write failed: errno:%d\n", fd->errno());
           BACKEND_CLOSE(fd);
         }
       } else {
@@ -1229,7 +1238,7 @@ class TelnetSession {
         fd->set_write_callback(0);
 
         if (write_cb) {
-          DWRITE("TELNET: Write callback with nothing to send.\n");
+          TDWRITE("TELNET: Write callback with nothing to send.\n");
         }
       }
     } else {
@@ -1262,7 +1271,7 @@ class TelnetSession {
 
   private void got_oob(mixed ignored, string s)
   {
-    DWRITE("TELNET: got_oob(\"%s\")\n", s);
+    TDWRITE("TELNET: got_oob(\"%s\")\n", s);
 
     sync = sync || (s == "\377");
     if (cb["URG"]) {
@@ -1273,10 +1282,10 @@ class TelnetSession {
   private string rest = "";
   private void got_data(mixed ignored, string s)
   {
-    DWRITE("TELNET: got_data(\"%s\")\n", s);
+    TDWRITE("TELNET: got_data(\"%s\")\n", s);
 
     if (sizeof(s) && (s[0] == 242)) {
-      DWRITE("TELNET: Data Mark\n");
+      TDWRITE("TELNET: Data Mark\n");
       // Data Mark handing.
       s = s[1..];
       sync = 0;
@@ -1303,7 +1312,7 @@ class TelnetSession {
           if (sizeof(part)) {
             string name = TelnetCodes[part[0]];
 
-            DWRITE("TELNET: Code %s\n", name || "Unknown");
+            TDWRITE("TELNET: Code %s\n", name || "Unknown");
 
             int j;
             function fun;
@@ -1371,11 +1380,11 @@ class TelnetSession {
       }
       if (lineno < (sizeof(lines)-1)) {
         if ((!sync) && read_cb) {
-          DWRITE("TELNET: Calling read_callback(X, \"%s\")\n", line);
+          TDWRITE("TELNET: Calling read_callback(X, \"%s\")\n", line);
           read_cb(id, line);
         }
       } else {
-        DWRITE("TELNET: Partial line is \"%s\"\n", line);
+        TDWRITE("TELNET: Partial line is \"%s\"\n", line);
         rest = line;
       }
     }
@@ -4661,7 +4670,11 @@ class FTPSession
 
   private void got_command(mixed ignored, string line)
   {
-    DWRITE("FTP2: got_command(X, \"%s\")\n", line);
+    if (!has_prefix(upper_case(line), "PASS ")) {
+      DWRITE("FTP2: got_command(X, %O)\n", line);
+    } else {
+      DWRITE("FTP2: got_command(X, %O)\n", "PASS CENSORED_PASSWORD");
+    }
 
     touch_me();
 
