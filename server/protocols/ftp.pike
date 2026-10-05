@@ -2894,8 +2894,9 @@ class FTPSession
                    lt->hour, lt->min, lt->sec);
   }
 
-  mapping(string:string) make_MLSD_facts(string f, mapping(string:array) dir,
-                                        object session)
+  mapping(string:string) make_MLSD_facts(string f,
+                                         mapping(string:array|Stdio.Stat) dir,
+                                         object session)
   {
     array st = dir[f];
 
@@ -2907,6 +2908,7 @@ class FTPSession
       facts->size = (string)st[1];
       facts->type = "file";
       if (current_mlst_facts["media-type"]) {
+        // FIXME: Consider using master_session here.
         string|array(string) ct = session->conf->type_from_filename(f);
         if (arrayp(ct)) {
           ct = (sizeof(ct) > 1) && ct[1];
@@ -4090,8 +4092,15 @@ class FTPSession
       }
       dir["."] = stat_file(combine_path(args));
 
+      // NOTE: send_MLSD_response() is asynchronous, and may thus
+      //       propagate the session object to a different thread.
+      //       Our handler thread session will terminate when we
+      //       return, but the session object is still potentially
+      //       (even likely) alive. The threadbound session objects
+      //       MUST therefore be terminated here.
+      session->destruct_threadbound_session_objects();
+
       send_MLSD_response(dir, session);
-      // NOTE: send_MLSD_response is asynchronous!
     } else {
       if (st) {
         session->file->error = 405;
