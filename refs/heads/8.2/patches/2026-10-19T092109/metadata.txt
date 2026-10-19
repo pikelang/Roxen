@@ -1,0 +1,10 @@
+subject: Roxen 8.2: [SRD-108] FTP: Do not complain about connections that the peer closed before accept().
+from: 4f7c6476a3833879da91e9e2ae266bdfd86ca9d3
+to: 261d80544b8cf4627c22c040dc724f99c22914a0
+originator: Erik Allemann
+depends: 2026-06-29T085251
+restart: true
+
+• FTP: Do not complain about connections that the peer closed before accept().
+
+Potential fix for [SRD-108].
