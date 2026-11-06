@@ -2856,15 +2856,19 @@ private void sq_cache_free(Sql.Sql real, string db_name, int reuse_in_thread)
 #endif
   if( !--sql_active_list[db_name] )
     m_delete( sql_active_list, db_name );
+  if( sizeof( sql_free_list[ db_name ] || ({}) ) >= 20 )
+  {
+    // Enough free connections to this database: close this one, not
+    // the free ones. Clearing all free connections when there were
+    // more than 20 made every handler thread connect anew under load,
+    // as connections come back through the handler queue (see SQLKey).
+#ifdef DB_DEBUG
+    werror("Free list full. Closing the connection.\n" );
+#endif
+    return;
+  }
   sql_free_list[ db_name ] = ({ SQLTimeout(real) }) +
     (sql_free_list[ db_name ]||({}));
-  if( `+( 0, @map(values( sql_free_list ),sizeof ) ) > 20 )
-  {
-#ifdef DB_DEBUG
-    werror("Free list too large. Cleaning.\n" );
-#endif
-    clear_connect_to_my_mysql_cache();
-  }
 #else
   // Slow'R'us
   call_out(gc,0);

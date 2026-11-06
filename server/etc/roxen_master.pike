@@ -1072,6 +1072,17 @@ void create()
     add_constant(e, o[e]);
 }
 
+//! The original master runs the backend once Roxen's main() has
+//! returned, and notes that in a private variable of its own, which
+//! this master neither copies nor sets: asyncp() returned 0 for good,
+//! so that SQL connections were closed instead of reused ("still
+//! booting" in roxenloader's SQLKey), as SSL.File and Cache took Roxen
+//! to be synchronous.
+int(0..1) asyncp()
+{
+  return mm->asyncp();
+}
+
 #if __REAL_VERSION__ >= 7.7
 
 local object get_compat_master(int major, int minor)
