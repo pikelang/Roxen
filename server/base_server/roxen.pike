@@ -6752,6 +6752,19 @@ void describe_thread (Thread.Thread thread)
   report_debug(">> " + replace (th_bt, "\n", "\n>> ") + "\n");
 }
 
+// The handler of the signals that dump the threads. It runs in a
+// signal context, where Pike 9 doesn't allow _disable_threads() (nor
+// locking mutexes), so describe_all_threads() failed at once: dump
+// from a thread of its own.
+protected void describe_all_threads_from_signal (mixed ... ignored)
+{
+#ifdef THREADS
+  Thread.Thread (describe_all_threads);
+#else
+  describe_all_threads();
+#endif
+}
+
 // Dump all threads to the debug log.
 void describe_all_threads (void|int ignored, // Might be the signal number.
                            void|int(0..1) inhibit_threads_disabled)
@@ -7643,7 +7656,7 @@ int main(int argc, array tmp)
               "SIGWINCH",
 #endif
   }), string sig)
-    catch( signal(signum(sig),async_sig_start(describe_all_threads,-1)));
+    catch( signal(signum(sig),async_sig_start(describe_all_threads_from_signal,-1)));
 
   start_time=time();		// Used by the "uptime" info later on.
 
