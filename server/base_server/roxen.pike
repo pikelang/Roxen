@@ -929,11 +929,12 @@ local protected void handler_thread(int id)
           if (Thread.Condition cond = hold_wakeup_cond) {
             // Make a MutexKey for wait() to please 7.3. This will of
             // course not fix the race, but we ignore that. See the
-            // comment at the declaration of hold_wakeup_cond. (Must
-            // have an extra ref to the mutex since the MutexKey
-            // doesn't keep one.)
-            Thread.Mutex m = Thread.Mutex();
-            cond->wait (m->lock());
+            // comment at the declaration of hold_wakeup_cond. All
+            // threads on hold use the same mutex: a Condition is tied
+            // to the first mutex it is waited with, and wait() throws
+            // for a key of another one (as on Pike 9), which made every
+            // thread but the first fail when put on hold.
+            cond->wait (hold_wakeup_mutex->lock());
           }
           threads_on_hold--;
           THREAD_WERR("Handle thread [" + id + "] released");
@@ -1061,6 +1062,8 @@ protected Thread.Condition hold_wakeup_cond = Thread.Condition();
 // the hold/release handler threads function deal with hung threads
 // anyway. The outcome would only be that release_handler_threads
 // starts some extra handler thread unnecessarily.
+// The mutex that the threads on hold wait with.
+protected Thread.Mutex hold_wakeup_mutex = Thread.Mutex();
 
 void hold_handler_threads()
 //! Tries to put all handler threads on hold, but gives up if it takes
