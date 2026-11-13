@@ -108,5 +108,12 @@
 #define HTTP_BLOCKING_SIZE_THRESHOLD	1000
 #endif /* !HTTP_BLOCKING_SIZE_THRESHOLD */
 
+/* A response of strings up to this size on a plain connection that is
+ * idle is written at once, without blocking, and only what the socket
+ * doesn't take goes through the pipe. 0 turns that off. */
+#ifndef HTTP_OPTIMISTIC_WRITE_MAX
+#define HTTP_OPTIMISTIC_WRITE_MAX	65536
+#endif /* !HTTP_OPTIMISTIC_WRITE_MAX */
+
 /*---------------- End of configurable options. */
 #endif /* if _ROXEN_CONFIG_H_ */

@@ -290,6 +290,15 @@ void send(string|object what, int|void len,
 int(0..1) my_fd_busy;
 int(0..1) pipe_pending;
 
+// Bytes of the response written before the pipe took the rest
+// (low_send_result()), for its done callback to count.
+protected int prewritten;
+
+protected void do_log_prewritten(int fsent)
+{
+  do_log(fsent + prewritten);
+}
+
 void start_sender( )
 {
   if (my_fd_busy) {
@@ -308,7 +317,7 @@ void start_sender( )
                               do_log(fsent);
                             } );
 #else
-    pipe->set_done_callback( do_log );
+    pipe->set_done_callback( prewritten ? do_log_prewritten : do_log );
 #endif
     pipe->output( my_fd );
   } else {
@@ -2590,6 +2599,33 @@ void low_send_result(string headers, string data, int|void len,
                            sizeof(headers), sizeof(data)));
 #ifndef CONNECTION_DEBUG
     REQUEST_WERR(sprintf("HTTP: Send headers %O", headers));
+#endif
+#if HTTP_OPTIMISTIC_WRITE_MAX > 0
+    // Strings on a plain connection with nothing else being sent: write
+    // them at once, without blocking. That spares the pipe's
+    // sendfile(), a round trip through a thread of its own, whenever
+    // the socket takes it all; what it doesn't take goes through the
+    // pipe as before. Not with throttling, which the pipe does.
+    if (!file && !pipe && !my_fd_busy && !throttle->doit &&
+        !conf->throttler &&
+        (sizeof(headers) + sizeof(data) <= HTTP_OPTIMISTIC_WRITE_MAX) &&
+        Program.inherits(object_program(my_fd), Stdio.File)) {
+      int s = my_fd->write(({ headers, data }));
+      if (s == sizeof(headers) + sizeof(data)) {
+        MY_TRACE_LEAVE(sprintf("Wrote all %d bytes at once", s));
+        protocol_time += gethrtime() - start_time;
+        do_log(s);
+        return;
+      }
+      if (s > 0) {
+        prewritten = s;
+        if (s >= sizeof(headers)) {
+          data = data[s - sizeof(headers)..];
+          headers = "";
+        } else
+          headers = headers[s..];
+      }
+    }
 #endif
     if (sizeof(headers))
       send(headers, 0,
