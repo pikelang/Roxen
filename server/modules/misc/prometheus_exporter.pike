@@ -73,7 +73,9 @@ class PrometheusValue(string name)
       } else if (intp(v)) {
         buf->sprintf("%d", v);
       } else {
-        buf->add(v);
+        buf->add(replace((string)v,
+                         ({ "\\", "\"", "\n" }),
+                         ({ "\\\\", "\\\"", "\\n" })));
       }
       buf->add("\"");
     }
@@ -664,29 +666,34 @@ array(mapping) get_module_snmp(RoxenModule o, int mod_no)
 
   // Use fake oid:s below, since we are only interested in the values not the actual address.
   ADT.Trie mib = o->query_snmp_mib(({ -1, mod_no }), ({}));
-  return get_snmp_values(mib, ({}), (o->sname()/"#")[0], 0,
-                         ({ "backupDiskCapacity",
-                            "backupDiskUsed",
-                            "backupDiskFree",
+  string plugin_instance = (o->sname()/"#")[0];
+  array(mapping) values = get_snmp_values(mib, ({}), plugin_instance, 0,
+                                          ({ "backupDiskCapacity",
+                                             "backupDiskUsed",
+                                             "backupDiskFree",
 
-                            "minFeedDiskCapacity",
-                            "minFeedDiskUsed",
-                            "minFeedDiskFree",
+                                             "minFeedDiskCapacity",
+                                             "minFeedDiskUsed",
+                                             "minFeedDiskFree",
 
-                            "databaseDiskCapacity",
-                            "databaseDiskUsed",
-                            "databaseDiskFree",
-                            "numPublications",
-                            "numEditions",
-                            "numPages",
-                            "numPageVersions",
-                            "numStories",
-                            "numStoryItems",
-                            "numStoryItemVersions",
-                            "numFeedItems",
-                            "numPageSlots",
-                            "numPageGroups"
-                         }) );
+                                             "databaseDiskCapacity",
+                                             "databaseDiskUsed",
+                                             "databaseDiskFree",
+                                             "numPublications",
+                                             "numEditions",
+                                             "numPages",
+                                             "numPageVersions",
+                                             "numStories",
+                                             "numStoryItems",
+                                             "numStoryItemVersions",
+                                             "numFeedItems",
+                                             "numPageSlots",
+                                             "numPageGroups"
+                                          }) );
+  if (plugin_instance == "print-indesign-server")
+    add_indesign_layout_server_aspects(values, mib, mod_no);
+
+  return values;
 }
 
 mapping type_mapping = ([ "STRING": 0,
@@ -701,6 +708,75 @@ string mangle_snmp_label(string label)
   return replace(label,
                  ({ "GDS(1)", "GDS(cpu time)", "GDS(real time)", "(", ")", "<", ">"," " }),
                  ({ "0", "1", "2", "_", "_", "_", "_", "_" }));
+}
+
+// Return the layout-server table row encoded in an InDesign module OID,
+// or zero if the OID is outside that table.
+int indesign_layout_server_row(array(int) oid, int mod_no)
+{
+  // The InDesign layout server table is emitted below the module's fake OID as
+  // -1.<mod_no>.14.<row>.<column>..., so the row is the first part after 14.
+  if (sizeof(oid) < 5 ||
+      oid[0] != -1 || oid[1] != mod_no || oid[2] != 14)
+    return 0;
+
+  return oid[3];
+}
+
+// Build a row-to-URI map from the layout-server table's string column.
+mapping(int:string) get_indesign_layout_server_uris(ADT.Trie mib, int mod_no)
+{
+  mapping(int:string) uris = ([]);
+  array(int) prefix = ({ -1, mod_no, 14 });
+
+  // The URI is a string column and is therefore not exported as a metric by
+  // get_snmp_values().  Keep it here as row metadata for the numeric columns.
+  for (array(int) oid = mib->next(prefix); oid; oid = mib->next(oid)) {
+    int row = indesign_layout_server_row(oid, mod_no);
+    if (!row)
+      break;
+
+    mixed val = mib->lookup(oid);
+    if (!objectp(val)) continue;
+    if (mangle_snmp_label(val->name || "") != "layoutServerURI") continue;
+    if (val->update_value)
+      val->update_value();
+
+    uris[row] = (string)val->value;
+  }
+
+  return uris;
+}
+
+// Add URI labels to numeric layout-server table values so each table row
+// becomes a separate Prometheus sample.
+void add_indesign_layout_server_aspects(array(mapping) values,
+                                        ADT.Trie mib,
+                                        int mod_no)
+{
+  mapping(int:string) uris = get_indesign_layout_server_uris(mib, mod_no);
+  if (!sizeof(uris)) return;
+
+  foreach (values, mapping entry) {
+    switch (entry->type_instance) {
+      case "layoutServerEnabled":
+      case "layoutServerProxiedInstances":
+      case "layoutServerConcurrency":
+      case "layoutServerActiveRequests":
+        break;
+      default:
+        continue;
+    }
+
+    // Without a row-specific label, repeated table values with the same metric
+    // name overwrite each other in PrometheusValue.
+    int row = indesign_layout_server_row((array(int))(entry->oid/"."), mod_no);
+    string uri = uris[row];
+    if (!uri) continue;
+
+    entry->uri = uri;
+    entry->aspects = (entry->aspects || ({})) + ({ "uri" });
+  }
 }
 
 array(mapping) get_snmp_values(ADT.Trie mib,
