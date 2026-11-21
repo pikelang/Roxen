@@ -30,12 +30,24 @@ class Readline
     exit(1);
   }
 
-  void destroy()
+  protected void _destruct()
   {
     get_input_controller()->dumb = 0;
+#if __REAL_VERSION__ < 8.1
     ::destroy();
+#else
+    ::_destruct();
+#endif
     signal(signum("SIGINT"));
   }
+
+#if __REAL_VERSION__ < 8.1
+  // Pike 8.0 calls destroy(), later versions lfun::_destruct().
+  protected void destroy()
+  {
+    _destruct();
+  }
+#endif
 
     private string safe_value(string r)
     {

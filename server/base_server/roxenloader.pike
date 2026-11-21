@@ -4123,6 +4123,9 @@ void start_mysql (void|int log_queries_to_stdout)
     Filesystem.System tar = Filesystem.Tar( "etc/mysql-template.tar" );
     foreach( tar->get_dir( "mysql" ), string f )
     {
+      // Pike 9's Filesystem.Tar()->get_dir() returns the names
+      // relative to the directory, Pike 8.0's the full paths.
+      if (!has_prefix(f, "/")) f = "/mysql/" + f;
 #ifdef DEBUG
       report_debug("copying "+f+" ... ");
 #endif

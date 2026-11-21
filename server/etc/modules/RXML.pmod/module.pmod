@@ -8594,8 +8594,19 @@ protected class PikeCompile
         error ("Empty code got bound identifiers: %O\n", indices (cur_ids));
 #endif
 
+    resolve_delayed();
+  }
+
+  //! Resolve the delayed resolve places whose symbols are bound.
+  //! Assumes @[mutex] is locked, or that no other thread can use
+  //! this object.
+  protected void resolve_delayed()
+  {
     foreach (delayed_resolve_places; mixed what;) {
       mixed index = m_delete (delayed_resolve_places, what);
+      // An object may have been destructed meanwhile, when this runs
+      // from destroy() or after it (see there). It needs nothing.
+      if (!what) continue;
       if (zero_type (bindings[what[index]]))
         delayed_resolve_places[what] = index;
       else {
@@ -8603,13 +8614,42 @@ protected class PikeCompile
         COMP_MSG ("%O resolved delayed %O\n", this_object(), what[index]);
       }
     }
+  }
 
-    return;
+  //! Take over the state of a @[PikeCompile] that is destructed with
+  //! code left to compile. Only for @[destroy()].
+  void take_over_from_destroyed (string txt, mapping(string:int) ids,
+                                 mapping(mixed:mixed) places,
+                                 mapping(string:mixed) binds)
+  {
+    code::add (txt);
+    cur_ids = ids;
+    delayed_resolve_places = places;
+    bindings = binds;
   }
 
   //! Destruction callback.
   protected void destroy()
   {
+#if constant (Pike.signal_contextp)
+    // Pike 9 runs destructors in a signal handler context, where a
+    // mutex can't be locked and code can't be compiled. No other
+    // thread can use this object any more. Code left to compile (the
+    // last user of a shared object needn't have compiled what another
+    // one added) goes to a new object that compiles it from the
+    // backend straight after.
+    if (Pike.signal_contextp()) {
+      if (code::_sizeof()) {
+        PikeCompile later = PikeCompile();
+        later->take_over_from_destroyed (code::get(), cur_ids,
+                                         delayed_resolve_places, bindings);
+        call_out (later->compile, 0);
+      }
+      else
+        resolve_delayed();
+      return;
+    }
+#endif
     compile();			// To clean up delayed_resolve_places.
 #ifdef DEBUG
     if (sizeof (delayed_resolve_places)) {

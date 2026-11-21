@@ -16,7 +16,9 @@ string name= LOCALE(326, "Patch management");
 string doc = LOCALE(327, "Show information about the available patches and "
                          "their status.");
 
-Write_back wb = class Write_back
+// An anonymous class: Pike 9 doesn't take a named class as an
+// expression.
+object wb = class
                 {
                   private array(mapping(string:string)) all_messages = ({ });
 

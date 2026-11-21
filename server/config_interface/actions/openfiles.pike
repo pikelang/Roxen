@@ -3,8 +3,10 @@
  */
 inherit "wizard";
 
-// This file uses stuff from spider...
+// This file uses stuff from spider... (which Pike 9 doesn't have)
+#if constant (spider)
 import spider;
+#endif
 
 #include <stat.h>
 #include <roxen.h>

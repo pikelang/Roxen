@@ -5,6 +5,9 @@ string cvs_version = "$Id$";
 #include <module.h>
 #include <config.h>
 
+// The Pipe module: on Pike 9, Stdio.Pipe hides it after the import.
+protected constant pipe_module = Pipe;
+
 import Stdio;
 
 #ifdef PROXY_DEBUG
@@ -525,7 +528,7 @@ class Request {
       return;
     }
 
-    pipe=Pipe.pipe();
+    pipe=pipe_module.pipe();
     pipe->write("HTTP/1.0 200 Yeah, it's a FTP directory\r\n"
                 "Content-type: text/html\r\n"
                 "Content-length: "+strlen(res)+"\r\n");
@@ -581,7 +584,7 @@ class Request {
 
     type=id->conf->type_from_filename(file);
 
-    pipe=Pipe.pipe();
+    pipe=pipe_module.pipe();
     pipe->write("HTTP/1.0 200 FTP transfer initiated\r\n");
 
     tmp=id->conf->type_from_filename(file,1);

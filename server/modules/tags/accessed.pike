@@ -86,8 +86,26 @@ void create(Configuration c) {
 
 }
 
-#if __VERSION__ > 7.2
+#if constant (spider.parse_accessed_database)
 #define parse_accessed_database spider.parse_accessed_database
+#elif !constant (parse_accessed_database)
+// Pike 9 has no spider module. The same as its
+// parse_accessed_database(): each line "name:number" maps the name, up
+// to the last colon, to the number, and the largest number comes along.
+protected array(mapping(string:int)|int) parse_accessed_database (string db)
+{
+  mapping(string:int) names = ([]);
+  int cnum;
+  foreach (db / "\n", string line) {
+    array(string) parts = line / ":";
+    if (sizeof (parts) > 1) {
+      int n = (int) parts[-1];
+      names[parts[..<1] * ":"] = n;
+      if (n > cnum) cnum = n;
+    }
+  }
+  return ({ names, cnum });
+}
 #endif
 
 TAGDOCUMENTATION

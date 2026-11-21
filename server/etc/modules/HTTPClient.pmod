@@ -663,12 +663,13 @@ public class Session
 
     protected void create()
     {
-      #if constant (this::maxtime)
-      TRACE("# Query has maxtime\n");
-      if (Session::maxtime) {
-        this::maxtime = Session::maxtime;
+      // Pike 9's Protocols.HTTP.Query has maxtime, Pike 8.0's doesn't.
+      // (Pike 9's preprocessor fails on constant (this::maxtime), and
+      // Pike 8.0's took it to be false.)
+      if (Session::maxtime && has_index (this, "maxtime")) {
+        TRACE("# Query has maxtime\n");
+        this["maxtime"] = Session::maxtime;
       }
-      #endif
 
       if (Session::timeout) {
         this::timeout = Session::timeout;
